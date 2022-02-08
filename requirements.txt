@@ -1,0 +1,6 @@
+python-keycloak
+websocket-client
+rel
+playsound
+pygame
+pyttsx3
