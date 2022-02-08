@@ -79,16 +79,20 @@ def play_sound_effect(fileName):
 
     if path.isfile(fileToPlay + '.wav'):
         if osType == 'Linux' or osType == 'Osx':
-            from playsound import playsound
-            playsound(fileToPlay + '.wav')
+            from pygame import mixer
+            mixer.init()
+            mixer.music.load(fileToPlay + '.wav')
+            mixer.music.play()
         elif osType == 'Windows':
             import winsound
             winsound.PlaySound(fileToPlay + '.wav', winsound.SND_ASYNC | winsound.SND_NODEFAULT)
 
     elif path.isfile(fileToPlay + '.mp3'):
         if osType == 'Linux' or osType == 'Osx':
-            from playsound import playsound
-            playsound(fileToPlay + '.mp3')
+            from pygame import mixer
+            mixer.init()
+            mixer.music.load(fileToPlay + '.mp3')
+            mixer.music.play()
         elif osType == 'Windows':
             from pygame import mixer
             mixer.init()
