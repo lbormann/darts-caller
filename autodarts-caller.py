@@ -11,6 +11,8 @@ import rel
 from keycloak import KeycloakOpenID
 import requests
 
+from pygame import mixer
+
 import _thread
 # import threading
 
@@ -79,8 +81,6 @@ def play_sound_effect(fileName):
 
     if path.isfile(fileToPlay + '.wav'):
         if osType == 'Linux' or osType == 'Osx':
-            from pygame import mixer
-            mixer.init()
             mixer.music.load(fileToPlay + '.wav')
             mixer.music.play()
         elif osType == 'Windows':
@@ -89,13 +89,9 @@ def play_sound_effect(fileName):
 
     elif path.isfile(fileToPlay + '.mp3'):
         if osType == 'Linux' or osType == 'Osx':
-            from pygame import mixer
-            mixer.init()
             mixer.music.load(fileToPlay + '.mp3')
             mixer.music.play()
         elif osType == 'Windows':
-            from pygame import mixer
-            mixer.init()
             mixer.music.load(fileToPlay + '.mp3')
             mixer.music.play()
 
@@ -220,6 +216,9 @@ if __name__ == "__main__":
 
     global caller
     caller = None
+
+    # Initialize sound-output
+    mixer.init()
 
     # Configure client
     keycloak_openid = KeycloakOpenID(server_url=AUTODART_AUTH_URL,

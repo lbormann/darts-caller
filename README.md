@@ -23,6 +23,10 @@ Go to download-directory and type:
 
     pip install -r requirements.txt
 
+(Optional) When you are on linux and you encounter problems with playing sound:
+
+    sudo apt-get install python3-sdl2
+
 
 ### Setup media folder
 
