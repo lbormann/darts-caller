@@ -143,13 +143,13 @@ def process_match_x01(m):
         print('>>> Match: Leg started')
 
     # Check for game end
-    elif m['winner'] != -1:
+    elif players['boardStatus'] != 'Takeout in progress' and m['winner'] != -1:
         play_sound_effect('gameshot')
         setup_caller()
         print('>>> Match: Gameshot and match')
 
     # Check for leg end
-    elif m['gameWinner'] != -1:
+    elif players['boardStatus'] != 'Takeout in progress' and m['gameWinner'] != -1:
         play_sound_effect('gameshot')
         if RANDOM_CALLER_EACH_LEG:
             setup_caller()
