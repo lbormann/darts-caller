@@ -20,6 +20,7 @@ import websocket
 
 
 
+
 AUTODART_URL = 'https://autodarts.io'
 AUTODART_AUTH_URL = 'https://login.autodarts.io/auth/'
 AUTODART_AUTH_TICKET_URL = 'https://api.autodarts.io/ms/v0/ticket'
@@ -166,17 +167,20 @@ def process_match_x01(m):
 
     # Check for points call
     elif players['boardStatus'] != 'Takeout in progress' and turns != None and turns['throws'] != None and len(turns['throws']) == 3:
-        play_sound_effect(str(turns['points']))
+        points = str(turns['points'])
+        play_sound_effect(points)
+        call_custom_webhook(points)
         print(">>> Match: Turn ended")
 
 def process_match_cricket(m):
     players = m['players'][0]
     turns = m['turns'][0]
-
     # TODO: implement logic
 
 
-
+def call_custom_webhook(data):
+    URL = CUSTOM_WEBHOOK_POINTS + '/' + data
+    requests.get(url = URL)
 
 
 if __name__ == "__main__":
@@ -188,6 +192,7 @@ if __name__ == "__main__":
     ap.add_argument("-M", "--media_path", required=True, help="Absolute path to your media folder. You can download free sounds at https://freesound.org/")
     ap.add_argument("-R", "--random_caller", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will randomly choose a caller each game. It only works when your base-media-folder has subfolders with its files")
     ap.add_argument("-L", "--random_caller_each_leg", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will randomly choose a caller each leg instead of each game. It only works when 'random_caller=1'")
+    ap.add_argument("-W", "--custom_webhook_points", required=False, help="Url that will be requested every call")
     args = vars(ap.parse_args())
 
     AUTODART_USER_EMAIL = args['autodarts_email']                          
@@ -196,6 +201,7 @@ if __name__ == "__main__":
     AUDIO_MEDIA_PATH = args['media_path']
     RANDOM_CALLER = args['random_caller']   
     RANDOM_CALLER_EACH_LEG = args['random_caller_each_leg']   
+    CUSTOM_WEBHOOK_POINTS = args['custom_webhook_points']
 
     TTS = False     
 
@@ -218,6 +224,7 @@ if __name__ == "__main__":
     caller = None
 
     # Initialize sound-output
+    mixer.pre_init(44100, -16, 2, 1024)
     mixer.init()
 
     # Configure client
