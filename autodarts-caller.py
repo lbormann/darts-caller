@@ -1,11 +1,13 @@
 import os
 from os import path
+from pathlib import Path
 import time
 import json
 import ssl
 import platform
 import random
 import argparse
+from urllib.parse import urlparse, parse_qs
 import rel
 
 from keycloak import KeycloakOpenID
@@ -32,7 +34,7 @@ AUTODART_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe?ticket='
 
 SUPPORTED_GAME_VARIANTS = ['X01']
 VERSION = '0.1.0'
-DEBUG = True
+DEBUG = False
 
 
 
@@ -51,20 +53,22 @@ def setup_caller():
         choose_caller()
         print(">>> Your current caller: " + str(caller))
 
-
 def choose_caller():
     global caller
 
+    baseMediaPath = AUDIO_MEDIA_PATH
+
     if RANDOM_CALLER == False:
-        caller = AUDIO_MEDIA_PATH
+        caller = baseMediaPath
     else:
-        callerSubDirs = os.listdir(AUDIO_MEDIA_PATH)
+        callerSubDirs = [ name for name in os.listdir(AUDIO_MEDIA_PATH) if os.path.isdir(os.path.join(AUDIO_MEDIA_PATH, name)) ]
+        # print('Callers available: ' + str(len(callerSubDirs)))
+
         if len(callerSubDirs) == 0:
             print('WARNING: You chose "RANDOM_CALLER", but there are no subfolders that identify your caller-media-files. Please correct this. Fallback to caller-media-files in Media-main-directory.\r\n')
-            caller = AUDIO_MEDIA_PATH
+            caller = baseMediaPath
         else:
-            caller = AUDIO_MEDIA_PATH + random.choice([ name for name in callerSubDirs if os.path.isdir(os.path.join(AUDIO_MEDIA_PATH, name)) ])
-
+            caller = os.path.join(baseMediaPath, random.choice(callerSubDirs))
 
 def play_sound_effect(fileName):
     global caller
@@ -78,21 +82,12 @@ def play_sound_effect(fileName):
         print('Can not play sound for OS: ' + osType + " . Please contact developer for support") 
         return
 
-    fileToPlay = caller + '/' + fileName 
-
+    fileToPlay = os.path.join(caller, fileName)
     if path.isfile(fileToPlay + '.wav'):
-        if osType == 'Linux' or osType == 'Osx':
             mixer.music.load(fileToPlay + '.wav')
             mixer.music.play()
-        elif osType == 'Windows':
-            import winsound
-            winsound.PlaySound(fileToPlay + '.wav', winsound.SND_ASYNC | winsound.SND_NODEFAULT)
 
     elif path.isfile(fileToPlay + '.mp3'):
-        if osType == 'Linux' or osType == 'Osx':
-            mixer.music.load(fileToPlay + '.mp3')
-            mixer.music.play()
-        elif osType == 'Windows':
             mixer.music.load(fileToPlay + '.mp3')
             mixer.music.play()
 
@@ -101,6 +96,7 @@ def play_sound_effect(fileName):
 
 def listen_to_newest_match(m, ws):
     global currentMatch
+    cm = str(currentMatch)
 
     # look for newest supported match that match my board-id and take it as ongoing match
     newMatch = None
@@ -110,14 +106,14 @@ def listen_to_newest_match(m, ws):
                 newMatch = m['id']   
                 break
 
-    if currentMatch == None or (currentMatch != None and newMatch != None and currentMatch != newMatch):
+    if cm == None or (cm != None and newMatch != None and cm != newMatch):
         print('\r\n>>> Listen to match: ' + newMatch)
 
-        if currentMatch != None:
+        if cm != None:
             paramsUnsubscribeMatchEvents = {
                 "type": "unsubscribe",
                 "channel": "autodarts.matches",
-                "topic": str(currentMatch) + ".state"
+                "topic": cm + ".state"
             }
             ws.send(json.dumps(paramsUnsubscribeMatchEvents))
 
@@ -128,8 +124,6 @@ def listen_to_newest_match(m, ws):
         }
         ws.send(json.dumps(paramsSubscribeMatchEvents))
         currentMatch = newMatch
-
-  
 
 def process_match_x01(m):
     players = m['players'][0]
@@ -177,10 +171,9 @@ def process_match_cricket(m):
     turns = m['turns'][0]
     # TODO: implement logic
 
-
 def call_custom_webhook(data):
-    URL = CUSTOM_WEBHOOK_POINTS + '/' + data
-    requests.get(url = URL)
+    if CUSTOM_WEBHOOK_POINTS != None:
+        requests.get(url = (CUSTOM_WEBHOOK_POINTS + '/' + data))
 
 
 if __name__ == "__main__":
@@ -202,6 +195,12 @@ if __name__ == "__main__":
     RANDOM_CALLER = args['random_caller']   
     RANDOM_CALLER_EACH_LEG = args['random_caller_each_leg']   
     CUSTOM_WEBHOOK_POINTS = args['custom_webhook_points']
+
+    AUDIO_MEDIA_PATH = Path(AUDIO_MEDIA_PATH)
+
+    if CUSTOM_WEBHOOK_POINTS is not None:
+        parsedUrl = urlparse(CUSTOM_WEBHOOK_POINTS)
+        CUSTOM_WEBHOOK_POINTS = parsedUrl.scheme + '://' + parsedUrl.netloc + parsedUrl.path
 
     TTS = False     
 
@@ -248,17 +247,16 @@ if __name__ == "__main__":
 
     def on_message(ws, message):
         m = json.loads(message)
-        # ppjson(m)
+        ppjson(m)
 
         if m['channel'] == 'autodarts.matches':
-
             global currentMatch
             data = m['data']
             listen_to_newest_match(data, ws)
             
             if currentMatch != None and data['id'] == currentMatch:
                 if data['variant'] == 'X01':
-                    # ppjson(data)
+                    ppjson(data)
                     process_match_x01(data)
                 elif data['variant'] == 'Cricket':
                     process_match_cricket(data)
