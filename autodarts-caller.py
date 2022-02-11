@@ -8,18 +8,12 @@ import platform
 import random
 import argparse
 from urllib.parse import urlparse, parse_qs
-import rel
-
 from keycloak import KeycloakOpenID
 import requests
-
 from pygame import mixer
-
 import _thread
 import threading
-
 import websocket
-
 
 
 
@@ -302,8 +296,6 @@ if __name__ == "__main__":
 
 
 
-    rel.safe_read()
-
     def on_message(ws, message):
         m = json.loads(message)
         ppjson(m)
@@ -352,8 +344,5 @@ if __name__ == "__main__":
                             on_error=on_error,
                             on_close=on_close)
 
-
-    ws.run_forever(dispatcher=rel)  # Set dispatcher to automatic reconnection
-    rel.signal(2, rel.abort)        # Keyboard interrupt
-    rel.dispatch()
+    ws.run_forever()
    

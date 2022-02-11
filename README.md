@@ -63,9 +63,9 @@ Arguments:
 
 Some infos about webhooks:
 - WT If set with an valid url. It tries to request (Get) this url and extends it by the turn-points, ie:
-    http://192.168.0.13/turn/<turn-points>
+    http://192.168.0.13/turn/turn-points
 - WTT If set with an valid url. It tries to request (Get) this url and extends it by the thrower-name, throw-number, throw-points and points-left, ie:
-    http://192.168.0.13/throw/<thrower>/<throw-number>/<throw-points>/<points-left>
+    http://192.168.0.13/throw/thrower/throw-number/throw-points/points-left
 
 
 ## Setup autoboot [linux] (optional)
