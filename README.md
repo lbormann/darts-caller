@@ -89,6 +89,7 @@ It may be buggy. I've just coded it for fast fun with autodarts.io. You can give
 
 ## TODOs
 
+- Prevent from double calling
 - Make it more easy to use
 - Care of possible error situations that may appear during long run 
 - Support other games modes (currently only X01 support)

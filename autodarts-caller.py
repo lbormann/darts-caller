@@ -126,6 +126,7 @@ def process_match_x01(m):
     currentPlayer = m['players'][turns['player']]['index']
     # print(currentPlayer)
 
+    # Check for board-stop
     if players['boardStatus'] == 'Stopped':
         play_sound_effect('boardstopped')      
         print('>>> Match: Board stopped')
@@ -168,12 +169,12 @@ def process_match_x01(m):
         play_sound_effect(points)
         print(">>> Match: Turn ended")
 
-    # Check for board-stop
+    # Check for every throw
     if players['boardStatus'] != 'Takeout in progress' and turns['throws'] != None: 
         throwIndex = len(turns['throws']) - 1
         throwNumber = throwIndex + 1
         throwPoints = turns['throws'][throwIndex]['segment']['number'] * turns['throws'][throwIndex]['segment']['multiplier']
-        throw = m['players'][0]['name'] + '/' + str(throwNumber) + '/' + str(throwPoints) + '/' + str(m['gameScores'][0])
+        throw = m['players'][0]['name'] + '/' + str(throwNumber) + '/' + str(throwPoints) + '/' + str(m['gameScores'][0]) + '/' + str(turns['busted']) + '/' + 'X01'
         print(">>> Match: Throw " + throw)
         call_webhook_throw_points(throw)
 
@@ -265,8 +266,8 @@ if __name__ == "__main__":
     print('       WELCOME TO AUTODARTS-CALLER')
     print('##########################################')
     print('VERSION: ' + VERSION)
-    print('SUPPORTED GAME-VARIANTS: ' + " ".join(str(x) for x in SUPPORTED_GAME_VARIANTS) )
     print('RUNNING OS: ' + osType + ' | ' + osName + ' | ' + osRelease)
+    print('SUPPORTED GAME-VARIANTS: ' + " ".join(str(x) for x in SUPPORTED_GAME_VARIANTS) )
     print('\r\n')
     
     global currentMatch
