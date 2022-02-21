@@ -31,7 +31,9 @@ VERSION = '0.1.1'
 DEBUG = False
 
 
-
+def printv(msg, only_debug = False):
+    if only_debug == False or (only_debug == True and DEBUG == True):
+        print('>>> ' + msg)
 
 def ppjson(js):
     if DEBUG:
@@ -42,10 +44,10 @@ def setup_caller():
     if TTS == True:
         import pyttsx3
         engine = pyttsx3.init()
-        print('>>> Your current caller: TTS-Engine')
+        printv('Your current caller: TTS-Engine')
     else:
         choose_caller()
-        print(">>> Your current caller: " + str(caller))
+        printv("Your current caller: " + str(caller))
 
 def choose_caller():
     global caller
@@ -56,10 +58,10 @@ def choose_caller():
         caller = baseMediaPath
     else:
         callerSubDirs = [ name for name in os.listdir(AUDIO_MEDIA_PATH) if os.path.isdir(os.path.join(AUDIO_MEDIA_PATH, name)) ]
-        # print('Callers available: ' + str(len(callerSubDirs)))
+        printv('Callers available: ' + str(len(callerSubDirs)), only_debug = True)
 
         if len(callerSubDirs) == 0:
-            print('WARNING: You chose "RANDOM_CALLER", but there are no subfolders that identify your caller-media-files. Please correct this. Fallback to caller-media-files in Media-main-directory.\r\n')
+            printv('WARNING: You chose "RANDOM_CALLER", but there are no subfolders that identify your caller-media-files. Please correct this. Fallback to caller-media-files in Media-main-directory.\r\n')
             caller = baseMediaPath
         else:
             caller = os.path.join(baseMediaPath, random.choice(callerSubDirs))
@@ -73,7 +75,7 @@ def play_sound_effect(fileName):
         return
 
     if osType != 'Linux' and osType != 'Osx' and osType != 'Windows': 
-        print('Can not play sound for OS: ' + osType + ". Please contact developer for support") 
+        printv('Can not play sound for OS: ' + osType + ". Please contact developer for support") 
         return
 
     fileToPlay = os.path.join(caller, fileName)
@@ -86,7 +88,7 @@ def play_sound_effect(fileName):
             mixer.music.play()
 
     else:
-        print('XXX Could not find a playable sound-file for: ' + fileName)
+        printv('XXX Could not find a playable sound-file for: ' + fileName)
 
 def listen_to_newest_match(m, ws):
     global currentMatch
@@ -101,7 +103,7 @@ def listen_to_newest_match(m, ws):
                 break
 
     if cm == None or (cm != None and newMatch != None and cm != newMatch):
-        print('\r\n>>> Listen to match: ' + newMatch)
+        printv('Listen to match: ' + newMatch)
 
         if cm != None:
             paramsUnsubscribeMatchEvents = {
@@ -124,25 +126,25 @@ def process_match_x01(m):
     players = m['players'][0]
     turns = m['turns'][0]
     currentPlayer = m['players'][turns['player']]['index']
-    # print(currentPlayer)
+    # printv(currentPlayer)
 
     # Check for board-stop
     if players['boardStatus'] == 'Stopped':
         play_sound_effect('boardstopped')      
-        print('>>> Match: Board stopped')
+        printv('Match: Board stopped')
 
     # Check for game start 
-    if players['boardStatus'] != 'Takeout in progress' and m['stats'][0]['average'] == 0:
+    elif players['boardStatus'] != 'Takeout in progress' and m['stats'][0]['average'] == 0:
         call_webhook_leg_started()
         play_sound_effect('gameon')      
-        print('>>> Match: Leg started')
+        printv('Match: Leg started')
 
     # Check for game end
     elif players['boardStatus'] != 'Takeout in progress' and m['winner'] != -1:
         call_webhook_leg_ended()
         play_sound_effect('gameshot')
         setup_caller()
-        print('>>> Match: Gameshot and match')
+        printv('Match: Gameshot and match')
 
     # Check for leg end
     elif players['boardStatus'] != 'Takeout in progress' and m['gameWinner'] != -1:
@@ -150,24 +152,24 @@ def process_match_x01(m):
         play_sound_effect('gameshot')
         if RANDOM_CALLER_EACH_LEG:
             setup_caller()
-        print('>>> Match: Gameshot and match')
+        printv('Match: Gameshot and match')
     
     # Check for busted turn
     elif players['boardStatus'] != 'Takeout in progress' and turns['busted'] == True:
         play_sound_effect('busted')
-        print('>>> Match: Busted')
+        printv('Match: Busted')
 
     # Check for possible checkout
     elif m['player'] == currentPlayer and m['gameScores'][0] <= 170 and turns != None and turns['throws'] == None:
         play_sound_effect(str(m['gameScores'][currentPlayer]))
-        print('>>> Match: Checkout possible')
+        printv('Match: Checkout possible')
 
     # Check for points call
     elif players['boardStatus'] != 'Takeout in progress' and turns != None and turns['throws'] != None and len(turns['throws']) == 3:
         points = str(turns['points'])
         call_webhook_turn_points(points)
         play_sound_effect(points)
-        print(">>> Match: Turn ended")
+        printv("Match: Turn ended")
 
     # Check for every throw
     if players['boardStatus'] != 'Takeout in progress' and turns['throws'] != None: 
@@ -175,7 +177,7 @@ def process_match_x01(m):
         throwNumber = throwIndex + 1
         throwPoints = turns['throws'][throwIndex]['segment']['number'] * turns['throws'][throwIndex]['segment']['multiplier']
         throw = m['players'][0]['name'] + '/' + str(throwNumber) + '/' + str(throwPoints) + '/' + str(m['gameScores'][0]) + '/' + str(turns['busted']) + '/' + 'X01'
-        print(">>> Match: Throw " + throw)
+        printv("Match: Throw " + throw)
         call_webhook_throw_points(throw)
 
 def process_match_cricket(m):
@@ -209,6 +211,72 @@ def call_webhook_turn_points(data):
         webhook_request(WEBHOOK_TURN_POINTS, data)
 
 
+def connect():
+    # Configure client
+    keycloak_openid = KeycloakOpenID(server_url=AUTODART_AUTH_URL,
+                        client_id=AUTODART_CLIENT_ID,
+                        realm_name=AUTODART_REALM_NAME,
+                        verify=True)
+
+    # Get Token
+    token = keycloak_openid.token(AUTODART_USER_EMAIL, AUTODART_USER_PASSWORD)
+    printv(token, only_debug = True)
+
+
+    # Get Ticket
+    ticket = requests.post(AUTODART_AUTH_TICKET_URL, headers={'Authorization': 'Bearer ' + token['access_token']})
+    printv(ticket.text, only_debug = True)
+
+
+    websocket.enableTrace(False)
+    ws = websocket.WebSocketApp(AUTODART_WEBSOCKET_URL + ticket.text,
+                            on_open=on_open,
+                            on_message=on_message,
+                            on_error=on_error,
+                            on_close=on_close)
+
+    ws.run_forever()
+
+def on_open(ws):
+    caller = setup_caller()
+    printv('Receiving live information from ' + AUTODART_URL)
+    paramsSubscribeMatchesEvents = {
+        "channel": "autodarts.matches",
+        "type": "subscribe",
+        "topic": "*.state"
+    }
+    ws.send(json.dumps(paramsSubscribeMatchesEvents))
+
+
+def on_message(ws, message):
+    m = json.loads(message)
+    ppjson(m)
+
+    if m['channel'] == 'autodarts.matches':
+        global currentMatch
+        data = m['data']
+        listen_to_newest_match(data, ws)
+        
+        if currentMatch != None and data['id'] == currentMatch:
+            if data['variant'] == 'X01':
+                ppjson(data)
+                process_match_x01(data)
+            elif data['variant'] == 'Cricket':
+                process_match_cricket(data)
+
+def on_close(ws, close_status_code, close_msg):
+    printv("Websocket closed")
+    printv(str(close_msg))
+    printv(str(close_status_code))
+    printv ("Retry : %s" % time.ctime())
+    time.sleep(10)
+    connect_websocket()
+    
+def on_error(ws, error):
+    printv(error)
+
+
+
 
 if __name__ == "__main__":
 
@@ -236,8 +304,6 @@ if __name__ == "__main__":
     WEBHOOK_LEG_ENDED = args['webhook_leg_ended']
     WEBHOOK_TURN_POINTS = args['webhook_turn_points']
     WEBHOOK_THROW_POINTS = args['webhook_throw_points']
-    
-
 
     if WEBHOOK_LEG_STARTED is not None:
         parsedUrl = urlparse(WEBHOOK_LEG_STARTED)
@@ -280,70 +346,11 @@ if __name__ == "__main__":
     mixer.pre_init(44100, -16, 2, 1024)
     mixer.init()
 
-    # Configure client
-    keycloak_openid = KeycloakOpenID(server_url=AUTODART_AUTH_URL,
-                        client_id=AUTODART_CLIENT_ID,
-                        realm_name=AUTODART_REALM_NAME,
-                        verify=True)
-
-    # Get Token
-    token = keycloak_openid.token(AUTODART_USER_EMAIL, AUTODART_USER_PASSWORD)
-    # print(token)
-
-
-    # Get Ticket
-    ticket = requests.post(AUTODART_AUTH_TICKET_URL, headers={'Authorization': 'Bearer ' + token['access_token']})
-    # print(ticket.text)
+    try:
+        connect()
+    except:
+        printv("Connect failed")
 
 
 
-    def on_message(ws, message):
-        m = json.loads(message)
-        ppjson(m)
-
-        if m['channel'] == 'autodarts.matches':
-            global currentMatch
-            data = m['data']
-            listen_to_newest_match(data, ws)
-            
-            if currentMatch != None and data['id'] == currentMatch:
-                if data['variant'] == 'X01':
-                    ppjson(data)
-                    process_match_x01(data)
-                elif data['variant'] == 'Cricket':
-                    process_match_cricket(data)
-
-
-    def on_error(ws, error):
-        print(error)
-
-    def on_close(ws, close_status_code, close_msg):
-        print("### Websocket closed ###")
-        print("### " + str(close_msg) + "###")
-        print("### " + str(close_status_code) + "###")
-
-    def on_open(ws):
-        caller = setup_caller()
-
-        print('>>> Receiving live information from ' + AUTODART_URL)
-
-        paramsSubscribeMatchesEvents = {
-            "channel": "autodarts.matches",
-            "type": "subscribe",
-            "topic": "*.state"
-        }
-        ws.send(json.dumps(paramsSubscribeMatchesEvents))
-
-        
-
-
-
-    websocket.enableTrace(False)
-    ws = websocket.WebSocketApp(AUTODART_WEBSOCKET_URL + ticket.text,
-                            on_open=on_open,
-                            on_message=on_message,
-                            on_error=on_error,
-                            on_close=on_close)
-
-    ws.run_forever()
    
