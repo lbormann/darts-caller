@@ -7,12 +7,10 @@ import ssl
 import platform
 import random
 import argparse
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse
 from keycloak import KeycloakOpenID
 import requests
 from pygame import mixer
-import _thread
-import threading
 import websocket
 
 
@@ -33,17 +31,17 @@ DEBUG = False
 
 def printv(msg, only_debug = False):
     if only_debug == False or (only_debug == True and DEBUG == True):
-        print('>>> ' + msg)
+        print('\r\n>>> ' + str(msg))
 
 def ppjson(js):
-    if DEBUG:
-        print(json.dumps(js, indent=4, sort_keys=True))
+    if DEBUG == True:
+        print(json.dumps(js, indent = 4, sort_keys = True))
 
 def setup_caller():
     global caller
     if TTS == True:
         import pyttsx3
-        engine = pyttsx3.init()
+        pyttsx3.init()
         printv('Your current caller: TTS-Engine')
     else:
         choose_caller()
@@ -104,7 +102,7 @@ def listen_to_newest_match(m, ws):
 
     if cm == None or (cm != None and newMatch != None and cm != newMatch):
         printv('Listen to match: ' + newMatch)
-
+        
         if cm != None:
             paramsUnsubscribeMatchEvents = {
                 "type": "unsubscribe",
@@ -118,6 +116,7 @@ def listen_to_newest_match(m, ws):
             "channel": "autodarts.matches",
             "topic": newMatch + ".state"
         }
+        call_webhook_leg_started()
         ws.send(json.dumps(paramsSubscribeMatchEvents))
         currentMatch = newMatch
         
@@ -128,6 +127,15 @@ def process_match_x01(m):
     currentPlayer = m['players'][turns['player']]['index']
     # printv(currentPlayer)
 
+    # Check for every throw
+    if players['boardStatus'] != 'Takeout in progress' and turns['throws'] != None: 
+        throwIndex = len(turns['throws']) - 1
+        throwNumber = throwIndex + 1
+        throwPoints = turns['throws'][throwIndex]['segment']['number'] * turns['throws'][throwIndex]['segment']['multiplier']
+        throw = m['players'][0]['name'] + '/' + str(throwNumber) + '/' + str(throwPoints) + '/' + str(m['gameScores'][0]) + '/' + str(turns['busted']) + '/' + 'X01'
+        printv("Match: Throw " + throw)
+        call_webhook_throw_points(throw)
+
     # Check for board-stop
     if players['boardStatus'] == 'Stopped':
         play_sound_effect('boardstopped')      
@@ -135,20 +143,25 @@ def process_match_x01(m):
 
     # Check for game start 
     elif players['boardStatus'] != 'Takeout in progress' and m['stats'][0]['average'] == 0:
-        call_webhook_leg_started()
         play_sound_effect('gameon')      
         printv('Match: Leg started')
 
     # Check for game end
     elif players['boardStatus'] != 'Takeout in progress' and m['winner'] != -1:
+        points = str(turns['points'])
+        call_webhook_turn_points(points)
         call_webhook_leg_ended()
+
         play_sound_effect('gameshot')
         setup_caller()
         printv('Match: Gameshot and match')
 
     # Check for leg end
     elif players['boardStatus'] != 'Takeout in progress' and m['gameWinner'] != -1:
+        points = str(turns['points'])
+        call_webhook_turn_points(points)
         call_webhook_leg_ended()
+
         play_sound_effect('gameshot')
         if RANDOM_CALLER_EACH_LEG:
             setup_caller()
@@ -170,15 +183,6 @@ def process_match_x01(m):
         call_webhook_turn_points(points)
         play_sound_effect(points)
         printv("Match: Turn ended")
-
-    # Check for every throw
-    if players['boardStatus'] != 'Takeout in progress' and turns['throws'] != None: 
-        throwIndex = len(turns['throws']) - 1
-        throwNumber = throwIndex + 1
-        throwPoints = turns['throws'][throwIndex]['segment']['number'] * turns['throws'][throwIndex]['segment']['multiplier']
-        throw = m['players'][0]['name'] + '/' + str(throwNumber) + '/' + str(throwPoints) + '/' + str(m['gameScores'][0]) + '/' + str(turns['busted']) + '/' + 'X01'
-        printv("Match: Throw " + throw)
-        call_webhook_throw_points(throw)
 
 def process_match_cricket(m):
     players = m['players'][0]
@@ -238,7 +242,7 @@ def connect():
     ws.run_forever()
 
 def on_open(ws):
-    caller = setup_caller()
+    setup_caller()
     printv('Receiving live information from ' + AUTODART_URL)
     paramsSubscribeMatchesEvents = {
         "channel": "autodarts.matches",
@@ -250,7 +254,7 @@ def on_open(ws):
 
 def on_message(ws, message):
     m = json.loads(message)
-    ppjson(m)
+    # ppjson(m)
 
     if m['channel'] == 'autodarts.matches':
         global currentMatch
@@ -270,7 +274,11 @@ def on_close(ws, close_status_code, close_msg):
     printv(str(close_status_code))
     printv ("Retry : %s" % time.ctime())
     time.sleep(10)
-    connect_websocket()
+    
+    try:
+        connect()
+    except:
+        printv("Connect failed")
     
 def on_error(ws, error):
     printv(error)
