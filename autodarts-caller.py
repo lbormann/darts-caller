@@ -3,7 +3,6 @@ from os import path
 from pathlib import Path
 import time
 import json
-import ssl
 import platform
 import random
 import argparse
@@ -128,11 +127,16 @@ def process_match_x01(m):
     # printv(currentPlayer)
 
     # Check for every throw
-    if players['boardStatus'] != 'Takeout in progress' and turns['throws'] != None: 
+    if players['boardStatus'] != 'Takeout in progress': 
+        user = str(players['name'])
         throwIndex = len(turns['throws']) - 1
-        throwNumber = throwIndex + 1
-        throwPoints = turns['throws'][throwIndex]['segment']['number'] * turns['throws'][throwIndex]['segment']['multiplier']
-        throw = m['players'][0]['name'] + '/' + str(throwNumber) + '/' + str(throwPoints) + '/' + str(m['gameScores'][0]) + '/' + str(turns['busted']) + '/' + 'X01'
+        throwNumber = str(throwIndex + 1)
+        throwPoints = str(turns['throws'][throwIndex]['segment']['number'] * turns['throws'][throwIndex]['segment']['multiplier'])
+        pointsLeft = str(m['gameScores'][0])
+        busted = str(turns['busted'])
+        variant = 'X01'
+
+        throw = user + '/' + throwNumber + '/' + throwPoints + '/' + pointsLeft + '/' + busted + '/' + variant
         printv("Match: Throw " + throw)
         call_webhook_throw_points(throw)
 
@@ -148,20 +152,12 @@ def process_match_x01(m):
 
     # Check for game end
     elif players['boardStatus'] != 'Takeout in progress' and m['winner'] != -1:
-        points = str(turns['points'])
-        call_webhook_turn_points(points)
-        call_webhook_leg_ended()
-
         play_sound_effect('gameshot')
         setup_caller()
         printv('Match: Gameshot and match')
 
     # Check for leg end
     elif players['boardStatus'] != 'Takeout in progress' and m['gameWinner'] != -1:
-        points = str(turns['points'])
-        call_webhook_turn_points(points)
-        call_webhook_leg_ended()
-
         play_sound_effect('gameshot')
         if RANDOM_CALLER_EACH_LEG:
             setup_caller()
@@ -180,7 +176,6 @@ def process_match_x01(m):
     # Check for points call
     elif players['boardStatus'] != 'Takeout in progress' and turns != None and turns['throws'] != None and len(turns['throws']) == 3:
         points = str(turns['points'])
-        call_webhook_turn_points(points)
         play_sound_effect(points)
         printv("Match: Turn ended")
 
@@ -202,25 +197,17 @@ def call_webhook_leg_started():
     if WEBHOOK_LEG_STARTED != None:
         webhook_request(WEBHOOK_LEG_STARTED)
 
-def call_webhook_leg_ended():
-    if WEBHOOK_LEG_ENDED != None:
-        webhook_request(WEBHOOK_LEG_ENDED)
-
 def call_webhook_throw_points(data):
     if WEBHOOK_THROW_POINTS != None:
         webhook_request(WEBHOOK_THROW_POINTS, data)
 
-def call_webhook_turn_points(data):
-    if WEBHOOK_TURN_POINTS != None:
-        webhook_request(WEBHOOK_TURN_POINTS, data)
-
 
 def connect():
     # Configure client
-    keycloak_openid = KeycloakOpenID(server_url=AUTODART_AUTH_URL,
-                        client_id=AUTODART_CLIENT_ID,
-                        realm_name=AUTODART_REALM_NAME,
-                        verify=True)
+    keycloak_openid = KeycloakOpenID(server_url = AUTODART_AUTH_URL,
+                        client_id = AUTODART_CLIENT_ID,
+                        realm_name = AUTODART_REALM_NAME,
+                        verify = True)
 
     # Get Token
     token = keycloak_openid.token(AUTODART_USER_EMAIL, AUTODART_USER_PASSWORD)
@@ -234,10 +221,10 @@ def connect():
 
     websocket.enableTrace(False)
     ws = websocket.WebSocketApp(AUTODART_WEBSOCKET_URL + ticket.text,
-                            on_open=on_open,
-                            on_message=on_message,
-                            on_error=on_error,
-                            on_close=on_close)
+                            on_open = on_open,
+                            on_message = on_message,
+                            on_error = on_error,
+                            on_close = on_close)
 
     ws.run_forever()
 
@@ -296,8 +283,6 @@ if __name__ == "__main__":
     ap.add_argument("-R", "--random_caller", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will randomly choose a caller each game. It only works when your base-media-folder has subfolders with its files")
     ap.add_argument("-L", "--random_caller_each_leg", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will randomly choose a caller each leg instead of each game. It only works when 'random_caller=1'")
     ap.add_argument("-WS", "--webhook_leg_started", required=False, help="Url that will be requested every leg start")
-    ap.add_argument("-WE", "--webhook_leg_ended", required=False, help="Url that will be requested every leg end")
-    ap.add_argument("-WT", "--webhook_turn_points", required=False, help="Url that will be requested every turn")
     ap.add_argument("-WTT", "--webhook_throw_points", required=False, help="Url that will be requested every throw")
     args = vars(ap.parse_args())
 
@@ -309,21 +294,11 @@ if __name__ == "__main__":
     RANDOM_CALLER = args['random_caller']   
     RANDOM_CALLER_EACH_LEG = args['random_caller_each_leg']   
     WEBHOOK_LEG_STARTED = args['webhook_leg_started']
-    WEBHOOK_LEG_ENDED = args['webhook_leg_ended']
-    WEBHOOK_TURN_POINTS = args['webhook_turn_points']
     WEBHOOK_THROW_POINTS = args['webhook_throw_points']
 
     if WEBHOOK_LEG_STARTED is not None:
         parsedUrl = urlparse(WEBHOOK_LEG_STARTED)
         WEBHOOK_LEG_STARTED = parsedUrl.scheme + '://' + parsedUrl.netloc + parsedUrl.path
-
-    if WEBHOOK_LEG_ENDED is not None:
-        parsedUrl = urlparse(WEBHOOK_LEG_ENDED)
-        WEBHOOK_LEG_ENDED = parsedUrl.scheme + '://' + parsedUrl.netloc + parsedUrl.path
-
-    if WEBHOOK_TURN_POINTS is not None:
-        parsedUrl = urlparse(WEBHOOK_TURN_POINTS)
-        WEBHOOK_TURN_POINTS = parsedUrl.scheme + '://' + parsedUrl.netloc + parsedUrl.path
 
     if WEBHOOK_THROW_POINTS is not None:
         parsedUrl = urlparse(WEBHOOK_THROW_POINTS)

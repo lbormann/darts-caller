@@ -1,3 +1,4 @@
 caller
 *.txt
-*.bat
+win-exec-custom.bat
+win-start-custom.bat
