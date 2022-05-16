@@ -24,7 +24,7 @@ AUTODART_BOARDS_URL = 'https://api.autodarts.io/bs/v0/boards/'
 AUTODART_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe?ticket='
 
 SUPPORTED_GAME_VARIANTS = ['X01']
-VERSION = '1.0.0'
+VERSION = '1.0.1'
 DEBUG = False
 
 
@@ -175,8 +175,8 @@ def process_match_x01(m):
             printv('Match: Busted')
 
         # Check for possible checkout
-        elif m['player'] == currentPlayer and m['gameScores'][0] <= 170 and turns != None and turns['throws'] == None:
-            play_sound_effect(str(m['gameScores'][currentPlayer]))
+        elif m['player'] == currentPlayerIndex and m['gameScores'][currentPlayerIndex] <= 170 and turns != None and turns['throws'] == None:
+            play_sound_effect(str(m['gameScores'][currentPlayerIndex]))
             printv('Match: Checkout possible')
 
         # Check for points call
