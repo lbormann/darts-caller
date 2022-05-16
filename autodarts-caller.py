@@ -24,7 +24,7 @@ AUTODART_BOARDS_URL = 'https://api.autodarts.io/bs/v0/boards/'
 AUTODART_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe?ticket='
 
 SUPPORTED_GAME_VARIANTS = ['X01']
-VERSION = '0.1.1'
+VERSION = '1.0.0'
 DEBUG = False
 
 
@@ -63,6 +63,13 @@ def choose_caller():
         else:
             caller = os.path.join(baseMediaPath, random.choice(callerSubDirs))
 
+
+def play_sound(pathToFile):
+    mixer.music.load(pathToFile)
+    if AUDIO_CALLER_VOLUME is not None:
+        mixer.music.set_volume(AUDIO_CALLER_VOLUME)
+    mixer.music.play()
+
 def play_sound_effect(fileName):
     global caller
 
@@ -77,15 +84,12 @@ def play_sound_effect(fileName):
 
     fileToPlay = os.path.join(caller, fileName)
     if path.isfile(fileToPlay + '.wav'):
-            mixer.music.load(fileToPlay + '.wav')
-            mixer.music.play()
-
+        play_sound(fileToPlay + '.wav')
     elif path.isfile(fileToPlay + '.mp3'):
-            mixer.music.load(fileToPlay + '.mp3')
-            mixer.music.play()
-
+        play_sound(fileToPlay + '.mp3')
     else:
         printv('XXX Could not find a playable sound-file for: ' + fileName)
+
 
 def listen_to_newest_match(m, ws):
     global currentMatch
@@ -115,24 +119,28 @@ def listen_to_newest_match(m, ws):
             "channel": "autodarts.matches",
             "topic": newMatch + ".state"
         }
-        call_webhook_leg_started()
         ws.send(json.dumps(paramsSubscribeMatchEvents))
         currentMatch = newMatch
         
 
 def process_match_x01(m):
-    players = m['players'][0]
+    currentPlayerIndex = m['player']
+    currentPlayer = m['players'][currentPlayerIndex]
     turns = m['turns'][0]
-    currentPlayer = m['players'][turns['player']]['index']
-    # printv(currentPlayer)
 
-    # Check for every throw
-    if players['boardStatus'] != 'Takeout in progress': 
-        user = str(players['name'])
+    # Check for board-stop
+    if currentPlayer['boardStatus'] == 'Stopped':
+        play_sound_effect('boardstopped')      
+        printv('Match: Board stopped')
+        return
+
+    # Check for every throw (Webhook)
+    elif WEBHOOK_THROW_POINTS != None and currentPlayer['boardStatus'] != 'Takeout in progress' and turns['throws'] != None: 
+        user = str(currentPlayer['name'])
         throwIndex = len(turns['throws']) - 1
         throwNumber = str(throwIndex + 1)
         throwPoints = str(turns['throws'][throwIndex]['segment']['number'] * turns['throws'][throwIndex]['segment']['multiplier'])
-        pointsLeft = str(m['gameScores'][0])
+        pointsLeft = str(m['gameScores'][currentPlayerIndex])
         busted = str(turns['busted'])
         variant = 'X01'
 
@@ -140,62 +148,56 @@ def process_match_x01(m):
         printv("Match: Throw " + throw)
         call_webhook_throw_points(throw)
 
-    # Check for board-stop
-    if players['boardStatus'] == 'Stopped':
-        play_sound_effect('boardstopped')      
-        printv('Match: Board stopped')
+    # Check for interesting information
+    if currentPlayer['boardStatus'] != 'Takeout in progress':
 
-    # Check for game start 
-    elif players['boardStatus'] != 'Takeout in progress' and m['stats'][0]['average'] == 0:
-        play_sound_effect('gameon')      
-        printv('Match: Leg started')
+        # Check for game start 
+        if m['stats'][0]['average'] == 0:
+            play_sound_effect('gameon')      
+            printv('Match: Leg started')
 
-    # Check for game end
-    elif players['boardStatus'] != 'Takeout in progress' and m['winner'] != -1:
-        play_sound_effect('gameshot')
-        setup_caller()
-        printv('Match: Gameshot and match')
-
-    # Check for leg end
-    elif players['boardStatus'] != 'Takeout in progress' and m['gameWinner'] != -1:
-        play_sound_effect('gameshot')
-        if RANDOM_CALLER_EACH_LEG:
+        # Check for game end
+        elif m['winner'] != -1:
+            play_sound_effect('gameshot')
             setup_caller()
-        printv('Match: Gameshot and match')
-    
-    # Check for busted turn
-    elif players['boardStatus'] != 'Takeout in progress' and turns['busted'] == True:
-        play_sound_effect('busted')
-        printv('Match: Busted')
+            printv('Match: Gameshot and match')
 
-    # Check for possible checkout
-    elif m['player'] == currentPlayer and m['gameScores'][0] <= 170 and turns != None and turns['throws'] == None:
-        play_sound_effect(str(m['gameScores'][currentPlayer]))
-        printv('Match: Checkout possible')
+        # Check for leg end
+        elif m['gameWinner'] != -1:
+            play_sound_effect('gameshot')
+            if RANDOM_CALLER_EACH_LEG:
+                setup_caller()
+            printv('Match: Gameshot and match')
+        
+        # Check for busted turn
+        elif turns['busted'] == True:
+            play_sound_effect('busted')
+            printv('Match: Busted')
 
-    # Check for points call
-    elif players['boardStatus'] != 'Takeout in progress' and turns != None and turns['throws'] != None and len(turns['throws']) == 3:
-        points = str(turns['points'])
-        play_sound_effect(points)
-        printv("Match: Turn ended")
+        # Check for possible checkout
+        elif m['player'] == currentPlayer and m['gameScores'][0] <= 170 and turns != None and turns['throws'] == None:
+            play_sound_effect(str(m['gameScores'][currentPlayer]))
+            printv('Match: Checkout possible')
 
-def process_match_cricket(m):
-    players = m['players'][0]
-    turns = m['turns'][0]
-    # TODO: implement logic
+        # Check for points call
+        elif turns != None and turns['throws'] != None and len(turns['throws']) == 3:
+            points = str(turns['points'])
+            play_sound_effect(points)
+            printv("Match: Turn ended")
+
+# def process_match_cricket(m):
+#     players = m['players'][0]
+#     turns = m['turns'][0]
+#     # TODO: implement logic
 
 def webhook_request(urlii, pathii = None):
     request_url = urlii
     if pathii != None:
         request_url = request_url + "/" + pathii
     try:
-        requests.get(request_url, timeout=0.0000000001)
+        requests.get(request_url, timeout=0.25)
     except: 
         return
-
-def call_webhook_leg_started():
-    if WEBHOOK_LEG_STARTED != None:
-        webhook_request(WEBHOOK_LEG_STARTED)
 
 def call_webhook_throw_points(data):
     if WEBHOOK_THROW_POINTS != None:
@@ -229,46 +231,54 @@ def connect():
     ws.run_forever()
 
 def on_open(ws):
-    setup_caller()
-    printv('Receiving live information from ' + AUTODART_URL)
-    paramsSubscribeMatchesEvents = {
-        "channel": "autodarts.matches",
-        "type": "subscribe",
-        "topic": "*.state"
-    }
-    ws.send(json.dumps(paramsSubscribeMatchesEvents))
-
+    try:
+        setup_caller()
+        printv('Receiving live information from ' + AUTODART_URL)
+        paramsSubscribeMatchesEvents = {
+            "channel": "autodarts.matches",
+            "type": "subscribe",
+            "topic": "*.state"
+        }
+        ws.send(json.dumps(paramsSubscribeMatchesEvents))
+    except:
+        printv("WS-Open failed")
 
 def on_message(ws, message):
-    m = json.loads(message)
-    # ppjson(m)
+    try:
+        m = json.loads(message)
+        ppjson(m)
 
-    if m['channel'] == 'autodarts.matches':
-        global currentMatch
-        data = m['data']
-        listen_to_newest_match(data, ws)
-        
-        if currentMatch != None and data['id'] == currentMatch:
-            if data['variant'] == 'X01':
-                ppjson(data)
-                process_match_x01(data)
-            elif data['variant'] == 'Cricket':
-                process_match_cricket(data)
+        if m['channel'] == 'autodarts.matches':
+            global currentMatch
+            data = m['data']
+            listen_to_newest_match(data, ws)
+
+            printv('Current Match: ' + currentMatch)
+            
+            if currentMatch != None and data['id'] == currentMatch:
+                if data['variant'] == 'X01':
+                    process_match_x01(data)
+                # elif data['variant'] == 'Cricket':
+                #     process_match_cricket(data)
+    except:
+        printv("WS-Message failed")
 
 def on_close(ws, close_status_code, close_msg):
-    printv("Websocket closed")
-    printv(str(close_msg))
-    printv(str(close_status_code))
-    printv ("Retry : %s" % time.ctime())
-    time.sleep(10)
-    
     try:
+        printv("Websocket closed")
+        printv(str(close_msg))
+        printv(str(close_status_code))
+        printv ("Retry : %s" % time.ctime())
+        time.sleep(10)
         connect()
     except:
-        printv("Connect failed")
+        printv("WS-Close failed")
     
 def on_error(ws, error):
-    printv(error)
+    try:
+        printv(error)
+    except:
+        printv("WS-Error failed")
 
 
 
@@ -280,9 +290,9 @@ if __name__ == "__main__":
     ap.add_argument("-P", "--autodarts_password", required=True, help="Registered password address at " + AUTODART_URL)
     ap.add_argument("-B", "--autodarts_board_id", required=True, help="Registered board-id at " + AUTODART_URL)
     ap.add_argument("-M", "--media_path", required=True, help="Absolute path to your media folder. You can download free sounds at https://freesound.org/")
+    ap.add_argument("-V", "--caller_volume", type=float, required=False, help="Set the caller volume between 0.0 (silent) and 1.0 (max)")
     ap.add_argument("-R", "--random_caller", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will randomly choose a caller each game. It only works when your base-media-folder has subfolders with its files")
     ap.add_argument("-L", "--random_caller_each_leg", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will randomly choose a caller each leg instead of each game. It only works when 'random_caller=1'")
-    ap.add_argument("-WS", "--webhook_leg_started", required=False, help="Url that will be requested every leg start")
     ap.add_argument("-WTT", "--webhook_throw_points", required=False, help="Url that will be requested every throw")
     args = vars(ap.parse_args())
 
@@ -291,14 +301,10 @@ if __name__ == "__main__":
     AUTODART_USER_BOARD_ID = args['autodarts_board_id']        
     AUDIO_MEDIA_PATH = args['media_path']
     AUDIO_MEDIA_PATH = Path(AUDIO_MEDIA_PATH)
+    AUDIO_CALLER_VOLUME = args['caller_volume']
     RANDOM_CALLER = args['random_caller']   
     RANDOM_CALLER_EACH_LEG = args['random_caller_each_leg']   
-    WEBHOOK_LEG_STARTED = args['webhook_leg_started']
     WEBHOOK_THROW_POINTS = args['webhook_throw_points']
-
-    if WEBHOOK_LEG_STARTED is not None:
-        parsedUrl = urlparse(WEBHOOK_LEG_STARTED)
-        WEBHOOK_LEG_STARTED = parsedUrl.scheme + '://' + parsedUrl.netloc + parsedUrl.path
 
     if WEBHOOK_THROW_POINTS is not None:
         parsedUrl = urlparse(WEBHOOK_THROW_POINTS)

@@ -1,6 +1,6 @@
 # AUTODARTS-CALLER
 
-Autodarts-caller plays sound-files on your local system accordingly to the state of an https://autodarts.io match. You can run this application on any machine that supports python. Of course it should be possible to run it next to autodarts itself. Furthermore it can forward multiple game events such throw-stats and leg-started to other web-applications that consume this data; ie. to initialize a video-record of highlights.
+Autodarts-caller plays sound-files on your local system accordingly to the state of an https://autodarts.io match. You can run this application on any machine that supports python. Of course it should be possible to run it next to autodarts itself. Furthermore it can forward match events to other web-applications that consume this data; ie. to initialize a video-record of highlights.
 
 Autodarts-caller looks for an active game that is associated with your autodarts board-id.
 At the time only the game logic of X01-Variant is supported.
@@ -56,20 +56,20 @@ If you are on linux you could create an SH-script similiar to "win-exec.bat" and
 
 ### General instruction to configure and run the caller-application
 
-    python autodarts-caller.py -U <your-autodarts-email> -P <your-autodarts-password> -B <your-autodarts-board-id> -M <absolute-folder-to-your-media-files> -R <0|1> -L <0|1>
+    python autodarts-caller.py -U <your-autodarts-email> -P <your-autodarts-password> -B <your-autodarts-board-id> -M <absolute-folder-to-your-media-files> -V 0.75 -R <0|1> -L <0|1>
 
 Arguments:
 - -U / --autodarts_email [Required]
 - -P / --autodarts_password [Required]
 - -B / --autodarts_board_id [Required]
 - -M / --media_path [Required]
+- -V / --caller_volume [Optional] [Default: 1.0] [Possible values: 0.0 .. 1.0]
 - -R / --random_caller [Optional] [Default: 0] [Possible values: 0 | 1]
 - -L / --random_caller_each_leg [Optional] [Default: 0] [Possible values: 0 | 1]
-- -WS / --webhook_leg_started [Optional] [Default: None]
 - -WTT / --webhook_throw_points [Optional] [Default: None]
 
 Some infos about webhooks:
-- WTT If set with an valid url. It tries to request (Get) the url and extends it by the current throw-information: http://192.168.0.13/throw/thrower/throw-number/throw-points/points-left/busted/variant
+- 'WTT' If set with an valid url. It tries to request the given url (GET) and extends it by the current throw-information: http://192.168.0.13/throw/thrower/throw-number/throw-points/points-left/busted/variant
 
 
 ## Setup autoboot [linux] (optional)
@@ -102,11 +102,10 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 
 ### Done
 - Prevent from double calling
+- only one webhook with all information (to prevent race condition on receiving app): leg_end, turn, throw_number, throw_value, points_left, variant, user
+- let the user configure caller-volume
 
 ### In queue
-- only one webhook with all information (to prevent race condition on receiving app): leg_end, turn, throw_number, throw_value, points_left, variant, user
-- Make it more easy to use
-- Care of possible error situations that may appear during long run 
 - Support other games modes (currently only X01 support)
 
 
