@@ -184,6 +184,9 @@ def process_match_x01(m):
             points = str(turns['points'])
             play_sound_effect(points)
             printv("Match: Turn ended")
+    else:
+        play_sound_effect('playerchange')
+        printv("Match: Next player")
 
 # def process_match_cricket(m):
 #     players = m['players'][0]
