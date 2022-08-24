@@ -24,7 +24,7 @@ AUTODART_BOARDS_URL = 'https://api.autodarts.io/bs/v0/boards/'
 AUTODART_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe?ticket='
 
 SUPPORTED_GAME_VARIANTS = ['X01']
-VERSION = '1.0.1'
+VERSION = '1.1.1'
 DEBUG = False
 
 
