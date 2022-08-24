@@ -32,7 +32,7 @@ Go to download-directory and type:
 
 ### Setup media folder
 
-You need to have sounds-files as mp3 or wav. This files have to be named by 1 to 180, gameon, gameshot, busted, boardstopped. You dont need all files. If you are too lazy you can go for 40, 60, 180 or whatever you like. You can record your voice or download some files in the internet, ie. freesound.org.
+You need to have sounds-files as mp3 or wav. This files have to be named by 1 to 180, gameon, gameshot, busted, boardstopped, playerchange. You dont need all files. If you are too lazy you can go for 40, 60, 180 or whatever you like. You can record your voice or download some files in the internet, ie. freesound.org.
 Put all sound files in one folder and if you like create subfolders in this folder for random caller functionality. (use '-R = 1' / '--random_caller = 1' as argument on program start).
 
 Supported sound-file-namings:
@@ -41,6 +41,7 @@ Supported sound-file-namings:
 - gameshot.{wav | mp3}
 - busted.{wav | mp3}
 - boardstopped.{wav | mp3}
+- playerchange.{wav | mp3}
 
 
 ## RUN IT
@@ -84,7 +85,7 @@ a) If you use the app WITH restart-script:
 
 b) If you use the app WITHOUT restart-script:
 
-    @reboot cd <absolute-path-to>/autodarts-caller && python autodarts-caller.py -U <TODO> -P <TODO> -B <TODO> -M <TODO>" 
+    @reboot cd <absolute-path-to>/autodarts-caller && python autodarts-caller.py -U <TODO> -P <TODO> -B <TODO> -M <TODO>
 
 
 Save and close the file. Reboot your system.
