@@ -24,7 +24,7 @@ AUTODART_BOARDS_URL = 'https://api.autodarts.io/bs/v0/boards/'
 AUTODART_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe?ticket='
 
 SUPPORTED_GAME_VARIANTS = ['X01']
-VERSION = '1.1.2'
+VERSION = '1.1.3'
 DEBUG = False
 
 
@@ -187,16 +187,20 @@ def process_match_x01(m):
             play_sound_effect(points)
             printv("Match: Turn ended")
     
-    if currentPlayer['boardStatus'] == 'Takeout in progress' and lastBoardStatus == 'Takeout':
+
+
+    busted = turns['busted']
+    pointsLeft = str(m['gameScores'][currentPlayerIndex])
+
+    if currentPlayer['boardStatus'] == 'Takeout in progress' and (lastBoardStatus == 'Takeout' or busted == True or pointsLeft == "0"):
         play_sound_effect('playerchange')
         printv("Match: Next player")
 
         user = str(currentPlayer['name'])
         throwIndex = len(turns['throws']) - 1
         throwNumber = str(throwIndex + 1)
-        throwPoints = str(turns['throws'][throwIndex]['segment']['number'] * turns['throws'][throwIndex]['segment']['multiplier'])
-        pointsLeft = str(m['gameScores'][currentPlayerIndex])
-        busted = str(turns['busted'])
+        # throwPoints = str(turns['throws'][throwIndex]['segment']['number'] * turns['throws'][throwIndex]['segment']['multiplier'])
+        busted = str(busted)
         variant = 'X01'
 
         throw = user + '/' + throwNumber + '/' + str(turns['points']) + '/' + pointsLeft + '/' + busted + '/' + variant
