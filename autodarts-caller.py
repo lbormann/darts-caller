@@ -24,7 +24,7 @@ AUTODART_BOARDS_URL = 'https://api.autodarts.io/bs/v0/boards/'
 AUTODART_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe?ticket='
 
 SUPPORTED_GAME_VARIANTS = ['X01']
-VERSION = '1.1.1'
+VERSION = '1.1.2'
 DEBUG = False
 
 
@@ -128,6 +128,8 @@ def process_match_x01(m):
     currentPlayer = m['players'][currentPlayerIndex]
     turns = m['turns'][0]
 
+    global lastBoardStatus
+
     # Check for board-stop
     if currentPlayer['boardStatus'] == 'Stopped':
         play_sound_effect('boardstopped')      
@@ -135,18 +137,18 @@ def process_match_x01(m):
         return
 
     # Check for every throw (Webhook)
-    elif WEBHOOK_THROW_POINTS != None and currentPlayer['boardStatus'] != 'Takeout in progress' and turns['throws'] != None: 
-        user = str(currentPlayer['name'])
-        throwIndex = len(turns['throws']) - 1
-        throwNumber = str(throwIndex + 1)
-        throwPoints = str(turns['throws'][throwIndex]['segment']['number'] * turns['throws'][throwIndex]['segment']['multiplier'])
-        pointsLeft = str(m['gameScores'][currentPlayerIndex])
-        busted = str(turns['busted'])
-        variant = 'X01'
+    # elif WEBHOOK_THROW_POINTS != None and currentPlayer['boardStatus'] != 'Takeout in progress' and turns['throws'] != None: 
+    #     user = str(currentPlayer['name'])
+    #     throwIndex = len(turns['throws']) - 1
+    #     throwNumber = str(throwIndex + 1)
+    #     throwPoints = str(turns['throws'][throwIndex]['segment']['number'] * turns['throws'][throwIndex]['segment']['multiplier'])
+    #     pointsLeft = str(m['gameScores'][currentPlayerIndex])
+    #     busted = str(turns['busted'])
+    #     variant = 'X01'
 
-        throw = user + '/' + throwNumber + '/' + throwPoints + '/' + pointsLeft + '/' + busted + '/' + variant
-        printv("Match: Throw " + throw)
-        call_webhook_throw_points(throw)
+    #     throw = user + '/' + throwNumber + '/' + throwPoints + '/' + pointsLeft + '/' + busted + '/' + variant
+    #     printv("Match: Throw " + throw)
+    #     call_webhook_throw_points(throw)
 
     # Check for interesting information
     if currentPlayer['boardStatus'] != 'Takeout in progress':
@@ -184,9 +186,26 @@ def process_match_x01(m):
             points = str(turns['points'])
             play_sound_effect(points)
             printv("Match: Turn ended")
-    else:
+    
+    if currentPlayer['boardStatus'] == 'Takeout in progress' and lastBoardStatus == 'Takeout':
         play_sound_effect('playerchange')
         printv("Match: Next player")
+
+        user = str(currentPlayer['name'])
+        throwIndex = len(turns['throws']) - 1
+        throwNumber = str(throwIndex + 1)
+        throwPoints = str(turns['throws'][throwIndex]['segment']['number'] * turns['throws'][throwIndex]['segment']['multiplier'])
+        pointsLeft = str(m['gameScores'][currentPlayerIndex])
+        busted = str(turns['busted'])
+        variant = 'X01'
+
+        throw = user + '/' + throwNumber + '/' + str(turns['points']) + '/' + pointsLeft + '/' + busted + '/' + variant
+        printv("Match: Throw " + throw)
+        call_webhook_throw_points(throw)
+
+    # printv(currentPlayer['boardStatus'])
+    lastBoardStatus = currentPlayer['boardStatus']
+
 
 # def process_match_cricket(m):
 #     players = m['players'][0]
@@ -249,7 +268,7 @@ def on_open(ws):
 def on_message(ws, message):
     try:
         m = json.loads(message)
-        ppjson(m)
+        # ppjson(m)
 
         if m['channel'] == 'autodarts.matches':
             global currentMatch
@@ -259,6 +278,7 @@ def on_message(ws, message):
             printv('Current Match: ' + currentMatch)
             
             if currentMatch != None and data['id'] == currentMatch:
+                ppjson(data)
                 if data['variant'] == 'X01':
                     process_match_x01(data)
                 # elif data['variant'] == 'Cricket':
@@ -333,6 +353,9 @@ if __name__ == "__main__":
 
     global caller
     caller = None
+
+    global lastBoardStatus
+    lastBoardStatus = None
 
     # Initialize sound-output
     mixer.pre_init(44100, -16, 2, 1024)
