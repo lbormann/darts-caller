@@ -100,14 +100,16 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 
 
 ## TODOs
+- Support other games modes (currently only X01 support)
+- dont care about last slash in webhook
+- add Readme-section for updating
+- fix webhook for apps that need info of every throw
+
 
 ### Done
 - Prevent from double calling
 - only one webhook with all information (to prevent race condition on receiving app): leg_end, turn, throw_number, throw_value, points_left, variant, user
 - let the user configure caller-volume
-
-### In queue
-- Support other games modes (currently only X01 support)
 
 
 ## LAST WORDS

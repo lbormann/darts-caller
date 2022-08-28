@@ -24,7 +24,7 @@ AUTODART_BOARDS_URL = 'https://api.autodarts.io/bs/v0/boards/'
 AUTODART_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe?ticket='
 
 SUPPORTED_GAME_VARIANTS = ['X01']
-VERSION = '1.1.3'
+VERSION = '1.1.4'
 DEBUG = False
 
 
@@ -221,6 +221,7 @@ def webhook_request(urlii, pathii = None):
     if pathii != None:
         request_url = request_url + "/" + pathii
     try:
+        printv("HTTP: " + request_url)
         requests.get(request_url, timeout=0.25)
     except: 
         return
@@ -279,7 +280,7 @@ def on_message(ws, message):
             data = m['data']
             listen_to_newest_match(data, ws)
 
-            printv('Current Match: ' + currentMatch)
+            # printv('Current Match: ' + currentMatch)
             
             if currentMatch != None and data['id'] == currentMatch:
                 ppjson(data)
