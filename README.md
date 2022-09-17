@@ -104,6 +104,7 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - dont care about last slash in webhook
 - add Readme-section for updating
 - fix webhook for apps that need info of every throw
+- Sounds every throw (normal, double, tripple, missed)
 
 
 ### Done
