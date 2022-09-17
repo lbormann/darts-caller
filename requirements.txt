@@ -1,3 +1,4 @@
 python-keycloak
 websocket-client
 pygame
+pyinstaller
