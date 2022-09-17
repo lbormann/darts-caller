@@ -2,3 +2,6 @@ caller
 *.txt
 win-exec-custom.bat
 win-start-custom.bat
+build
+dist
+*.spec

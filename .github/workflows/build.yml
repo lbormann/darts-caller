@@ -36,25 +36,25 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-latest
-            TARGET: macos
-            CMD_BUILD: >
-                pyinstaller -F -w -n autodarts-caller -i resources/autodarts-caller.icns autodarts-caller.py &&
-                cd dist/ &&
-                zip -r9 autodarts-caller autodarts-caller.app/
-            OUT_FILE_NAME: autodarts-caller-mac.zip
-            ASSET_MIME: application/zip
-          - os: ubuntu-latest
-            TARGET: ubuntu
-            CMD_BUILD: >
-                pyinstaller -F -w -n autodarts-caller -i resources/autodarts-caller.svg autodarts-caller.py &&
-                cd dist/ &&
-                zip -r9 autodarts-caller autodarts-caller.app/
-            OUT_FILE_NAME: autodarts-caller-ubuntu.zip
-            ASSET_MIME: application/zip
+          # - os: macos-latest
+          #   TARGET: macos
+          #   CMD_BUILD: >
+          #       pyinstaller -F -n autodarts-caller -i resources/autodarts-caller.icns autodarts-caller.py &&
+          #       cd dist/ &&
+          #       zip -r9 autodarts-caller autodarts-caller.app/
+          #   OUT_FILE_NAME: autodarts-caller-mac.zip
+          #   ASSET_MIME: application/zip
+          # - os: ubuntu-latest
+          #   TARGET: ubuntu
+          #   CMD_BUILD: >
+          #       pyinstaller -F -n autodarts-caller -i resources/autodarts-caller.svg autodarts-caller.py &&
+          #       cd dist/ &&
+          #       zip -r9 autodarts-caller autodarts-caller.app/
+          #   OUT_FILE_NAME: autodarts-caller-ubuntu.zip
+          #   ASSET_MIME: application/zip
           - os: windows-latest
             TARGET: windows
-            CMD_BUILD: pyinstaller -F -w -n autodarts-caller -i resources/autodarts-caller.ico autodarts-caller.py
+            CMD_BUILD: pyinstaller -F -n autodarts-caller -i resources/autodarts-caller.ico autodarts-caller.py
             OUT_FILE_NAME: autodarts-caller.exe
             ASSET_MIME: application/vnd.microsoft.portable-executable
     steps:
