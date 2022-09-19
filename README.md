@@ -56,7 +56,7 @@ Supported sound-file-namings:
 
 Create a shortcut of the executable; right click on the shortcut -> select properties -> add arguments in the target input at the end of the text field.
 
-Example: C:\Downloads\autodarts-extern.exe -U "your-autodarts-email" -P "your-autodarts-password" -B "your-autodarts-board-id" -M "absolute-folder-to-your-media-files"
+Example: C:\Downloads\autodarts-caller.exe -U "your-autodarts-email" -P "your-autodarts-password" -B "your-autodarts-board-id" -M "absolute-folder-to-your-media-files"
 
 Save changes.
 Click on the shortcut to start the caller.
