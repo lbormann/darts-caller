@@ -92,7 +92,7 @@ Some infos about -WTT:
 The program tries to request the given url (GET-Request).
 
 Example: if you set -WTT "http://localhost:8080/throw"
-the program will extend it internally to "http://localhost:8080/throw/<thrower>/<throw-number>/<throw-points>/<points-left>/<busted>/<variant>" and sends it to the given application (http://localhost:8080)
+the program will extend it internally to "http://localhost:8080/throw/thrower/throw-number/throw-points/points-left/busted/variant" and sends it to the given application (http://localhost:8080)
 
 
 
