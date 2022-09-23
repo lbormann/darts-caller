@@ -38,12 +38,11 @@ Go to download-directory and type:
 
 ## SETUP SOUNDS
 
-You need to have sounds-files as mp3 or wav. This files have to be named by 1 to 180, gameon, gameshot, busted, boardstopped, playerchange etc. You dont need all files. If you are too lazy you can go for 40, 60, 180 or whatever you like. You can record your voice or download some files in the internet, ie. freesound.org.
+You need to have sounds-files as mp3 or wav. This files have to be named by 1 to 180, gameshot, busted, boardstopped, playerchange etc. You dont need all files. If you are too lazy you can go for 40, 60, 180 or whatever you like. You can record your voice or download some files in the internet, ie. https://freesound.org or https://www.zapsplat.com
 Put all sound files in one folder and if you like create subfolders in this folder for random caller functionality.
 
 Supported sound-file-namings:
 - 0-180.{wav | mp3}
-- gameon.{wav | mp3}
 - gameshot.{wav | mp3}
 - busted.{wav | mp3}
 - boardstopped.{wav | mp3}
@@ -90,6 +89,7 @@ Save and close the file. Reboot your system.
 - -V / --caller_volume [Optional] [Default: 1.0] [Possible values: 0.0 .. 1.0]
 - -R / --random_caller [Optional] [Default: 0] [Possible values: 0 | 1]
 - -L / --random_caller_each_leg [Optional] [Default: 0] [Possible values: 0 | 1]
+- -PCC / --possible_checkout_call [optional] [Default: 1] [Possible values: 0 | 1]
 - -WTT / --webhook_throw_points [Optional] [Default: None]
 
 Some infos about -WTT:
@@ -118,6 +118,8 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - only one webhook with all information (to prevent race condition on receiving app): leg_end, turn, throw_number, throw_value, points_left, variant, user
 - let the user configure caller-volume
 - Sounds for every throw (single, double, tripple, missed)
+- add start argument for surpressing checkout calls
+- add sites for free sound-file downloads
 
 
 ## LAST WORDS

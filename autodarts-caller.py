@@ -25,7 +25,7 @@ AUTODART_BOARDS_URL = 'https://api.autodarts.io/bs/v0/boards/'
 AUTODART_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe?ticket='
 
 SUPPORTED_GAME_VARIANTS = ['X01']
-VERSION = '1.2.1'
+VERSION = '1.2.2'
 DEBUG = False
 
 
@@ -205,7 +205,7 @@ def process_match_x01(m):
             printv('Match: Busted')
 
         # Check for possible checkout
-        elif m['player'] == currentPlayerIndex and m['gameScores'][currentPlayerIndex] <= 170 and turns != None and turns['throws'] == None:
+        elif POSSIBLE_CHECKOUT_CALL and m['player'] == currentPlayerIndex and m['gameScores'][currentPlayerIndex] <= 170 and turns != None and turns['throws'] == None:
             play_sound_effect(str(m['gameScores'][currentPlayerIndex]))
             printv('Match: Checkout possible')
 
@@ -349,6 +349,7 @@ if __name__ == "__main__":
     ap.add_argument("-V", "--caller_volume", type=float, required=False, help="Set the caller volume between 0.0 (silent) and 1.0 (max)")
     ap.add_argument("-R", "--random_caller", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will randomly choose a caller each game. It only works when your base-media-folder has subfolders with its files")
     ap.add_argument("-L", "--random_caller_each_leg", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will randomly choose a caller each leg instead of each game. It only works when 'random_caller=1'")
+    ap.add_argument("-PCC", "--possible_checkout_call", type=int, choices=range(0, 2), default=1, required=False, help="If '1', the application will call a possible checkout starting at 170")
     ap.add_argument("-WTT", "--webhook_throw_points", required=False, help="Url that will be requested every throw")
     args = vars(ap.parse_args())
 
@@ -361,6 +362,7 @@ if __name__ == "__main__":
     RANDOM_CALLER = args['random_caller']   
     RANDOM_CALLER_EACH_LEG = args['random_caller_each_leg']   
     WEBHOOK_THROW_POINTS = args['webhook_throw_points']
+    POSSIBLE_CHECKOUT_CALL = args['possible_checkout_call']
 
     if WEBHOOK_THROW_POINTS is not None:
         parsedUrl = urlparse(WEBHOOK_THROW_POINTS)
