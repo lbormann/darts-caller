@@ -38,7 +38,7 @@ Go to download-directory and type:
 
 ## SETUP SOUNDS
 
-You need to have sounds-files as mp3 or wav. This files have to be named by 1 to 180, gameon, gameshot, busted, boardstopped, playerchange. You dont need all files. If you are too lazy you can go for 40, 60, 180 or whatever you like. You can record your voice or download some files in the internet, ie. freesound.org.
+You need to have sounds-files as mp3 or wav. This files have to be named by 1 to 180, gameon, gameshot, busted, boardstopped, playerchange etc. You dont need all files. If you are too lazy you can go for 40, 60, 180 or whatever you like. You can record your voice or download some files in the internet, ie. freesound.org.
 Put all sound files in one folder and if you like create subfolders in this folder for random caller functionality.
 
 Supported sound-file-namings:
@@ -48,6 +48,10 @@ Supported sound-file-namings:
 - busted.{wav | mp3}
 - boardstopped.{wav | mp3}
 - playerchange.{wav | mp3}
+- single.{wav | mp3}
+- double.{wav | mp3}
+- triple.{wav | mp3}
+- missed.{wav | mp3}
 
 
 ## RUN IT
@@ -107,13 +111,13 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - dont care about last slash in webhook
 - add Readme-section for updating
 - fix webhook for apps that need info of every throw
-- Sounds for every throw (normal, double, tripple, missed)
 
 
 ### Done
 - Prevent from double calling
 - only one webhook with all information (to prevent race condition on receiving app): leg_end, turn, throw_number, throw_value, points_left, variant, user
 - let the user configure caller-volume
+- Sounds for every throw (single, double, tripple, missed)
 
 
 ## LAST WORDS

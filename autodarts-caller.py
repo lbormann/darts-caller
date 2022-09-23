@@ -1,6 +1,7 @@
 import os
 from os import path
 from pathlib import Path
+import pprint
 import time
 import json
 import platform
@@ -24,7 +25,7 @@ AUTODART_BOARDS_URL = 'https://api.autodarts.io/bs/v0/boards/'
 AUTODART_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe?ticket='
 
 SUPPORTED_GAME_VARIANTS = ['X01']
-VERSION = '1.1.4'
+VERSION = '1.2.0'
 DEBUG = False
 
 
@@ -65,7 +66,11 @@ def choose_caller():
 
 
 def play_sound(pathToFile):
-    mixer.music.load(pathToFile)
+    if mixer.music.get_busy() == False:
+        mixer.music.load(pathToFile)
+    else:
+        mixer.music.queue(pathToFile)
+
     if AUDIO_CALLER_VOLUME is not None:
         mixer.music.set_volume(AUDIO_CALLER_VOLUME)
     mixer.music.play()
@@ -149,6 +154,25 @@ def process_match_x01(m):
     #     throw = user + '/' + throwNumber + '/' + throwPoints + '/' + pointsLeft + '/' + busted + '/' + variant
     #     printv("Match: Throw " + throw)
     #     call_webhook_throw_points(throw)
+
+    # Check for dart-effect sound
+    # elif turns != None and turns['throws'] != None and len(turns['throws']) >= 1:
+    #     throwNumber = len(turns['throws'])
+    #     turns['throws']
+
+    if currentPlayer['boardStatus'] != 'Takeout in progress' and turns != None and turns['throws'] != None and len(turns['throws']) >= 1: 
+        throwAmount = len(turns['throws'])
+        type = turns['throws'][throwAmount - 1]['segment']['bed']
+
+        if type == 'Single':
+            play_sound_effect('single')
+        elif type == 'Double':
+            play_sound_effect('double')
+        elif type == 'Triple':
+            play_sound_effect('triple')
+        elif type == 'Outside':
+            play_sound_effect('missed')
+
 
     # Check for interesting information
     if currentPlayer['boardStatus'] != 'Takeout in progress':
