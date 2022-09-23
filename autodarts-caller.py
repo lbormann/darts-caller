@@ -25,7 +25,7 @@ AUTODART_BOARDS_URL = 'https://api.autodarts.io/bs/v0/boards/'
 AUTODART_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe?ticket='
 
 SUPPORTED_GAME_VARIANTS = ['X01']
-VERSION = '1.2.0'
+VERSION = '1.2.1'
 DEBUG = False
 
 
@@ -165,6 +165,10 @@ def process_match_x01(m):
         type = turns['throws'][throwAmount - 1]['segment']['bed']
 
         if type == 'Single':
+            play_sound_effect('single')
+        elif type == 'SingleOuter':
+            play_sound_effect('single')
+        elif type == 'SingleInner':
             play_sound_effect('single')
         elif type == 'Double':
             play_sound_effect('double')
