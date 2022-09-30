@@ -8,6 +8,23 @@ At the time only the game logic of X01-Variant is supported.
 Tested on Windows 11 Pro x64, Python 3.9.7 and Raspberry pi 4B 4GB, Python 3.9.7
 
 
+## COMPATIBILITY
+
+x = supported
+o = not (yet) supported
+
+| Variant | Support |
+| ------------- | ------------- |
+| X01 | x |
+| Cricket | x |
+| Bermuda | o |
+| Shanghai | o |
+| Gotcha | o |
+| Around the Clock | o |
+| Round the World | o |
+| Count Up | o |
+
+
 ## INSTALL INSTRUCTION
 
 ### Windows

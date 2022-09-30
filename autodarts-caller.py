@@ -24,8 +24,8 @@ AUTODART_MATCHES_URL = 'https://api.autodarts.io/gs/v0/matches'
 AUTODART_BOARDS_URL = 'https://api.autodarts.io/bs/v0/boards/'
 AUTODART_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe?ticket='
 
-SUPPORTED_GAME_VARIANTS = ['X01']
-VERSION = '1.2.2'
+SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket']
+VERSION = '1.3.0'
 DEBUG = False
 
 
@@ -181,13 +181,8 @@ def process_match_x01(m):
     # Check for interesting information
     if currentPlayer['boardStatus'] != 'Takeout in progress':
 
-        # Check for game start 
-        if m['stats'][0]['average'] == 0:
-            play_sound_effect('gameon')      
-            printv('Match: Leg started')
-
         # Check for game end
-        elif m['winner'] != -1:
+        if m['winner'] != -1:
             play_sound_effect('gameshot')
             setup_caller()
             printv('Match: Gameshot and match')
@@ -238,11 +233,103 @@ def process_match_x01(m):
     # printv(currentPlayer['boardStatus'])
     lastBoardStatus = currentPlayer['boardStatus']
 
+def process_match_cricket(m):
+    currentPlayerIndex = m['player']
+    currentPlayer = m['players'][currentPlayerIndex]
+    turns = m['turns'][0]
 
-# def process_match_cricket(m):
-#     players = m['players'][0]
-#     turns = m['turns'][0]
-#     # TODO: implement logic
+    global lastBoardStatus
+
+    # Check for board-stop
+    if currentPlayer['boardStatus'] == 'Stopped':
+        play_sound_effect('boardstopped')      
+        printv('Match: Board stopped')
+        return
+
+    # Check for every throw (Webhook)
+    # elif WEBHOOK_THROW_POINTS != None and currentPlayer['boardStatus'] != 'Takeout in progress' and turns['throws'] != None: 
+    #     user = str(currentPlayer['name'])
+    #     throwIndex = len(turns['throws']) - 1
+    #     throwNumber = str(throwIndex + 1)
+    #     throwPoints = str(turns['throws'][throwIndex]['segment']['number'] * turns['throws'][throwIndex]['segment']['multiplier'])
+    #     pointsLeft = str(m['gameScores'][currentPlayerIndex])
+    #     busted = str(turns['busted'])
+    #     variant = 'X01'
+
+    #     throw = user + '/' + throwNumber + '/' + throwPoints + '/' + pointsLeft + '/' + busted + '/' + variant
+    #     printv("Match: Throw " + throw)
+    #     call_webhook_throw_points(throw)
+
+    # Check for dart-effect sound
+    # elif turns != None and turns['throws'] != None and len(turns['throws']) >= 1:
+    #     throwNumber = len(turns['throws'])
+    #     turns['throws']
+
+    if currentPlayer['boardStatus'] != 'Takeout in progress' and turns != None and turns['throws'] != None and len(turns['throws']) >= 1: 
+        throwAmount = len(turns['throws'])
+        type = turns['throws'][throwAmount - 1]['segment']['bed']
+
+        if type == 'Single':
+            play_sound_effect('single')
+        elif type == 'SingleOuter':
+            play_sound_effect('single')
+        elif type == 'SingleInner':
+            play_sound_effect('single')
+        elif type == 'Double':
+            play_sound_effect('double')
+        elif type == 'Triple':
+            play_sound_effect('triple')
+        elif type == 'Outside':
+            play_sound_effect('missed')
+
+
+    # Check for interesting information
+    if currentPlayer['boardStatus'] != 'Takeout in progress':
+
+        # Check for game end
+        if m['winner'] != -1:
+            play_sound_effect('gameshot')
+            setup_caller()
+            printv('Match: Gameshot and match')
+
+        # Check for leg end
+        elif m['gameWinner'] != -1:
+            play_sound_effect('gameshot')
+            if RANDOM_CALLER_EACH_LEG:
+                setup_caller()
+            printv('Match: Gameshot and match')
+        
+        # Check for busted turn
+        elif turns['busted'] == True:
+            play_sound_effect('busted')
+            printv('Match: Busted')
+    
+
+
+    busted = turns['busted']
+    
+    if currentPlayer['boardStatus'] == 'Takeout in progress' and (lastBoardStatus == 'Takeout' or busted == True):
+        play_sound_effect('playerchange')
+        printv("Match: Next player")
+
+        user = str(currentPlayer['name'])
+        throwIndex = len(turns['throws']) - 1
+        throwNumber = str(throwIndex + 1)
+        pointsLeft = "0"
+        busted = str(busted)
+        variant = 'Cricket'
+
+        throwPoints = ''
+        for t in turns['throws']:
+            throwPoints += 'x' + str(t['segment']['name'])
+        throwPoints = throwPoints[1:]
+
+        throw = user + '/' + throwNumber + '/' + throwPoints + '/' + pointsLeft + '/' + busted + '/' + variant
+        printv("Match: Throw " + throw)
+        call_webhook_throw_points(throw)
+
+    # printv(currentPlayer['boardStatus'])
+    lastBoardStatus = currentPlayer['boardStatus']
 
 def webhook_request(urlii, pathii = None):
     request_url = urlii
@@ -314,8 +401,8 @@ def on_message(ws, message):
                 ppjson(data)
                 if data['variant'] == 'X01':
                     process_match_x01(data)
-                # elif data['variant'] == 'Cricket':
-                #     process_match_cricket(data)
+                elif data['variant'] == 'Cricket':
+                    process_match_cricket(data)
     except:
         printv("WS-Message failed")
 
