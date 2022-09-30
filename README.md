@@ -2,8 +2,6 @@
 
 Autodarts-caller plays sound-files on your local system accordingly to the state of an https://autodarts.io game. Furthermore it can forward game events to other web-applications like https://github.com/lbormann/autodarts-extern that process the incoming data to automate other web-dart-platforms like https://lidarts.org
 
-Autodarts-caller looks for an active game that is associated with your autodarts board-id.
-At the time only the game logic of X01-Variant is supported.
 
 Tested on Windows 11 Pro x64, Python 3.9.7 and Raspberry pi 4B 4GB, Python 3.9.7
 
