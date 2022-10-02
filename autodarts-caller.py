@@ -160,7 +160,7 @@ def process_match_x01(m):
     #     throwNumber = len(turns['throws'])
     #     turns['throws']
 
-    if currentPlayer['boardStatus'] != 'Takeout in progress' and turns != None and turns['throws'] != None and len(turns['throws']) >= 1: 
+    if CALL_EVERY_DART and currentPlayer['boardStatus'] != 'Takeout in progress' and turns != None and turns['throws'] != None and len(turns['throws']) >= 1: 
         throwAmount = len(turns['throws'])
         type = turns['throws'][throwAmount - 1]['segment']['bed']
 
@@ -335,9 +335,11 @@ def webhook_request(urlii, pathii = None):
     request_url = urlii
     if pathii != None:
         request_url = request_url + "/" + pathii
+    else:
+        return
     try:
-        printv("HTTP: " + request_url)
-        requests.get(request_url, timeout=0.25)
+        printv("HTTP: " + request_url)  
+        requests.get(request_url, timeout=0.25)     
     except: 
         return
 
@@ -436,6 +438,7 @@ if __name__ == "__main__":
     ap.add_argument("-V", "--caller_volume", type=float, required=False, help="Set the caller volume between 0.0 (silent) and 1.0 (max)")
     ap.add_argument("-R", "--random_caller", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will randomly choose a caller each game. It only works when your base-media-folder has subfolders with its files")
     ap.add_argument("-L", "--random_caller_each_leg", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will randomly choose a caller each leg instead of each game. It only works when 'random_caller=1'")
+    ap.add_argument("-E", "--call_every_dart", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will call every thrown dart")
     ap.add_argument("-PCC", "--possible_checkout_call", type=int, choices=range(0, 2), default=1, required=False, help="If '1', the application will call a possible checkout starting at 170")
     ap.add_argument("-WTT", "--webhook_throw_points", required=False, help="Url that will be requested every throw")
     args = vars(ap.parse_args())
@@ -449,11 +452,12 @@ if __name__ == "__main__":
     RANDOM_CALLER = args['random_caller']   
     RANDOM_CALLER_EACH_LEG = args['random_caller_each_leg']   
     WEBHOOK_THROW_POINTS = args['webhook_throw_points']
+    CALL_EVERY_DART = args['call_every_dart']
     POSSIBLE_CHECKOUT_CALL = args['possible_checkout_call']
-
+    
     if WEBHOOK_THROW_POINTS is not None:
         parsedUrl = urlparse(WEBHOOK_THROW_POINTS)
-        WEBHOOK_THROW_POINTS = parsedUrl.scheme + '://' + parsedUrl.netloc + parsedUrl.path
+        WEBHOOK_THROW_POINTS = parsedUrl.scheme + '://' + parsedUrl.netloc + parsedUrl.path.rstrip("/")
 
 
     TTS = False     
@@ -487,6 +491,9 @@ if __name__ == "__main__":
         connect()
     except:
         printv("Connect failed")
+
+
+    
 
 
 

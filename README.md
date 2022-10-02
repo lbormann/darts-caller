@@ -104,6 +104,7 @@ Save and close the file. Reboot your system.
 - -V / --caller_volume [Optional] [Default: 1.0] [Possible values: 0.0 .. 1.0]
 - -R / --random_caller [Optional] [Default: 0] [Possible values: 0 | 1]
 - -L / --random_caller_each_leg [Optional] [Default: 0] [Possible values: 0 | 1]
+- -E / --call_every_dart [Optional] [Default: 0] [Possible values: 0 | 1]
 - -PCC / --possible_checkout_call [optional] [Default: 1] [Possible values: 0 | 1]
 - -WTT / --webhook_throw_points [Optional] [Default: None]
 
