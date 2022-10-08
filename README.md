@@ -115,6 +115,9 @@ Example: if you set -WTT "http://localhost:8080/throw"
 the program will extend it internally to "http://localhost:8080/throw/thrower/throw-number/throw-points/points-left/busted/variant" and sends it to the given application (http://localhost:8080)
 
 
+## EXTENSIONS
+
+If you think it is terrible to configure/start/handling this application then go for autodarts-desktop https://github.com/Semtexmagix/autodarts-desktop
 
 
 ## BUGS
@@ -127,7 +130,9 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - dont care about last slash in webhook
 - add Readme-section for updating
 - fix webhook for apps that need info of every throw
-
+- call opponment`s throw
+- offer multiple WTT`s
+- Fix media-file repetition
 
 ### Done
 - Prevent from double calling
@@ -136,6 +141,7 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - Sounds for every throw (single, double, tripple, missed)
 - add start argument for surpressing checkout calls
 - add sites for free sound-file downloads
+- Cricket: Change call behaviour to default
 
 
 ## LAST WORDS

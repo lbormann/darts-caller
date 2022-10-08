@@ -24,8 +24,9 @@ AUTODART_MATCHES_URL = 'https://api.autodarts.io/gs/v0/matches'
 AUTODART_BOARDS_URL = 'https://api.autodarts.io/bs/v0/boards/'
 AUTODART_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe?ticket='
 
+SUPPORTED_CRICKET_FIELDS = [15,16,17,18,19,20,25]
 SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket']
-VERSION = '1.3.1'
+VERSION = '1.3.2'
 DEBUG = False
 
 
@@ -265,7 +266,7 @@ def process_match_cricket(m):
     #     throwNumber = len(turns['throws'])
     #     turns['throws']
 
-    if currentPlayer['boardStatus'] != 'Takeout in progress' and turns != None and turns['throws'] != None and len(turns['throws']) >= 1: 
+    if CALL_EVERY_DART and currentPlayer['boardStatus'] != 'Takeout in progress' and turns != None and turns['throws'] != None and len(turns['throws']) >= 1: 
         throwAmount = len(turns['throws'])
         type = turns['throws'][throwAmount - 1]['segment']['bed']
 
@@ -303,6 +304,16 @@ def process_match_cricket(m):
         elif turns['busted'] == True:
             play_sound_effect('busted')
             printv('Match: Busted')
+
+        # Check for points call
+        elif turns != None and turns['throws'] != None and len(turns['throws']) == 3:
+            throwPoints = 0
+            for t in turns['throws']:
+                number = t['segment']['number']
+                if number in SUPPORTED_CRICKET_FIELDS:
+                    throwPoints += (t['segment']['multiplier'] * number)
+            play_sound_effect(str(throwPoints))
+            printv("Match: Turn ended")
     
 
 
@@ -321,7 +332,9 @@ def process_match_cricket(m):
 
         throwPoints = ''
         for t in turns['throws']:
-            throwPoints += 'x' + str(t['segment']['name'])
+            number = t['segment']['number']
+            if number in SUPPORTED_CRICKET_FIELDS:
+                throwPoints += 'x' + str(t['segment']['name'])
         throwPoints = throwPoints[1:]
 
         throw = user + '/' + throwNumber + '/' + throwPoints + '/' + pointsLeft + '/' + busted + '/' + variant
