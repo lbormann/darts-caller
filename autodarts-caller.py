@@ -16,7 +16,7 @@ import websocket
 
 
 AUTODART_URL = 'https://autodarts.io'
-AUTODART_AUTH_URL = 'https://login.autodarts.io/auth/'
+AUTODART_AUTH_URL = 'https://login.autodarts.io/'
 AUTODART_AUTH_TICKET_URL = 'https://api.autodarts.io/ms/v0/ticket'
 AUTODART_CLIENT_ID = 'autodarts-app'
 AUTODART_REALM_NAME = 'autodarts'
@@ -26,7 +26,7 @@ AUTODART_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe?ticket='
 
 SUPPORTED_CRICKET_FIELDS = [15,16,17,18,19,20,25]
 SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket']
-VERSION = '1.3.2'
+VERSION = '1.3.3'
 DEBUG = False
 
 

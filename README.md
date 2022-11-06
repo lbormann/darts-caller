@@ -133,6 +133,7 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - call opponment`s throw
 - offer multiple WTT`s
 - Fix media-file repetition
+- pc_2-pc_170.{wav | mp3} different sounds-files for possible checkout calls
 
 ### Done
 - Prevent from double calling
