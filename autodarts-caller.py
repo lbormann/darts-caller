@@ -26,7 +26,7 @@ AUTODART_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe?ticket='
 
 SUPPORTED_CRICKET_FIELDS = [15,16,17,18,19,20,25]
 SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket']
-VERSION = '1.3.3'
+VERSION = '1.3.4'
 DEBUG = False
 
 
@@ -84,7 +84,7 @@ def play_sound_effect(fileName):
         engine.runAndWait()
         return
 
-    if osType != 'Linux' and osType != 'Osx' and osType != 'Windows': 
+    if osType != 'Linux' and osType != 'Osx' and osType != 'Darwin' and osType != 'Windows': 
         printv('Can not play sound for OS: ' + osType + ". Please contact developer for support") 
         return
 
