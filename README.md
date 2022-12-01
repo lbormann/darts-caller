@@ -91,9 +91,13 @@ Click on the shortcut to start the caller.
 
 At the end of the file add:
 
-    @reboot cd <absolute-path-to>/autodarts-caller && python autodarts-caller.py -U "TODO" -P "TODO" -B "TODO" -M "TODO"
+    @reboot sleep 30 && cd <absolute-path-to>/autodarts-caller && python autodarts-caller.py -U "TODO" -P "TODO" -B "TODO" -M "TODO"
 
-Save and close the file. Reboot your system.
+Make sure you add an empty line under the added command.
+
+Save and close the file. 
+
+Reboot your system.
 
 ### Arguments
 
