@@ -58,14 +58,16 @@ Put all sound files in one folder and if you like create subfolders in this fold
 
 Supported sound-file-namings:
 - 0-180.{wav | mp3}
+- gameon.{wav | mp3}
 - gameshot.{wav | mp3}
 - busted.{wav | mp3}
-- boardstopped.{wav | mp3}
 - playerchange.{wav | mp3}
 - single.{wav | mp3}
 - double.{wav | mp3}
 - triple.{wav | mp3}
 - missed.{wav | mp3}
+
+
 
 
 ## RUN IT
@@ -147,6 +149,8 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - add start argument for surpressing checkout calls
 - add sites for free sound-file downloads
 - Cricket: Change call behaviour to default
+- improved possible checkout call for bogey numbers
+- added sound-check on program start
 
 
 ## LAST WORDS
