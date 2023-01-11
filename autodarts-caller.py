@@ -447,7 +447,6 @@ if __name__ == "__main__":
     # Initialize sound-output
     mixer.pre_init(44100, -16, 2, 1024)
     mixer.init()
-    play_sound("sound_check.mp3")
 
 
     try:
