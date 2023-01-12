@@ -53,7 +53,7 @@ Go to download-directory and type:
 
 ## SETUP SOUNDS
 
-You need to have sounds-files as mp3 or wav. This files have to be named by 1 to 180, gameshot, busted, boardstopped, playerchange etc. You dont need all files. If you are too lazy you can go for 40, 60, 180 or whatever you like. You can record your voice or download some files in the internet, ie. https://freesound.org or https://www.zapsplat.com
+You need to have sounds-files as mp3 or wav. This files have to be named by 1 to 180, gameshot, busted, playerchange etc. You dont need all files. If you are too lazy you can go for 40, 60, 180 or whatever you like. You can record your voice or download some files in the internet, ie. https://freesound.org or https://www.zapsplat.com
 Put all sound files in one folder and if you like create subfolders in this folder for random caller functionality.
 
 Supported sound-file-namings:

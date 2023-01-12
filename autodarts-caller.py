@@ -24,10 +24,10 @@ AUTODART_MATCHES_URL = 'https://api.autodarts.io/gs/v0/matches'
 AUTODART_BOARDS_URL = 'https://api.autodarts.io/bs/v0/boards/'
 AUTODART_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe?ticket='
 
-BOGEY_NUMBERS = [169, 168, 166, 165, 163, 162, 159]
+BOGEY_NUMBERS = [169,168,166,165,163,162,159]
 SUPPORTED_CRICKET_FIELDS = [15,16,17,18,19,20,25]
 SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket']
-VERSION = '1.3.5'
+VERSION = '1.3.6'
 DEBUG = False
 
 
@@ -136,6 +136,7 @@ def process_match_x01(m):
     remainingPlayerScore = m['gameScores'][currentPlayerIndex]
     turns = m['turns'][0]
     isGameOn = False
+    isGameFinished = False
     global lastPoints
 
 
@@ -159,12 +160,14 @@ def process_match_x01(m):
     
     # Check for game end
     if m['winner'] != -1:
+        isGameFinished = True
         play_sound_effect('gameshot')
         setup_caller()
         printv('Match: Gameshot and match')
 
     # Check for leg end
     elif m['gameWinner'] != -1:
+        isGameFinished = True
         play_sound_effect('gameshot')
         if RANDOM_CALLER_EACH_LEG:
             setup_caller()
@@ -178,6 +181,7 @@ def process_match_x01(m):
           
     # Check for busted turn
     elif turns['busted'] == True:
+        lastPoints = 0
         play_sound_effect('busted')
         printv('Match: Busted')
 
@@ -194,7 +198,7 @@ def process_match_x01(m):
         printv("Match: Turn ended")
 
     # Process Webhook
-    if isGameOn == False and turns != None and turns['throws'] == None:
+    if isGameOn == False and turns != None and (turns['throws'] == None or isGameFinished == True):
         play_sound_effect('playerchange')
         printv("Match: Next player")
 
@@ -214,6 +218,7 @@ def process_match_cricket(m):
     currentPlayer = m['players'][currentPlayerIndex]
     turns = m['turns'][0]
     isGameOn = False
+    isGameFinished = False
     global lastPoints
 
 
@@ -237,12 +242,14 @@ def process_match_cricket(m):
 
     # Check for game end
     if m['winner'] != -1:
+        isGameFinished = True
         play_sound_effect('gameshot')
         setup_caller()
         printv('Match: Gameshot and match')
 
     # Check for leg end
     elif m['gameWinner'] != -1:
+        isGameFinished = True
         play_sound_effect('gameshot')
         if RANDOM_CALLER_EACH_LEG:
             setup_caller()
@@ -273,13 +280,11 @@ def process_match_cricket(m):
         printv("Match: Turn ended")
     
 
-    if isGameOn == False and turns != None and turns['throws'] == None:
+    if isGameOn == False and turns != None and (turns['throws'] == None or isGameFinished == True):
         play_sound_effect('playerchange')
         printv("Match: Next player")
 
         user = str(currentPlayer['name'])
-        # throwIndex = len(turns['throws']) - 1
-        # throwNumber = str(throwIndex + 1)
         throwNumber = "1"
         throwPoints = lastPoints
         pointsLeft = "0"
