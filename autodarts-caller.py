@@ -28,7 +28,7 @@ BOGEY_NUMBERS = [169,168,166,165,163,162,159]
 SUPPORTED_CRICKET_FIELDS = [15,16,17,18,19,20,25]
 SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket']
 VERSION = '1.3.6'
-DEBUG = False
+DEBUG = True
 
 
 def printv(msg, only_debug = False):
@@ -181,7 +181,7 @@ def process_match_x01(m):
           
     # Check for busted turn
     elif turns['busted'] == True:
-        lastPoints = 0
+        lastPoints = "B"
         play_sound_effect('busted')
         printv('Match: Busted')
 
@@ -202,11 +202,16 @@ def process_match_x01(m):
         play_sound_effect('playerchange')
         printv("Match: Next player")
 
+        busted = "False"
+
+        if lastPoints == "B":
+            lastPoints = "0"
+            busted = "True"
+
         user = str(currentPlayer['name'])
         throwNumber = "0"
         points = lastPoints
         pointsLeft = str(m['gameScores'][currentPlayerIndex])
-        busted = str(turns['busted'])
         variant = 'X01'
 
         throw = user + '/' + throwNumber + '/' + points + '/' + pointsLeft + '/' + busted + '/' + variant
