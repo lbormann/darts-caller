@@ -28,7 +28,7 @@ BOGEY_NUMBERS = [169,168,166,165,163,162,159]
 SUPPORTED_CRICKET_FIELDS = [15,16,17,18,19,20,25]
 SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket']
 VERSION = '1.3.6'
-DEBUG = False
+DEBUG = True
 
 
 def printv(msg, only_debug = False):
@@ -135,10 +135,15 @@ def process_match_x01(m):
     currentPlayer = m['players'][currentPlayerIndex]
     remainingPlayerScore = m['gameScores'][currentPlayerIndex]
     turns = m['turns'][0]
+    points = str(turns['points'])
     isGameOn = False
-    isGameFinished = False
+    isGameFin = False
+    global isGameFinished
     global lastPoints
 
+
+    if turns != None and turns['throws'] != None and len(turns['throws']) == 3 or isGameFinished == True:
+        lastPoints = points
 
     if CALL_EVERY_DART and turns != None and turns['throws'] != None and len(turns['throws']) >= 1: 
         throwAmount = len(turns['throws'])
@@ -159,15 +164,15 @@ def process_match_x01(m):
 
     
     # Check for game end
-    if m['winner'] != -1:
-        isGameFinished = True
+    if m['winner'] != -1 and isGameFinished == False:
+        isGameFin = True
         play_sound_effect('gameshot')
         setup_caller()
         printv('Match: Gameshot and match')
 
     # Check for leg end
-    elif m['gameWinner'] != -1:
-        isGameFinished = True
+    elif m['gameWinner'] != -1 and isGameFinished == False:
+        isGameFin = True
         play_sound_effect('gameshot')
         if RANDOM_CALLER_EACH_LEG:
             setup_caller()
@@ -176,34 +181,35 @@ def process_match_x01(m):
     # Check for leg start
     elif m['settings']['baseScore'] == m['gameScores'][0] and turns['throws'] == None:
         isGameOn = True
+        isGameFinished = False
         play_sound_effect('gameon')
         printv('Match: Gameon')
           
     # Check for busted turn
     elif turns['busted'] == True:
         lastPoints = "B"
+        isGameFinished = False
         play_sound_effect('busted')
         printv('Match: Busted')
 
     # Check for possible checkout
     elif POSSIBLE_CHECKOUT_CALL and m['player'] == currentPlayerIndex and remainingPlayerScore <= 170 and remainingPlayerScore not in BOGEY_NUMBERS and turns != None and turns['throws'] == None:
+        isGameFinished = False
         play_sound_effect(str(m['gameScores'][currentPlayerIndex]))
         printv('Match: Checkout possible')
 
     # Check for points call
     elif turns != None and turns['throws'] != None and len(turns['throws']) == 3:
-        points = str(turns['points'])
-        lastPoints = points
+        isGameFinished = False
         play_sound_effect(points)
         printv("Match: Turn ended")
 
     # Process Webhook
-    if isGameOn == False and turns != None and (turns['throws'] == None or isGameFinished == True):
+    if isGameOn == False and turns != None and turns['throws'] == None or isGameFinished == True:
         play_sound_effect('playerchange')
         printv("Match: Next player")
 
         busted = "False"
-
         if lastPoints == "B":
             lastPoints = "0"
             busted = "True"
@@ -217,6 +223,9 @@ def process_match_x01(m):
         throw = user + '/' + throwNumber + '/' + points + '/' + pointsLeft + '/' + busted + '/' + variant
         printv("Match: Throw " + throw)
         call_webhook_throw_points(throw)
+
+    if isGameFin == True:
+        isGameFinished = True
 
 def process_match_cricket(m):
     currentPlayerIndex = m['player']
@@ -452,6 +461,9 @@ if __name__ == "__main__":
 
     global lastPoints
     lastPoints = None
+
+    global isGameFinished
+    isGameFinished = False
 
 
     # Initialize sound-output
