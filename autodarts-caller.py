@@ -27,7 +27,7 @@ AUTODART_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe?ticket='
 BOGEY_NUMBERS = [169,168,166,165,163,162,159]
 SUPPORTED_CRICKET_FIELDS = [15,16,17,18,19,20,25]
 SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket']
-VERSION = '1.3.7'
+VERSION = '1.3.8'
 DEBUG = False
 
 
@@ -69,33 +69,43 @@ def choose_caller():
 
 def play_sound(pathToFile):
     if mixer.music.get_busy() == False:
+        # printv('SOUNDPLAYER IS NOT BUSY!')
         mixer.music.load(pathToFile)
+        if AUDIO_CALLER_VOLUME is not None:
+            mixer.music.set_volume(AUDIO_CALLER_VOLUME)
+        mixer.music.play()
     else:
+        # printv('SOUNDPLAYER IS BUSY!')
         mixer.music.queue(pathToFile)
 
-    if AUDIO_CALLER_VOLUME is not None:
-        mixer.music.set_volume(AUDIO_CALLER_VOLUME)
-    mixer.music.play()
 
 def play_sound_effect(fileName):
-    global caller
+    try:
+        global caller
 
-    if TTS == True:
-        engine.say(fileName)
-        engine.runAndWait()
-        return
+        if TTS == True:
+            engine.say(fileName)
+            engine.runAndWait()
+            return True
 
-    if osType != 'Linux' and osType != 'Osx' and osType != 'Darwin' and osType != 'Windows': 
-        printv('Can not play sound for OS: ' + osType + ". Please contact developer for support") 
-        return
+        if osType != 'Linux' and osType != 'Osx' and osType != 'Darwin' and osType != 'Windows': 
+            printv('Can not play sound for OS: ' + osType + ". Please contact developer for support") 
+            return False
 
-    fileToPlay = os.path.join(caller, fileName)
-    if path.isfile(fileToPlay + '.wav'):
-        play_sound(fileToPlay + '.wav')
-    elif path.isfile(fileToPlay + '.mp3'):
-        play_sound(fileToPlay + '.mp3')
-    else:
-        printv('XXX Could not find a playable sound-file for: ' + fileName)
+        fileToPlay = os.path.join(caller, fileName)
+        if path.isfile(fileToPlay + '.wav'):
+            play_sound(fileToPlay + '.wav')
+            return True
+        elif path.isfile(fileToPlay + '.mp3'):
+            play_sound(fileToPlay + '.mp3')
+            return True
+        else:
+            printv('Could not find a playable sound-file for: ' + fileName)
+            return False
+    except:
+        printv('Failed to play sound-file for: ' + fileName + ' -> Please try another soundfile or different format')
+        return False
+
 
 
 def listen_to_newest_match(m, ws):
@@ -201,7 +211,10 @@ def process_match_x01(m):
     # Check for possible checkout
     elif POSSIBLE_CHECKOUT_CALL and m['player'] == currentPlayerIndex and remainingPlayerScore <= 170 and remainingPlayerScore not in BOGEY_NUMBERS and turns != None and turns['throws'] == None:
         isGameFinished = False
-        play_sound_effect(str(m['gameScores'][currentPlayerIndex]))
+        remaining = str(m['gameScores'][currentPlayerIndex])
+        if play_sound_effect('yr_' + remaining) == False:
+            play_sound_effect(remaining)
+
         printv('Match: Checkout possible')
 
     # Check for points call

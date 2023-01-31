@@ -58,6 +58,7 @@ Put all sound files in one folder and if you like create subfolders in this fold
 
 Supported sound-file-namings:
 - 0-180.{wav | mp3}
+- yr_1-yr_170.{wav | mp3}   (YOU REQUIRE)
 - gameon.{wav | mp3}
 - gameshot.{wav | mp3}
 - busted.{wav | mp3}
@@ -138,8 +139,7 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - fix webhook for apps that need info of every throw
 - call opponment`s throw
 - offer multiple WTT`s
-- Fix media-file repetition
-- pc_2-pc_170.{wav | mp3} different sounds-files for possible checkout calls
+
 
 ### Done
 - Prevent from double calling
@@ -151,7 +151,8 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - Cricket: Change call behaviour to default
 - improved possible checkout call for bogey numbers
 - added sound-check on program start
-
+- yr_2-yr_170.{wav | mp3} different sounds-files for possible checkout calls
+- Fix sound-play repetition
 
 ## LAST WORDS
 
