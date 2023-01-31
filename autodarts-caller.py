@@ -27,7 +27,7 @@ AUTODART_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe?ticket='
 BOGEY_NUMBERS = [169,168,166,165,163,162,159]
 SUPPORTED_CRICKET_FIELDS = [15,16,17,18,19,20,25]
 SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket']
-VERSION = '1.3.6'
+VERSION = '1.3.7'
 DEBUG = False
 
 
@@ -106,9 +106,13 @@ def listen_to_newest_match(m, ws):
     newMatch = None
     if m['variant'] in SUPPORTED_GAME_VARIANTS and m['finished'] == False:
         for p in m['players']:
-            if p['boardId'] == AUTODART_USER_BOARD_ID:
-                newMatch = m['id']   
-                break
+            try:
+                if p['boardId'] == AUTODART_USER_BOARD_ID:
+                    newMatch = m['id']   
+                    break
+            except:
+                continue
+                
 
     if cm == None or (cm != None and newMatch != None and cm != newMatch):
         printv('Listen to match: ' + newMatch)
@@ -128,6 +132,8 @@ def listen_to_newest_match(m, ws):
         }
         ws.send(json.dumps(paramsSubscribeMatchEvents))
         currentMatch = newMatch
+    
+
         
 
 def process_match_x01(m):
@@ -368,7 +374,9 @@ def on_open(ws):
 
 def on_message(ws, message):
     try:
+        global lastMessage
         m = json.loads(message)
+
         # ppjson(m)
 
         if m['channel'] == 'autodarts.matches':
@@ -378,8 +386,10 @@ def on_message(ws, message):
 
             # printv('Current Match: ' + currentMatch)
             
-            if currentMatch != None and data['id'] == currentMatch:
+            if lastMessage != data and currentMatch != None and data['id'] == currentMatch:
+                lastMessage = data
                 ppjson(data)
+
                 if data['variant'] == 'X01':
                     process_match_x01(data)
                 elif data['variant'] == 'Cricket':
@@ -453,6 +463,9 @@ if __name__ == "__main__":
     print('SUPPORTED GAME-VARIANTS: ' + " ".join(str(x) for x in SUPPORTED_GAME_VARIANTS) )
     print('\r\n')
     
+    global lastMessage
+    lastMessage = None
+
     global currentMatch
     currentMatch = None
 
