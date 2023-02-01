@@ -12,6 +12,9 @@ from keycloak import KeycloakOpenID
 import requests
 from pygame import mixer
 import websocket
+import logging
+logger=logging.getLogger()
+
 
 
 
@@ -26,8 +29,8 @@ AUTODART_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe?ticket='
 
 BOGEY_NUMBERS = [169,168,166,165,163,162,159]
 SUPPORTED_CRICKET_FIELDS = [15,16,17,18,19,20,25]
-SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket']
-VERSION = '1.3.8'
+SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket', 'Random Checkout']
+VERSION = '1.4.0'
 DEBUG = False
 
 
@@ -38,6 +41,11 @@ def printv(msg, only_debug = False):
 def ppjson(js):
     if DEBUG == True:
         print(json.dumps(js, indent = 4, sort_keys = True))
+
+def log_and_print(message, obj):
+    printv(message + repr(obj))
+    logger.exception(message + str(obj))
+    
 
 def setup_caller():
     global caller
@@ -102,8 +110,8 @@ def play_sound_effect(fileName):
         else:
             printv('Could not find a playable sound-file for: ' + fileName)
             return False
-    except:
-        printv('Failed to play sound-file for: ' + fileName + ' -> Please try another soundfile or different format')
+    except Exception as e:
+        log_and_print('Failed to play sound-file for: ' + fileName + ' -> Please try another soundfile or different format: ', e)
         return False
 
 
@@ -116,12 +124,9 @@ def listen_to_newest_match(m, ws):
     newMatch = None
     if m['variant'] in SUPPORTED_GAME_VARIANTS and m['finished'] == False:
         for p in m['players']:
-            try:
-                if p['boardId'] == AUTODART_USER_BOARD_ID:
-                    newMatch = m['id']   
-                    break
-            except:
-                continue
+            if 'boardId' in p and p['boardId'] == AUTODART_USER_BOARD_ID:
+                newMatch = m['id']   
+                break
                 
 
     if cm == None or (cm != None and newMatch != None and cm != newMatch):
@@ -157,6 +162,11 @@ def process_match_x01(m):
     global isGameFinished
     global lastPoints
 
+    # Determine "baseScore"-Key
+    base = 'baseScore'
+    if 'target' in m['settings']:
+        base = 'target'
+    
 
     if turns != None and turns['throws'] != None and len(turns['throws']) == 3 or isGameFinished == True:
         lastPoints = points
@@ -195,7 +205,7 @@ def process_match_x01(m):
         printv('Match: Gameshot and match')
 
     # Check for leg start
-    elif m['settings']['baseScore'] == m['gameScores'][0] and turns['throws'] == None:
+    elif m['settings'][base] == m['gameScores'][0] and turns['throws'] == None:
         isGameOn = True
         isGameFinished = False
         play_sound_effect('gameon')
@@ -376,14 +386,16 @@ def on_open(ws):
     try:
         setup_caller()
         printv('Receiving live information from ' + AUTODART_URL)
+        printv('!!! In case that calling is not working, please check your Board-ID (-B) for correctness !!!')
         paramsSubscribeMatchesEvents = {
             "channel": "autodarts.matches",
             "type": "subscribe",
             "topic": "*.state"
         }
         ws.send(json.dumps(paramsSubscribeMatchesEvents))
-    except:
-        printv("WS-Open failed")
+    except Exception as e:
+        log_and_print('WS-Open failed: ', e)
+
 
 def on_message(ws, message):
     try:
@@ -403,12 +415,13 @@ def on_message(ws, message):
                 lastMessage = data
                 ppjson(data)
 
-                if data['variant'] == 'X01':
+                variant = data['variant']
+                if variant == 'X01' or variant == 'Random Checkout':
                     process_match_x01(data)
-                elif data['variant'] == 'Cricket':
+                elif variant == 'Cricket':
                     process_match_cricket(data)
-    except:
-        printv("WS-Message failed")
+    except Exception as e:
+        log_and_print('WS-Message failed: ', e)
 
 def on_close(ws, close_status_code, close_msg):
     try:
@@ -418,14 +431,14 @@ def on_close(ws, close_status_code, close_msg):
         printv ("Retry : %s" % time.ctime())
         time.sleep(10)
         connect()
-    except:
-        printv("WS-Close failed")
+    except Exception as e:
+        log_and_print('WS-Close failed: ', e)
     
 def on_error(ws, error):
     try:
         printv(error)
-    except:
-        printv("WS-Error failed")
+    except Exception as e:
+        log_and_print('WS-Error failed: ', e)
 
 
 
@@ -499,8 +512,9 @@ if __name__ == "__main__":
 
     try:
         connect()
-    except:
-        printv("Connect failed")
+    except Exception as e:
+        log_and_print("Connect failed: ", e)
+
 
 
     
