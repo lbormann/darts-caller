@@ -30,7 +30,7 @@ AUTODART_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe?ticket='
 BOGEY_NUMBERS = [169,168,166,165,163,162,159]
 SUPPORTED_CRICKET_FIELDS = [15,16,17,18,19,20,25]
 SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket', 'Random Checkout']
-VERSION = '1.4.0'
+VERSION = '1.5.0'
 DEBUG = False
 
 
@@ -75,19 +75,18 @@ def choose_caller():
             caller = os.path.join(baseMediaPath, random.choice(callerSubDirs))
 
 
-def play_sound(pathToFile):
-    if mixer.music.get_busy() == False:
-        # printv('SOUNDPLAYER IS NOT BUSY!')
-        mixer.music.load(pathToFile)
-        if AUDIO_CALLER_VOLUME is not None:
-            mixer.music.set_volume(AUDIO_CALLER_VOLUME)
-        mixer.music.play()
-    else:
-        # printv('SOUNDPLAYER IS BUSY!')
-        mixer.music.queue(pathToFile)
+def play_sound(pathToFile, waitForLast):
+    if waitForLast == True:
+        while mixer.get_busy():
+            time.sleep(0.1)
+
+    sound = mixer.Sound(pathToFile)
+    if AUDIO_CALLER_VOLUME is not None:
+        sound.set_volume(AUDIO_CALLER_VOLUME)
+    sound.play()
 
 
-def play_sound_effect(fileName):
+def play_sound_effect(fileName, waitForLast = False):
     try:
         global caller
 
@@ -102,10 +101,10 @@ def play_sound_effect(fileName):
 
         fileToPlay = os.path.join(caller, fileName)
         if path.isfile(fileToPlay + '.wav'):
-            play_sound(fileToPlay + '.wav')
+            play_sound(fileToPlay + '.wav', waitForLast)
             return True
         elif path.isfile(fileToPlay + '.mp3'):
-            play_sound(fileToPlay + '.mp3')
+            play_sound(fileToPlay + '.mp3', waitForLast)
             return True
         else:
             printv('Could not find a playable sound-file for: ' + fileName)
@@ -120,7 +119,7 @@ def listen_to_newest_match(m, ws):
     global currentMatch
     cm = str(currentMatch)
 
-    # look for newest supported match that match my board-id and take it as ongoing match
+    # look for supported match that match my board-id and take it as ongoing match
     newMatch = None
     if m['variant'] in SUPPORTED_GAME_VARIANTS and m['finished'] == False:
         for p in m['players']:
@@ -154,9 +153,11 @@ def listen_to_newest_match(m, ws):
 def process_match_x01(m):
     currentPlayerIndex = m['player']
     currentPlayer = m['players'][currentPlayerIndex]
+    currentPlayerName = str(currentPlayer['name'])
     remainingPlayerScore = m['gameScores'][currentPlayerIndex]
     turns = m['turns'][0]
     points = str(turns['points'])
+
     isGameOn = False
     isGameFin = False
     global isGameFinished
@@ -221,9 +222,11 @@ def process_match_x01(m):
     # Check for possible checkout
     elif POSSIBLE_CHECKOUT_CALL and m['player'] == currentPlayerIndex and remainingPlayerScore <= 170 and remainingPlayerScore not in BOGEY_NUMBERS and turns != None and turns['throws'] == None:
         isGameFinished = False
-        remaining = str(m['gameScores'][currentPlayerIndex])
-        if play_sound_effect('yr_' + remaining) == False:
-            play_sound_effect(remaining)
+        play_sound_effect(currentPlayerName)
+
+        remaining = str(remainingPlayerScore)
+        if play_sound_effect('yr_' + remaining, True) == False:
+            play_sound_effect(remaining, True)
 
         printv('Match: Checkout possible')
 
@@ -243,10 +246,10 @@ def process_match_x01(m):
             lastPoints = "0"
             busted = "True"
 
-        user = str(currentPlayer['name'])
+        user = currentPlayerName
         throwNumber = "0"
         points = lastPoints
-        pointsLeft = str(m['gameScores'][currentPlayerIndex])
+        pointsLeft = str(remainingPlayerScore)
         variant = 'X01'
 
         throw = user + '/' + throwNumber + '/' + points + '/' + pointsLeft + '/' + busted + '/' + variant
@@ -506,7 +509,8 @@ if __name__ == "__main__":
 
 
     # Initialize sound-output
-    mixer.pre_init(44100, -16, 2, 1024)
+    # mixer.pre_init(44100, -16, 2, 1024)
+    mixer.pre_init(44100, 32, 2, 4096) #frequency, size, channels, buffersize
     mixer.init()
 
 

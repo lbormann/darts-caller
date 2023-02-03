@@ -59,7 +59,8 @@ Put all sound files in one folder and if you like create subfolders in this fold
 
 Supported sound-file-namings:
 - 0-180.{wav | mp3}
-- yr_2-yr_170.{wav | mp3}   (YOU REQUIRE)
+- playername(s).{wav | mp3}   (Name of Autodarts-player(s))
+- yr_2-yr_170.{wav | mp3}   (*playername* you require)
 - gameon.{wav | mp3}
 - gameshot.{wav | mp3}
 - busted.{wav | mp3}
@@ -69,7 +70,13 @@ Supported sound-file-namings:
 - triple.{wav | mp3}
 - missed.{wav | mp3}
 
+### Sound is not playing?!
 
+Sometimes there are sounds that are not readable. In this case you can convert the file(s) with an additional program (https://www.heise.de/download/product/mp3-quality-modifier-66202)
+Make sure you configurate 44100HZ, Stereo
+
+### Sound does not match up to calls?!
+Try https://www.audacity.de/ to modify your sound.
 
 
 ## RUN IT
