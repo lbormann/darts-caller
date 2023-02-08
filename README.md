@@ -121,7 +121,7 @@ Reboot your system.
 - -L / --random_caller_each_leg [OPTIONAL] [Default: 0] [Possible values: 0 | 1]
 - -E / --call_every_dart [OPTIONAL] [Default: 0] [Possible values: 0 | 1]
 - -PCC / --possible_checkout_call [OPTIONAL] [Default: 1] [Possible values: 0 | 1]
-- -WTT / --webhook_throw_points [OPTIONAL] [Default: None]
+- -WTT / --webhook_throw_points [OPTIONAL] [MULTIPLE ENTRIES POSSIBLE] [Default: None]
 
 Some infos about -WTT:
 The program tries to request the given url (GET-Request).
@@ -142,11 +142,9 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 
 ## TODOs
 - Support other games modes
-- dont care about last slash in webhook
 - add Readme-section for updating
-- fix webhook for apps that need info of every throw
-- offer multiple WTT`s
-
+- add possibility to have more sound-files for one event (random if multiple found)
+- add [playername] to gameshot like in [playername] you require
 
 ### Done
 - Prevent from double calling
@@ -160,6 +158,9 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - yr_2-yr_170.{wav | mp3} different sounds-files for possible checkout calls
 - Fix sound-play repetition
 - Improved error logging
+- dont care about last slash in webhook
+- fix webhook for apps that need info of every throw
+- offer multiple WTT`s
 
 ## LAST WORDS
 

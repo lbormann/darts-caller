@@ -12,6 +12,7 @@ from keycloak import KeycloakOpenID
 import requests
 from pygame import mixer
 import websocket
+import threading
 import logging
 logger=logging.getLogger()
 
@@ -30,7 +31,7 @@ AUTODART_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe?ticket='
 BOGEY_NUMBERS = [169,168,166,165,163,162,159]
 SUPPORTED_CRICKET_FIELDS = [15,16,17,18,19,20,25]
 SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket', 'Random Checkout']
-VERSION = '1.5.0'
+VERSION = '1.5.1'
 DEBUG = False
 
 
@@ -46,6 +47,9 @@ def log_and_print(message, obj):
     printv(message + repr(obj))
     logger.exception(message + str(obj))
     
+def parseUrl(str):
+    parsedUrl = urlparse(str)
+    return parsedUrl.scheme + '://' + parsedUrl.netloc + parsedUrl.path.rstrip("/")
 
 def setup_caller():
     global caller
@@ -65,7 +69,6 @@ def choose_caller():
     if RANDOM_CALLER == False:
         caller = baseMediaPath
     else:
-        callerSubDirs = [ name for name in os.listdir(AUDIO_MEDIA_PATH) if os.path.isdir(os.path.join(AUDIO_MEDIA_PATH, name)) ]
         printv('Callers available: ' + str(len(callerSubDirs)), only_debug = True)
 
         if len(callerSubDirs) == 0:
@@ -168,8 +171,8 @@ def process_match_x01(m):
     if 'target' in m['settings']:
         base = 'target'
     
-
-    if turns != None and turns['throws'] != None and len(turns['throws']) == 3 or isGameFinished == True:
+    # and len(turns['throws']) == 3 or isGameFinished == True
+    if turns != None and turns['throws'] != None:
         lastPoints = points
 
     if CALL_EVERY_DART and turns != None and turns['throws'] != None and len(turns['throws']) >= 1: 
@@ -190,16 +193,36 @@ def process_match_x01(m):
             play_sound_effect('missed')
 
     
-    # Check for game end
+    # Check for match end
     if m['winner'] != -1 and isGameFinished == False:
         isGameFin = True
+        
+        matchWon = {
+                "event": "match-won",
+                "player": currentPlayerName,
+                "game": {
+                    "mode": "X01"
+                } 
+            }
+        broadcast(matchWon)
+
         play_sound_effect('gameshot')
         setup_caller()
         printv('Match: Gameshot and match')
 
-    # Check for leg end
+    # Check for leg/game end
     elif m['gameWinner'] != -1 and isGameFinished == False:
         isGameFin = True
+        
+        gameWon = {
+                "event": "game-won",
+                "player": currentPlayerName,
+                "game": {
+                    "mode": "X01"
+                } 
+            }
+        broadcast(gameWon)
+
         play_sound_effect('gameshot')
         if RANDOM_CALLER_EACH_LEG:
             setup_caller()
@@ -209,6 +232,19 @@ def process_match_x01(m):
     elif m['settings'][base] == m['gameScores'][0] and turns['throws'] == None:
         isGameOn = True
         isGameFinished = False
+        
+        gameStarted = {
+            "event": "game-started",
+            "player": currentPlayerName,
+            "game": {
+                "mode": "X01",
+                "pointsStart": str(base),
+                # TODO: fix
+                "special": "TODO"
+                }     
+            }
+        broadcast(gameStarted)
+
         play_sound_effect('gameon')
         printv('Match: Gameon')
           
@@ -216,6 +252,15 @@ def process_match_x01(m):
     elif turns['busted'] == True:
         lastPoints = "B"
         isGameFinished = False
+        busted = { 
+                    "event": "busted",
+                    "player": currentPlayerName,
+                    "game": {
+                        "mode": "X01"
+                    }       
+                }
+        broadcast(busted)
+
         play_sound_effect('busted')
         printv('Match: Busted')
 
@@ -230,31 +275,90 @@ def process_match_x01(m):
 
         printv('Match: Checkout possible')
 
-    # Check for points call
+    # Check for 1. Dart
+    elif turns != None and turns['throws'] != None and len(turns['throws']) == 1:
+        isGameFinished = False
+        # dartsThrown = {
+        #     "event": "darts-thrown",
+        #     "player": currentPlayerName,
+        #     "game": {
+        #         "mode": "X01",
+        #         "pointsLeft": str(remainingPlayerScore),
+        #         "dartNumber": "1",
+        #         "dartValue": points,        
+
+        #     }
+        # }
+        # broadcast(dartsThrown)
+
+    # Check for 2. Dart
+    elif turns != None and turns['throws'] != None and len(turns['throws']) == 2:
+        isGameFinished = False
+        # dartsThrown = {
+        #     "event": "darts-thrown",
+        #     "player": currentPlayerName,
+        #     "game": {
+        #         "mode": "X01",
+        #         "pointsLeft": str(remainingPlayerScore),
+        #         "dartNumber": "2",
+        #         "dartValue": points,        
+
+        #     }
+        # }
+        # broadcast(dartsThrown)
+
+    # Check for 3. Dart - points call
     elif turns != None and turns['throws'] != None and len(turns['throws']) == 3:
         isGameFinished = False
+        
+
+        dartsThrown = {
+            "event": "darts-thrown",
+            "player": currentPlayerName,
+            "game": {
+                "mode": "X01",
+                "pointsLeft": str(remainingPlayerScore),
+                "dartNumber": "3",
+                "dartValue": points,        
+
+            }
+        }
+        broadcast(dartsThrown)
+
         play_sound_effect(points)
         printv("Match: Turn ended")
 
-    # Process Webhook
+    # Playerchange
     if isGameOn == False and turns != None and turns['throws'] == None or isGameFinished == True:
-        play_sound_effect('playerchange')
-        printv("Match: Next player")
-
         busted = "False"
         if lastPoints == "B":
             lastPoints = "0"
             busted = "True"
 
-        user = currentPlayerName
-        throwNumber = "0"
-        points = lastPoints
-        pointsLeft = str(remainingPlayerScore)
-        variant = 'X01'
+        dartsPulled = {
+            "event": "darts-pulled",
+            "player": currentPlayerName,
+            "game": {
+                "mode": "X01",
+                # TODO: fix
+                "pointsLeft": str(remainingPlayerScore),
+                # TODO: fix
+                "dartsThrown": "3",
+                "dartsThrownValue": lastPoints,
+                "busted": busted
+                # TODO: fix
+                # "darts": [
+                #     {"number": "1", "value": "60"},
+                #     {"number": "2", "value": "60"},
+                #     {"number": "3", "value": "60"}
+                # ]
+            }
+        }
+        broadcast(dartsPulled)
 
-        throw = user + '/' + throwNumber + '/' + points + '/' + pointsLeft + '/' + busted + '/' + variant
-        printv("Match: Throw " + throw)
-        call_webhook_throw_points(throw)
+        play_sound_effect('playerchange')
+        printv("Match: Next player")
+
 
     if isGameFin == True:
         isGameFinished = True
@@ -262,11 +366,21 @@ def process_match_x01(m):
 def process_match_cricket(m):
     currentPlayerIndex = m['player']
     currentPlayer = m['players'][currentPlayerIndex]
+    currentPlayerName = str(currentPlayer['name'])
+    # remainingPlayerScore = m['gameScores'][currentPlayerIndex]
     turns = m['turns'][0]
+    # points = str(turns['points'])
+
+    # TODO: mode/variant by incoming structure
+
     isGameOn = False
-    isGameFinished = False
+    isGameFin = False
+    global isGameFinished
     global lastPoints
 
+    # and len(turns['throws']) == 3 or isGameFinished == True
+    # if turns != None and turns['throws'] != None:
+    #     lastPoints = points
 
     if CALL_EVERY_DART and turns != None and turns['throws'] != None and len(turns['throws']) >= 1: 
         throwAmount = len(turns['throws'])
@@ -286,16 +400,35 @@ def process_match_cricket(m):
             play_sound_effect('missed')
 
 
-    # Check for game end
-    if m['winner'] != -1:
-        isGameFinished = True
+    # Check for match end
+    if m['winner'] != -1 and isGameFinished == False:
+        isGameFin = True
+        
+        matchWon = {
+            "event": "match-won",
+            "player": currentPlayerName,
+            "game": {
+                "mode": "Cricket"
+            } 
+        }
+        broadcast(matchWon)
+
         play_sound_effect('gameshot')
         setup_caller()
         printv('Match: Gameshot and match')
 
-    # Check for leg end
+    # Check for leg/game end
     elif m['gameWinner'] != -1:
         isGameFinished = True
+
+        gameWon = {
+                "event": "game-won",
+                "player": currentPlayerName,
+                "game": {
+                    "mode": "Cricket"
+                } 
+            }
+        broadcast(gameWon)
         play_sound_effect('gameshot')
         if RANDOM_CALLER_EACH_LEG:
             setup_caller()
@@ -304,16 +437,42 @@ def process_match_cricket(m):
     # Check for leg start
     elif m['gameScores'][0] == 0 and m['scores'] == None and turns['throws'] == None and m['round'] == 1:
         isGameOn = True
+        isGameFinished = False
+
+        gameStarted = {
+            "event": "game-started",
+            "player": currentPlayerName,
+            "game": {
+                "mode": "Cricket",
+                # TODO: fix
+                "special": "TODO"
+                }     
+            }
+        broadcast(gameStarted)
+
         play_sound_effect('gameon')
         printv('Match: Gameon')
 
     # Check for busted turn
     elif turns['busted'] == True:
+        lastPoints = "B"
+        isGameFinished = False
+
+        busted = { 
+                    "event": "busted",
+                    "player": currentPlayerName,
+                    "game": {
+                        "mode": "X01"
+                    }       
+                }
+        broadcast(busted)
+
         play_sound_effect('busted')
         printv('Match: Busted')
 
-    # Check for points call
+    # Check for 3. Dart - points call
     elif turns != None and turns['throws'] != None and len(turns['throws']) == 3:
+        isGameFinished = False
         throwPoints = 0
         lastPoints = ''
         for t in turns['throws']:
@@ -322,14 +481,25 @@ def process_match_cricket(m):
                 throwPoints += (t['segment']['multiplier'] * number)
                 lastPoints += 'x' + str(t['segment']['name'])
         lastPoints = lastPoints[1:]
+
+        dartsThrown = {
+            "event": "darts-thrown",
+            "player": currentPlayerName,
+            "game": {
+                "mode": "Cricket",
+                # "pointsLeft": str(remainingPlayerScore),
+                "dartNumber": "3",
+                # "dartValue": points,        
+
+            }
+        }
+        broadcast(dartsThrown)
+
         play_sound_effect(str(throwPoints))
         printv("Match: Turn ended")
     
-
-    if isGameOn == False and turns != None and (turns['throws'] == None or isGameFinished == True):
-        play_sound_effect('playerchange')
-        printv("Match: Next player")
-
+    # Playerchange
+    if isGameOn == False and turns != None and turns['throws'] == None or isGameFinished == True:
         user = str(currentPlayer['name'])
         throwNumber = "1"
         throwPoints = lastPoints
@@ -337,26 +507,49 @@ def process_match_cricket(m):
         busted = str(turns['busted'])
         variant = 'Cricket'
 
-        throw = user + '/' + throwNumber + '/' + throwPoints + '/' + pointsLeft + '/' + busted + '/' + variant
-        printv("Match: Throw " + throw)
-        call_webhook_throw_points(throw)
+        dartsPulled = {
+            "event": "darts-pulled",
+            "player": user,
+            "game": {
+                "mode": variant,
+                # TODO: fix
+                "pointsLeft": pointsLeft,
+                # TODO: fix
+                "dartsThrown": "3",
+                "dartsThrownValue": throwPoints,
+                "busted": busted
+                # TODO: fix
+                # "darts": [
+                #     {"number": "1", "value": "60"},
+                #     {"number": "2", "value": "60"},
+                #     {"number": "3", "value": "60"}
+                # ]
+            }
+        }
+        broadcast(dartsPulled)
 
+        play_sound_effect('playerchange')
+        printv("Match: Next player")
 
-def webhook_request(urlii, pathii = None):
-    request_url = urlii
-    if pathii != None:
-        request_url = request_url + "/" + pathii
-    else:
-        return
+    if isGameFin == True:
+        isGameFinished = True
+
+        
+            
+def broadcast(data):
+    for ep in WEBHOOK_THROW_POINTS:
+        try:
+            threading.Thread(target=broadcast_intern, args=(ep, data)).start()
+        except:
+            continue
+
+def broadcast_intern(endpoint, data):
     try:
-        printv("HTTP: " + request_url)  
-        requests.get(request_url, timeout=0.25)     
-    except: 
+        requests.post(endpoint, json=data, verify=False)      
+    except:
         return
+            
 
-def call_webhook_throw_points(data):
-    if WEBHOOK_THROW_POINTS != None:
-        webhook_request(WEBHOOK_THROW_POINTS, data)
 
 
 def connect():
@@ -458,7 +651,7 @@ if __name__ == "__main__":
     ap.add_argument("-L", "--random_caller_each_leg", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will randomly choose a caller each leg instead of each game. It only works when 'random_caller=1'")
     ap.add_argument("-E", "--call_every_dart", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will call every thrown dart")
     ap.add_argument("-PCC", "--possible_checkout_call", type=int, choices=range(0, 2), default=1, required=False, help="If '1', the application will call a possible checkout starting at 170")
-    ap.add_argument("-WTT", "--webhook_throw_points", required=False, help="Url that will be requested every throw")
+    ap.add_argument("-WTT", "--webhook_throw_points", required=False, nargs='*', help="Url(s) that will be requested every throw")
     args = vars(ap.parse_args())
 
     AUTODART_USER_EMAIL = args['autodarts_email']                          
@@ -472,26 +665,15 @@ if __name__ == "__main__":
     WEBHOOK_THROW_POINTS = args['webhook_throw_points']
     CALL_EVERY_DART = args['call_every_dart']
     POSSIBLE_CHECKOUT_CALL = args['possible_checkout_call']
-    
-    if WEBHOOK_THROW_POINTS is not None:
-        parsedUrl = urlparse(WEBHOOK_THROW_POINTS)
-        WEBHOOK_THROW_POINTS = parsedUrl.scheme + '://' + parsedUrl.netloc + parsedUrl.path.rstrip("/")
 
+    if WEBHOOK_THROW_POINTS is not None:
+        parsedList = list()
+        for e in WEBHOOK_THROW_POINTS:
+            parsedList.append(parseUrl(e))
+        WEBHOOK_THROW_POINTS = parsedList
 
     TTS = False     
 
-    osType = platform.system()
-    osName = os.name
-    osRelease = platform.release()
-    print('\r\n')
-    print('##########################################')
-    print('       WELCOME TO AUTODARTS-CALLER')
-    print('##########################################')
-    print('VERSION: ' + VERSION)
-    print('RUNNING OS: ' + osType + ' | ' + osName + ' | ' + osRelease)
-    print('SUPPORTED GAME-VARIANTS: ' + " ".join(str(x) for x in SUPPORTED_GAME_VARIANTS) )
-    print('\r\n')
-    
     global lastMessage
     lastMessage = None
 
@@ -512,6 +694,22 @@ if __name__ == "__main__":
     # mixer.pre_init(44100, -16, 2, 1024)
     mixer.pre_init(44100, 32, 2, 4096) #frequency, size, channels, buffersize
     mixer.init()
+
+
+    printv('Started with following arguments:')
+    printv(json.dumps(args, indent=4))
+
+    osType = platform.system()
+    osName = os.name
+    osRelease = platform.release()
+    print('\r\n')
+    print('##########################################')
+    print('       WELCOME TO AUTODARTS-CALLER')
+    print('##########################################')
+    print('VERSION: ' + VERSION)
+    print('RUNNING OS: ' + osType + ' | ' + osName + ' | ' + osRelease)
+    print('SUPPORTED GAME-VARIANTS: ' + " ".join(str(x) for x in SUPPORTED_GAME_VARIANTS) )
+    print('\r\n')
 
 
     try:
