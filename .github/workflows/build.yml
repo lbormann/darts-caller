@@ -41,7 +41,7 @@ jobs:
           # - os: macos-latest
           #   TARGET: macos
           #   CMD_BUILD: >
-          #       pyinstaller -F -n autodarts-caller -i resources/autodarts-cadller.icns autodarts-caller.py &&
+          #       pyinstaller -F -n autodarts-caller -i resources/autodarts-caller.icns autodarts-caller.py &&
           #       cd dist/ &&
           #       zip -r9 autodarts-caller autodarts-caller.app/
           #   OUT_FILE_NAME: autodarts-caller-mac.zip
@@ -49,7 +49,7 @@ jobs:
           - os: ubuntu-latest
             TARGET: ubuntu
             CMD_BUILD: pyinstaller -F -n autodarts-caller -i resources/autodarts-caller.svg autodarts-caller.py
-            OUT_FILE_NAME: autodarts-caller.bin
+            OUT_FILE_NAME: autodarts-caller
             ASSET_MIME: application/octet-stream
           - os: windows-latest
             TARGET: windows
