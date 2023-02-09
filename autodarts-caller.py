@@ -69,6 +69,7 @@ def choose_caller():
     if RANDOM_CALLER == False:
         caller = baseMediaPath
     else:
+        callerSubDirs = [ name for name in os.listdir(AUDIO_MEDIA_PATH) if os.path.isdir(os.path.join(AUDIO_MEDIA_PATH, name)) ]
         printv('Callers available: ' + str(len(callerSubDirs)), only_debug = True)
 
         if len(callerSubDirs) == 0:
