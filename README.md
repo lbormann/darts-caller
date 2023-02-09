@@ -124,10 +124,8 @@ Reboot your system.
 - -WTT / --webhook_throw_points [OPTIONAL] [MULTIPLE ENTRIES POSSIBLE] [Default: None]
 
 Some infos about -WTT:
-The program tries to request the given url (GET-Request).
-
-Example: if you set -WTT "http://localhost:8080/throw"
-the program will extend it internally to "http://localhost:8080/throw/thrower/throw-number/throw-points/points-left/busted/variant" and sends it to the given application (http://localhost:8080)
+The program tries to send (POST) a specific json at the given url(s).
+You can find a list of json examples for the different game-events in broadcast-examples.dat
 
 
 ## EXTENSIONS
