@@ -671,6 +671,8 @@ if __name__ == "__main__":
         for e in WEBHOOK_THROW_POINTS:
             parsedList.append(parseUrl(e))
         WEBHOOK_THROW_POINTS = parsedList
+    else:
+        WEBHOOK_THROW_POINTS = list()
 
     TTS = False     
 
