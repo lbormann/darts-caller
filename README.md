@@ -70,6 +70,12 @@ Supported sound-file-namings:
 - triple.{wav | mp3}
 - missed.{wav | mp3}
 
+
+### App starts and stops immediately?!
+
+Check your autodarts-credentials (use email-adress and password). 
+If your are facing "failed keycloakautentikation Error", you probably need to disable two-factor-auth!
+
 ### Sound is not playing?!
 
 Sometimes there are sounds that are not readable. In this case you can convert the file(s) with an additional program (https://www.heise.de/download/product/mp3-quality-modifier-66202)
@@ -128,7 +134,7 @@ The program tries to send (POST) a specific json at the given url(s).
 You can find a list of json examples for the different game-events in broadcast-examples.dat
 
 
-## EXTENSIONS
+## HELPERS
 
 If you think it is terrible to configure/start/handling this application then go for autodarts-desktop https://github.com/Semtexmagix/autodarts-desktop
 

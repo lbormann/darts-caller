@@ -31,7 +31,7 @@ AUTODART_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe?ticket='
 BOGEY_NUMBERS = [169,168,166,165,163,162,159]
 SUPPORTED_CRICKET_FIELDS = [15,16,17,18,19,20,25]
 SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket', 'Random Checkout']
-VERSION = '1.5.4'
+VERSION = '1.5.5'
 DEBUG = False
 
 
@@ -161,6 +161,7 @@ def process_match_x01(m):
     remainingPlayerScore = m['gameScores'][currentPlayerIndex]
     turns = m['turns'][0]
     points = str(turns['points'])
+    pcc_success = False
 
     isGameOn = False
     isGameFin = False
@@ -209,6 +210,7 @@ def process_match_x01(m):
         broadcast(matchWon)
 
         play_sound_effect('gameshot')
+        play_sound_effect(currentPlayerName, True)
         setup_caller()
         printv('Match: Gameshot and match')
 
@@ -227,6 +229,7 @@ def process_match_x01(m):
         broadcast(gameWon)
 
         play_sound_effect('gameshot')
+        play_sound_effect(currentPlayerName, True)
         if RANDOM_CALLER_EACH_LEG:
             setup_caller()
         printv('Match: Gameshot and match')
@@ -248,7 +251,8 @@ def process_match_x01(m):
             }
         broadcast(gameStarted)
 
-        play_sound_effect('gameon')
+        play_sound_effect(currentPlayerName)
+        play_sound_effect('gameon', True)
         printv('Match: Gameon')
           
     # Check for busted turn
@@ -273,42 +277,19 @@ def process_match_x01(m):
         play_sound_effect(currentPlayerName)
 
         remaining = str(remainingPlayerScore)
-        if play_sound_effect('yr_' + remaining, True) == False:
-            play_sound_effect(remaining, True)
+        pcc_success = play_sound_effect('yr_' + remaining, True)
+        if pcc_success == False:
+            pcc_success = play_sound_effect(remaining, True)
 
         printv('Match: Checkout possible')
 
     # Check for 1. Dart
     elif turns != None and turns['throws'] != None and len(turns['throws']) == 1:
         isGameFinished = False
-        # dartsThrown = {
-        #     "event": "darts-thrown",
-        #     "player": currentPlayerName,
-        #     "game": {
-        #         "mode": "X01",
-        #         "pointsLeft": str(remainingPlayerScore),
-        #         "dartNumber": "1",
-        #         "dartValue": points,        
-
-        #     }
-        # }
-        # broadcast(dartsThrown)
 
     # Check for 2. Dart
     elif turns != None and turns['throws'] != None and len(turns['throws']) == 2:
         isGameFinished = False
-        # dartsThrown = {
-        #     "event": "darts-thrown",
-        #     "player": currentPlayerName,
-        #     "game": {
-        #         "mode": "X01",
-        #         "pointsLeft": str(remainingPlayerScore),
-        #         "dartNumber": "2",
-        #         "dartValue": points,        
-
-        #     }
-        # }
-        # broadcast(dartsThrown)
 
     # Check for 3. Dart - points call
     elif turns != None and turns['throws'] != None and len(turns['throws']) == 3:
@@ -359,7 +340,9 @@ def process_match_x01(m):
         }
         broadcast(dartsPulled)
 
-        play_sound_effect('playerchange')
+        if pcc_success == False:
+            play_sound_effect('playerchange')
+
         printv("Match: Next player")
 
 
