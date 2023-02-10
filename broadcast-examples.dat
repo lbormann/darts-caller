@@ -14,7 +14,8 @@
     "event": "game-won",
     "player": "luca",
     "game": {
-        "mode": "x01"
+        "mode": "x01",
+        "turnPoints": "100"
     }    
 }
 
@@ -24,7 +25,8 @@
     "event": "match-won",
     "player": "luca",
     "game": {
-        "mode": "x01"
+        "mode": "x01",
+        "turnPoints": "100"
     }    
 }
 
