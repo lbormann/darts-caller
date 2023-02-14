@@ -34,8 +34,8 @@ DEFAULT_MIXER_BUFFERSIZE = 4096
 BOGEY_NUMBERS = [169, 168, 166, 165, 163, 162, 159]
 SUPPORTED_CRICKET_FIELDS = [15, 16, 17, 18, 19, 20, 25]
 SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket', 'Random Checkout']
-VERSION = '1.6.0'
-DEBUG = True
+VERSION = '1.6.1'
+DEBUG = False
 
 
 def printv(msg, only_debug = False):
