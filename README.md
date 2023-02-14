@@ -57,7 +57,7 @@ Go to download-directory and type:
 You need to have sounds-files as mp3 or wav. This files have to be named by 1 to 180, gameshot, busted, playerchange etc. You dont need all files. If you are too lazy you can go for 40, 60, 180 or whatever you like. You can record your voice or download some files in the internet, ie. https://freesound.org, https://www.zapsplat.com or watchout for pinned messages in (Discord https://discord.com/channels/802528604067201055/955745166134747196).
 Put all sound files in one folder and if you like create subfolders in this folder for random caller functionality.
 
-Supported sound-file-namings:
+Supported sound-file-namings for Autodarts-Events:
 - 0-180.{wav | mp3}
 - playername(s).{wav | mp3}   (Name of Autodarts-player(s))
 - yr_2-yr_170.{wav | mp3}   (*playername* you require)
@@ -69,6 +69,16 @@ Supported sound-file-namings:
 - double.{wav | mp3}
 - triple.{wav | mp3}
 - missed.{wav | mp3}
+- ambient_gameon.{wav | mp3}
+- ambient_gameshot.{wav | mp3}
+- ambient_noscore.{wav | mp3}
+- ambient_50more.{wav | mp3}
+- ambient_100more.{wav | mp3}
+- ambient_120more.{wav | mp3}
+- ambient_150more.{wav | mp3}
+- ambient_180.{wav | mp3}
+
+Since Version 1.6.0 you can deposit multiple sounds for EVERY event. Therefor you have to add a "+" to the filename. After the "+" you can add whatever text you prefer; as an example: let`s say we want multiple sounds for the 'gameon'-event. Our default file is 'gameon.mp3/gameon.wav'. Now we add some more: 'gameon+1.mp3', 'gameon+2.mp3', 'gameon+BEST.mp3'. You are not limited to gameon, even score-sounds can have multiple soundfiles.
 
 
 ### App starts and stops immediately?!
@@ -127,11 +137,13 @@ Reboot your system.
 - -L / --random_caller_each_leg [OPTIONAL] [Default: 0] [Possible values: 0 | 1]
 - -E / --call_every_dart [OPTIONAL] [Default: 0] [Possible values: 0 | 1]
 - -PCC / --possible_checkout_call [OPTIONAL] [Default: 1] [Possible values: 0 | 1]
+- -A / --ambient_sounds [OPTIONAL] [Default: 0] [Possible values: 0 | 1]
 - -WTT / --webhook_throw_points [OPTIONAL] [MULTIPLE ENTRIES POSSIBLE] [Default: None]
 
 Some infos about -WTT:
-The program tries to send (POST) a specific json at the given url(s).
-You can find a list of json examples for the different game-events in broadcast-examples.dat
+The program tries to send (POST) a specific json at the given url(s). You could try to prioritize which urls will be called first, but in general they will be called in parallel.
+You can find a list of json examples for the different game-events in 'broadcast-examples.dat'
+
 
 
 ## HELPERS
@@ -147,8 +159,7 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 ## TODOs
 - Support other games modes
 - add Readme-section for updating
-- add possibility to have more sound-files for one event (random if multiple found)
-- add [playername] to gameshot like in [playername] you require
+
 
 ### Done
 - Prevent from double calling
@@ -165,6 +176,11 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - dont care about last slash in webhook
 - fix webhook for apps that need info of every throw
 - offer multiple WTT`s
+- add [playername] to gameshot like in [playername] you require
+- add configurable pygame.mixer
+- add possibility to have more sound-files for one event (random if multiple found)
+- add ambient-sounds for gameon, gamewon, noscore etc.
+
 
 ## LAST WORDS
 

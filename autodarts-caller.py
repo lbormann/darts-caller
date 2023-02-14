@@ -1,7 +1,5 @@
 import os
-from os import path
 from pathlib import Path
-import pprint
 import time
 import json
 import platform
@@ -28,11 +26,16 @@ AUTODART_MATCHES_URL = 'https://api.autodarts.io/gs/v0/matches'
 AUTODART_BOARDS_URL = 'https://api.autodarts.io/bs/v0/boards/'
 AUTODART_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe?ticket='
 
-BOGEY_NUMBERS = [169,168,166,165,163,162,159]
-SUPPORTED_CRICKET_FIELDS = [15,16,17,18,19,20,25]
+DEFAULT_MIXER_FREQUENCY = 44100
+DEFAULT_MIXER_SIZE = 32
+DEFAULT_MIXER_CHANNELS = 2
+DEFAULT_MIXER_BUFFERSIZE = 4096
+
+BOGEY_NUMBERS = [169, 168, 166, 165, 163, 162, 159]
+SUPPORTED_CRICKET_FIELDS = [15, 16, 17, 18, 19, 20, 25]
 SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket', 'Random Checkout']
-VERSION = '1.5.5'
-DEBUG = False
+VERSION = '1.6.0'
+DEBUG = True
 
 
 def printv(msg, only_debug = False):
@@ -44,79 +47,63 @@ def ppjson(js):
         print(json.dumps(js, indent = 4, sort_keys = True))
 
 def log_and_print(message, obj):
-    printv(message + repr(obj))
     logger.exception(message + str(obj))
     
 def parseUrl(str):
     parsedUrl = urlparse(str)
     return parsedUrl.scheme + '://' + parsedUrl.netloc + parsedUrl.path.rstrip("/")
 
+
+def load_callers(path):
+    filenames = []
+    for root, dirs, files in os.walk(path):
+        file_dict = {}
+        for filename in files:
+            if filename.endswith('.mp3') or filename.endswith('.wav'):
+                full_path = os.path.join(root, filename)
+                base = os.path.splitext(filename)[0]
+                key = base.split('+', 1)[0]
+                if key in file_dict:
+                    file_dict[key].append(full_path)
+                else:
+                    file_dict[key] = [full_path]
+        if file_dict:
+            filenames.append((root, file_dict))
+    return filenames
+
 def setup_caller():
     global caller
-    if TTS == True:
-        import pyttsx3
-        pyttsx3.init()
-        printv('Your current caller: TTS-Engine')
-    else:
-        choose_caller()
-        printv("Your current caller: " + str(caller))
-
-def choose_caller():
-    global caller
-
-    baseMediaPath = AUDIO_MEDIA_PATH
+    callers = load_callers(AUDIO_MEDIA_PATH)
+    printv(str(len(callers)) + ' caller(s) ready to call out your Darts!')
 
     if RANDOM_CALLER == False:
-        caller = baseMediaPath
+        caller = callers[0]
     else:
-        callerSubDirs = [ name for name in os.listdir(AUDIO_MEDIA_PATH) if os.path.isdir(os.path.join(AUDIO_MEDIA_PATH, name)) ]
-        printv('Callers available: ' + str(len(callerSubDirs)), only_debug = True)
+        caller = random.choice(callers)
 
-        if len(callerSubDirs) == 0:
-            printv('WARNING: You chose "RANDOM_CALLER", but there are no subfolders that identify your caller-media-files. Please correct this. Fallback to caller-media-files in Media-main-directory.\r\n')
-            caller = baseMediaPath
-        else:
-            caller = os.path.join(baseMediaPath, random.choice(callerSubDirs))
+    printv("Your current caller: " + str(os.path.basename(os.path.normpath(caller[0]))) + " knows " + str(len(caller[1].values())) + " Sound(s)")
+    printv(caller[1], True)
+    caller = caller[1]
+    
 
-
-def play_sound(pathToFile, waitForLast):
+def play_sound(pathToFile, waitForLast, volume_lower):
     if waitForLast == True:
         while mixer.get_busy():
             time.sleep(0.1)
 
     sound = mixer.Sound(pathToFile)
     if AUDIO_CALLER_VOLUME is not None:
-        sound.set_volume(AUDIO_CALLER_VOLUME)
+        sound.set_volume(AUDIO_CALLER_VOLUME + volume_lower)
     sound.play()
 
-
-def play_sound_effect(fileName, waitForLast = False):
+def play_sound_effect(event, waitForLast = False, volumeLower = 0):
     try:
         global caller
-
-        if TTS == True:
-            engine.say(fileName)
-            engine.runAndWait()
-            return True
-
-        if osType != 'Linux' and osType != 'Osx' and osType != 'Darwin' and osType != 'Windows': 
-            printv('Can not play sound for OS: ' + osType + ". Please contact developer for support") 
-            return False
-
-        fileToPlay = os.path.join(caller, fileName)
-        if path.isfile(fileToPlay + '.wav'):
-            play_sound(fileToPlay + '.wav', waitForLast)
-            return True
-        elif path.isfile(fileToPlay + '.mp3'):
-            play_sound(fileToPlay + '.mp3', waitForLast)
-            return True
-        else:
-            printv('Could not find a playable sound-file for: ' + fileName)
-            return False
+        play_sound(random.choice(caller[event]), waitForLast, volumeLower)
+        return True
     except Exception as e:
-        log_and_print('Failed to play sound-file for: ' + fileName + ' -> Please try another soundfile or different format: ', e)
+        log_and_print('Failed to play soundfile for: "' + event + '" -> Check existance of that soundfile if you want to play it: ', e)
         return False
-
 
 
 def listen_to_newest_match(m, ws):
@@ -152,12 +139,10 @@ def listen_to_newest_match(m, ws):
         currentMatch = newMatch
     
 
-        
-
 def process_match_x01(m):
     currentPlayerIndex = m['player']
     currentPlayer = m['players'][currentPlayerIndex]
-    currentPlayerName = str(currentPlayer['name'])
+    currentPlayerName = str(currentPlayer['name']).lower()
     remainingPlayerScore = m['gameScores'][currentPlayerIndex]
     turns = m['turns'][0]
     points = str(turns['points'])
@@ -211,6 +196,8 @@ def process_match_x01(m):
 
         play_sound_effect('gameshot')
         play_sound_effect(currentPlayerName, True)
+        if AMBIENT_SOUNDS == True:
+            play_sound_effect('ambient_gameshot', volumeLower=-0.4)
         setup_caller()
         printv('Match: Gameshot and match')
 
@@ -230,6 +217,8 @@ def process_match_x01(m):
 
         play_sound_effect('gameshot')
         play_sound_effect(currentPlayerName, True)
+        if AMBIENT_SOUNDS == True:
+            play_sound_effect('ambient_gameshot', volumeLower=-0.4)
         if RANDOM_CALLER_EACH_LEG:
             setup_caller()
         printv('Match: Gameshot and match')
@@ -251,8 +240,10 @@ def process_match_x01(m):
             }
         broadcast(gameStarted)
 
-        play_sound_effect(currentPlayerName)
+        play_sound_effect(currentPlayerName, False)
         play_sound_effect('gameon', True)
+        if AMBIENT_SOUNDS == True:
+            play_sound_effect('ambient_gameon', volumeLower=-0.6)
         printv('Match: Gameon')
           
     # Check for busted turn
@@ -269,6 +260,8 @@ def process_match_x01(m):
         broadcast(busted)
 
         play_sound_effect('busted')
+        if AMBIENT_SOUNDS == True:
+            play_sound_effect('ambient_noscore', volumeLower=-0.4)
         printv('Match: Busted')
 
     # Check for possible checkout
@@ -287,15 +280,20 @@ def process_match_x01(m):
     elif turns != None and turns['throws'] != None and len(turns['throws']) == 1:
         isGameFinished = False
 
+        # if AMBIENT_SOUNDS == True and turns['throws'][0]['segment']['bed'] == 'Outside':
+        #     play_sound_effect('ambient_noscore', volumeLower=-0.3)
+
     # Check for 2. Dart
     elif turns != None and turns['throws'] != None and len(turns['throws']) == 2:
         isGameFinished = False
+
+        # if AMBIENT_SOUNDS == True and turns['throws'][1]['segment']['bed'] == 'Outside':
+        #     play_sound_effect('ambient_noscore', volumeLower=-0.3)
 
     # Check for 3. Dart - points call
     elif turns != None and turns['throws'] != None and len(turns['throws']) == 3:
         isGameFinished = False
         
-
         dartsThrown = {
             "event": "darts-thrown",
             "player": currentPlayerName,
@@ -308,8 +306,23 @@ def process_match_x01(m):
             }
         }
         broadcast(dartsThrown)
-
+        
         play_sound_effect(points)
+        if AMBIENT_SOUNDS == True:
+            if turns['points'] == 0:
+                play_sound_effect('ambient_noscore', volumeLower=-0.5)
+            elif turns['points'] >= 50:
+                play_sound_effect('ambient_50more', volumeLower=-0.4)
+            elif turns['points'] >= 100:
+                play_sound_effect('ambient_100more', volumeLower=-0.3)
+            elif turns['points'] >= 120:
+                play_sound_effect('ambient_120more', volumeLower=-0.2)
+            elif turns['points'] >= 153:
+                play_sound_effect('ambient_150more', volumeLower=-0.1)
+            elif turns['points'] == 180:
+                play_sound_effect('ambient_180', volumeLower=-0.1)
+            
+
         printv("Match: Turn ended")
 
     # Playerchange
@@ -521,7 +534,6 @@ def process_match_cricket(m):
         isGameFinished = True
 
         
-            
 def broadcast(data):
     for ep in WEBHOOK_THROW_POINTS:
         try:
@@ -535,7 +547,6 @@ def broadcast_intern(endpoint, data):
     except:
         return
             
-
 
 
 def connect():
@@ -577,7 +588,6 @@ def on_open(ws):
         ws.send(json.dumps(paramsSubscribeMatchesEvents))
     except Exception as e:
         log_and_print('WS-Open failed: ', e)
-
 
 def on_message(ws, message):
     try:
@@ -637,7 +647,12 @@ if __name__ == "__main__":
     ap.add_argument("-L", "--random_caller_each_leg", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will randomly choose a caller each leg instead of each game. It only works when 'random_caller=1'")
     ap.add_argument("-E", "--call_every_dart", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will call every thrown dart")
     ap.add_argument("-PCC", "--possible_checkout_call", type=int, choices=range(0, 2), default=1, required=False, help="If '1', the application will call a possible checkout starting at 170")
+    ap.add_argument("-A", "--ambient_sounds", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will call a ambient_*-Sounds")
     ap.add_argument("-WTT", "--webhook_throw_points", required=False, nargs='*', help="Url(s) that will be requested every throw")
+    ap.add_argument("-MIF", "--mixer_frequency", type=int, required=False, default=DEFAULT_MIXER_FREQUENCY, help="Pygame mixer frequency")
+    ap.add_argument("-MIS", "--mixer_size", type=int, required=False, default=DEFAULT_MIXER_SIZE, help="Pygame mixer size")
+    ap.add_argument("-MIC", "--mixer_channels", type=int, required=False, default=DEFAULT_MIXER_CHANNELS, help="Pygame mixer channels")
+    ap.add_argument("-MIB", "--mixer_buffersize", type=int, required=False, default=DEFAULT_MIXER_BUFFERSIZE, help="Pygame mixer buffersize")
     args = vars(ap.parse_args())
 
     AUTODART_USER_EMAIL = args['autodarts_email']                          
@@ -651,6 +666,13 @@ if __name__ == "__main__":
     WEBHOOK_THROW_POINTS = args['webhook_throw_points']
     CALL_EVERY_DART = args['call_every_dart']
     POSSIBLE_CHECKOUT_CALL = args['possible_checkout_call']
+    AMBIENT_SOUNDS = args['ambient_sounds']
+    MIXER_FREQUENCY = args['mixer_frequency']
+    MIXER_SIZE = args['mixer_size']
+    MIXER_CHANNELS = args['mixer_channels']
+    MIXER_BUFFERSIZE = args['mixer_buffersize']
+
+
 
     if WEBHOOK_THROW_POINTS is not None:
         parsedList = list()
@@ -659,8 +681,6 @@ if __name__ == "__main__":
         WEBHOOK_THROW_POINTS = parsedList
     else:
         WEBHOOK_THROW_POINTS = list()
-
-    TTS = False     
 
     global lastMessage
     lastMessage = None
@@ -679,10 +699,8 @@ if __name__ == "__main__":
 
 
     # Initialize sound-output
-    # mixer.pre_init(44100, -16, 2, 1024)
-    mixer.pre_init(44100, 32, 2, 4096) #frequency, size, channels, buffersize
+    mixer.pre_init(MIXER_FREQUENCY, MIXER_SIZE, MIXER_CHANNELS, MIXER_BUFFERSIZE) 
     mixer.init()
-
 
     printv('Started with following arguments:')
     printv(json.dumps(args, indent=4))
@@ -698,7 +716,7 @@ if __name__ == "__main__":
     print('RUNNING OS: ' + osType + ' | ' + osName + ' | ' + osRelease)
     print('SUPPORTED GAME-VARIANTS: ' + " ".join(str(x) for x in SUPPORTED_GAME_VARIANTS) )
     print('\r\n')
-
+  
 
     try:
         connect()
