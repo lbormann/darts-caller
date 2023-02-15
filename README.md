@@ -14,7 +14,7 @@ o = not (yet) supported
 | Variant | Support |
 | ------------- | ------------- |
 | X01 | x |
-| Cricket | x |
+| Cricket | o |
 | Bermuda | o |
 | Shanghai | o |
 | Gotcha | o |
@@ -54,31 +54,38 @@ Go to download-directory and type:
 
 ## SETUP SOUNDS
 
-You need to have sounds-files as mp3 or wav. This files have to be named by 1 to 180, gameshot, busted, playerchange etc. You dont need all files. If you are too lazy you can go for 40, 60, 180 or whatever you like. You can record your voice or download some files in the internet, ie. https://freesound.org, https://www.zapsplat.com or watchout for pinned messages in (Discord https://discord.com/channels/802528604067201055/955745166134747196).
+You need to have sounds-files as mp3 or wav. This files have to be named by 1 to 180, gameshot, busted, playerchange etc. You dont need all files. If you are too lazy you can go for 40, 60, 180 or whatever you like. You can record your voice or download some files in the internet, ie. https://freesound.org, https://www.zapsplat.com or watchout for pinned messages in (Discord https://discord.com/channels/802528604067201055/955745166134747196 or https://discord.com/channels/802528604067201055/1019720832647434320).
 Put all sound files in one folder and if you like create subfolders in this folder for random caller functionality.
 
 Supported sound-file-namings for Autodarts-Events:
 - 0-180.{wav | mp3}
 - playername(s).{wav | mp3}   (Name of Autodarts-player(s))
-- yr_2-yr_170.{wav | mp3}   (*playername* you require)
+- yr_2-yr_170.{wav | mp3}   (-PCC / --possible_checkout_call = 1)
+- matchon.{wav | mp3}
+- matchshot.{wav | mp3}
 - gameon.{wav | mp3}
 - gameshot.{wav | mp3}
 - busted.{wav | mp3}
 - playerchange.{wav | mp3}
-- single.{wav | mp3}
-- double.{wav | mp3}
-- triple.{wav | mp3}
-- missed.{wav | mp3}
-- ambient_gameon.{wav | mp3}
-- ambient_gameshot.{wav | mp3}
-- ambient_noscore.{wav | mp3}
-- ambient_50more.{wav | mp3}
-- ambient_100more.{wav | mp3}
-- ambient_120more.{wav | mp3}
-- ambient_150more.{wav | mp3}
-- ambient_180.{wav | mp3}
+- {s1-t20}.{wav | mp3}  (-E / --call_every_dart = 1)
+- single.{wav | mp3}    (-E / --call_every_dart = 1)   
+- singleinner.{wav | mp3}   (-E / --call_every_dart = 1)
+- singleouter.{wav | mp3}   (-E / --call_every_dart = 1)
+- double.{wav | mp3}    (-E / --call_every_dart = 1)
+- triple.{wav | mp3}    (-E / --call_every_dart = 1)
+- outside.{wav | mp3}   (-E / --call_every_dart = 1)
+- ambient_matchon.{wav | mp3}    (-A / --ambient_sounds = 1)
+- ambient_matchshot.{wav | mp3}  (-A / --ambient_sounds = 1)
+- ambient_gameon.{wav | mp3}    (-A / --ambient_sounds = 1)
+- ambient_gameshot.{wav | mp3}  (-A / --ambient_sounds = 1)
+- ambient_noscore.{wav | mp3}   (-A / --ambient_sounds = 1)
+- ambient_50more.{wav | mp3}    (-A / --ambient_sounds = 1)
+- ambient_100more.{wav | mp3}   (-A / --ambient_sounds = 1)
+- ambient_120more.{wav | mp3}   (-A / --ambient_sounds = 1)
+- ambient_150more.{wav | mp3}   (-A / --ambient_sounds = 1)
+- ambient_180.{wav | mp3}   (-A / --ambient_sounds = 1)
 
-Since Version 1.6.0 you can deposit multiple sounds for EVERY event. Therefor you have to add a "+" to the filename. After the "+" you can add whatever text you prefer; as an example: let`s say we want multiple sounds for the 'gameon'-event. Our default file is 'gameon.mp3/gameon.wav'. Now we add some more: 'gameon+1.mp3', 'gameon+2.mp3', 'gameon+BEST.mp3'. You are not limited to gameon, even score-sounds can have multiple soundfiles.
+Since Version 1.6.0 you can deposit multiple sounds for EVERY game-event. Therefor you have to add a "+" to the filename. After the "+" you can add whatever text you prefer; as an example: let`s say we want multiple sounds for the 'gameon'-event. Our default file is 'gameon.mp3/gameon.wav'. Now we add some more: 'gameon+1.mp3', 'gameon+2.mp3', 'gameon+BEST.mp3'. You are not limited to gameon, even score-sounds can have multiple soundfiles.
 
 
 ### App starts and stops immediately?!
@@ -140,9 +147,52 @@ Reboot your system.
 - -A / --ambient_sounds [OPTIONAL] [Default: 0] [Possible values: 0 | 1]
 - -WTT / --webhook_throw_points [OPTIONAL] [MULTIPLE ENTRIES POSSIBLE] [Default: None]
 
-Some infos about -WTT:
-The program tries to send (POST) a specific json at the given url(s). You could try to prioritize which urls will be called first, but in general they will be called in parallel.
-You can find a list of json examples for the different game-events in 'broadcast-examples.dat'
+
+#### **-U / --autodarts_email**
+
+You should know your autodarts.io registered email-adress.
+
+#### **-P / --autodarts_password**
+
+You should know your autodarts.io registered password.
+
+#### **-B / --autodarts_board_id**
+
+You should know your autodarts.io registered board-ID (You can find it in Board-Manager).
+
+#### **-M / --media_path**
+
+You need to set an absolut Path to your media-file-directory, otherwise you won`t notice any calls. Make sure your sound-files are in a supported format (mp3,wav).
+
+#### **-V / --caller_volume**
+
+You can lower the call-volume in relation to current system-volume. 1.0 is system-volume. 0.5 is "half" volume.
+
+#### **-R / --random_caller**
+
+If you set this to 1 you will get a random caller each time you start the application. For this to work you need to setup subfolders in your media_path. Each subfolders represents a caller. By default this is not activated.
+
+#### **-L / --random_caller_each_leg**
+
+If you set this to 1 you will get a random caller each time a new leg starts. By default this is not activated.
+
+#### **-E / --call_every_dart**
+
+If you set this to 1 the caller calls every dart. Setup sounds {S1-T180}, single, double and others. By default this is not activated.
+
+#### **-PCC / --possible_checkout_call**
+
+If you set this to 1 the caller will call if there is a checkout possibility. Setup sounds {playername}{yr_2-yr_170} or {1-170} as a fallback. By default this is activated.
+
+#### **-A / --ambient_sounds**
+
+If you set this to 1 the caller will call extra sounds like crowd shouting or so (you decide!) Setup sounds {ambient_*}. By default this is not activated.
+
+#### **-WTT**
+
+The program tries to send (POST) a specific json to the given url(s). You could try to prioritize which urls will be invoked first, but in general they will be invoked in parallel.
+Other extensions like autodarts-extern or autodarts-wled requiring to set this field to their corresponding address (ip:port).
+Moreover you can find a list of json-examples for different game-events that are sent to WTT-entries in 'broadcast-examples.dat'. Who knows maybe you build your own extension upon this?!
 
 
 
@@ -157,11 +207,14 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 
 
 ## TODOs
+
 - Support other games modes
 - add Readme-section for updating
-
+- improve Readme: explain arguments, add example for starting app
+- add debug by argument
 
 ### Done
+
 - Prevent from double calling
 - only one webhook with all information (to prevent race condition on receiving app): leg_end, turn, throw_number, throw_value, points_left, variant, user
 - let the user configure caller-volume
@@ -180,6 +233,8 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - add configurable pygame.mixer
 - add possibility to have more sound-files for one event (random if multiple found)
 - add ambient-sounds for gameon, gamewon, noscore etc.
+- call every field possible
+- added matchshot
 
 
 ## LAST WORDS
