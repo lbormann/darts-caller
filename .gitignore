@@ -1,5 +1,6 @@
 caller
 *.txt
+*.json
 win-exec-custom.bat
 win-start-custom.bat
 build

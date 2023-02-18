@@ -22,7 +22,7 @@ AUTODART_AUTH_URL = 'https://login.autodarts.io/'
 AUTODART_AUTH_TICKET_URL = 'https://api.autodarts.io/ms/v0/ticket'
 AUTODART_CLIENT_ID = 'autodarts-app'
 AUTODART_REALM_NAME = 'autodarts'
-AUTODART_MATCHES_URL = 'https://api.autodarts.io/gs/v0/matches'
+AUTODART_MATCHES_URL = 'https://api.autodarts.io/gs/v0/matches/'
 AUTODART_BOARDS_URL = 'https://api.autodarts.io/bs/v0/boards/'
 AUTODART_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe?ticket='
 
@@ -33,8 +33,8 @@ DEFAULT_MIXER_BUFFERSIZE = 4096
 
 BOGEY_NUMBERS = [169, 168, 166, 165, 163, 162, 159]
 SUPPORTED_CRICKET_FIELDS = [15, 16, 17, 18, 19, 20, 25]
-SUPPORTED_GAME_VARIANTS = ['X01', 'Random Checkout'] # 'Cricket', 
-VERSION = '1.7.0'
+SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket', 'Random Checkout']
+VERSION = '1.7.1'
 DEBUG = False
 
 
@@ -52,7 +52,6 @@ def log_and_print(message, obj):
 def parseUrl(str):
     parsedUrl = urlparse(str)
     return parsedUrl.scheme + '://' + parsedUrl.netloc + parsedUrl.path.rstrip("/")
-
 
 def load_callers(path):
     filenames = []
@@ -86,20 +85,21 @@ def setup_caller():
     caller = caller[1]
     
 
-def play_sound(pathToFile, waitForLast, volume_lower):
+def play_sound(pathToFile, waitForLast, volumeMult):
     if waitForLast == True:
         while mixer.get_busy():
             time.sleep(0.1)
 
     sound = mixer.Sound(pathToFile)
     if AUDIO_CALLER_VOLUME is not None:
-        sound.set_volume(AUDIO_CALLER_VOLUME + volume_lower)
+        sound.set_volume(AUDIO_CALLER_VOLUME * volumeMult)
     sound.play()
+    # printv('Playing: "' + pathToFile + '"', only_debug=True)
 
-def play_sound_effect(event, waitForLast = False, volumeLower = 0):
+def play_sound_effect(event, waitForLast = False, volumeMult = 1.0):
     try:
         global caller
-        play_sound(random.choice(caller[event]), waitForLast, volumeLower)
+        play_sound(random.choice(caller[event]), waitForLast, volumeMult)
         return True
     except Exception as e:
         printv('Can not play soundfile for event "' + event + '" -> Ignore this or check existance; otherwise convert your file appropriate')
@@ -140,6 +140,7 @@ def listen_to_newest_match(m, ws):
     
 
 def process_match_x01(m):
+    variant = m['variant']
     currentPlayerIndex = m['player']
     currentPlayer = m['players'][currentPlayerIndex]
     currentPlayerName = str(currentPlayer['name']).lower()
@@ -152,6 +153,8 @@ def process_match_x01(m):
     isGameFin = False
     global isGameFinished
     global lastPoints
+    global accessToken
+    global currentMatch
 
     # Determine "baseScore"-Key
     base = 'baseScore'
@@ -185,7 +188,7 @@ def process_match_x01(m):
                 "event": "match-won",
                 "player": currentPlayerName,
                 "game": {
-                    "mode": "X01",
+                    "mode": variant,
                     "dartsThrownValue": points
                 } 
             }
@@ -194,9 +197,9 @@ def process_match_x01(m):
         if play_sound_effect('matchshot') == False:
             play_sound_effect('gameshot')
         play_sound_effect(currentPlayerName, True)
-        if AMBIENT_SOUNDS == True:
-            if play_sound_effect('ambient_matchshot', volumeLower=-0.4) == False:
-                play_sound_effect('ambient_gameshot', volumeLower=-0.4)
+        if AMBIENT_SOUNDS != 0.0:
+            if play_sound_effect('ambient_matchshot', volumeMult = AMBIENT_SOUNDS) == False:
+                play_sound_effect('ambient_gameshot', volumeMult = AMBIENT_SOUNDS)
         setup_caller()
         printv('Gameshot and match')
 
@@ -208,7 +211,7 @@ def process_match_x01(m):
                 "event": "game-won",
                 "player": currentPlayerName,
                 "game": {
-                    "mode": "X01",
+                    "mode": variant,
                     "dartsThrownValue": points
                 } 
             }
@@ -216,8 +219,8 @@ def process_match_x01(m):
 
         play_sound_effect('gameshot')
         play_sound_effect(currentPlayerName, True)
-        if AMBIENT_SOUNDS == True:
-            play_sound_effect('ambient_gameshot', volumeLower=-0.4)
+        if AMBIENT_SOUNDS != 0.0:
+            play_sound_effect('ambient_gameshot', volumeMult = AMBIENT_SOUNDS)
         if RANDOM_CALLER_EACH_LEG:
             setup_caller()
         printv('Gameshot')
@@ -226,12 +229,12 @@ def process_match_x01(m):
     elif m['settings'][base] == m['gameScores'][0] and turns['throws'] == None and m['leg'] == 1 and m['set'] == 1:
         isGameOn = True
         isGameFinished = False
-        
+
         matchStarted = {
             "event": "match-started",
             "player": currentPlayerName,
             "game": {
-                "mode": "X01",
+                "mode": variant,
                 "pointsStart": str(base),
                 # TODO: fix
                 "special": "TODO"
@@ -243,21 +246,22 @@ def process_match_x01(m):
         if play_sound_effect('matchon', True) == False:
             play_sound_effect('gameon', True)
         # play only if it is a real match not just legs!
-        if AMBIENT_SOUNDS == True and (m['legs'] != 1 or m['sets'] != 1):
-            if play_sound_effect('ambient_matchon', volumeLower=-0.6) == False:
-                play_sound_effect('ambient_gameon', volumeLower=-0.6)
+        if AMBIENT_SOUNDS != 0.0 and ('legs' in m and 'sets'):
+            if play_sound_effect('ambient_matchon', volumeMult = AMBIENT_SOUNDS) == False:
+                play_sound_effect('ambient_gameon', volumeMult = AMBIENT_SOUNDS)
+
         printv('Matchon')
 
     # Check for gameon
     elif m['settings'][base] == m['gameScores'][0] and turns['throws'] == None:
         isGameOn = True
         isGameFinished = False
-        
+
         gameStarted = {
             "event": "game-started",
             "player": currentPlayerName,
             "game": {
-                "mode": "X01",
+                "mode": variant,
                 "pointsStart": str(base),
                 # TODO: fix
                 "special": "TODO"
@@ -267,8 +271,9 @@ def process_match_x01(m):
 
         play_sound_effect(currentPlayerName, False)
         play_sound_effect('gameon', True)
-        if AMBIENT_SOUNDS == True:
-            play_sound_effect('ambient_gameon', volumeLower=-0.6)
+        if AMBIENT_SOUNDS != 0.0:
+            play_sound_effect('ambient_gameon', volumeMult = AMBIENT_SOUNDS)
+
         printv('Gameon')
           
     # Check for busted turn
@@ -279,14 +284,14 @@ def process_match_x01(m):
                     "event": "busted",
                     "player": currentPlayerName,
                     "game": {
-                        "mode": "X01"
+                        "mode": variant
                     }       
                 }
         broadcast(busted)
 
         play_sound_effect('busted')
-        if AMBIENT_SOUNDS == True:
-            play_sound_effect('ambient_noscore', volumeLower=-0.4)
+        if AMBIENT_SOUNDS != 0.0:
+            play_sound_effect('ambient_noscore', volumeMult = AMBIENT_SOUNDS)
         printv('Busted')
 
     # Check for possible checkout
@@ -305,15 +310,9 @@ def process_match_x01(m):
     elif turns != None and turns['throws'] != None and len(turns['throws']) == 1:
         isGameFinished = False
 
-        # if AMBIENT_SOUNDS == True and turns['throws'][0]['segment']['bed'] == 'Outside':
-        #     play_sound_effect('ambient_noscore', volumeLower=-0.3)
-
     # Check for 2. Dart
     elif turns != None and turns['throws'] != None and len(turns['throws']) == 2:
         isGameFinished = False
-
-        # if AMBIENT_SOUNDS == True and turns['throws'][1]['segment']['bed'] == 'Outside':
-        #     play_sound_effect('ambient_noscore', volumeLower=-0.3)
 
     # Check for 3. Dart - points call
     elif turns != None and turns['throws'] != None and len(turns['throws']) == 3:
@@ -323,7 +322,7 @@ def process_match_x01(m):
             "event": "darts-thrown",
             "player": currentPlayerName,
             "game": {
-                "mode": "X01",
+                "mode": variant,
                 "pointsLeft": str(remainingPlayerScore),
                 "dartNumber": "3",
                 "dartValue": points,        
@@ -331,21 +330,22 @@ def process_match_x01(m):
             }
         }
         broadcast(dartsThrown)
+
         
         play_sound_effect(points)
-        if AMBIENT_SOUNDS == True:
+        if AMBIENT_SOUNDS != 0.0:
             if turns['points'] == 0:
-                play_sound_effect('ambient_noscore', volumeLower=-0.5)
+                play_sound_effect('ambient_noscore', volumeMult = AMBIENT_SOUNDS)
             elif turns['points'] == 180:
-                play_sound_effect('ambient_180', volumeLower=-0.1)
+                play_sound_effect('ambient_180', volumeMult = AMBIENT_SOUNDS)
             elif turns['points'] >= 153:
-                play_sound_effect('ambient_150more', volumeLower=-0.1)   
+                play_sound_effect('ambient_150more', volumeMult = AMBIENT_SOUNDS)   
             elif turns['points'] >= 120:
-                play_sound_effect('ambient_120more', volumeLower=-0.2)
+                play_sound_effect('ambient_120more', volumeMult = AMBIENT_SOUNDS)
             elif turns['points'] >= 100:
-                play_sound_effect('ambient_100more', volumeLower=-0.3)
+                play_sound_effect('ambient_100more', volumeMult = AMBIENT_SOUNDS)
             elif turns['points'] >= 50:
-                play_sound_effect('ambient_50more', volumeLower=-0.4)
+                play_sound_effect('ambient_50more', volumeMult = AMBIENT_SOUNDS)
 
 
         printv("Turn ended")
@@ -361,7 +361,7 @@ def process_match_x01(m):
             "event": "darts-pulled",
             "player": currentPlayerName,
             "game": {
-                "mode": "X01",
+                "mode": variant,
                 # TODO: fix
                 "pointsLeft": str(remainingPlayerScore),
                 # TODO: fix
@@ -390,113 +390,171 @@ def process_match_x01(m):
 def process_match_cricket(m):
     currentPlayerIndex = m['player']
     currentPlayer = m['players'][currentPlayerIndex]
-    currentPlayerName = str(currentPlayer['name'])
-    # remainingPlayerScore = m['gameScores'][currentPlayerIndex]
+    currentPlayerName = str(currentPlayer['name']).lower()
     turns = m['turns'][0]
-    # points = str(turns['points'])
-
-    # TODO: mode/variant by incoming structure
+    variant = m['variant']
 
     isGameOn = False
     isGameFin = False
     global isGameFinished
     global lastPoints
 
-    # and len(turns['throws']) == 3 or isGameFinished == True
-    # if turns != None and turns['throws'] != None:
-    #     lastPoints = points
-
+    # Call every thrown dart
     if CALL_EVERY_DART and turns != None and turns['throws'] != None and len(turns['throws']) >= 1: 
         throwAmount = len(turns['throws'])
-        type = turns['throws'][throwAmount - 1]['segment']['bed']
+        type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
+        field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
+        field_number = turns['throws'][throwAmount - 1]['segment']['number']
 
-        if type == 'Single':
-            play_sound_effect('single')
-        elif type == 'SingleOuter':
-            play_sound_effect('single')
-        elif type == 'SingleInner':
-            play_sound_effect('single')
-        elif type == 'Double':
-            play_sound_effect('double')
-        elif type == 'Triple':
-            play_sound_effect('triple')
-        elif type == 'Outside':
-            play_sound_effect('missed')
+        if field_number in SUPPORTED_CRICKET_FIELDS and play_sound_effect(field_name) == False:
+            inner_outer = False
+            if type == 'singleouter' or type == 'singleinner':
+                 inner_outer = play_sound_effect(type)
+                 if inner_outer == False:
+                    play_sound_effect('single')
+            else:
+                play_sound_effect(type)
 
-
-    # Check for match end
+    # Check for matchshot
     if m['winner'] != -1 and isGameFinished == False:
         isGameFin = True
+
+        throwPoints = 0
+        lastPoints = ''
+        for t in turns['throws']:
+            number = t['segment']['number']
+            if number in SUPPORTED_CRICKET_FIELDS:
+                throwPoints += (t['segment']['multiplier'] * number)
+                lastPoints += 'x' + str(t['segment']['name'])
+        lastPoints = lastPoints[1:]
         
         matchWon = {
-            "event": "match-won",
-            "player": currentPlayerName,
-            "game": {
-                "mode": "Cricket"
-            } 
-        }
+                "event": "match-won",
+                "player": currentPlayerName,
+                "game": {
+                    "mode": variant,
+                    "dartsThrownValue": throwPoints                    
+                } 
+            }
         broadcast(matchWon)
 
-        play_sound_effect('gameshot')
+        if play_sound_effect('matchshot') == False:
+            play_sound_effect('gameshot')
+        play_sound_effect(currentPlayerName, True)
+        if AMBIENT_SOUNDS != 0.0:
+            if play_sound_effect('ambient_matchshot', volumeMult = AMBIENT_SOUNDS) == False:
+                play_sound_effect('ambient_gameshot', volumeMult = AMBIENT_SOUNDS)
         setup_caller()
         printv('Gameshot and match')
 
-    # Check for leg/game end
-    elif m['gameWinner'] != -1:
-        isGameFinished = True
+    # Check for gameshot
+    elif m['gameWinner'] != -1 and isGameFinished == False:
+        isGameFin = True
 
+        throwPoints = 0
+        lastPoints = ''
+        for t in turns['throws']:
+            number = t['segment']['number']
+            if number in SUPPORTED_CRICKET_FIELDS:
+                throwPoints += (t['segment']['multiplier'] * number)
+                lastPoints += 'x' + str(t['segment']['name'])
+        lastPoints = lastPoints[1:]
+        
         gameWon = {
                 "event": "game-won",
                 "player": currentPlayerName,
                 "game": {
-                    "mode": "Cricket"
+                    "mode": variant,
+                    "dartsThrownValue": throwPoints
                 } 
             }
         broadcast(gameWon)
+
         play_sound_effect('gameshot')
+        play_sound_effect(currentPlayerName, True)
+        if AMBIENT_SOUNDS != 0.0:
+            play_sound_effect('ambient_gameshot', volumeMult = AMBIENT_SOUNDS)
         if RANDOM_CALLER_EACH_LEG:
             setup_caller()
-        printv('Gameshot and match')
+        printv('Gameshot')
     
-    # Check for leg start
+    # Check for matchon
+    elif m['gameScores'][0] == 0 and m['scores'] == None and turns['throws'] == None and m['round'] == 1 and m['leg'] == 1 and m['set'] == 1:
+        isGameOn = True
+        isGameFinished = False
+        
+        matchStarted = {
+            "event": "match-started",
+            "player": currentPlayerName,
+            "game": {
+                "mode": variant,
+                # TODO: fix
+                "special": "TODO"
+                }     
+            }
+        broadcast(matchStarted)
+
+        play_sound_effect(currentPlayerName, False)
+        if play_sound_effect('matchon', True) == False:
+            play_sound_effect('gameon', True)
+        # play only if it is a real match not just legs!
+        if AMBIENT_SOUNDS != 0.0 and ('legs' in m and 'sets'):
+            if play_sound_effect('ambient_matchon', volumeMult = AMBIENT_SOUNDS) == False:
+                play_sound_effect('ambient_gameon', volumeMult = AMBIENT_SOUNDS)
+        printv('Matchon')
+
+    # Check for gameon
     elif m['gameScores'][0] == 0 and m['scores'] == None and turns['throws'] == None and m['round'] == 1:
         isGameOn = True
         isGameFinished = False
-
+        
         gameStarted = {
             "event": "game-started",
             "player": currentPlayerName,
             "game": {
-                "mode": "Cricket",
+                "mode": variant,
                 # TODO: fix
                 "special": "TODO"
                 }     
             }
         broadcast(gameStarted)
 
-        play_sound_effect('gameon')
+        play_sound_effect(currentPlayerName, False)
+        play_sound_effect('gameon', True)
+        if AMBIENT_SOUNDS != 0.0:
+            play_sound_effect('ambient_gameon', volumeMult = AMBIENT_SOUNDS)
         printv('Gameon')
 
     # Check for busted turn
     elif turns['busted'] == True:
         lastPoints = "B"
         isGameFinished = False
-
         busted = { 
                     "event": "busted",
                     "player": currentPlayerName,
                     "game": {
-                        "mode": "X01"
+                        "mode": variant
                     }       
                 }
         broadcast(busted)
 
         play_sound_effect('busted')
+        if AMBIENT_SOUNDS != 0.0:
+            play_sound_effect('ambient_noscore', volumeMult = AMBIENT_SOUNDS)
         printv('Busted')
+
+    # Check for 1. Dart
+    elif turns != None and turns['throws'] != None and len(turns['throws']) == 1:
+        isGameFinished = False
+
+    # Check for 2. Dart
+    elif turns != None and turns['throws'] != None and len(turns['throws']) == 2:
+        isGameFinished = False
 
     # Check for 3. Dart - points call
     elif turns != None and turns['throws'] != None and len(turns['throws']) == 3:
         isGameFinished = False
+
         throwPoints = 0
         lastPoints = ''
         for t in turns['throws']:
@@ -510,38 +568,44 @@ def process_match_cricket(m):
             "event": "darts-thrown",
             "player": currentPlayerName,
             "game": {
-                "mode": "Cricket",
-                # "pointsLeft": str(remainingPlayerScore),
+                "mode": variant,
                 "dartNumber": "3",
-                # "dartValue": points,        
+                "dartValue": throwPoints,        
 
             }
         }
         broadcast(dartsThrown)
 
         play_sound_effect(str(throwPoints))
+        if AMBIENT_SOUNDS != 0.0:
+            if throwPoints == 0:
+                play_sound_effect('ambient_noscore', volumeMult = AMBIENT_SOUNDS)
+            elif throwPoints == 180:
+                play_sound_effect('ambient_180', volumeMult = AMBIENT_SOUNDS)
+            elif throwPoints >= 153:
+                play_sound_effect('ambient_150more', volumeMult = AMBIENT_SOUNDS)   
+            elif throwPoints >= 120:
+                play_sound_effect('ambient_120more', volumeMult = AMBIENT_SOUNDS)
+            elif throwPoints >= 100:
+                play_sound_effect('ambient_100more', volumeMult = AMBIENT_SOUNDS)
+            elif throwPoints >= 50:
+                play_sound_effect('ambient_50more', volumeMult = AMBIENT_SOUNDS)
+
         printv("Turn ended")
     
     # Playerchange
     if isGameOn == False and turns != None and turns['throws'] == None or isGameFinished == True:
-        user = str(currentPlayer['name'])
-        throwNumber = "1"
-        throwPoints = lastPoints
-        pointsLeft = "0"
-        busted = str(turns['busted'])
-        variant = 'Cricket'
-
         dartsPulled = {
             "event": "darts-pulled",
-            "player": user,
+            "player": str(currentPlayer['name']),
             "game": {
                 "mode": variant,
                 # TODO: fix
-                "pointsLeft": pointsLeft,
+                "pointsLeft": "0",
                 # TODO: fix
                 "dartsThrown": "3",
-                "dartsThrownValue": throwPoints,
-                "busted": busted
+                "dartsThrownValue": lastPoints,
+                "busted": str(turns['busted'])
                 # TODO: fix
                 # "darts": [
                 #     {"number": "1", "value": "60"},
@@ -557,7 +621,6 @@ def process_match_cricket(m):
 
     if isGameFin == True:
         isGameFinished = True
-
         
 def broadcast(data):
     for ep in WEBHOOK_THROW_POINTS:
@@ -575,6 +638,8 @@ def broadcast_intern(endpoint, data):
 
 
 def connect():
+    global accessToken
+
     # Configure client
     keycloak_openid = KeycloakOpenID(server_url = AUTODART_AUTH_URL,
                                         client_id = AUTODART_CLIENT_ID,
@@ -583,8 +648,8 @@ def connect():
 
     # Get Token
     token = keycloak_openid.token(AUTODART_USER_EMAIL, AUTODART_USER_PASSWORD)
+    accessToken = token['access_token']
     printv(token, only_debug = True)
-
 
     # Get Ticket
     ticket = requests.post(AUTODART_AUTH_TICKET_URL, headers={'Authorization': 'Bearer ' + token['access_token']})
@@ -648,7 +713,7 @@ def on_close(ws, close_status_code, close_msg):
         printv(str(close_msg))
         printv(str(close_status_code))
         printv ("Retry : %s" % time.ctime())
-        time.sleep(10)
+        time.sleep(3)
         connect()
     except Exception as e:
         log_and_print('WS-Close failed: ', e)
@@ -669,12 +734,12 @@ if __name__ == "__main__":
     ap.add_argument("-P", "--autodarts_password", required=True, help="Registered password address at " + AUTODART_URL)
     ap.add_argument("-B", "--autodarts_board_id", required=True, help="Registered board-id at " + AUTODART_URL)
     ap.add_argument("-M", "--media_path", required=True, help="Absolute path to your media folder. You can download free sounds at https://freesound.org/")
-    ap.add_argument("-V", "--caller_volume", type=float, required=False, help="Set the caller volume between 0.0 (silent) and 1.0 (max)")
+    ap.add_argument("-V", "--caller_volume", type=float, default=1.0, required=False, help="Set the caller volume between 0.0 (silent) and 1.0 (max)")
     ap.add_argument("-R", "--random_caller", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will randomly choose a caller each game. It only works when your base-media-folder has subfolders with its files")
     ap.add_argument("-L", "--random_caller_each_leg", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will randomly choose a caller each leg instead of each game. It only works when 'random_caller=1'")
     ap.add_argument("-E", "--call_every_dart", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will call every thrown dart")
     ap.add_argument("-PCC", "--possible_checkout_call", type=int, choices=range(0, 2), default=1, required=False, help="If '1', the application will call a possible checkout starting at 170")
-    ap.add_argument("-A", "--ambient_sounds", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will call a ambient_*-Sounds")
+    ap.add_argument("-A", "--ambient_sounds", type=float, default=0.0, required=False, help="If > '0.0' (volume), the application will call a ambient_*-Sounds")
     ap.add_argument("-WTT", "--webhook_throw_points", required=False, nargs='*', help="Url(s) that will be requested every throw")
     ap.add_argument("-MIF", "--mixer_frequency", type=int, required=False, default=DEFAULT_MIXER_FREQUENCY, help="Pygame mixer frequency")
     ap.add_argument("-MIS", "--mixer_size", type=int, required=False, default=DEFAULT_MIXER_SIZE, help="Pygame mixer size")
@@ -699,8 +764,6 @@ if __name__ == "__main__":
     MIXER_CHANNELS = args['mixer_channels']
     MIXER_BUFFERSIZE = args['mixer_buffersize']
 
-
-
     if WEBHOOK_THROW_POINTS is not None:
         parsedList = list()
         for e in WEBHOOK_THROW_POINTS:
@@ -708,6 +771,9 @@ if __name__ == "__main__":
         WEBHOOK_THROW_POINTS = parsedList
     else:
         WEBHOOK_THROW_POINTS = list()
+
+    global accessToken
+    accessToken = None
 
     global lastMessage
     lastMessage = None

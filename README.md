@@ -14,7 +14,7 @@ o = not (yet) supported
 | Variant | Support |
 | ------------- | ------------- |
 | X01 | x |
-| Cricket | o |
+| Cricket | x |
 | Bermuda | o |
 | Shanghai | o |
 | Gotcha | o |
@@ -36,7 +36,7 @@ o = not (yet) supported
 #### Setup python3
 
 - Download and install python 3.x.x for your specific os.
-- Download and install pip
+- Download and install pip.
 
 
 #### Get the project
@@ -74,16 +74,16 @@ Supported sound-file-namings for Autodarts-Events:
 - double.{wav | mp3}    (-E / --call_every_dart = 1)
 - triple.{wav | mp3}    (-E / --call_every_dart = 1)
 - outside.{wav | mp3}   (-E / --call_every_dart = 1)
-- ambient_matchon.{wav | mp3}    (-A / --ambient_sounds = 1)
-- ambient_matchshot.{wav | mp3}  (-A / --ambient_sounds = 1)
-- ambient_gameon.{wav | mp3}    (-A / --ambient_sounds = 1)
-- ambient_gameshot.{wav | mp3}  (-A / --ambient_sounds = 1)
-- ambient_noscore.{wav | mp3}   (-A / --ambient_sounds = 1)
-- ambient_50more.{wav | mp3}    (-A / --ambient_sounds = 1)
-- ambient_100more.{wav | mp3}   (-A / --ambient_sounds = 1)
-- ambient_120more.{wav | mp3}   (-A / --ambient_sounds = 1)
-- ambient_150more.{wav | mp3}   (-A / --ambient_sounds = 1)
-- ambient_180.{wav | mp3}   (-A / --ambient_sounds = 1)
+- ambient_matchon.{wav | mp3}    (-A / --ambient_sounds > 0.0)
+- ambient_matchshot.{wav | mp3}  (-A / --ambient_sounds > 0.0)
+- ambient_gameon.{wav | mp3}    (-A / --ambient_sounds > 0.0)
+- ambient_gameshot.{wav | mp3}  (-A / --ambient_sounds > 0.0)
+- ambient_noscore.{wav | mp3}   (-A / --ambient_sounds > 0.0)
+- ambient_50more.{wav | mp3}    (-A / --ambient_sounds > 0.0)
+- ambient_100more.{wav | mp3}   (-A / --ambient_sounds > 0.0)
+- ambient_120more.{wav | mp3}   (-A / --ambient_sounds > 0.0)
+- ambient_150more.{wav | mp3}   (-A / --ambient_sounds > 0.0)
+- ambient_180.{wav | mp3}   (-A / --ambient_sounds > 0.0)
 
 Since Version 1.6.0 you can deposit multiple sounds for EVERY game-event. Therefor you have to add a "+" to the filename. After the "+" you can add whatever text you prefer; as an example: let`s say we want multiple sounds for the 'gameon'-event. Our default file is 'gameon.mp3/gameon.wav'. Now we add some more: 'gameon+1.mp3', 'gameon+2.mp3', 'gameon+BEST.mp3'. You are not limited to gameon, even score-sounds can have multiple soundfiles.
 
@@ -116,7 +116,7 @@ Click on the shortcut to start the caller.
 
 ### Run by source
 
-    python autodarts-caller.py -U "your-autodarts-email" -P "your-autodarts-password" -B "your-autodarts-board-id" -M "absolute-folder-to-your-media-files" -V "0.75" -R "0|1" -L "0|1"
+    python3 autodarts-caller.py -U "your-autodarts-email" -P "your-autodarts-password" -B "your-autodarts-board-id" -M "absolute-folder-to-your-media-files"
 
 
 ### Setup autoboot [linux] (optional)
@@ -125,7 +125,7 @@ Click on the shortcut to start the caller.
 
 At the end of the file add:
 
-    @reboot sleep 30 && cd <absolute-path-to>/autodarts-caller && python autodarts-caller.py -U "TODO" -P "TODO" -B "TODO" -M "TODO"
+    @reboot sleep 30 && cd <absolute-path-to>/autodarts-caller && python3 autodarts-caller.py -U "TODO" -P "TODO" -B "TODO" -M "TODO"
 
 Make sure you add an empty line under the added command.
 
@@ -144,7 +144,7 @@ Reboot your system.
 - -L / --random_caller_each_leg [OPTIONAL] [Default: 0] [Possible values: 0 | 1]
 - -E / --call_every_dart [OPTIONAL] [Default: 0] [Possible values: 0 | 1]
 - -PCC / --possible_checkout_call [OPTIONAL] [Default: 1] [Possible values: 0 | 1]
-- -A / --ambient_sounds [OPTIONAL] [Default: 0] [Possible values: 0 | 1]
+- -A / --ambient_sounds [OPTIONAL] [Default: 0.0] [Possible values: 0.0 | 1.0]
 - -WTT / --webhook_throw_points [OPTIONAL] [MULTIPLE ENTRIES POSSIBLE] [Default: None]
 
 
@@ -166,11 +166,11 @@ You need to set an absolut Path to your media-file-directory, otherwise you won`
 
 #### **-V / --caller_volume**
 
-You can lower the call-volume in relation to current system-volume. 1.0 is system-volume. 0.5 is "half" volume.
+You can lower the call-volume in relation to current system-volume. 1.0 is system-volume. 0.5 is "half" volume. By default this is 1.0
 
 #### **-R / --random_caller**
 
-If you set this to 1 you will get a random caller each time you start the application. For this to work you need to setup subfolders in your media_path. Each subfolders represents a caller. By default this is not activated.
+If you set this to 1 you will get a random caller each time you start the application. For this to work you need to setup subfolders in your media_path. Each subfolder represents an individual caller. By default this is not activated.
 
 #### **-L / --random_caller_each_leg**
 
@@ -186,12 +186,12 @@ If you set this to 1 the caller will call if there is a checkout possibility. Se
 
 #### **-A / --ambient_sounds**
 
-If you set this to 1 the caller will call extra sounds like crowd shouting or so (you decide!) Setup sounds {ambient_*}. By default this is not activated.
+If you set this to value between 0.1 and 1.0 the caller will call extra sounds like crowd-shouting or whatever you like (you decide!). Setup sounds {ambient_*}. 
+The configured value will be multiplied by caller_volume. As an example: caller_volume = 0.8 and ambient_sounds = 1.0 means your sound-volume will be 0.8 relative to your system-volume. By default this is 0.0
 
 #### **-WTT**
 
-The program tries to send (POST) a specific json to the given url(s). You could try to prioritize which urls will be invoked first, but in general they will be invoked in parallel.
-Other extensions like autodarts-extern or autodarts-wled requiring to set this field to their corresponding address (ip:port).
+The program tries to send (POST) a specific json to the given url(s). Other extensions like autodarts-extern or autodarts-wled requiring to set this field to their corresponding address (ip:port). You could try to prioritize which urls will be invoked first, but in general they will be invoked in parallel.
 Moreover you can find a list of json-examples for different game-events that are sent to WTT-entries in 'broadcast-examples.dat'. Who knows maybe you build your own extension upon this?!
 
 
@@ -210,8 +210,10 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 
 - Support other games modes
 - add Readme-section for updating
-- improve Readme: explain arguments, add example for starting app
 - add debug by argument
+- -E 25 will be called as 25 (that is wrong)
+- cricket 2 players 2x gameon
+- cricket: do not call marked fields, only call number if field is still open
 
 ### Done
 
