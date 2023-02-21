@@ -10,13 +10,15 @@ from keycloak import KeycloakOpenID
 import requests
 from pygame import mixer
 import websocket
+from websocket_server import WebsocketServer
 import threading
 import logging
 logger=logging.getLogger()
 
 
 
-
+DEFAULT_HOST_IP = '0.0.0.0'
+DEFAULT_HOST_PORT = 8079
 AUTODART_URL = 'https://autodarts.io'
 AUTODART_AUTH_URL = 'https://login.autodarts.io/'
 AUTODART_AUTH_TICKET_URL = 'https://api.autodarts.io/ms/v0/ticket'
@@ -34,7 +36,7 @@ DEFAULT_MIXER_BUFFERSIZE = 4096
 BOGEY_NUMBERS = [169, 168, 166, 165, 163, 162, 159]
 SUPPORTED_CRICKET_FIELDS = [15, 16, 17, 18, 19, 20, 25]
 SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket', 'Random Checkout']
-VERSION = '1.7.1'
+VERSION = '1.8.0'
 DEBUG = False
 
 
@@ -72,6 +74,7 @@ def load_callers(path):
 
 def setup_caller():
     global caller
+
     callers = load_callers(AUDIO_MEDIA_PATH)
     printv(str(len(callers)) + ' caller(s) ready to call out your Darts!')
 
@@ -83,7 +86,7 @@ def setup_caller():
     printv("Your current caller: " + str(os.path.basename(os.path.normpath(caller[0]))) + " knows " + str(len(caller[1].values())) + " Sound(s)")
     printv(caller[1], True)
     caller = caller[1]
-    
+
 
 def play_sound(pathToFile, waitForLast, volumeMult):
     if waitForLast == True:
@@ -138,7 +141,6 @@ def listen_to_newest_match(m, ws):
         ws.send(json.dumps(paramsSubscribeMatchEvents))
         currentMatch = newMatch
     
-
 def process_match_x01(m):
     variant = m['variant']
     currentPlayerIndex = m['player']
@@ -621,52 +623,50 @@ def process_match_cricket(m):
 
     if isGameFin == True:
         isGameFinished = True
-        
-def broadcast(data):
-    for ep in WEBHOOK_THROW_POINTS:
-        try:
-            threading.Thread(target=broadcast_intern, args=(ep, data)).start()
-        except:
-            continue
 
-def broadcast_intern(endpoint, data):
-    try:
-        requests.post(endpoint, json=data, verify=False)      
-    except:
-        return
+
+def broadcast(data):
+    def process(*args):
+        global server
+        server.send_message_to_all(json.dumps(data, indent=2).encode('utf-8'))
+    threading.Thread(target=process).start()
             
 
+def connect_autodarts():
+    def process(*args):
+        global accessToken
 
-def connect():
-    global accessToken
+        # Configure client
+        keycloak_openid = KeycloakOpenID(server_url = AUTODART_AUTH_URL,
+                                            client_id = AUTODART_CLIENT_ID,
+                                            realm_name = AUTODART_REALM_NAME,
+                                            verify = True)
 
-    # Configure client
-    keycloak_openid = KeycloakOpenID(server_url = AUTODART_AUTH_URL,
-                                        client_id = AUTODART_CLIENT_ID,
-                                        realm_name = AUTODART_REALM_NAME,
-                                        verify = True)
+        # Get Token
+        token = keycloak_openid.token(AUTODART_USER_EMAIL, AUTODART_USER_PASSWORD)
+        accessToken = token['access_token']
+        printv(token, only_debug = True)
 
-    # Get Token
-    token = keycloak_openid.token(AUTODART_USER_EMAIL, AUTODART_USER_PASSWORD)
-    accessToken = token['access_token']
-    printv(token, only_debug = True)
-
-    # Get Ticket
-    ticket = requests.post(AUTODART_AUTH_TICKET_URL, headers={'Authorization': 'Bearer ' + token['access_token']})
-    printv(ticket.text, only_debug = True)
+        # Get Ticket
+        ticket = requests.post(AUTODART_AUTH_TICKET_URL, headers={'Authorization': 'Bearer ' + token['access_token']})
+        printv(ticket.text, only_debug = True)
 
 
-    websocket.enableTrace(False)
-    ws = websocket.WebSocketApp(AUTODART_WEBSOCKET_URL + ticket.text,
-                            on_open = on_open,
-                            on_message = on_message,
-                            on_error = on_error,
-                            on_close = on_close)
+        websocket.enableTrace(False)
+        ws = websocket.WebSocketApp(AUTODART_WEBSOCKET_URL + ticket.text,
+                                on_open = on_open_autodarts,
+                                on_message = on_message_autodarts,
+                                on_error = on_error_autodarts,
+                                on_close = on_close_autodarts)
 
-    ws.run_forever()
+        ws.run_forever()
+    threading.Thread(target=process).start()
 
-def on_open(ws):
+def on_open_autodarts(ws):
     try:
+        global accessToken
+        global boardManagerAddress
+
         printv('Receiving live information from ' + AUTODART_URL)
         printv('!!! In case that calling is not working, please check your Board-ID (-B) for correctness !!!')
         paramsSubscribeMatchesEvents = {
@@ -675,10 +675,17 @@ def on_open(ws):
             "topic": "*.state"
         }
         ws.send(json.dumps(paramsSubscribeMatchesEvents))
+
+        if accessToken != None:
+            res = requests.get(AUTODART_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + accessToken})
+            board_ip = res.json()['ip']
+            boardManagerAddress = 'http://' + board_ip
+            printv('Board-address: ' + boardManagerAddress)
+
     except Exception as e:
         log_and_print('WS-Open failed: ', e)
 
-def on_message(ws, message):
+def on_message_autodarts(ws, message):
     def process(*args):
         try:
             global lastMessage
@@ -692,7 +699,10 @@ def on_message(ws, message):
                 listen_to_newest_match(data, ws)
 
                 # printv('Current Match: ' + currentMatch)
-                
+                if('turns' in data and len(data['turns']) >=1):
+                    data['turns'][0].pop("id", None)
+                    data['turns'][0].pop("createdAt", None)
+
                 if lastMessage != data and currentMatch != None and data['id'] == currentMatch:
                     lastMessage = data
                     ppjson(data)
@@ -707,18 +717,18 @@ def on_message(ws, message):
 
     threading.Thread(target=process).start()
 
-def on_close(ws, close_status_code, close_msg):
+def on_close_autodarts(ws, close_status_code, close_msg):
     try:
         printv("Websocket closed")
         printv(str(close_msg))
         printv(str(close_status_code))
         printv ("Retry : %s" % time.ctime())
         time.sleep(3)
-        connect()
+        connect_autodarts()
     except Exception as e:
         log_and_print('WS-Close failed: ', e)
     
-def on_error(ws, error):
+def on_error_autodarts(ws, error):
     try:
         printv(error)
     except Exception as e:
@@ -726,10 +736,41 @@ def on_error(ws, error):
 
 
 
+def client_new_message(client, server, message):
+    def process(*args):
+        try:
+            global boardManagerAddress
+            printv('CLIENT MESSAGE: ' + str(message))
+            
+            if boardManagerAddress != None:
+                if message.startswith('board-start'):
+                    msg_splitted = message.split(':')
+                    if len(msg_splitted) > 1:
+                        time.sleep(float(msg_splitted[1]))
+                    res = requests.put(boardManagerAddress + '/api/start')
+                    # printv(str(res))
+
+                elif message == 'board-stop':
+                    res = requests.put(boardManagerAddress + '/api/stop')
+                    # printv(str(res))
+
+        except Exception as e:
+            log_and_print('WS-Message failed: ', e)
+    threading.Thread(target=process).start()
+
+def new_client(client, server):
+    printv('NEW CLIENT CONNECTED: ' + str(client))
+
+def client_left(client, server):
+    printv('CLIENT DISCONNECTED: ' + str(client))
+
+
+
 
 if __name__ == "__main__":
 
     ap = argparse.ArgumentParser()
+    
     ap.add_argument("-U", "--autodarts_email", required=True, help="Registered email address at " + AUTODART_URL)
     ap.add_argument("-P", "--autodarts_password", required=True, help="Registered password address at " + AUTODART_URL)
     ap.add_argument("-B", "--autodarts_board_id", required=True, help="Registered board-id at " + AUTODART_URL)
@@ -740,11 +781,13 @@ if __name__ == "__main__":
     ap.add_argument("-E", "--call_every_dart", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will call every thrown dart")
     ap.add_argument("-PCC", "--possible_checkout_call", type=int, choices=range(0, 2), default=1, required=False, help="If '1', the application will call a possible checkout starting at 170")
     ap.add_argument("-A", "--ambient_sounds", type=float, default=0.0, required=False, help="If > '0.0' (volume), the application will call a ambient_*-Sounds")
-    ap.add_argument("-WTT", "--webhook_throw_points", required=False, nargs='*', help="Url(s) that will be requested every throw")
+    ap.add_argument("-HP", "--host_port", required=False, type=int, default=DEFAULT_HOST_PORT, help="Host-Port")
     ap.add_argument("-MIF", "--mixer_frequency", type=int, required=False, default=DEFAULT_MIXER_FREQUENCY, help="Pygame mixer frequency")
     ap.add_argument("-MIS", "--mixer_size", type=int, required=False, default=DEFAULT_MIXER_SIZE, help="Pygame mixer size")
     ap.add_argument("-MIC", "--mixer_channels", type=int, required=False, default=DEFAULT_MIXER_CHANNELS, help="Pygame mixer channels")
     ap.add_argument("-MIB", "--mixer_buffersize", type=int, required=False, default=DEFAULT_MIXER_BUFFERSIZE, help="Pygame mixer buffersize")
+    
+
     args = vars(ap.parse_args())
 
     AUTODART_USER_EMAIL = args['autodarts_email']                          
@@ -755,25 +798,23 @@ if __name__ == "__main__":
     AUDIO_CALLER_VOLUME = args['caller_volume']
     RANDOM_CALLER = args['random_caller']   
     RANDOM_CALLER_EACH_LEG = args['random_caller_each_leg']   
-    WEBHOOK_THROW_POINTS = args['webhook_throw_points']
     CALL_EVERY_DART = args['call_every_dart']
     POSSIBLE_CHECKOUT_CALL = args['possible_checkout_call']
     AMBIENT_SOUNDS = args['ambient_sounds']
+    HOST_PORT = args['host_port']
     MIXER_FREQUENCY = args['mixer_frequency']
     MIXER_SIZE = args['mixer_size']
     MIXER_CHANNELS = args['mixer_channels']
     MIXER_BUFFERSIZE = args['mixer_buffersize']
 
-    if WEBHOOK_THROW_POINTS is not None:
-        parsedList = list()
-        for e in WEBHOOK_THROW_POINTS:
-            parsedList.append(parseUrl(e))
-        WEBHOOK_THROW_POINTS = parsedList
-    else:
-        WEBHOOK_THROW_POINTS = list()
+    global server
+    server = None
 
     global accessToken
     accessToken = None
+
+    global boardManagerAddress
+    boardManagerAddress = None
 
     global lastMessage
     lastMessage = None
@@ -812,14 +853,14 @@ if __name__ == "__main__":
   
     try:
         setup_caller()
-        connect()
+        connect_autodarts()
+        
+        server = WebsocketServer(host=DEFAULT_HOST_IP, port=HOST_PORT, loglevel=logging.ERROR)
+        server.set_fn_new_client(new_client)
+        server.set_fn_client_left(client_left)
+        server.set_fn_message_received(client_new_message)
+        server.run_forever()
+
     except Exception as e:
         log_and_print("Connect failed: ", e)
-
-
-
-    
-
-
-
    

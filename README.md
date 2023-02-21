@@ -1,6 +1,6 @@
 # AUTODARTS-CALLER
 
-Autodarts-caller plays sound-files on your local system accordingly to the state of an https://autodarts.io game. Furthermore it can forward game events to other web-applications like https://github.com/lbormann/autodarts-extern that process the incoming data to automate other web-dart-platforms like https://lidarts.org
+Autodarts-caller plays sound-files on your local system accordingly to the state of an https://autodarts.io game. Furthermore it acts as a central hub by forwarding game-events to connected clients like https://github.com/lbormann/autodarts-extern that process the incoming data to automate other web-dart-platforms like https://lidarts.org
 
 
 Tested on Windows 10 & 11 Pro x64, Python 3.9.7 and Raspberry pi 4B 4GB, Python 3.9.7
@@ -91,15 +91,15 @@ Since Version 1.6.0 you can deposit multiple sounds for EVERY game-event. Theref
 ### App starts and stops immediately?!
 
 Check your autodarts-credentials (use email-adress and password). 
-If your are facing "failed keycloakautentikation Error", you probably need to disable two-factor-auth!
+If your are facing "failed keycloakautentikation Error", you probably need to disable Two-Factor-Auth!
 
 ### Sound is not playing?!
 
-Sometimes there are sounds that are not readable. In this case you can convert the file(s) with an additional program (https://www.heise.de/download/product/mp3-quality-modifier-66202)
+Sometimes there are sounds that are not readable. In this case you can convert the sound-file(s) with an additional program (https://www.heise.de/download/product/mp3-quality-modifier-66202)
 Make sure you configurate 44100HZ, Stereo
 
-### Sound does not match up to calls?!
-Try https://www.audacity.de/ to modify your sound.
+### Sound does not match up calls?!
+Try https://www.audacity.de/ to modify your sound-files.
 
 
 ## RUN IT
@@ -145,7 +145,8 @@ Reboot your system.
 - -E / --call_every_dart [OPTIONAL] [Default: 0] [Possible values: 0 | 1]
 - -PCC / --possible_checkout_call [OPTIONAL] [Default: 1] [Possible values: 0 | 1]
 - -A / --ambient_sounds [OPTIONAL] [Default: 0.0] [Possible values: 0.0 | 1.0]
-- -WTT / --webhook_throw_points [OPTIONAL] [MULTIPLE ENTRIES POSSIBLE] [Default: None]
+- -HP / --host_port [OPTIONAL] [Default: 8079]
+
 
 
 #### **-U / --autodarts_email**
@@ -189,10 +190,11 @@ If you set this to 1 the caller will call if there is a checkout possibility. Se
 If you set this to value between 0.1 and 1.0 the caller will call extra sounds like crowd-shouting or whatever you like (you decide!). Setup sounds {ambient_*}. 
 The configured value will be multiplied by caller_volume. As an example: caller_volume = 0.8 and ambient_sounds = 1.0 means your sound-volume will be 0.8 relative to your system-volume. By default this is 0.0
 
-#### **-WTT**
+#### **-HP / --host_port**
 
-The program tries to send (POST) a specific json to the given url(s). Other extensions like autodarts-extern or autodarts-wled requiring to set this field to their corresponding address (ip:port). You could try to prioritize which urls will be invoked first, but in general they will be invoked in parallel.
-Moreover you can find a list of json-examples for different game-events that are sent to WTT-entries in 'broadcast-examples.dat'. Who knows maybe you build your own extension upon this?!
+The app provides a websocket-service. Other extensions like autodarts-extern or autodarts-wled can connect to this service (ws://ip:port).
+For a list of json-examples look at 'broadcast-examples.dat' - who knows maybe you build your own extension upon this?!
+
 
 
 
@@ -237,6 +239,8 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - add ambient-sounds for gameon, gamewon, noscore etc.
 - call every field possible
 - added matchshot
+- use WS
+
 
 
 ## LAST WORDS
