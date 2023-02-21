@@ -36,7 +36,7 @@ DEFAULT_MIXER_BUFFERSIZE = 4096
 BOGEY_NUMBERS = [169, 168, 166, 165, 163, 162, 159]
 SUPPORTED_CRICKET_FIELDS = [15, 16, 17, 18, 19, 20, 25]
 SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket', 'Random Checkout']
-VERSION = '1.8.0'
+VERSION = '1.8.1'
 DEBUG = False
 
 
@@ -112,6 +112,9 @@ def play_sound_effect(event, waitForLast = False, volumeMult = 1.0):
 def listen_to_newest_match(m, ws):
     global currentMatch
     cm = str(currentMatch)
+    global accessToken
+    global boardManagerAddress
+
 
     # look for supported match that match my board-id and take it as ongoing match
     newMatch = None
@@ -120,10 +123,15 @@ def listen_to_newest_match(m, ws):
             if 'boardId' in p and p['boardId'] == AUTODART_USER_BOARD_ID:
                 newMatch = m['id']   
                 break
-                
 
     if cm == None or (cm != None and newMatch != None and cm != newMatch):
         printv('Listen to match: ' + newMatch)
+
+        if accessToken != None:
+            res = requests.get(AUTODART_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + accessToken})
+            board_ip = res.json()['ip']
+            boardManagerAddress = 'http://' + board_ip
+            printv('Board-address: ' + boardManagerAddress)  
         
         if cm != None:
             paramsUnsubscribeMatchEvents = {
@@ -664,9 +672,6 @@ def connect_autodarts():
 
 def on_open_autodarts(ws):
     try:
-        global accessToken
-        global boardManagerAddress
-
         printv('Receiving live information from ' + AUTODART_URL)
         printv('!!! In case that calling is not working, please check your Board-ID (-B) for correctness !!!')
         paramsSubscribeMatchesEvents = {
@@ -675,13 +680,6 @@ def on_open_autodarts(ws):
             "topic": "*.state"
         }
         ws.send(json.dumps(paramsSubscribeMatchesEvents))
-
-        if accessToken != None:
-            res = requests.get(AUTODART_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + accessToken})
-            board_ip = res.json()['ip']
-            boardManagerAddress = 'http://' + board_ip
-            printv('Board-address: ' + boardManagerAddress)
-
     except Exception as e:
         log_and_print('WS-Open failed: ', e)
 
