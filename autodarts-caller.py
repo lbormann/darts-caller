@@ -36,7 +36,7 @@ DEFAULT_MIXER_BUFFERSIZE = 4096
 BOGEY_NUMBERS = [169, 168, 166, 165, 163, 162, 159]
 SUPPORTED_CRICKET_FIELDS = [15, 16, 17, 18, 19, 20, 25]
 SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket', 'Random Checkout']
-VERSION = '1.8.1'
+VERSION = '1.8.2'
 DEBUG = False
 
 
@@ -87,6 +87,21 @@ def setup_caller():
     printv(caller[1], True)
     caller = caller[1]
 
+def receive_local_board_address():
+    try:
+        global accessToken
+        global boardManagerAddress
+
+        scheme = 'http://'    
+        if boardManagerAddress == None or boardManagerAddress == scheme: 
+            res = requests.get(AUTODART_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + accessToken})
+            board_ip = res.json()['ip']
+            boardManagerAddress = scheme + board_ip
+            printv('Board-address: ' + boardManagerAddress)  
+    except Exception as e:
+        log_and_print('Fetching local-board-address failed', e)
+
+
 
 def play_sound(pathToFile, waitForLast, volumeMult):
     if waitForLast == True:
@@ -112,9 +127,6 @@ def play_sound_effect(event, waitForLast = False, volumeMult = 1.0):
 def listen_to_newest_match(m, ws):
     global currentMatch
     cm = str(currentMatch)
-    global accessToken
-    global boardManagerAddress
-
 
     # look for supported match that match my board-id and take it as ongoing match
     newMatch = None
@@ -127,12 +139,6 @@ def listen_to_newest_match(m, ws):
     if cm == None or (cm != None and newMatch != None and cm != newMatch):
         printv('Listen to match: ' + newMatch)
 
-        if accessToken != None:
-            res = requests.get(AUTODART_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + accessToken})
-            board_ip = res.json()['ip']
-            boardManagerAddress = 'http://' + board_ip
-            printv('Board-address: ' + boardManagerAddress)  
-        
         if cm != None:
             paramsUnsubscribeMatchEvents = {
                 "type": "unsubscribe",
@@ -655,6 +661,7 @@ def connect_autodarts():
         accessToken = token['access_token']
         printv(token, only_debug = True)
 
+
         # Get Ticket
         ticket = requests.post(AUTODART_AUTH_TICKET_URL, headers={'Authorization': 'Bearer ' + token['access_token']})
         printv(ticket.text, only_debug = True)
@@ -680,6 +687,8 @@ def on_open_autodarts(ws):
             "topic": "*.state"
         }
         ws.send(json.dumps(paramsSubscribeMatchesEvents))
+
+        receive_local_board_address()
     except Exception as e:
         log_and_print('WS-Open failed: ', e)
 
@@ -733,14 +742,12 @@ def on_error_autodarts(ws, error):
         log_and_print('WS-Error failed: ', e)
 
 
-
 def client_new_message(client, server, message):
     def process(*args):
         try:
-            global boardManagerAddress
             printv('CLIENT MESSAGE: ' + str(message))
-            
-            if boardManagerAddress != None:
+
+            if boardManagerAddress != None and boardManagerAddress != 'http://':
                 if message.startswith('board-start'):
                     msg_splitted = message.split(':')
                     if len(msg_splitted) > 1:
@@ -751,6 +758,8 @@ def client_new_message(client, server, message):
                 elif message == 'board-stop':
                     res = requests.put(boardManagerAddress + '/api/stop')
                     # printv(str(res))
+            else:
+              printv('Can not start board as board-address is unknown: ' + str(boardManagerAddress))  
 
         except Exception as e:
             log_and_print('WS-Message failed: ', e)

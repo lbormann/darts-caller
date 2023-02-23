@@ -91,7 +91,7 @@ Since Version 1.6.0 you can deposit multiple sounds for EVERY game-event. Theref
 ### App starts and stops immediately?!
 
 Check your autodarts-credentials (use email-adress and password). 
-If your are facing "failed keycloakautentikation Error", you probably need to disable Two-Factor-Auth!
+If your are facing "failed keycloakauthentication Error (401 invalid_grant)", you probably need to disable Two-Factor-Auth!
 
 ### Sound is not playing?!
 
@@ -144,7 +144,7 @@ Reboot your system.
 - -L / --random_caller_each_leg [OPTIONAL] [Default: 0] [Possible values: 0 | 1]
 - -E / --call_every_dart [OPTIONAL] [Default: 0] [Possible values: 0 | 1]
 - -PCC / --possible_checkout_call [OPTIONAL] [Default: 1] [Possible values: 0 | 1]
-- -A / --ambient_sounds [OPTIONAL] [Default: 0.0] [Possible values: 0.0 | 1.0]
+- -A / --ambient_sounds [OPTIONAL] [Default: 0.0] [Possible values: 0.0 .. 1.0]
 - -HP / --host_port [OPTIONAL] [Default: 8079]
 
 
