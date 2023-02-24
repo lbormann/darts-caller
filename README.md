@@ -57,33 +57,45 @@ Go to download-directory and type:
 You need to have sounds-files as mp3 or wav. This files have to be named by 1 to 180, gameshot, busted, playerchange etc. You dont need all files. If you are too lazy you can go for 40, 60, 180 or whatever you like. You can record your voice or download some files in the internet, ie. https://freesound.org, https://www.zapsplat.com or watchout for pinned messages in (Discord https://discord.com/channels/802528604067201055/955745166134747196 or https://discord.com/channels/802528604067201055/1019720832647434320).
 Put all sound files in one folder and if you like create subfolders in this folder for random caller functionality.
 
-Supported sound-file-namings for Autodarts-Events:
-- 0-180.{wav | mp3}
-- playername(s).{wav | mp3}   (Name of Autodarts-player(s))
-- yr_2-yr_170.{wav | mp3}   (-PCC / --possible_checkout_call = 1)
-- matchon.{wav | mp3}
-- matchshot.{wav | mp3}
-- gameon.{wav | mp3}
-- gameshot.{wav | mp3}
-- busted.{wav | mp3}
-- playerchange.{wav | mp3}
-- {s1-t20}.{wav | mp3}  (-E / --call_every_dart = 1)
-- single.{wav | mp3}    (-E / --call_every_dart = 1)   
-- singleinner.{wav | mp3}   (-E / --call_every_dart = 1)
-- singleouter.{wav | mp3}   (-E / --call_every_dart = 1)
-- double.{wav | mp3}    (-E / --call_every_dart = 1)
-- triple.{wav | mp3}    (-E / --call_every_dart = 1)
-- outside.{wav | mp3}   (-E / --call_every_dart = 1)
-- ambient_matchon.{wav | mp3}    (-A / --ambient_sounds > 0.0)
-- ambient_matchshot.{wav | mp3}  (-A / --ambient_sounds > 0.0)
-- ambient_gameon.{wav | mp3}    (-A / --ambient_sounds > 0.0)
-- ambient_gameshot.{wav | mp3}  (-A / --ambient_sounds > 0.0)
-- ambient_noscore.{wav | mp3}   (-A / --ambient_sounds > 0.0)
-- ambient_50more.{wav | mp3}    (-A / --ambient_sounds > 0.0)
-- ambient_100more.{wav | mp3}   (-A / --ambient_sounds > 0.0)
-- ambient_120more.{wav | mp3}   (-A / --ambient_sounds > 0.0)
-- ambient_150more.{wav | mp3}   (-A / --ambient_sounds > 0.0)
-- ambient_180.{wav | mp3}   (-A / --ambient_sounds > 0.0)
+***EVERY SOUND FILE NEEDS TO BE .mp3 or .wav***
+
+______
+
+**Caller:**
+- 0-180 [score after 3 thrown darts]
+- matchon
+- matchshot
+- gameon
+- gameshot
+- busted
+- playerchange
+- {playername(s)} [Name of Autodarts-player(s)]
+- yr_2-yr_170 [-PCC / --possible_checkout_call = 1]
+
+**Single-dart-effects (Startparameter -E / --call_every_dart = 1):**
+- single       
+- singleinner
+- singleouter
+- double
+- triple
+- outside
+- sbull
+- bull
+- s1-t20 [overrides single, singleinner, singleouter, double, triple"]
+
+**Ambient (Startparameter -A / --ambient_sounds > 0.0):**
+- ambient_matchon  
+- ambient_matchshot
+- ambient_gameon  
+- ambient_gameshot
+- ambient_noscore 
+- ambient_50more  
+- ambient_100more 
+- ambient_120more 
+- ambient_150more 
+- ambient_180 
+
+______
 
 Since Version 1.6.0 you can deposit multiple sounds for EVERY game-event. Therefor you have to add a "+" to the filename. After the "+" you can add whatever text you prefer; as an example: let`s say we want multiple sounds for the 'gameon'-event. Our default file is 'gameon.mp3/gameon.wav'. Now we add some more: 'gameon+1.mp3', 'gameon+2.mp3', 'gameon+BEST.mp3'. You are not limited to gameon, even score-sounds can have multiple soundfiles.
 

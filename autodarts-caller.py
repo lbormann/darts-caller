@@ -187,6 +187,11 @@ def process_match_x01(m):
         type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
         field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
 
+        if field_name == '25':
+            field_name = 'sbull'
+
+        # printv("Type: " + str(type) + " - Field-name: " + str(field_name))
+
         if play_sound_effect(field_name) == False:
             inner_outer = False
             if type == 'singleouter' or type == 'singleinner':
@@ -421,6 +426,11 @@ def process_match_cricket(m):
         type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
         field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
         field_number = turns['throws'][throwAmount - 1]['segment']['number']
+
+        if field_name == '25':
+            field_name = 'sbull'
+            
+        # printv("Type: " + str(type) + " - Field-name: " + str(field_name))
 
         if field_number in SUPPORTED_CRICKET_FIELDS and play_sound_effect(field_name) == False:
             inner_outer = False
