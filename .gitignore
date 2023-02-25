@@ -6,3 +6,4 @@ win-start-custom.bat
 build
 dist
 *.spec
+downloads

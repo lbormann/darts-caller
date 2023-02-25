@@ -59,31 +59,34 @@ Put all sound files in one folder and if you like create subfolders in this fold
 
 ***EVERY SOUND FILE NEEDS TO BE .mp3 or .wav***
 
-______
+**MAIN-CALLING:**
 
-**Caller:**
-- 0-180 [score after 3 thrown darts]
-- matchon
-- matchshot
 - gameon
+- matchon
 - gameshot
+- matchshot
 - busted
+- 0-180
+- {playername(s)} (Name of Autodarts-player(s))
+- bot
+- "bot lvl 1"-"bot lvl 11" [overrides bot]
+- yr_2-yr_170 (-PCC = 1 and -PCCSF = 1)
 - playerchange
-- {playername(s)} [Name of Autodarts-player(s)]
-- yr_2-yr_170 [-PCC / --possible_checkout_call = 1]
 
-**Single-dart-effects (Startparameter -E / --call_every_dart = 1):**
-- single       
-- singleinner
-- singleouter
+**SINGLE-DARTS (Argument -E = 1):**
+
+- single 
+- singleinner [overrides single]
+- singleouter [overrides single]
 - double
 - triple
 - outside
 - sbull
 - bull
-- s1-t20 [overrides single, singleinner, singleouter, double, triple"]
+- s1-t20 [overrides single, singleinner, singleouter, double, triple]
 
-**Ambient (Startparameter -A / --ambient_sounds > 0.0):**
+**AMBIENT (Argument -A > 0.0):**
+
 - ambient_matchon  
 - ambient_matchshot
 - ambient_gameon  
@@ -155,8 +158,11 @@ Reboot your system.
 - -R / --random_caller [OPTIONAL] [Default: 0] [Possible values: 0 | 1]
 - -L / --random_caller_each_leg [OPTIONAL] [Default: 0] [Possible values: 0 | 1]
 - -E / --call_every_dart [OPTIONAL] [Default: 0] [Possible values: 0 | 1]
+- -ESF / --call_every_dart_single_files [OPTIONAL] [Default: 1] [Possible values: 0 | 1]
 - -PCC / --possible_checkout_call [OPTIONAL] [Default: 1] [Possible values: 0 | 1]
+- -PCCSF / --possible_checkout_call_single_files [OPTIONAL] [Default: 1] [Possible values: 0 | 1]
 - -A / --ambient_sounds [OPTIONAL] [Default: 0.0] [Possible values: 0.0 .. 1.0]
+- -ACC / --ambient_sounds_after_calls [OPTIONAL] [Default: 0] [Possible values: 0 | 1]
 - -HP / --host_port [OPTIONAL] [Default: 8079]
 
 
@@ -179,28 +185,41 @@ You need to set an absolut Path to your media-file-directory, otherwise you won`
 
 #### **-V / --caller_volume**
 
-You can lower the call-volume in relation to current system-volume. 1.0 is system-volume. 0.5 is "half" volume. By default this is 1.0
+You can lower the call-volume in relation to current system-volume. '1.0' is system-volume. '0.5' is "half" volume. By default this is '1.0'
 
 #### **-R / --random_caller**
 
-If you set this to 1 you will get a random caller each time you start the application. For this to work you need to setup subfolders in your media_path. Each subfolder represents an individual caller. By default this is not activated.
+If you set this to '1' you will get a random caller each time you start the application. For this to work you need to setup subfolders in your media_path. Each subfolder represents an individual caller. By default this is not activated.
 
 #### **-L / --random_caller_each_leg**
 
-If you set this to 1 you will get a random caller each time a new leg starts. By default this is not activated.
+If you set this to 1' you will get a random caller each time a new leg starts. By default this is not activated.
 
 #### **-E / --call_every_dart**
 
-If you set this to 1 the caller calls every dart. Setup sounds {S1-T180}, single, double and others. By default this is not activated.
+If you set this to '1' the caller calls every dart. Setup sounds 'S1'-'T20', single, double and others. By default this is not activated.
+
+#### **-ESF / --call_every_dart_single_files**
+
+TODO!
+If you set this to '1' the caller calls every dart. Setup sounds 'S1'-'T20', single, double and others. By default this is not activated.
 
 #### **-PCC / --possible_checkout_call**
 
-If you set this to 1 the caller will call if there is a checkout possibility. Setup sounds {playername}{yr_2-yr_170} or {1-170} as a fallback. By default this is activated.
+If you set this to '1' the caller will call if there is a checkout possibility. Setup sounds {playername}{yr_2-yr_170} or {2-170} as a fallback. By default this is activated.
+
+#### **-PCCSF / --possible_checkout_call_single_file**
+
+If '1', the application will call a possible checkout by using 'yr_2-yr_170'-file. Otherwise it uses two separated sound-files named: 'you_require' and 'x' (score-value).
 
 #### **-A / --ambient_sounds**
 
-If you set this to value between 0.1 and 1.0 the caller will call extra sounds like crowd-shouting or whatever you like (you decide!). Setup sounds {ambient_*}. 
-The configured value will be multiplied by caller_volume. As an example: caller_volume = 0.8 and ambient_sounds = 1.0 means your sound-volume will be 0.8 relative to your system-volume. By default this is 0.0
+If you set this to value between '0.1' and '1.0' the caller will call extra sounds like crowd-shouting or whatever you like (you decide!). Setup sounds {ambient_*}. 
+The configured value will be multiplied by caller_volume. As an example: caller_volume = '0.8' and ambient_sounds = '1.0' means your sound-volume will be 0.8 relative to your system-volume. By default this is '0'.
+
+#### **-ACC / --ambient_sounds_after_calls**
+
+If you set this to '1' ambient_*-sounds will wait until main-calls are finished. By default this is not activated.
 
 #### **-HP / --host_port**
 
@@ -225,9 +244,11 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - Support other games modes
 - add Readme-section for updating
 - add debug by argument
-- -E 25 will be called as 25 (that is wrong)
 - cricket 2 players 2x gameon
 - cricket: do not call marked fields, only call number if field is still open
+- add example start-command to RM (win/linux)
+- add caller-downloader / profile-downloader
+- Bots no dart-sounds for every turn (at least not for ESF = 0)
 
 ### Done
 
@@ -252,6 +273,7 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - call every field possible
 - added matchshot
 - use WS
+- -E 25 will be called as 25 (that is wrong)
 
 
 

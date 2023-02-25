@@ -3,3 +3,4 @@ websocket-client
 websocket-server==0.6.4
 pygame
 pyinstaller
+download

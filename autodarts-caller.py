@@ -14,11 +14,21 @@ from websocket_server import WebsocketServer
 import threading
 import logging
 logger=logging.getLogger()
+from download import download
+import shutil
+import csv
 
 
+
+
+VERSION = '1.9.0'
+DEBUG = False
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
+# TODO: Remove C:\\Repositories\\github.com\\autodarts-caller\\Downloads\\
+DEFAULT_DOWNLOADS_PATH = 'downloads'
+
 AUTODART_URL = 'https://autodarts.io'
 AUTODART_AUTH_URL = 'https://login.autodarts.io/'
 AUTODART_AUTH_TICKET_URL = 'https://api.autodarts.io/ms/v0/ticket'
@@ -36,8 +46,106 @@ DEFAULT_MIXER_BUFFERSIZE = 4096
 BOGEY_NUMBERS = [169, 168, 166, 165, 163, 162, 159]
 SUPPORTED_CRICKET_FIELDS = [15, 16, 17, 18, 19, 20, 25]
 SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket', 'Random Checkout']
-VERSION = '1.8.2'
-DEBUG = False
+SUPPORTED_SOUND_FORMATS = ['.mp3', '.wav']
+
+# https://anonfiles.com/X2S0idaaz0/4_zip
+# https://anonfiles.com/bfl8j6aczb/charles_m_english_us_canada_zip
+CALLER_PROFILES_URLS = [
+    # 'https://cdn-101.anonfiles.com/X2S0idaaz0/a2c855fa-1677294118/4.zip'
+    'https://cdn-142.anonfiles.com/bfl8j6aczb/d4541734-1677296974/charles-m-english-us-canada.zip'
+]
+
+
+
+
+
+def download_install_caller_profiles(): 
+
+    # clean download-area!
+    shutil.rmtree(DEFAULT_DOWNLOADS_PATH)
+
+    # download and parse every caller-profile
+    for i in range(len(CALLER_PROFILES_URLS)):
+        CPR = CALLER_PROFILES_URLS[i]
+        try:
+            dest = os.path.join(DEFAULT_DOWNLOADS_PATH, 'download.zip')
+            # kind="zip", 
+            # path = download(CPR, dest, progressbar=True, replace=False, verbose=True)
+            # print(str(path))
+
+            shutil.unpack_archive(dest, DEFAULT_DOWNLOADS_PATH)
+            os.remove(dest)
+    
+            # Schritt 1
+            definition_file = [f for f in os.listdir(DEFAULT_DOWNLOADS_PATH) if f.endswith('.csv')][0]
+            san_list = list()
+            with open(os.path.join(DEFAULT_DOWNLOADS_PATH, definition_file), 'r', encoding='utf-8') as f:
+                tts = list(csv.reader(f, delimiter=';'))
+                for event in tts:
+                    sanitized = list(filter(None, event))
+                    if len(sanitized) == 1:
+                        sanitized.append(sanitized[0].lower())
+                    san_list.append(sanitized)
+                    
+                # print(san_list)
+
+            # Schritt 2
+            zip_filename = [f for f in os.listdir(DEFAULT_DOWNLOADS_PATH) if f.endswith('.zip')][0]
+            dest = os.path.join(DEFAULT_DOWNLOADS_PATH, zip_filename)
+            shutil.unpack_archive(dest, DEFAULT_DOWNLOADS_PATH)
+            os.remove(dest)
+
+
+            # sound_folder = [f for f in os.listdir(DEFAULT_DOWNLOADS_PATH)][0]
+            # print('HEEEELLLO: ' + str(sound_folder))
+            sound_folder = [dirs for root, dirs, files in sorted(os.walk(DEFAULT_DOWNLOADS_PATH))][0][0]
+            src = os.path.join(DEFAULT_DOWNLOADS_PATH, sound_folder)
+            dest = os.path.splitext(dest)[0]
+            os.rename(src, dest)
+
+            # print('View: ' + src + ' UND ' + dest)
+
+
+            # Schritt 3
+            sounds = []
+            for root, dirs, files in sorted(os.walk(dest)):
+                for file in files:
+                    if file.endswith(tuple(SUPPORTED_SOUND_FORMATS)):
+                        # sounds.append(file)
+                        sounds.append(os.path.join(root, file))
+            # print(sounds)
+
+
+            # Schritt 4
+            for i in range(len(san_list)):
+                row = san_list[i]
+
+                caller_keys = row[1:]
+                # print(caller_keys)
+
+                cSound = sounds[i]
+                split_tup = os.path.splitext(cSound)
+                cSound_extension = split_tup[1]
+
+                for ck in caller_keys:
+                    copy_name = os.path.join(dest, ck + cSound_extension)
+                    exists = os.path.exists(copy_name)
+                    print('Test existance: ' + copy_name)
+
+                    counter = 0
+                    while exists == True:
+                        counter = counter + 1
+                        copy_name = os.path.join(dest, ck + '+' + str(counter) + cSound_extension)
+                        exists = os.path.exists(copy_name)
+                        print('Test (' + str(counter) + ') existance: ' + copy_name)
+
+                    shutil.copyfile(cSound, copy_name)
+
+
+        except Exception as e:
+            log_and_print('processing caller-profile ' + CPR + ' failed.', e)
+            continue
+
 
 
 def printv(msg, only_debug = False):
@@ -60,7 +168,7 @@ def load_callers(path):
     for root, dirs, files in os.walk(path):
         file_dict = {}
         for filename in files:
-            if filename.endswith('.mp3') or filename.endswith('.wav'):
+            if filename.endswith(tuple(SUPPORTED_SOUND_FORMATS)):
                 full_path = os.path.join(root, filename)
                 base = os.path.splitext(filename)[0]
                 key = base.split('+', 1)[0]
@@ -84,7 +192,7 @@ def setup_caller():
         caller = random.choice(callers)
 
     printv("Your current caller: " + str(os.path.basename(os.path.normpath(caller[0]))) + " knows " + str(len(caller[1].values())) + " Sound(s)")
-    printv(caller[1], True)
+    # printv(caller[1], True)
     caller = caller[1]
 
 def receive_local_board_address():
@@ -172,6 +280,10 @@ def process_match_x01(m):
     global accessToken
     global currentMatch
 
+    busted = turns['busted'] == True
+    matchshot = m['winner'] != -1 and isGameFinished == False
+    gameshot = m['gameWinner'] != -1 and isGameFinished == False
+
     # Determine "baseScore"-Key
     base = 'baseScore'
     if 'target' in m['settings']:
@@ -182,7 +294,8 @@ def process_match_x01(m):
         lastPoints = points
 
     # Call every thrown dart
-    if CALL_EVERY_DART and turns != None and turns['throws'] != None and len(turns['throws']) >= 1: 
+    if CALL_EVERY_DART and turns != None and turns['throws'] != None and len(turns['throws']) >= 1 and busted == False and matchshot == False and gameshot == False: 
+
         throwAmount = len(turns['throws'])
         type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
         field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
@@ -192,17 +305,30 @@ def process_match_x01(m):
 
         # printv("Type: " + str(type) + " - Field-name: " + str(field_name))
 
-        if play_sound_effect(field_name) == False:
-            inner_outer = False
-            if type == 'singleouter' or type == 'singleinner':
-                 inner_outer = play_sound_effect(type)
-                 if inner_outer == False:
-                    play_sound_effect('single')
+        if len(turns['throws']) <= 2:
+            if CALL_EVERY_DART_SINGLE_FILE:
+                if play_sound_effect(field_name) == False:
+                    inner_outer = False
+                    if type == 'singleouter' or type == 'singleinner':
+                        inner_outer = play_sound_effect(type)
+                        if inner_outer == False:
+                            play_sound_effect('single')
+                    else:
+                        play_sound_effect(type)
+
             else:
-                play_sound_effect(type)
+                field_number = str(turns['throws'][throwAmount - 1]['segment']['number'])
+
+                if type == 'single' or type == 'singleinner' or type == "singleouter":
+                    play_sound_effect(field_number)
+                elif type == 'double' or type == 'triple':
+                    play_sound_effect(type)
+                    play_sound_effect(field_number, True)
+                else:
+                    play_sound_effect('outside')
 
     # Check for matchshot
-    if m['winner'] != -1 and isGameFinished == False:
+    if matchshot:
         isGameFin = True
         
         matchWon = {
@@ -218,14 +344,15 @@ def process_match_x01(m):
         if play_sound_effect('matchshot') == False:
             play_sound_effect('gameshot')
         play_sound_effect(currentPlayerName, True)
+
         if AMBIENT_SOUNDS != 0.0:
-            if play_sound_effect('ambient_matchshot', volumeMult = AMBIENT_SOUNDS) == False:
-                play_sound_effect('ambient_gameshot', volumeMult = AMBIENT_SOUNDS)
+            if play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS) == False:
+                play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
         setup_caller()
         printv('Gameshot and match')
 
     # Check for gameshot
-    elif m['gameWinner'] != -1 and isGameFinished == False:
+    elif gameshot:
         isGameFin = True
         
         gameWon = {
@@ -241,7 +368,7 @@ def process_match_x01(m):
         play_sound_effect('gameshot')
         play_sound_effect(currentPlayerName, True)
         if AMBIENT_SOUNDS != 0.0:
-            play_sound_effect('ambient_gameshot', volumeMult = AMBIENT_SOUNDS)
+            play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
         if RANDOM_CALLER_EACH_LEG:
             setup_caller()
         printv('Gameshot')
@@ -268,8 +395,8 @@ def process_match_x01(m):
             play_sound_effect('gameon', True)
         # play only if it is a real match not just legs!
         if AMBIENT_SOUNDS != 0.0 and ('legs' in m and 'sets'):
-            if play_sound_effect('ambient_matchon', volumeMult = AMBIENT_SOUNDS) == False:
-                play_sound_effect('ambient_gameon', volumeMult = AMBIENT_SOUNDS)
+            if play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS) == False:
+                play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
 
         printv('Matchon')
 
@@ -293,12 +420,12 @@ def process_match_x01(m):
         play_sound_effect(currentPlayerName, False)
         play_sound_effect('gameon', True)
         if AMBIENT_SOUNDS != 0.0:
-            play_sound_effect('ambient_gameon', volumeMult = AMBIENT_SOUNDS)
+            play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
 
         printv('Gameon')
           
     # Check for busted turn
-    elif turns['busted'] == True:
+    elif busted:
         lastPoints = "B"
         isGameFinished = False
         busted = { 
@@ -312,7 +439,7 @@ def process_match_x01(m):
 
         play_sound_effect('busted')
         if AMBIENT_SOUNDS != 0.0:
-            play_sound_effect('ambient_noscore', volumeMult = AMBIENT_SOUNDS)
+            play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
         printv('Busted')
 
     # Check for possible checkout
@@ -321,11 +448,16 @@ def process_match_x01(m):
         play_sound_effect(currentPlayerName)
 
         remaining = str(remainingPlayerScore)
-        pcc_success = play_sound_effect('yr_' + remaining, True)
-        if pcc_success == False:
-            pcc_success = play_sound_effect(remaining, True)
 
-        printv('Checkout possible')
+        if POSSIBLE_CHECKOUT_CALL_SINGLE_FILE:
+            pcc_success = play_sound_effect('yr_' + remaining, True)
+            if pcc_success == False:
+                pcc_success = play_sound_effect(remaining, True)
+        else:
+            play_sound_effect('you_require', True)
+            play_sound_effect(remaining, True)
+
+        printv('Checkout possible: ' + remaining)
 
     # Check for 1. Dart
     elif turns != None and turns['throws'] != None and len(turns['throws']) == 1:
@@ -352,21 +484,20 @@ def process_match_x01(m):
         }
         broadcast(dartsThrown)
 
-        
         play_sound_effect(points)
         if AMBIENT_SOUNDS != 0.0:
             if turns['points'] == 0:
-                play_sound_effect('ambient_noscore', volumeMult = AMBIENT_SOUNDS)
+                play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
             elif turns['points'] == 180:
-                play_sound_effect('ambient_180', volumeMult = AMBIENT_SOUNDS)
+                play_sound_effect('ambient_180', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
             elif turns['points'] >= 153:
-                play_sound_effect('ambient_150more', volumeMult = AMBIENT_SOUNDS)   
+                play_sound_effect('ambient_150more', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)   
             elif turns['points'] >= 120:
-                play_sound_effect('ambient_120more', volumeMult = AMBIENT_SOUNDS)
+                play_sound_effect('ambient_120more', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
             elif turns['points'] >= 100:
-                play_sound_effect('ambient_100more', volumeMult = AMBIENT_SOUNDS)
+                play_sound_effect('ambient_100more', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
             elif turns['points'] >= 50:
-                play_sound_effect('ambient_50more', volumeMult = AMBIENT_SOUNDS)
+                play_sound_effect('ambient_50more', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
 
 
         printv("Turn ended")
@@ -432,6 +563,7 @@ def process_match_cricket(m):
             
         # printv("Type: " + str(type) + " - Field-name: " + str(field_name))
 
+        # TODO non single file
         if field_number in SUPPORTED_CRICKET_FIELDS and play_sound_effect(field_name) == False:
             inner_outer = False
             if type == 'singleouter' or type == 'singleinner':
@@ -468,8 +600,8 @@ def process_match_cricket(m):
             play_sound_effect('gameshot')
         play_sound_effect(currentPlayerName, True)
         if AMBIENT_SOUNDS != 0.0:
-            if play_sound_effect('ambient_matchshot', volumeMult = AMBIENT_SOUNDS) == False:
-                play_sound_effect('ambient_gameshot', volumeMult = AMBIENT_SOUNDS)
+            if play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS) == False:
+                play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
         setup_caller()
         printv('Gameshot and match')
 
@@ -499,7 +631,7 @@ def process_match_cricket(m):
         play_sound_effect('gameshot')
         play_sound_effect(currentPlayerName, True)
         if AMBIENT_SOUNDS != 0.0:
-            play_sound_effect('ambient_gameshot', volumeMult = AMBIENT_SOUNDS)
+            play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
         if RANDOM_CALLER_EACH_LEG:
             setup_caller()
         printv('Gameshot')
@@ -525,8 +657,8 @@ def process_match_cricket(m):
             play_sound_effect('gameon', True)
         # play only if it is a real match not just legs!
         if AMBIENT_SOUNDS != 0.0 and ('legs' in m and 'sets'):
-            if play_sound_effect('ambient_matchon', volumeMult = AMBIENT_SOUNDS) == False:
-                play_sound_effect('ambient_gameon', volumeMult = AMBIENT_SOUNDS)
+            if play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS) == False:
+                play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
         printv('Matchon')
 
     # Check for gameon
@@ -548,7 +680,7 @@ def process_match_cricket(m):
         play_sound_effect(currentPlayerName, False)
         play_sound_effect('gameon', True)
         if AMBIENT_SOUNDS != 0.0:
-            play_sound_effect('ambient_gameon', volumeMult = AMBIENT_SOUNDS)
+            play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
         printv('Gameon')
 
     # Check for busted turn
@@ -566,7 +698,7 @@ def process_match_cricket(m):
 
         play_sound_effect('busted')
         if AMBIENT_SOUNDS != 0.0:
-            play_sound_effect('ambient_noscore', volumeMult = AMBIENT_SOUNDS)
+            play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
         printv('Busted')
 
     # Check for 1. Dart
@@ -605,17 +737,17 @@ def process_match_cricket(m):
         play_sound_effect(str(throwPoints))
         if AMBIENT_SOUNDS != 0.0:
             if throwPoints == 0:
-                play_sound_effect('ambient_noscore', volumeMult = AMBIENT_SOUNDS)
+                play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
             elif throwPoints == 180:
-                play_sound_effect('ambient_180', volumeMult = AMBIENT_SOUNDS)
+                play_sound_effect('ambient_180', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
             elif throwPoints >= 153:
-                play_sound_effect('ambient_150more', volumeMult = AMBIENT_SOUNDS)   
+                play_sound_effect('ambient_150more', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)   
             elif throwPoints >= 120:
-                play_sound_effect('ambient_120more', volumeMult = AMBIENT_SOUNDS)
+                play_sound_effect('ambient_120more', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
             elif throwPoints >= 100:
-                play_sound_effect('ambient_100more', volumeMult = AMBIENT_SOUNDS)
+                play_sound_effect('ambient_100more', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
             elif throwPoints >= 50:
-                play_sound_effect('ambient_50more', volumeMult = AMBIENT_SOUNDS)
+                play_sound_effect('ambient_50more', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
 
         printv("Turn ended")
     
@@ -784,6 +916,7 @@ def client_left(client, server):
 
 
 
+
 if __name__ == "__main__":
 
     ap = argparse.ArgumentParser()
@@ -796,8 +929,11 @@ if __name__ == "__main__":
     ap.add_argument("-R", "--random_caller", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will randomly choose a caller each game. It only works when your base-media-folder has subfolders with its files")
     ap.add_argument("-L", "--random_caller_each_leg", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will randomly choose a caller each leg instead of each game. It only works when 'random_caller=1'")
     ap.add_argument("-E", "--call_every_dart", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will call every thrown dart")
+    ap.add_argument("-ESF", "--call_every_dart_single_files", type=int, choices=range(0, 2), default=1, required=False, help="If '1', the application will call a every dart by using single, dou.., else it uses two separated sounds: single + x (score)")
     ap.add_argument("-PCC", "--possible_checkout_call", type=int, choices=range(0, 2), default=1, required=False, help="If '1', the application will call a possible checkout starting at 170")
+    ap.add_argument("-PCCSF", "--possible_checkout_call_single_files", type=int, choices=range(0, 2), default=1, required=False, help="If '1', the application will call a possible checkout by using yr_2-yr_170, else it uses two separated sounds: you_require + x")
     ap.add_argument("-A", "--ambient_sounds", type=float, default=0.0, required=False, help="If > '0.0' (volume), the application will call a ambient_*-Sounds")
+    ap.add_argument("-AAC", "--ambient_sounds_after_calls", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the ambient sounds will appear after calling is finished")
     ap.add_argument("-HP", "--host_port", required=False, type=int, default=DEFAULT_HOST_PORT, help="Host-Port")
     ap.add_argument("-MIF", "--mixer_frequency", type=int, required=False, default=DEFAULT_MIXER_FREQUENCY, help="Pygame mixer frequency")
     ap.add_argument("-MIS", "--mixer_size", type=int, required=False, default=DEFAULT_MIXER_SIZE, help="Pygame mixer size")
@@ -816,8 +952,11 @@ if __name__ == "__main__":
     RANDOM_CALLER = args['random_caller']   
     RANDOM_CALLER_EACH_LEG = args['random_caller_each_leg']   
     CALL_EVERY_DART = args['call_every_dart']
+    CALL_EVERY_DART_SINGLE_FILE = args['call_every_dart_single_files']
     POSSIBLE_CHECKOUT_CALL = args['possible_checkout_call']
+    POSSIBLE_CHECKOUT_CALL_SINGLE_FILE = args['possible_checkout_call_single_files']
     AMBIENT_SOUNDS = args['ambient_sounds']
+    AMBIENT_SOUNDS_AFTER_CALLS = args['ambient_sounds_after_calls']
     HOST_PORT = args['host_port']
     MIXER_FREQUENCY = args['mixer_frequency']
     MIXER_SIZE = args['mixer_size']
@@ -867,8 +1006,14 @@ if __name__ == "__main__":
     print('RUNNING OS: ' + osType + ' | ' + osName + ' | ' + osRelease)
     print('SUPPORTED GAME-VARIANTS: ' + " ".join(str(x) for x in SUPPORTED_GAME_VARIANTS) )
     print('\r\n')
-  
+    
     try:
+        download_install_caller_profiles()
+    except Exception as e:
+        log_and_print("Caller-profile fetchung failed: ", e)
+        
+
+    try:  
         setup_caller()
         connect_autodarts()
         
