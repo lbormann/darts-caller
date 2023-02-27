@@ -61,10 +61,11 @@ BOGEY_NUMBERS = [169, 168, 166, 165, 163, 162, 159]
 
 
 
+
 CALLER_PROFILES = {
     'charles-m-english-us-canada': 'https://download1499.mediafire.com/608rnh5p9segWvS6qIbsfdRyQ6tINm25As3-ltArJiqdXceGVPnE5ehFP1wSkZ42gRcNNkAHdXCbYrlv6SJQZNMeREI/65dnw202a3gzz1s/download.zip',
-
-    
+    'clint-m-english-us-canada': 'https://download856.mediafire.com/t34rhybpjyggohzMXQnDLRBq2wO4QsIHxbJk4p79aeZnPF8FfZ6efiGQeLPxkjP8BCQ9b9-_KQsTwOZ-lfT2CQgwxvQ/vic3vn40lhhqkbt/C7.zip',
+    'alicia-f-english-us-canada': 'https://download942.mediafire.com/e4ihrrz2t0tg5O8YrE37tdYtOywOe3q3ze5vegw4rEpJy9AG9NB0qUF89I8hmy2-lHqPEHBjRV_R0UsqSgcY93dQvMQ/9i6jcwtfbu7gmza/C9.zip',
 }
 
 
@@ -185,6 +186,7 @@ def download_callers():
                         os.remove(current_sound)
 
                 shutil.move(dest, AUDIO_MEDIA_PATH)
+                ppi('A new caller was added: ' + cpr_name)
 
             except Exception as e:
                 ppe('Failed to process caller-profile: ' + cpr_name, e)
@@ -524,6 +526,11 @@ def process_match_x01(m):
 
         ppi('Checkout possible: ' + remaining)
 
+    # Player`s turn-call
+    elif CALL_CURRENT_PLAYER and m['player'] == currentPlayerIndex and turns != None and turns['throws'] == None:
+        isGameFinished = False
+        play_sound_effect(currentPlayerName)
+    
     # Check for 1. Dart
     elif turns != None and turns['throws'] != None and len(turns['throws']) == 1:
         isGameFinished = False
@@ -532,7 +539,7 @@ def process_match_x01(m):
     elif turns != None and turns['throws'] != None and len(turns['throws']) == 2:
         isGameFinished = False
 
-    # Check for 3. Dart - points call
+    # Check for 3. Dart - Score-call
     elif turns != None and turns['throws'] != None and len(turns['throws']) == 3:
         isGameFinished = False
         
@@ -566,6 +573,7 @@ def process_match_x01(m):
 
 
         ppi("Turn ended")
+
 
     # Playerchange
     if isGameOn == False and turns != None and turns['throws'] == None or isGameFinished == True:
@@ -995,6 +1003,7 @@ if __name__ == "__main__":
     ap.add_argument("-C", "--caller", default=DEFAULT_CALLER, required=False, help="Sets a particular caller")
     ap.add_argument("-R", "--random_caller", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will randomly choose a caller each game. It only works when your base-media-folder has subfolders with its files")
     ap.add_argument("-L", "--random_caller_each_leg", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will randomly choose a caller each leg instead of each game. It only works when 'random_caller=1'")
+    ap.add_argument("-CCP", "--call_current_player", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will call who is the current player to throw")
     ap.add_argument("-E", "--call_every_dart", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will call every thrown dart")
     ap.add_argument("-ESF", "--call_every_dart_single_files", type=int, choices=range(0, 2), default=1, required=False, help="If '1', the application will call a every dart by using single, dou.., else it uses two separated sounds: single + x (score)")
     ap.add_argument("-PCC", "--possible_checkout_call", type=int, choices=range(0, 2), default=1, required=False, help="If '1', the application will call a possible checkout starting at 170")
@@ -1023,6 +1032,7 @@ if __name__ == "__main__":
     CALLER = args['caller']
     RANDOM_CALLER = args['random_caller']   
     RANDOM_CALLER_EACH_LEG = args['random_caller_each_leg']   
+    CALL_CURRENT_PLAYER = args['call_current_player']
     CALL_EVERY_DART = args['call_every_dart']
     CALL_EVERY_DART_SINGLE_FILE = args['call_every_dart_single_files']
     POSSIBLE_CHECKOUT_CALL = args['possible_checkout_call']

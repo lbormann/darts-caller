@@ -152,6 +152,7 @@ Reboot your system.
 - -C / --caller [Default: None] [Possible values: look at description below]
 - -R / --random_caller [Default: 0] [Possible values: 0 | 1]
 - -L / --random_caller_each_leg [Default: 0] [Possible values: 0 | 1]
+- -CCP / --call_current_player [Default: 0] [Possible values: 0 | 1]
 - -E / --call_every_dart [Default: 0] [Possible values: 0 | 1]
 - -ESF / --call_every_dart_single_files [Default: 1] [Possible values: 0 | 1]
 - -PCC / --possible_checkout_call [Default: 1] [Possible values: 0 | 1]
@@ -201,6 +202,10 @@ If you set this to '1' you will get a random caller each time you start the appl
 
 If you set this to 1' you will get a random caller each time a new leg starts. By default this is not activated.
 
+#### **-CCP / --call_current_player**
+
+If you set this to 1' the application will call the playername at the start of his turn. By default this is not activated.
+
 #### **-E / --call_every_dart**
 
 If you set this to '1' the caller calls every dart. Setup sounds 's1'-'t20', single, double and others. This is pretty handy if you want to play sound-effects. (https://github.com/lbormann/autodarts-caller#setup-sounds) Note: the third dart will never trigger any extra sound as there are more important events, like summed score, busted etc.
@@ -244,6 +249,8 @@ In case you face problems with caller-voices-downloads try to change the downloa
 The app provides a websocket-service. Other extensions like autodarts-extern or autodarts-wled can connect to this service (ws://ip:port).
 For a list of json-examples look at 'broadcast-examples.dat' - who knows maybe you build your own extension upon this?!
 
+
+
 ## FAQ
 
 ### App starts and stops immediately?!
@@ -269,10 +276,10 @@ Try https://www.audacity.de/ to modify your sound-files.
 
     - **Template file:**
     A UTF8-encoded CSV file (*.csv) with a BOM (filename can be chosen freely), which is structured as follows:
-    Column 1 contains the phrase to be translated into the respective language by the provider. For example: "The game is over."
-    All further columns (separated by semicolon ';') contain "caller-filename-keys".
-    All valid keys can be viewed at https://github.com/lbormann/autodarts-caller#setup-sounds.
-    Finished templates for multiple languages can be found in the caller-templates folder.
+    Column 1 contains the phrase a sound file is based on. For example: "The game is over."
+    All further filled columns (separated by semicolon ';') contain "filename-keys".
+    All supported filename-keys can be found at https://github.com/lbormann/autodarts-caller#setup-sounds.
+    Moreover you can find finished template-files for multiple languages 'caller-templates'.
 
     - **Sounds archive:**
     A ZIP file (*.zip) (filename: "{speaker name}"-"{m|f}"-"{language}".zip - for example: "max-m-german.zip") containing a folder with the sound files. It should be noted that the sounds MUST be in the same order (when sorted alphabetically) as in the template file; however, the actual filename is completely irrelevant.
