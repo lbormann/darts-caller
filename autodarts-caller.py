@@ -5,7 +5,6 @@ import json
 import platform
 import random
 import argparse
-from urllib.parse import urlparse
 from keycloak import KeycloakOpenID
 import requests
 from pygame import mixer
@@ -13,21 +12,38 @@ import websocket
 from websocket_server import WebsocketServer
 import threading
 import logging
-logger=logging.getLogger()
 from download import download
 import shutil
 import csv
 
+sh = logging.StreamHandler()
+sh.setLevel(logging.INFO)
+# '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+formatter = logging.Formatter('%(message)s')
+sh.setFormatter(formatter)
+logger=logging.getLogger()
+logger.handlers.clear()
+logger.setLevel(logging.INFO)
+logger.addHandler(sh)
 
 
 
-VERSION = '1.9.0'
-DEBUG = False
+
+
+
+VERSION = '2.0.0'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
-# TODO: Remove C:\\Repositories\\github.com\\autodarts-caller\\Downloads\\
+DEFAULT_CALLER = None
+DEFAULT_DOWNLOADS = True
+DEFAULT_DOWNLOADS_LIMIT = 0
 DEFAULT_DOWNLOADS_PATH = 'downloads'
+DEFAULT_EMPTY_PATH = ''
+DEFAULT_MIXER_FREQUENCY = 44100
+DEFAULT_MIXER_SIZE = 32
+DEFAULT_MIXER_CHANNELS = 2
+DEFAULT_MIXER_BUFFERSIZE = 4096
 
 AUTODART_URL = 'https://autodarts.io'
 AUTODART_AUTH_URL = 'https://login.autodarts.io/'
@@ -38,134 +54,162 @@ AUTODART_MATCHES_URL = 'https://api.autodarts.io/gs/v0/matches/'
 AUTODART_BOARDS_URL = 'https://api.autodarts.io/bs/v0/boards/'
 AUTODART_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe?ticket='
 
-DEFAULT_MIXER_FREQUENCY = 44100
-DEFAULT_MIXER_SIZE = 32
-DEFAULT_MIXER_CHANNELS = 2
-DEFAULT_MIXER_BUFFERSIZE = 4096
-
-BOGEY_NUMBERS = [169, 168, 166, 165, 163, 162, 159]
-SUPPORTED_CRICKET_FIELDS = [15, 16, 17, 18, 19, 20, 25]
-SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket', 'Random Checkout']
 SUPPORTED_SOUND_FORMATS = ['.mp3', '.wav']
-
-# https://anonfiles.com/X2S0idaaz0/4_zip
-# https://anonfiles.com/bfl8j6aczb/charles_m_english_us_canada_zip
-CALLER_PROFILES_URLS = [
-    # 'https://cdn-101.anonfiles.com/X2S0idaaz0/a2c855fa-1677294118/4.zip'
-    'https://cdn-142.anonfiles.com/bfl8j6aczb/d4541734-1677296974/charles-m-english-us-canada.zip'
-]
+SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket', 'Random Checkout']
+SUPPORTED_CRICKET_FIELDS = [15, 16, 17, 18, 19, 20, 25]
+BOGEY_NUMBERS = [169, 168, 166, 165, 163, 162, 159]
 
 
 
+CALLER_PROFILES = {
+    'charles-m-english-us-canada': 'https://download1499.mediafire.com/608rnh5p9segWvS6qIbsfdRyQ6tINm25As3-ltArJiqdXceGVPnE5ehFP1wSkZ42gRcNNkAHdXCbYrlv6SJQZNMeREI/65dnw202a3gzz1s/download.zip',
 
-
-def download_install_caller_profiles(): 
-
-    # clean download-area!
-    shutil.rmtree(DEFAULT_DOWNLOADS_PATH)
-
-    # download and parse every caller-profile
-    for i in range(len(CALLER_PROFILES_URLS)):
-        CPR = CALLER_PROFILES_URLS[i]
-        try:
-            dest = os.path.join(DEFAULT_DOWNLOADS_PATH, 'download.zip')
-            # kind="zip", 
-            # path = download(CPR, dest, progressbar=True, replace=False, verbose=True)
-            # print(str(path))
-
-            shutil.unpack_archive(dest, DEFAULT_DOWNLOADS_PATH)
-            os.remove(dest)
     
-            # Schritt 1
-            definition_file = [f for f in os.listdir(DEFAULT_DOWNLOADS_PATH) if f.endswith('.csv')][0]
-            san_list = list()
-            with open(os.path.join(DEFAULT_DOWNLOADS_PATH, definition_file), 'r', encoding='utf-8') as f:
-                tts = list(csv.reader(f, delimiter=';'))
-                for event in tts:
-                    sanitized = list(filter(None, event))
-                    if len(sanitized) == 1:
-                        sanitized.append(sanitized[0].lower())
-                    san_list.append(sanitized)
-                    
-                # print(san_list)
-
-            # Schritt 2
-            zip_filename = [f for f in os.listdir(DEFAULT_DOWNLOADS_PATH) if f.endswith('.zip')][0]
-            dest = os.path.join(DEFAULT_DOWNLOADS_PATH, zip_filename)
-            shutil.unpack_archive(dest, DEFAULT_DOWNLOADS_PATH)
-            os.remove(dest)
-
-
-            # sound_folder = [f for f in os.listdir(DEFAULT_DOWNLOADS_PATH)][0]
-            # print('HEEEELLLO: ' + str(sound_folder))
-            sound_folder = [dirs for root, dirs, files in sorted(os.walk(DEFAULT_DOWNLOADS_PATH))][0][0]
-            src = os.path.join(DEFAULT_DOWNLOADS_PATH, sound_folder)
-            dest = os.path.splitext(dest)[0]
-            os.rename(src, dest)
-
-            # print('View: ' + src + ' UND ' + dest)
-
-
-            # Schritt 3
-            sounds = []
-            for root, dirs, files in sorted(os.walk(dest)):
-                for file in files:
-                    if file.endswith(tuple(SUPPORTED_SOUND_FORMATS)):
-                        # sounds.append(file)
-                        sounds.append(os.path.join(root, file))
-            # print(sounds)
-
-
-            # Schritt 4
-            for i in range(len(san_list)):
-                row = san_list[i]
-
-                caller_keys = row[1:]
-                # print(caller_keys)
-
-                cSound = sounds[i]
-                split_tup = os.path.splitext(cSound)
-                cSound_extension = split_tup[1]
-
-                for ck in caller_keys:
-                    copy_name = os.path.join(dest, ck + cSound_extension)
-                    exists = os.path.exists(copy_name)
-                    print('Test existance: ' + copy_name)
-
-                    counter = 0
-                    while exists == True:
-                        counter = counter + 1
-                        copy_name = os.path.join(dest, ck + '+' + str(counter) + cSound_extension)
-                        exists = os.path.exists(copy_name)
-                        print('Test (' + str(counter) + ') existance: ' + copy_name)
-
-                    shutil.copyfile(cSound, copy_name)
-
-
-        except Exception as e:
-            log_and_print('processing caller-profile ' + CPR + ' failed.', e)
-            continue
+}
 
 
 
-def printv(msg, only_debug = False):
-    if only_debug == False or (only_debug == True and DEBUG == True):
-        print('\r\n>>> ' + str(msg))
-
-def ppjson(js):
-    if DEBUG == True:
-        print(json.dumps(js, indent = 4, sort_keys = True))
-
-def log_and_print(message, obj):
-    logger.exception(message + str(obj))
+def ppi(message, info_object = None):
+    logger.info('\r\n>>> ' + str(message))
+    if info_object != None:
+        print(str(info_object))
     
-def parseUrl(str):
-    parsedUrl = urlparse(str)
-    return parsedUrl.scheme + '://' + parsedUrl.netloc + parsedUrl.path.rstrip("/")
+def ppe(message, error_object):
+    ppi(message)
+    if DEBUG:
+        logger.exception("\r\n" + str(error_object))
 
-def load_callers(path):
-    filenames = []
-    for root, dirs, files in os.walk(path):
+
+
+def download_callers(): 
+    if DOWNLOADS:
+        download_list = CALLER_PROFILES
+        if DOWNLOADS_LIMIT > 0:
+            download_list = {k: CALLER_PROFILES[k] for k in list(CALLER_PROFILES.keys())[-DOWNLOADS_LIMIT:]}
+
+        # Download and parse every caller-profile
+        for cpr_name, cpr_download_url in download_list.items():
+            try:
+                # Check if caller-profile already present in users media-directory, yes ? -> stop for this caller-profile
+                caller_profile_exists = os.path.exists(os.path.join(AUDIO_MEDIA_PATH, cpr_name))
+                if caller_profile_exists == True:
+                    # ppi('Caller-profile ' + cpr_name + ' already exists -> Skipping download')
+                    continue
+
+                # clean download-area!
+                shutil.rmtree(DOWNLOADS_PATH, ignore_errors=True)
+                if os.path.exists(DOWNLOADS_PATH) == False: os.mkdir(DOWNLOADS_PATH)
+                
+                # Download caller-profile and extract archive
+                dest = os.path.join(DOWNLOADS_PATH, 'download.zip')
+
+                # kind="zip", 
+                path = download(cpr_download_url, dest, progressbar=True, replace=False, verbose=True)
+ 
+                # TEMP Test!!
+                # shutil.copyfile('C:\\Users\\Luca\\Desktop\\WORK\\charles-m-english-us-canada\\download.zip', os.path.join(DOWNLOADS_PATH, 'download.zip'))
+
+                shutil.unpack_archive(dest, DOWNLOADS_PATH)
+                os.remove(dest)
+        
+                # Find sound-file-archive und extract it
+                zip_filename = [f for f in os.listdir(DOWNLOADS_PATH) if f.endswith('.zip')][0]
+                dest = os.path.join(DOWNLOADS_PATH, zip_filename)
+                shutil.unpack_archive(dest, DOWNLOADS_PATH)
+                os.remove(dest)
+
+                # Find folder and rename it to properly
+                sound_folder = [dirs for root, dirs, files in sorted(os.walk(DOWNLOADS_PATH))][0][0]
+                src = os.path.join(DOWNLOADS_PATH, sound_folder)
+                dest = os.path.splitext(dest)[0]
+                os.rename(src, dest)
+
+                # Find template-file and parse it
+                template_file = [f for f in os.listdir(DOWNLOADS_PATH) if f.endswith('.csv')][0]
+                template_file = os.path.join(DOWNLOADS_PATH, template_file)
+                san_list = list()
+                with open(template_file, 'r', encoding='utf-8') as f:
+                    tts = list(csv.reader(f, delimiter=';'))
+                    for event in tts:
+                        sanitized = list(filter(None, event))
+                        if len(sanitized) == 1:
+                            sanitized.append(sanitized[0].lower())
+                        san_list.append(sanitized)
+                    # print(san_list)
+
+                # Find origin-file
+                origin_file = None
+                files = [f for f in os.listdir(DOWNLOADS_PATH) if f.endswith('.txt')]
+                if len(files) >= 1:
+                    origin_file = os.path.join(DOWNLOADS_PATH, files[0])
+
+                # Move template- and origin-file to sound-dir
+                shutil.move(origin_file, dest)
+                shutil.move(template_file, dest)   
+
+                # Find all supported sound-files and remember names 
+                sounds = []
+                for root, dirs, files in sorted(os.walk(dest)):
+                    for file in files:
+                        if file.endswith(tuple(SUPPORTED_SOUND_FORMATS)):
+                            sounds.append(os.path.join(root, file))
+                # print(sounds)
+
+                # Rename sound-files and copy files according the defined caller-keys
+                for i in range(len(san_list) - 1):
+                    current_sound = sounds[i]
+                    current_sound_splitted = os.path.splitext(current_sound)
+                    current_sound_extension = current_sound_splitted[1]
+
+                    try:
+                        row = san_list[i]
+                        caller_keys = row[1:]
+                        # print(caller_keys)
+
+                        for ck in caller_keys:
+                            multiple_file_name = os.path.join(dest, ck + current_sound_extension)
+                            exists = os.path.exists(multiple_file_name)
+                            # print('Test existance: ' + multiple_file_name)
+
+                            counter = 0
+                            while exists == True:
+                                counter = counter + 1
+                                multiple_file_name = os.path.join(dest, ck + '+' + str(counter) + current_sound_extension)
+                                exists = os.path.exists(multiple_file_name)
+                                # print('Test (' + str(counter) + ') existance: ' + multiple_file_name)
+
+                            shutil.copyfile(current_sound, multiple_file_name)
+                    except Exception as ie:
+                        ppe('Failed to process entry "' + row[0] + '"', ie)
+                    finally:
+                        os.remove(current_sound)
+
+                shutil.move(dest, AUDIO_MEDIA_PATH)
+
+            except Exception as e:
+                ppe('Failed to process caller-profile: ' + cpr_name, e)
+            finally:
+                shutil.rmtree(DOWNLOADS_PATH, ignore_errors=True)
+
+def load_callers():
+
+    # load shared-sounds
+    shared_sounds = {}
+    if AUDIO_MEDIA_PATH_SHARED != DEFAULT_EMPTY_PATH: 
+        for root, dirs, files in os.walk(AUDIO_MEDIA_PATH_SHARED):
+            for filename in files:
+                if filename.endswith(tuple(SUPPORTED_SOUND_FORMATS)):
+                    full_path = os.path.join(root, filename)
+                    base = os.path.splitext(filename)[0]
+                    key = base.split('+', 1)[0]
+                    if key in shared_sounds:
+                        shared_sounds[key].append(full_path)
+                    else:
+                        shared_sounds[key] = [full_path]
+
+    # load callers
+    callers = []
+    for root, dirs, files in os.walk(AUDIO_MEDIA_PATH):
         file_dict = {}
         for filename in files:
             if filename.endswith(tuple(SUPPORTED_SOUND_FORMATS)):
@@ -177,22 +221,46 @@ def load_callers(path):
                 else:
                     file_dict[key] = [full_path]
         if file_dict:
-            filenames.append((root, file_dict))
-    return filenames
+            callers.append((root, file_dict))
+        
+    # add shared-sounds to callers
+    for ss_k, ss_v in shared_sounds.items():
+        for (root, c_keys) in callers:
+            if ss_k in c_keys:
+                for sound_variant in ss_v:
+                    c_keys[ss_k].append(sound_variant)
+            else:
+                c_keys[ss_k] = ss_v
+
+    return callers
 
 def setup_caller():
     global caller
+    caller = None
 
-    callers = load_callers(AUDIO_MEDIA_PATH)
-    printv(str(len(callers)) + ' caller(s) ready to call out your Darts!')
+    callers = load_callers()
+    ppi(str(len(callers)) + ' caller(s) ready to call out your Darts:')
 
-    if RANDOM_CALLER == False:
-        caller = callers[0]
+    # specific caller
+    if CALLER != DEFAULT_CALLER:
+        wanted_caller = CALLER.lower()
+        for c in callers:
+            caller_name = os.path.basename(os.path.normpath(c[0])).lower()
+            print(caller_name)
+            if caller_name == wanted_caller:
+                caller = c
+     
     else:
-        caller = random.choice(callers)
+        if RANDOM_CALLER == False:
+            caller = callers[0]
+        else:
+            caller = random.choice(callers)
 
-    printv("Your current caller: " + str(os.path.basename(os.path.normpath(caller[0]))) + " knows " + str(len(caller[1].values())) + " Sound(s)")
-    # printv(caller[1], True)
+    if caller == None:
+        raise Exception('A caller with name "' + wanted_caller + '" does NOT exist!')
+
+    ppi("Your current caller: " + str(os.path.basename(os.path.normpath(caller[0]))) + " knows " + str(len(caller[1].values())) + " Sound(s)")
+    # ppi(caller[1])
     caller = caller[1]
 
 def receive_local_board_address():
@@ -205,9 +273,9 @@ def receive_local_board_address():
             res = requests.get(AUTODART_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + accessToken})
             board_ip = res.json()['ip']
             boardManagerAddress = scheme + board_ip
-            printv('Board-address: ' + boardManagerAddress)  
+            ppi('Board-address: ' + boardManagerAddress)  
     except Exception as e:
-        log_and_print('Fetching local-board-address failed', e)
+        ppe('Fetching local-board-address failed', e)
 
 
 
@@ -220,7 +288,7 @@ def play_sound(pathToFile, waitForLast, volumeMult):
     if AUDIO_CALLER_VOLUME is not None:
         sound.set_volume(AUDIO_CALLER_VOLUME * volumeMult)
     sound.play()
-    # printv('Playing: "' + pathToFile + '"', only_debug=True)
+    # ppi('Playing: "' + pathToFile + '"')
 
 def play_sound_effect(event, waitForLast = False, volumeMult = 1.0):
     try:
@@ -228,7 +296,7 @@ def play_sound_effect(event, waitForLast = False, volumeMult = 1.0):
         play_sound(random.choice(caller[event]), waitForLast, volumeMult)
         return True
     except Exception as e:
-        printv('Can not play soundfile for event "' + event + '" -> Ignore this or check existance; otherwise convert your file appropriate')
+        ppe('Can not play soundfile for event "' + event + '" -> Ignore this or check existance; otherwise convert your file appropriate', e)
         return False
 
 
@@ -245,7 +313,7 @@ def listen_to_newest_match(m, ws):
                 break
 
     if cm == None or (cm != None and newMatch != None and cm != newMatch):
-        printv('Listen to match: ' + newMatch)
+        ppi('Listen to match: ' + newMatch)
 
         if cm != None:
             paramsUnsubscribeMatchEvents = {
@@ -303,7 +371,7 @@ def process_match_x01(m):
         if field_name == '25':
             field_name = 'sbull'
 
-        # printv("Type: " + str(type) + " - Field-name: " + str(field_name))
+        # ppi("Type: " + str(type) + " - Field-name: " + str(field_name))
 
         if len(turns['throws']) <= 2:
             if CALL_EVERY_DART_SINGLE_FILE:
@@ -349,7 +417,7 @@ def process_match_x01(m):
             if play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS) == False:
                 play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
         setup_caller()
-        printv('Gameshot and match')
+        ppi('Gameshot and match')
 
     # Check for gameshot
     elif gameshot:
@@ -371,7 +439,7 @@ def process_match_x01(m):
             play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
         if RANDOM_CALLER_EACH_LEG:
             setup_caller()
-        printv('Gameshot')
+        ppi('Gameshot')
 
     # Check for matchon
     elif m['settings'][base] == m['gameScores'][0] and turns['throws'] == None and m['leg'] == 1 and m['set'] == 1:
@@ -398,7 +466,7 @@ def process_match_x01(m):
             if play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS) == False:
                 play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
 
-        printv('Matchon')
+        ppi('Matchon')
 
     # Check for gameon
     elif m['settings'][base] == m['gameScores'][0] and turns['throws'] == None:
@@ -417,12 +485,12 @@ def process_match_x01(m):
             }
         broadcast(gameStarted)
 
-        play_sound_effect(currentPlayerName, False)
+        play_sound_effect(currentPlayerName)
         play_sound_effect('gameon', True)
         if AMBIENT_SOUNDS != 0.0:
             play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
 
-        printv('Gameon')
+        ppi('Gameon')
           
     # Check for busted turn
     elif busted:
@@ -440,7 +508,7 @@ def process_match_x01(m):
         play_sound_effect('busted')
         if AMBIENT_SOUNDS != 0.0:
             play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
-        printv('Busted')
+        ppi('Busted')
 
     # Check for possible checkout
     elif POSSIBLE_CHECKOUT_CALL and m['player'] == currentPlayerIndex and remainingPlayerScore <= 170 and remainingPlayerScore not in BOGEY_NUMBERS and turns != None and turns['throws'] == None:
@@ -457,7 +525,7 @@ def process_match_x01(m):
             play_sound_effect('you_require', True)
             play_sound_effect(remaining, True)
 
-        printv('Checkout possible: ' + remaining)
+        ppi('Checkout possible: ' + remaining)
 
     # Check for 1. Dart
     elif turns != None and turns['throws'] != None and len(turns['throws']) == 1:
@@ -500,7 +568,7 @@ def process_match_x01(m):
                 play_sound_effect('ambient_50more', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
 
 
-        printv("Turn ended")
+        ppi("Turn ended")
 
     # Playerchange
     if isGameOn == False and turns != None and turns['throws'] == None or isGameFinished == True:
@@ -533,7 +601,7 @@ def process_match_x01(m):
         if pcc_success == False:
             play_sound_effect('playerchange')
 
-        printv("Next player")
+        ppi("Next player")
 
 
     if isGameFin == True:
@@ -561,7 +629,7 @@ def process_match_cricket(m):
         if field_name == '25':
             field_name = 'sbull'
             
-        # printv("Type: " + str(type) + " - Field-name: " + str(field_name))
+        # ppi("Type: " + str(type) + " - Field-name: " + str(field_name))
 
         # TODO non single file
         if field_number in SUPPORTED_CRICKET_FIELDS and play_sound_effect(field_name) == False:
@@ -603,7 +671,7 @@ def process_match_cricket(m):
             if play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS) == False:
                 play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
         setup_caller()
-        printv('Gameshot and match')
+        ppi('Gameshot and match')
 
     # Check for gameshot
     elif m['gameWinner'] != -1 and isGameFinished == False:
@@ -634,7 +702,7 @@ def process_match_cricket(m):
             play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
         if RANDOM_CALLER_EACH_LEG:
             setup_caller()
-        printv('Gameshot')
+        ppi('Gameshot')
     
     # Check for matchon
     elif m['gameScores'][0] == 0 and m['scores'] == None and turns['throws'] == None and m['round'] == 1 and m['leg'] == 1 and m['set'] == 1:
@@ -659,7 +727,7 @@ def process_match_cricket(m):
         if AMBIENT_SOUNDS != 0.0 and ('legs' in m and 'sets'):
             if play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS) == False:
                 play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
-        printv('Matchon')
+        ppi('Matchon')
 
     # Check for gameon
     elif m['gameScores'][0] == 0 and m['scores'] == None and turns['throws'] == None and m['round'] == 1:
@@ -681,7 +749,7 @@ def process_match_cricket(m):
         play_sound_effect('gameon', True)
         if AMBIENT_SOUNDS != 0.0:
             play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
-        printv('Gameon')
+        ppi('Gameon')
 
     # Check for busted turn
     elif turns['busted'] == True:
@@ -699,7 +767,7 @@ def process_match_cricket(m):
         play_sound_effect('busted')
         if AMBIENT_SOUNDS != 0.0:
             play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
-        printv('Busted')
+        ppi('Busted')
 
     # Check for 1. Dart
     elif turns != None and turns['throws'] != None and len(turns['throws']) == 1:
@@ -749,7 +817,7 @@ def process_match_cricket(m):
             elif throwPoints >= 50:
                 play_sound_effect('ambient_50more', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
 
-        printv("Turn ended")
+        ppi("Turn ended")
     
     # Playerchange
     if isGameOn == False and turns != None and turns['throws'] == None or isGameFinished == True:
@@ -775,7 +843,7 @@ def process_match_cricket(m):
         broadcast(dartsPulled)
 
         play_sound_effect('playerchange')
-        printv("Next player")
+        ppi("Next player")
 
     if isGameFin == True:
         isGameFinished = True
@@ -801,12 +869,12 @@ def connect_autodarts():
         # Get Token
         token = keycloak_openid.token(AUTODART_USER_EMAIL, AUTODART_USER_PASSWORD)
         accessToken = token['access_token']
-        printv(token, only_debug = True)
+        # ppi(token)
 
 
         # Get Ticket
         ticket = requests.post(AUTODART_AUTH_TICKET_URL, headers={'Authorization': 'Bearer ' + token['access_token']})
-        printv(ticket.text, only_debug = True)
+        # ppi(ticket.text)
 
 
         websocket.enableTrace(False)
@@ -821,8 +889,8 @@ def connect_autodarts():
 
 def on_open_autodarts(ws):
     try:
-        printv('Receiving live information from ' + AUTODART_URL)
-        printv('!!! In case that calling is not working, please check your Board-ID (-B) for correctness !!!')
+        ppi('Receiving live information from ' + AUTODART_URL)
+        ppi('!!! In case that calling is not working, please check your Board-ID (-B) for correctness !!!')
         paramsSubscribeMatchesEvents = {
             "channel": "autodarts.matches",
             "type": "subscribe",
@@ -832,7 +900,7 @@ def on_open_autodarts(ws):
 
         receive_local_board_address()
     except Exception as e:
-        log_and_print('WS-Open failed: ', e)
+        ppe('WS-Open failed: ', e)
 
 def on_message_autodarts(ws, message):
     def process(*args):
@@ -840,21 +908,21 @@ def on_message_autodarts(ws, message):
             global lastMessage
             m = json.loads(message)
 
-            # ppjson(m)
+            # ppi(json.dumps(data, indent = 4, sort_keys = True))
 
             if m['channel'] == 'autodarts.matches':
                 global currentMatch
                 data = m['data']
                 listen_to_newest_match(data, ws)
 
-                # printv('Current Match: ' + currentMatch)
+                # ppi('Current Match: ' + currentMatch)
                 if('turns' in data and len(data['turns']) >=1):
                     data['turns'][0].pop("id", None)
                     data['turns'][0].pop("createdAt", None)
 
                 if lastMessage != data and currentMatch != None and data['id'] == currentMatch:
                     lastMessage = data
-                    ppjson(data)
+                    # ppi(json.dumps(data, indent = 4, sort_keys = True))
 
                     variant = data['variant']
                     if variant == 'X01' or variant == 'Random Checkout':
@@ -862,32 +930,32 @@ def on_message_autodarts(ws, message):
                     elif variant == 'Cricket':
                         process_match_cricket(data)
         except Exception as e:
-            log_and_print('WS-Message failed: ', e)
+            ppe('WS-Message failed: ', e)
 
     threading.Thread(target=process).start()
 
 def on_close_autodarts(ws, close_status_code, close_msg):
     try:
-        printv("Websocket closed")
-        printv(str(close_msg))
-        printv(str(close_status_code))
-        printv ("Retry : %s" % time.ctime())
+        ppi("Websocket closed")
+        ppi(close_msg)
+        ppi(close_status_code)
+        ppi("Retry : %s" % time.ctime())
         time.sleep(3)
         connect_autodarts()
     except Exception as e:
-        log_and_print('WS-Close failed: ', e)
+        ppe('WS-Close failed: ', e)
     
 def on_error_autodarts(ws, error):
     try:
-        printv(error)
+        ppi(error)
     except Exception as e:
-        log_and_print('WS-Error failed: ', e)
+        ppe('WS-Error failed: ', e)
 
 
 def client_new_message(client, server, message):
     def process(*args):
         try:
-            printv('CLIENT MESSAGE: ' + str(message))
+            ppi('CLIENT MESSAGE: ' + str(message))
 
             if boardManagerAddress != None and boardManagerAddress != 'http://':
                 if message.startswith('board-start'):
@@ -895,23 +963,23 @@ def client_new_message(client, server, message):
                     if len(msg_splitted) > 1:
                         time.sleep(float(msg_splitted[1]))
                     res = requests.put(boardManagerAddress + '/api/start')
-                    # printv(str(res))
+                    # ppi(res)
 
                 elif message == 'board-stop':
                     res = requests.put(boardManagerAddress + '/api/stop')
-                    # printv(str(res))
+                    # ppi(res)
             else:
-              printv('Can not start board as board-address is unknown: ' + str(boardManagerAddress))  
+              ppi('Can not start board as board-address is unknown: ' + str(boardManagerAddress))  
 
         except Exception as e:
-            log_and_print('WS-Message failed: ', e)
+            ppe('WS-Message failed: ', e)
     threading.Thread(target=process).start()
 
 def new_client(client, server):
-    printv('NEW CLIENT CONNECTED: ' + str(client))
+    ppi('NEW CLIENT CONNECTED: ' + str(client))
 
 def client_left(client, server):
-    printv('CLIENT DISCONNECTED: ' + str(client))
+    ppi('CLIENT DISCONNECTED: ' + str(client))
 
 
 
@@ -925,16 +993,22 @@ if __name__ == "__main__":
     ap.add_argument("-P", "--autodarts_password", required=True, help="Registered password address at " + AUTODART_URL)
     ap.add_argument("-B", "--autodarts_board_id", required=True, help="Registered board-id at " + AUTODART_URL)
     ap.add_argument("-M", "--media_path", required=True, help="Absolute path to your media folder. You can download free sounds at https://freesound.org/")
+    ap.add_argument("-MS", "--media_path_shared", required=False, default=DEFAULT_EMPTY_PATH, help="Absolute path to shared media folder (every caller get sounds)")
     ap.add_argument("-V", "--caller_volume", type=float, default=1.0, required=False, help="Set the caller volume between 0.0 (silent) and 1.0 (max)")
+    ap.add_argument("-C", "--caller", default=DEFAULT_CALLER, required=False, help="Sets a particular caller")
     ap.add_argument("-R", "--random_caller", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will randomly choose a caller each game. It only works when your base-media-folder has subfolders with its files")
     ap.add_argument("-L", "--random_caller_each_leg", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will randomly choose a caller each leg instead of each game. It only works when 'random_caller=1'")
     ap.add_argument("-E", "--call_every_dart", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will call every thrown dart")
     ap.add_argument("-ESF", "--call_every_dart_single_files", type=int, choices=range(0, 2), default=1, required=False, help="If '1', the application will call a every dart by using single, dou.., else it uses two separated sounds: single + x (score)")
     ap.add_argument("-PCC", "--possible_checkout_call", type=int, choices=range(0, 2), default=1, required=False, help="If '1', the application will call a possible checkout starting at 170")
-    ap.add_argument("-PCCSF", "--possible_checkout_call_single_files", type=int, choices=range(0, 2), default=1, required=False, help="If '1', the application will call a possible checkout by using yr_2-yr_170, else it uses two separated sounds: you_require + x")
+    ap.add_argument("-PCCSF", "--possible_checkout_call_single_files", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will call a possible checkout by using yr_2-yr_170, else it uses two separated sounds: you_require + x")
     ap.add_argument("-A", "--ambient_sounds", type=float, default=0.0, required=False, help="If > '0.0' (volume), the application will call a ambient_*-Sounds")
-    ap.add_argument("-AAC", "--ambient_sounds_after_calls", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the ambient sounds will appear after calling is finished")
+    ap.add_argument("-AAC", "--ambient_sounds_after_calls", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the ambient sounds will appear after calling is finished") 
+    ap.add_argument("-DL", "--downloads", type=int, choices=range(0, 2), default=DEFAULT_DOWNLOADS, required=False, help="If '1', the application will try to download a curated list of caller-voices")
+    ap.add_argument("-DLL", "--downloads_limit", type=int, choices=range(0, 1000), default=DEFAULT_DOWNLOADS_LIMIT, required=False, help="If '1', the application will try to download a only the X newest caller-voices. -DLN needs to be activated.")
+    ap.add_argument("-DLP", "--downloads_path", required=False, default=DEFAULT_DOWNLOADS_PATH, help="Absolute path for temporarly downloads")
     ap.add_argument("-HP", "--host_port", required=False, type=int, default=DEFAULT_HOST_PORT, help="Host-Port")
+    ap.add_argument("-DEB", "--debug", type=int, choices=range(0, 2), default=False, required=False, help="If '1', the application will output additional information")
     ap.add_argument("-MIF", "--mixer_frequency", type=int, required=False, default=DEFAULT_MIXER_FREQUENCY, help="Pygame mixer frequency")
     ap.add_argument("-MIS", "--mixer_size", type=int, required=False, default=DEFAULT_MIXER_SIZE, help="Pygame mixer size")
     ap.add_argument("-MIC", "--mixer_channels", type=int, required=False, default=DEFAULT_MIXER_CHANNELS, help="Pygame mixer channels")
@@ -943,12 +1017,15 @@ if __name__ == "__main__":
 
     args = vars(ap.parse_args())
 
+    
+
     AUTODART_USER_EMAIL = args['autodarts_email']                          
     AUTODART_USER_PASSWORD = args['autodarts_password']              
     AUTODART_USER_BOARD_ID = args['autodarts_board_id']        
-    AUDIO_MEDIA_PATH = args['media_path']
-    AUDIO_MEDIA_PATH = Path(AUDIO_MEDIA_PATH)
+    AUDIO_MEDIA_PATH = Path(args['media_path'])
+    AUDIO_MEDIA_PATH_SHARED = Path(args['media_path_shared']) 
     AUDIO_CALLER_VOLUME = args['caller_volume']
+    CALLER = args['caller']
     RANDOM_CALLER = args['random_caller']   
     RANDOM_CALLER_EACH_LEG = args['random_caller_each_leg']   
     CALL_EVERY_DART = args['call_every_dart']
@@ -957,7 +1034,11 @@ if __name__ == "__main__":
     POSSIBLE_CHECKOUT_CALL_SINGLE_FILE = args['possible_checkout_call_single_files']
     AMBIENT_SOUNDS = args['ambient_sounds']
     AMBIENT_SOUNDS_AFTER_CALLS = args['ambient_sounds_after_calls']
+    DOWNLOADS = args['downloads']
+    DOWNLOADS_LIMIT = args['downloads_limit']
+    DOWNLOADS_PATH = args['downloads_path']
     HOST_PORT = args['host_port']
+    DEBUG = args['debug']
     MIXER_FREQUENCY = args['mixer_frequency']
     MIXER_SIZE = args['mixer_size']
     MIXER_CHANNELS = args['mixer_channels']
@@ -992,8 +1073,9 @@ if __name__ == "__main__":
     mixer.pre_init(MIXER_FREQUENCY, MIXER_SIZE, MIXER_CHANNELS, MIXER_BUFFERSIZE) 
     mixer.init()
 
-    printv('Started with following arguments:')
-    printv(json.dumps(args, indent=4))
+    if DEBUG:
+        ppi('Started with following arguments:')
+        ppi(json.dumps(args, indent=4))
 
     osType = platform.system()
     osName = os.name
@@ -1008,10 +1090,9 @@ if __name__ == "__main__":
     print('\r\n')
     
     try:
-        download_install_caller_profiles()
+        download_callers()
     except Exception as e:
-        log_and_print("Caller-profile fetchung failed: ", e)
-        
+        ppe("Caller-profile fetching failed: ", e)
 
     try:  
         setup_caller()
@@ -1022,7 +1103,6 @@ if __name__ == "__main__":
         server.set_fn_client_left(client_left)
         server.set_fn_message_received(client_new_message)
         server.run_forever()
-
     except Exception as e:
-        log_and_print("Connect failed: ", e)
+        ppe("Connect failed: ", e)
    
