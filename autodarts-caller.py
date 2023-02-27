@@ -241,13 +241,13 @@ def setup_caller():
     callers = load_callers()
     ppi(str(len(callers)) + ' caller(s) ready to call out your Darts:')
 
-    # specific caller
-    if CALLER != DEFAULT_CALLER:
-        wanted_caller = CALLER.lower()
+    # caller-wish
+    if CALLER != DEFAULT_CALLER and CALLER != '':
+        wished_caller = CALLER.lower()
         for c in callers:
             caller_name = os.path.basename(os.path.normpath(c[0])).lower()
             print(caller_name)
-            if caller_name == wanted_caller:
+            if caller_name == wished_caller:
                 caller = c
      
     else:
@@ -255,9 +255,6 @@ def setup_caller():
             caller = callers[0]
         else:
             caller = random.choice(callers)
-
-    if caller == None:
-        raise Exception('A caller with name "' + wanted_caller + '" does NOT exist!')
 
     ppi("Your current caller: " + str(os.path.basename(os.path.normpath(caller[0]))) + " knows " + str(len(caller[1].values())) + " Sound(s)")
     # ppi(caller[1])
@@ -1014,11 +1011,9 @@ if __name__ == "__main__":
     ap.add_argument("-MIC", "--mixer_channels", type=int, required=False, default=DEFAULT_MIXER_CHANNELS, help="Pygame mixer channels")
     ap.add_argument("-MIB", "--mixer_buffersize", type=int, required=False, default=DEFAULT_MIXER_BUFFERSIZE, help="Pygame mixer buffersize")
     
-
     args = vars(ap.parse_args())
 
     
-
     AUTODART_USER_EMAIL = args['autodarts_email']                          
     AUTODART_USER_PASSWORD = args['autodarts_password']              
     AUTODART_USER_BOARD_ID = args['autodarts_board_id']        
@@ -1092,17 +1087,25 @@ if __name__ == "__main__":
     try:
         download_callers()
     except Exception as e:
-        ppe("Caller-profile fetching failed: ", e)
+        ppe("Caller-profile fetching failed!", e)
 
-    try:  
+    try:
         setup_caller()
-        connect_autodarts()
-        
-        server = WebsocketServer(host=DEFAULT_HOST_IP, port=HOST_PORT, loglevel=logging.ERROR)
-        server.set_fn_new_client(new_client)
-        server.set_fn_client_left(client_left)
-        server.set_fn_message_received(client_new_message)
-        server.run_forever()
     except Exception as e:
-        ppe("Connect failed: ", e)
+        ppe("Setup callers failed!", e)
+
+    if caller == None:
+        ppi('A caller with name "' + str(CALLER) + '" does NOT exist! Please compare your input with list of possible callers and update -C')
+        time.sleep(30)
+        exit(1)
+    else:
+        try:  
+            connect_autodarts()
+            server = WebsocketServer(host=DEFAULT_HOST_IP, port=HOST_PORT, loglevel=logging.ERROR)
+            server.set_fn_new_client(new_client)
+            server.set_fn_client_left(client_left)
+            server.set_fn_message_received(client_new_message)
+            server.run_forever()
+        except Exception as e:
+            ppe("Connect failed: ", e)
    

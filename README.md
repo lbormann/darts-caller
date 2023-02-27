@@ -233,11 +233,11 @@ If you set this to '1' the application will download all possible caller-voices 
 
 #### **-DLL / --downloads_limit**
 
-If you wish to stop the application from checking/downloading all possible caller-voices, you can limit it to x most recent. By default this is '0' (no limit).
+If you wish to stop the application from checking/downloading all possible caller-voices, you can limit it to x most recent. By default this is '0' (no limitation).
 
 #### **-DLP / --downloads_path**
 
-In case you face problems with caller-voices-downloads try to change the download-path (absolute Path). By default this is 'download' in the application`s directory.
+In case you face problems with caller-voices-downloads try to change the download-path (absolute Path). By default this is 'download' in the application`s directory. But make sure you choose an non important folder as the content will be cleared by application.
 
 #### **-HP / --host_port**
 
@@ -260,34 +260,30 @@ Make sure you configurate 44100HZ, Stereo
 Try https://www.audacity.de/ to modify your sound-files.
 
 
+
 ## CONTRIBUTE
 
 ### Do you want to provide your caller profile to the community?
 
-Here are the two steps to do that!
-
-
 1) Create a ZIP archive that contains the following contents:
 
-**Template file:**
-A UTF8-encoded CSV file (*.csv) with a BOM (filename can be chosen freely), which is structured as follows:
-Column 1 contains the phrase to be translated into the respective language by the provider. For example: "The game is over."
-All further columns (separated by semicolon ';') contain "caller-filename-keys".
-All valid keys can be viewed at https://github.com/lbormann/autodarts-caller#setup-sounds.
-Finished templates for multiple languages can be found in the caller-templates folder.
+    - **Template file:**
+    A UTF8-encoded CSV file (*.csv) with a BOM (filename can be chosen freely), which is structured as follows:
+    Column 1 contains the phrase to be translated into the respective language by the provider. For example: "The game is over."
+    All further columns (separated by semicolon ';') contain "caller-filename-keys".
+    All valid keys can be viewed at https://github.com/lbormann/autodarts-caller#setup-sounds.
+    Finished templates for multiple languages can be found in the caller-templates folder.
 
-**Sounds archive:**
-A ZIP file (*.zip) (filename: "{speaker name}"-"{m|f}"-"{language}".zip - for example: "Max-m-deutsch.zip") containing a folder with the sound files. It should be noted that the sounds MUST be in the same order (when sorted alphabetically) as in the template file; however, the actual filename is completely irrelevant.
+    - **Sounds archive:**
+    A ZIP file (*.zip) (filename: "{speaker name}"-"{m|f}"-"{language}".zip - for example: "max-m-german.zip") containing a folder with the sound files. It should be noted that the sounds MUST be in the same order (when sorted alphabetically) as in the template file; however, the actual filename is completely irrelevant.
 
-**Source file (optional but desirable):**
-A text file (*.txt) (filename: freely chosen) containing additional information about the origin of the sound files.
-Examples: Link to the website where the sounds were generated; specific generation profile for this speaker during generation.
+    - **Source file (optional but desirable):**
+    A text file (*.txt) (filename: freely chosen) containing additional information about the origin of the sound files.
+    Examples: Link to the website where the sounds were generated; specific generation profile for this speaker during generation.
 
+2) Upload your files to a file-hoster: Make sure you choose a filehoster that supports direct-links and unlimited file-persistence wihout restrictions (mediafire.com is a good hoster for that). !!IMPORTANT!! Before you upload, check your rights regarding distribution of your sound-files; are you the owner? Are you allowed to share it in public?
 
-2) Upload your files to a file-hoster: Make sure you choose a filehoster that supports direct-links and unlimited file-persistence wihout restrictions (mediafire.com is a good hoster for that). 
-!! IMPORTANT!! Before you upload, check your rights regarding distribution of your sound-files; are you the owner? Are you allowed to share it in public?
-
-3) Sent me a PM on Discord with the download-link (direct link) - Wait for an caller-update :) 
+3) Sent me a PM on Discord with the download-link (direct link) - Wait for new release :) 
 
 
 
@@ -338,8 +334,7 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - -E 25 will be called as 25 (that is wrong)
 - improve console logs
 - add caller-profile-downloader
-- add ambient_sounds_common_media_path
-- add every_single_dart_common_media_path
+- add media_path_shared
 
 
 
