@@ -31,7 +31,7 @@ logger.addHandler(sh)
 
 
 
-VERSION = '2.0.1'
+VERSION = '2.0.2'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -249,9 +249,10 @@ def setup_caller():
         wished_caller = CALLER.lower()
         for c in callers:
             caller_name = os.path.basename(os.path.normpath(c[0])).lower()
-            if caller_name == wished_caller:
+            print(caller_name)
+            if caller == None and caller_name == wished_caller:
                 caller = c
-                break
+
     else:
         for c in callers: 
             caller_name = os.path.basename(os.path.normpath(c[0])).lower()
@@ -359,6 +360,10 @@ def process_match_x01(m):
     matchon = (m['settings'][base] == m['gameScores'][0] and turns['throws'] == None and m['leg'] == 1 and m['set'] == 1)
     gameon = (m['settings'][base] == m['gameScores'][0] and turns['throws'] == None)
 
+    # ppi('matchon: '+ str(matchon) )
+    # ppi('gameon: '+ str(gameon) )
+    # ppi('isGameFinished: ' + str(isGameFinished))
+
     pcc_success = False
     isGameFin = False
 
@@ -366,7 +371,7 @@ def process_match_x01(m):
         lastPoints = points
 
 
-    # Playerchange (darts pulled)
+    # Darts pulled (Playerchange and Possible-checkout)
     if gameon == False and turns != None and turns['throws'] == None or isGameFinished == True:
         busted = "False"
         if lastPoints == "B":
@@ -395,10 +400,32 @@ def process_match_x01(m):
         }
         broadcast(dartsPulled)
 
-        if pcc_success == False:
-            play_sound_effect('playerchange')
+        if gameon == False and isGameFinished == False:
 
-        ppi("Next player")
+            # Check for possible checkout
+            if POSSIBLE_CHECKOUT_CALL and m['player'] == currentPlayerIndex and remainingPlayerScore <= 170 and remainingPlayerScore not in BOGEY_NUMBERS:
+                play_sound_effect(currentPlayerName)
+
+                remaining = str(remainingPlayerScore)
+
+                if POSSIBLE_CHECKOUT_CALL_SINGLE_FILE:
+                    pcc_success = play_sound_effect('yr_' + remaining, True)
+                    if pcc_success == False:
+                        pcc_success = play_sound_effect(remaining, True)
+                else:
+                    pcc_success = (play_sound_effect('you_require', True) and play_sound_effect(remaining, True))
+
+                ppi('Checkout possible: ' + remaining)
+
+            # Player`s turn-call
+            if CALL_CURRENT_PLAYER and m['player'] == currentPlayerIndex and pcc_success == False:
+                pcc_success = play_sound_effect(currentPlayerName)
+
+            # Player-change
+            if pcc_success == False:
+                play_sound_effect('playerchange')
+
+            ppi("Next player")
 
     # Call every thrown dart
     elif CALL_EVERY_DART and turns != None and turns['throws'] != None and len(turns['throws']) >= 1 and busted == False and matchshot == False and gameshot == False: 
@@ -434,6 +461,7 @@ def process_match_x01(m):
                 play_sound_effect('outside')
 
 
+
     # Check for matchshot
     if matchshot == True:
         isGameFin = True
@@ -448,13 +476,19 @@ def process_match_x01(m):
             }
         broadcast(matchWon)
 
-        if play_sound_effect('matchshot') == False:
-            play_sound_effect('gameshot')
-        play_sound_effect(currentPlayerName, True)
+        if AMBIENT_SOUNDS_AFTER_CALLS == False:
+            if AMBIENT_SOUNDS != 0.0:
+                if play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS) == False:
+                    play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+        else:
+            if play_sound_effect('matchshot') == False:
+                play_sound_effect('gameshot')
+            play_sound_effect(currentPlayerName, True)
 
-        if AMBIENT_SOUNDS != 0.0:
-            if play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS) == False:
-                play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+            if AMBIENT_SOUNDS != 0.0:
+                if play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS) == False:
+                    play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+
         setup_caller()
         ppi('Gameshot and match')
 
@@ -472,12 +506,18 @@ def process_match_x01(m):
             }
         broadcast(gameWon)
 
-        play_sound_effect('gameshot')
-        play_sound_effect(currentPlayerName, True)
-        if AMBIENT_SOUNDS != 0.0:
-            play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+        if AMBIENT_SOUNDS_AFTER_CALLS == False:
+            if AMBIENT_SOUNDS != 0.0:
+                play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+        else:
+            play_sound_effect('gameshot')
+            play_sound_effect(currentPlayerName, True)
+            if AMBIENT_SOUNDS != 0.0:
+                play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+
         if RANDOM_CALLER_EACH_LEG:
             setup_caller()
+
         ppi('Gameshot')
 
     # Check for matchon
@@ -496,13 +536,20 @@ def process_match_x01(m):
             }
         broadcast(matchStarted)
 
-        play_sound_effect(currentPlayerName, False)
-        if play_sound_effect('matchon', True) == False:
-            play_sound_effect('gameon', True)
-        # play only if it is a real match not just legs!
-        if AMBIENT_SOUNDS != 0.0 and ('legs' in m and 'sets'):
-            if play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS) == False:
-                play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+        if AMBIENT_SOUNDS_AFTER_CALLS == False:
+            # play only if it is a real match not just legs!
+            if AMBIENT_SOUNDS != 0.0 and ('legs' in m and 'sets'):
+                if play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS) == False:
+                    play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+        else:
+            play_sound_effect(currentPlayerName)
+            if play_sound_effect('matchon', True) == False:
+                play_sound_effect('gameon', True)
+
+            # play only if it is a real match not just legs!
+            if AMBIENT_SOUNDS != 0.0 and ('legs' in m and 'sets'):
+                if play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS) == False:
+                    play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
 
         ppi('Matchon')
 
@@ -522,10 +569,15 @@ def process_match_x01(m):
             }
         broadcast(gameStarted)
 
-        play_sound_effect(currentPlayerName)
-        play_sound_effect('gameon', True)
-        if AMBIENT_SOUNDS != 0.0:
-            play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+        if AMBIENT_SOUNDS_AFTER_CALLS == False:
+            if AMBIENT_SOUNDS != 0.0:
+                play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+        else:
+            play_sound_effect(currentPlayerName)
+            play_sound_effect('gameon', True)
+
+            if AMBIENT_SOUNDS != 0.0:
+                play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
 
         ppi('Gameon')
           
@@ -543,30 +595,11 @@ def process_match_x01(m):
         broadcast(busted)
 
         play_sound_effect('busted')
+
         if AMBIENT_SOUNDS != 0.0:
             play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+
         ppi('Busted')
-
-    # Check for possible checkout
-    elif POSSIBLE_CHECKOUT_CALL and m['player'] == currentPlayerIndex and remainingPlayerScore <= 170 and remainingPlayerScore not in BOGEY_NUMBERS and turns != None and turns['throws'] == None:
-        isGameFinished = False
-        play_sound_effect(currentPlayerName)
-
-        remaining = str(remainingPlayerScore)
-
-        if POSSIBLE_CHECKOUT_CALL_SINGLE_FILE:
-            pcc_success = play_sound_effect('yr_' + remaining, True)
-            if pcc_success == False:
-                pcc_success = play_sound_effect(remaining, True)
-        else:
-            pcc_success = (play_sound_effect('you_require', True) and play_sound_effect(remaining, True))
-
-        ppi('Checkout possible: ' + remaining)
-
-    # Player`s turn-call
-    elif CALL_CURRENT_PLAYER and m['player'] == currentPlayerIndex and turns != None and turns['throws'] == None:
-        isGameFinished = False
-        play_sound_effect(currentPlayerName)
     
     # Check for 1. Dart
     elif turns != None and turns['throws'] != None and len(turns['throws']) == 1:
@@ -594,6 +627,7 @@ def process_match_x01(m):
         broadcast(dartsThrown)
 
         play_sound_effect(points)
+
         if AMBIENT_SOUNDS != 0.0:
             ambient_x_success = False
             if turns['points'] != 0:

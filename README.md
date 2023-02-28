@@ -293,7 +293,7 @@ Try https://www.audacity.de/ to modify your sound-files.
 
 ## CONTRIBUTE
 
-### Do you want to provide your caller profile to the community?
+### Do you want to provide your caller profile to the community? It`s easy - read on!
 
 1) Create a ZIP archive that contains the following contents:
 
@@ -302,7 +302,7 @@ Try https://www.audacity.de/ to modify your sound-files.
     Column 1 contains the phrase a sound file is based on. For example: "The game is over."
     All further filled columns (separated by semicolon ';') contain "filename-keys".
     All supported filename-keys can be found at https://github.com/lbormann/autodarts-caller#setup-sounds.
-    Moreover you can find powerful template-files for multiple languages in 'caller-templates'.
+    Moreover you can find powerful template-files in 'caller-templates'; you can also create template files for other languages and share with me so that every contributer can use this to generate new awesome voices!
 
     - **Sounds archive:**
     A ZIP file (*.zip) (filename: "{speaker name}"-"{m|f}"-"{language}".zip - for example: "max-m-german.zip") containing a folder (filename irrelevant) with the sound files. It should be noted that the sounds MUST be in the same order (when sorted alphabetically) as in the template file; however, the actual filename is completely irrelevant.
@@ -311,7 +311,7 @@ Try https://www.audacity.de/ to modify your sound-files.
     A text file (*.txt) (filename: freely chosen) containing additional information about the origin of the sound files.
     Examples: Link to the website where the sounds were generated; specific generation profile for this speaker during generation, etc.
 
-2) Upload the ZIP archive to a file-hoster: Make sure you choose a filehoster that supports direct-links and unlimited file-persistence wihout restrictions (GoogleDrive, OneDrive, ...). !!IMPORTANT!! Before you upload, check your rights regarding distribution of your sound-files; are you the owner? Are you allowed to share it in public?
+2) Upload the ZIP archive to a file-hoster: Make sure you choose a filehoster that supports direct-links and unlimited file-persistence wihout restrictions (GoogleDrive, OneDrive, ...). !!IMPORTANT!! Before you upload, check your rights regarding distribution of the sound-files; are you the owner? Are you allowed to share it in public?
 
 3) Sent me a PM on Discord with the download-link - Wait for a new release :) 
 
