@@ -1,8 +1,8 @@
 caller
 *.txt
 *.json
-win-exec-custom.bat
-win-start-custom.bat
+*-custom.sh
+*-custom.bat
 build
 dist
 *.spec

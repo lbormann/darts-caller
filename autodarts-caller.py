@@ -31,7 +31,7 @@ logger.addHandler(sh)
 
 
 
-VERSION = '2.0.0'
+VERSION = '2.0.1'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -61,11 +61,13 @@ BOGEY_NUMBERS = [169, 168, 166, 165, 163, 162, 159]
 
 
 
-
 CALLER_PROFILES = {
-    'charles-m-english-us-canada': 'https://download1499.mediafire.com/608rnh5p9segWvS6qIbsfdRyQ6tINm25As3-ltArJiqdXceGVPnE5ehFP1wSkZ42gRcNNkAHdXCbYrlv6SJQZNMeREI/65dnw202a3gzz1s/download.zip',
-    'clint-m-english-us-canada': 'https://download856.mediafire.com/t34rhybpjyggohzMXQnDLRBq2wO4QsIHxbJk4p79aeZnPF8FfZ6efiGQeLPxkjP8BCQ9b9-_KQsTwOZ-lfT2CQgwxvQ/vic3vn40lhhqkbt/C7.zip',
-    'alicia-f-english-us-canada': 'https://download942.mediafire.com/e4ihrrz2t0tg5O8YrE37tdYtOywOe3q3ze5vegw4rEpJy9AG9NB0qUF89I8hmy2-lHqPEHBjRV_R0UsqSgcY93dQvMQ/9i6jcwtfbu7gmza/C9.zip',
+    'charles-m-english-us-canada': 'https://drive.google.com/file/d/1-CrWSFHBoT_I9kzDuo7PR7FLCfEO-Qg-/view?usp=sharing',
+    'clint-m-english-us-canada': 'https://drive.google.com/file/d/1-IQ9Bvp1i0jG6Bu9fMWhlbyAj9SkoVGb/view?usp=sharing',
+    'alicia-f-english-us-canada': 'https://drive.google.com/file/d/1-Cvk-IczRjOphDOCA14NwE1hy4DAB8Tt/view?usp=sharing',
+    'kushal-m-english-india': 'https://drive.google.com/file/d/1-GavAG_oa3MrrremanvfYSfMI0U784EN/view?usp=sharing',
+    'kylie-f-english-australia': 'https://drive.google.com/file/d/1-Y6XpdFjOotSLBi0sInf5CGpAAV3mv0b/view?usp=sharing',
+    'ruby-f-english-uk': 'https://drive.google.com/file/d/1-kqVwCd4HJes0EVNda5EOF6tTwUxql3z/view?usp=sharing',
 }
 
 
@@ -105,7 +107,7 @@ def download_callers():
                 dest = os.path.join(DOWNLOADS_PATH, 'download.zip')
 
                 # kind="zip", 
-                path = download(cpr_download_url, dest, progressbar=True, replace=False, verbose=True)
+                path = download(cpr_download_url, dest, progressbar=True, replace=False, verbose=DEBUG)
  
                 # TEMP Test!!
                 # shutil.copyfile('C:\\Users\\Luca\\Desktop\\WORK\\charles-m-english-us-canada\\download.zip', os.path.join(DOWNLOADS_PATH, 'download.zip'))
@@ -136,7 +138,7 @@ def download_callers():
                         if len(sanitized) == 1:
                             sanitized.append(sanitized[0].lower())
                         san_list.append(sanitized)
-                    # print(san_list)
+                    # ppi(san_list)
 
                 # Find origin-file
                 origin_file = None
@@ -154,7 +156,7 @@ def download_callers():
                     for file in files:
                         if file.endswith(tuple(SUPPORTED_SOUND_FORMATS)):
                             sounds.append(os.path.join(root, file))
-                # print(sounds)
+                # ppi(sounds)
 
                 # Rename sound-files and copy files according the defined caller-keys
                 for i in range(len(san_list) - 1):
@@ -165,19 +167,19 @@ def download_callers():
                     try:
                         row = san_list[i]
                         caller_keys = row[1:]
-                        # print(caller_keys)
+                        # ppi(caller_keys)
 
                         for ck in caller_keys:
                             multiple_file_name = os.path.join(dest, ck + current_sound_extension)
                             exists = os.path.exists(multiple_file_name)
-                            # print('Test existance: ' + multiple_file_name)
+                            # ppi('Test existance: ' + multiple_file_name)
 
                             counter = 0
                             while exists == True:
                                 counter = counter + 1
                                 multiple_file_name = os.path.join(dest, ck + '+' + str(counter) + current_sound_extension)
                                 exists = os.path.exists(multiple_file_name)
-                                # print('Test (' + str(counter) + ') existance: ' + multiple_file_name)
+                                # ppi('Test (' + str(counter) + ') existance: ' + multiple_file_name)
 
                             shutil.copyfile(current_sound, multiple_file_name)
                     except Exception as ie:
@@ -243,16 +245,18 @@ def setup_caller():
     callers = load_callers()
     ppi(str(len(callers)) + ' caller(s) ready to call out your Darts:')
 
-    # caller-wish
     if CALLER != DEFAULT_CALLER and CALLER != '':
         wished_caller = CALLER.lower()
         for c in callers:
             caller_name = os.path.basename(os.path.normpath(c[0])).lower()
-            print(caller_name)
             if caller_name == wished_caller:
                 caller = c
-     
+                break
     else:
+        for c in callers: 
+            caller_name = os.path.basename(os.path.normpath(c[0])).lower()
+            print(caller_name)
+
         if RANDOM_CALLER == False:
             caller = callers[0]
         else:
@@ -331,6 +335,11 @@ def listen_to_newest_match(m, ws):
         currentMatch = newMatch
     
 def process_match_x01(m):
+    global accessToken
+    global currentMatch
+    global isGameFinished
+    global lastPoints
+
     variant = m['variant']
     currentPlayerIndex = m['player']
     currentPlayer = m['players'][currentPlayerIndex]
@@ -338,30 +347,61 @@ def process_match_x01(m):
     remainingPlayerScore = m['gameScores'][currentPlayerIndex]
     turns = m['turns'][0]
     points = str(turns['points'])
-    pcc_success = False
-
-    isGameOn = False
-    isGameFin = False
-    global isGameFinished
-    global lastPoints
-    global accessToken
-    global currentMatch
-
-    busted = turns['busted'] == True
-    matchshot = m['winner'] != -1 and isGameFinished == False
-    gameshot = m['gameWinner'] != -1 and isGameFinished == False
-
+    busted = (turns['busted'] == True)
+    matchshot = (m['winner'] != -1 and isGameFinished == False)
+    gameshot = (m['gameWinner'] != -1 and isGameFinished == False)
+    
     # Determine "baseScore"-Key
     base = 'baseScore'
     if 'target' in m['settings']:
         base = 'target'
     
-    # and len(turns['throws']) == 3 or isGameFinished == True
+    matchon = (m['settings'][base] == m['gameScores'][0] and turns['throws'] == None and m['leg'] == 1 and m['set'] == 1)
+    gameon = (m['settings'][base] == m['gameScores'][0] and turns['throws'] == None)
+
+    pcc_success = False
+    isGameFin = False
+
     if turns != None and turns['throws'] != None:
         lastPoints = points
 
+
+    # Playerchange (darts pulled)
+    if gameon == False and turns != None and turns['throws'] == None or isGameFinished == True:
+        busted = "False"
+        if lastPoints == "B":
+            lastPoints = "0"
+            busted = "True"
+
+        dartsPulled = {
+            "event": "darts-pulled",
+            "player": currentPlayerName,
+            "game": {
+                "mode": variant,
+                # TODO: fix
+                "pointsLeft": str(remainingPlayerScore),
+                # TODO: fix
+                "dartsThrown": "3",
+                "dartsThrownValue": lastPoints,
+                "busted": busted
+                # TODO: fix
+                # "darts": [
+                #     {"number": "1", "value": "60"},
+                #     {"number": "2", "value": "60"},
+            
+                #     {"number": "3", "value": "60"}
+                # ]
+            }
+        }
+        broadcast(dartsPulled)
+
+        if pcc_success == False:
+            play_sound_effect('playerchange')
+
+        ppi("Next player")
+
     # Call every thrown dart
-    if CALL_EVERY_DART and turns != None and turns['throws'] != None and len(turns['throws']) >= 1 and busted == False and matchshot == False and gameshot == False: 
+    elif CALL_EVERY_DART and turns != None and turns['throws'] != None and len(turns['throws']) >= 1 and busted == False and matchshot == False and gameshot == False: 
 
         throwAmount = len(turns['throws'])
         type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
@@ -372,30 +412,30 @@ def process_match_x01(m):
 
         # ppi("Type: " + str(type) + " - Field-name: " + str(field_name))
 
-        if len(turns['throws']) <= 2:
-            if CALL_EVERY_DART_SINGLE_FILE:
-                if play_sound_effect(field_name) == False:
-                    inner_outer = False
-                    if type == 'singleouter' or type == 'singleinner':
-                        inner_outer = play_sound_effect(type)
-                        if inner_outer == False:
-                            play_sound_effect('single')
-                    else:
-                        play_sound_effect(type)
-
-            else:
-                field_number = str(turns['throws'][throwAmount - 1]['segment']['number'])
-
-                if type == 'single' or type == 'singleinner' or type == "singleouter":
-                    play_sound_effect(field_number)
-                elif type == 'double' or type == 'triple':
-                    play_sound_effect(type)
-                    play_sound_effect(field_number, True)
+        if CALL_EVERY_DART_SINGLE_FILE:
+            if play_sound_effect(field_name) == False:
+                inner_outer = False
+                if type == 'singleouter' or type == 'singleinner':
+                    inner_outer = play_sound_effect(type)
+                    if inner_outer == False:
+                        play_sound_effect('single')
                 else:
-                    play_sound_effect('outside')
+                    play_sound_effect(type)
+
+        elif len(turns['throws']) <= 2:
+            field_number = str(turns['throws'][throwAmount - 1]['segment']['number'])
+
+            if type == 'single' or type == 'singleinner' or type == "singleouter":
+                play_sound_effect(field_number)
+            elif type == 'double' or type == 'triple':
+                play_sound_effect(type)
+                play_sound_effect(field_number, True)
+            else:
+                play_sound_effect('outside')
+
 
     # Check for matchshot
-    if matchshot:
+    if matchshot == True:
         isGameFin = True
         
         matchWon = {
@@ -419,7 +459,7 @@ def process_match_x01(m):
         ppi('Gameshot and match')
 
     # Check for gameshot
-    elif gameshot:
+    elif gameshot == True:
         isGameFin = True
         
         gameWon = {
@@ -441,8 +481,7 @@ def process_match_x01(m):
         ppi('Gameshot')
 
     # Check for matchon
-    elif m['settings'][base] == m['gameScores'][0] and turns['throws'] == None and m['leg'] == 1 and m['set'] == 1:
-        isGameOn = True
+    elif matchon == True:
         isGameFinished = False
 
         matchStarted = {
@@ -468,8 +507,7 @@ def process_match_x01(m):
         ppi('Matchon')
 
     # Check for gameon
-    elif m['settings'][base] == m['gameScores'][0] and turns['throws'] == None:
-        isGameOn = True
+    elif gameon == True:
         isGameFinished = False
 
         gameStarted = {
@@ -492,7 +530,7 @@ def process_match_x01(m):
         ppi('Gameon')
           
     # Check for busted turn
-    elif busted:
+    elif busted == True:
         lastPoints = "B"
         isGameFinished = False
         busted = { 
@@ -521,8 +559,7 @@ def process_match_x01(m):
             if pcc_success == False:
                 pcc_success = play_sound_effect(remaining, True)
         else:
-            play_sound_effect('you_require', True)
-            play_sound_effect(remaining, True)
+            pcc_success = (play_sound_effect('you_require', True) and play_sound_effect(remaining, True))
 
         ppi('Checkout possible: ' + remaining)
 
@@ -558,55 +595,26 @@ def process_match_x01(m):
 
         play_sound_effect(points)
         if AMBIENT_SOUNDS != 0.0:
-            if turns['points'] == 0:
-                play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
-            elif turns['points'] == 180:
-                play_sound_effect('ambient_180', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
-            elif turns['points'] >= 153:
-                play_sound_effect('ambient_150more', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)   
-            elif turns['points'] >= 120:
-                play_sound_effect('ambient_120more', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
-            elif turns['points'] >= 100:
-                play_sound_effect('ambient_100more', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
-            elif turns['points'] >= 50:
-                play_sound_effect('ambient_50more', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+            ambient_x_success = False
+            if turns['points'] != 0:
+                ambient_x_success = play_sound_effect('ambient_' + str(turns['points']), AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
 
+            if ambient_x_success == False:
+                if turns['points'] >= 150:
+                    play_sound_effect('ambient_150more', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)   
+                elif turns['points'] >= 120:
+                    play_sound_effect('ambient_120more', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+                elif turns['points'] >= 100:
+                    play_sound_effect('ambient_100more', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+                elif turns['points'] >= 50:
+                    play_sound_effect('ambient_50more', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+                elif turns['points'] >= 1:
+                    play_sound_effect('ambient_1more', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+                else:
+                    play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
 
         ppi("Turn ended")
 
-
-    # Playerchange
-    if isGameOn == False and turns != None and turns['throws'] == None or isGameFinished == True:
-        busted = "False"
-        if lastPoints == "B":
-            lastPoints = "0"
-            busted = "True"
-
-        dartsPulled = {
-            "event": "darts-pulled",
-            "player": currentPlayerName,
-            "game": {
-                "mode": variant,
-                # TODO: fix
-                "pointsLeft": str(remainingPlayerScore),
-                # TODO: fix
-                "dartsThrown": "3",
-                "dartsThrownValue": lastPoints,
-                "busted": busted
-                # TODO: fix
-                # "darts": [
-                #     {"number": "1", "value": "60"},
-                #     {"number": "2", "value": "60"},
-                #     {"number": "3", "value": "60"}
-                # ]
-            }
-        }
-        broadcast(dartsPulled)
-
-        if pcc_success == False:
-            play_sound_effect('playerchange')
-
-        ppi("Next player")
 
 
     if isGameFin == True:
@@ -1022,7 +1030,6 @@ if __name__ == "__main__":
     
     args = vars(ap.parse_args())
 
-    
     AUTODART_USER_EMAIL = args['autodarts_email']                          
     AUTODART_USER_PASSWORD = args['autodarts_password']              
     AUTODART_USER_BOARD_ID = args['autodarts_board_id']        
@@ -1072,6 +1079,7 @@ if __name__ == "__main__":
 
     global isGameFinished
     isGameFinished = False
+
 
 
     # Initialize sound-output

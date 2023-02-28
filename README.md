@@ -52,6 +52,10 @@ Go to download-directory and type:
     sudo apt-get install python3-sdl2
 
 
+
+
+
+
 ## SETUP SOUNDS
 
 You need to have sounds-files as mp3 or wav. This files have to be named by 1 to 180, gameshot, busted, playerchange etc. You dont need all files. If you are too lazy you can go for 40, 60, 180 or whatever you like. You can record your voice or download some files in the internet, ie. https://freesound.org, https://www.zapsplat.com or watchout for pinned messages in (Discord https://discord.com/channels/802528604067201055/955745166134747196 or https://discord.com/channels/802528604067201055/1019720832647434320).
@@ -90,12 +94,13 @@ Put all sound files in one folder and if you like create subfolders in this fold
 - ambient_matchshot
 - ambient_gameon  
 - ambient_gameshot
-- ambient_noscore 
+- ambient_noscore
+- ambient_1more
 - ambient_50more  
 - ambient_100more 
 - ambient_120more 
 - ambient_150more 
-- ambient_180 
+- ambient_1-ambient_180 [overrides ambient_Xmore]
 
 ______
 
@@ -192,7 +197,7 @@ You can lower the call-volume in relation to current system-volume. '1.0' is sys
 
 #### **-C / --caller**
 
-Sets a specific caller. On start the application displays a list of installed callers; copy the name of chosen one and paste it here. By default this is 'None' meaning the application will use the sound-files of argument '-M' or a random caller if this is configurated (see next). 
+Sets a specific caller. On start the application displays a list of installed callers; copy the name of chosen one and paste it here. By default this is 'None' meaning the application uses sound-files of argument '-M' or a random caller if this is configurated (see next). Note: if you set this to '1' the arguments '-R' and '-L' are no more relevant.
 
 #### **-R / --random_caller**
 
@@ -208,7 +213,7 @@ If you set this to 1' the application will call the playername at the start of h
 
 #### **-E / --call_every_dart**
 
-If you set this to '1' the caller calls every dart. Setup sounds 's1'-'t20', single, double and others. This is pretty handy if you want to play sound-effects. (https://github.com/lbormann/autodarts-caller#setup-sounds) Note: the third dart will never trigger any extra sound as there are more important events, like summed score, busted etc.
+If you set this to '1' the caller calls every dart. Setup sounds 's1'-'t20', single, double and others. This is pretty handy if you want to play sound-effects. (https://github.com/lbormann/autodarts-caller#setup-sounds) Note: the third dart will only considered if argument '-ESF' is set to '1'.
 
 #### **-ESF / --call_every_dart_single_files**
 
@@ -251,12 +256,23 @@ For a list of json-examples look at 'broadcast-examples.dat' - who knows maybe y
 
 
 
+## UPDATE TO RECENT APP VERSION
+
+    cd autodarts-caller
+
+    git pull
+
+    pip install -r requirements.txt
+
+
 ## FAQ
 
 ### App starts and stops immediately?!
 
-Check your autodarts-credentials (use email-adress and password). 
-If your are facing "failed keycloakauthentication Error (401 invalid_grant)", you probably need to disable Two-Factor-Auth!
+- Make sure you follow the rules of each argument you are using.
+- Check your autodarts-credentials (use email-adress and password). 
+- If your are facing "failed keycloakauthentication Error (401 invalid_grant)", you probably need to disable Two-Factor-Auth!
+
 
 ### Sound is not playing?!
 
@@ -275,22 +291,22 @@ Try https://www.audacity.de/ to modify your sound-files.
 1) Create a ZIP archive that contains the following contents:
 
     - **Template file:**
-    A UTF8-encoded CSV file (*.csv) with a BOM (filename can be chosen freely), which is structured as follows:
+    A UTF8-(with a BOM)-encoded CSV file (*.csv) (filename can be chosen freely), which is structured as follows:
     Column 1 contains the phrase a sound file is based on. For example: "The game is over."
     All further filled columns (separated by semicolon ';') contain "filename-keys".
     All supported filename-keys can be found at https://github.com/lbormann/autodarts-caller#setup-sounds.
-    Moreover you can find finished template-files for multiple languages 'caller-templates'.
+    Moreover you can find powerful template-files for multiple languages in 'caller-templates'.
 
     - **Sounds archive:**
-    A ZIP file (*.zip) (filename: "{speaker name}"-"{m|f}"-"{language}".zip - for example: "max-m-german.zip") containing a folder with the sound files. It should be noted that the sounds MUST be in the same order (when sorted alphabetically) as in the template file; however, the actual filename is completely irrelevant.
+    A ZIP file (*.zip) (filename: "{speaker name}"-"{m|f}"-"{language}".zip - for example: "max-m-german.zip") containing a folder (filename irrelevant) with the sound files. It should be noted that the sounds MUST be in the same order (when sorted alphabetically) as in the template file; however, the actual filename is completely irrelevant.
 
     - **Source file (optional but desirable):**
     A text file (*.txt) (filename: freely chosen) containing additional information about the origin of the sound files.
-    Examples: Link to the website where the sounds were generated; specific generation profile for this speaker during generation.
+    Examples: Link to the website where the sounds were generated; specific generation profile for this speaker during generation, etc.
 
-2) Upload your files to a file-hoster: Make sure you choose a filehoster that supports direct-links and unlimited file-persistence wihout restrictions (mediafire.com is a good hoster for that). !!IMPORTANT!! Before you upload, check your rights regarding distribution of your sound-files; are you the owner? Are you allowed to share it in public?
+2) Upload the ZIP archive to a file-hoster: Make sure you choose a filehoster that supports direct-links and unlimited file-persistence wihout restrictions (mediafire.com is a good hoster for that). !!IMPORTANT!! Before you upload, check your rights regarding distribution of your sound-files; are you the owner? Are you allowed to share it in public?
 
-3) Sent me a PM on Discord with the download-link (direct link) - Wait for new release :) 
+3) Sent me a PM on Discord with the download-link (direct link) - Wait for a new release :) 
 
 
 
@@ -307,12 +323,12 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 ## TODOs
 
 - Support other games modes
-- add Readme-section for updating
-- add debug by argument
 - cricket 2 players 2x gameon
 - cricket: do not call marked fields, only call number if field is still open
 - add example start-command to RM (win/linux)
 - Bots no dart-sounds for every turn (at least not for ESF = 0)
+
+
 
 
 ### Done
@@ -340,8 +356,13 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - use WS
 - -E 25 will be called as 25 (that is wrong)
 - improve console logs
+- add debug by argument
 - add caller-profile-downloader
 - add media_path_shared
+- fix sending to websocket take too long / waiting for sound-playing (rework process_*)
+- optional activation of third dart (-E)
+- add "ambient1More"
+- add Readme-section for updating
 
 
 
