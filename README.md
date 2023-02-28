@@ -213,7 +213,7 @@ If you set this to 1' the application will call the playername at the start of h
 
 #### **-E / --call_every_dart**
 
-If you set this to '1' the caller calls every dart. Setup sounds 's1'-'t20', single, double and others. This is pretty handy if you want to play sound-effects. (https://github.com/lbormann/autodarts-caller#setup-sounds) Note: the third dart will only considered if argument '-ESF' is set to '1'.
+If you set this to '1' the caller calls every dart. Setup sounds 's1'-'t20', single, double and others. This is pretty handy if you want to play sound-effects. Note: the third dart will only considered if argument '-ESF' is set to '1'.
 
 #### **-ESF / --call_every_dart_single_files**
 
@@ -257,6 +257,13 @@ For a list of json-examples look at 'broadcast-examples.dat' - who knows maybe y
 
 
 ## UPDATE TO RECENT APP VERSION
+
+### Windows
+
+- Download the latest executable in the release section.
+
+
+### Linux / Others
 
     cd autodarts-caller
 
@@ -304,9 +311,9 @@ Try https://www.audacity.de/ to modify your sound-files.
     A text file (*.txt) (filename: freely chosen) containing additional information about the origin of the sound files.
     Examples: Link to the website where the sounds were generated; specific generation profile for this speaker during generation, etc.
 
-2) Upload the ZIP archive to a file-hoster: Make sure you choose a filehoster that supports direct-links and unlimited file-persistence wihout restrictions (mediafire.com is a good hoster for that). !!IMPORTANT!! Before you upload, check your rights regarding distribution of your sound-files; are you the owner? Are you allowed to share it in public?
+2) Upload the ZIP archive to a file-hoster: Make sure you choose a filehoster that supports direct-links and unlimited file-persistence wihout restrictions (GoogleDrive, OneDrive, ...). !!IMPORTANT!! Before you upload, check your rights regarding distribution of your sound-files; are you the owner? Are you allowed to share it in public?
 
-3) Sent me a PM on Discord with the download-link (direct link) - Wait for a new release :) 
+3) Sent me a PM on Discord with the download-link - Wait for a new release :) 
 
 
 
