@@ -497,6 +497,10 @@ def process_match_x01(m):
             if AMBIENT_SOUNDS != 0.0:
                 if play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS) == False:
                     play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+
+            if play_sound_effect('matchshot') == False:
+                play_sound_effect('gameshot')
+            play_sound_effect(currentPlayerName, True)
         else:
             if play_sound_effect('matchshot') == False:
                 play_sound_effect('gameshot')
@@ -526,9 +530,13 @@ def process_match_x01(m):
         if AMBIENT_SOUNDS_AFTER_CALLS == False:
             if AMBIENT_SOUNDS != 0.0:
                 play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+
+            play_sound_effect('gameshot')
+            play_sound_effect(currentPlayerName, True)
         else:
             play_sound_effect('gameshot')
             play_sound_effect(currentPlayerName, True)
+
             if AMBIENT_SOUNDS != 0.0:
                 play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
 
