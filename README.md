@@ -58,8 +58,15 @@ Go to download-directory and type:
 
 ## SETUP SOUNDS
 
-You need to have sounds-files as mp3 or wav. This files have to be named by 1 to 180, gameshot, busted, playerchange etc. You dont need all files. If you are too lazy you can go for 40, 60, 180 or whatever you like. You can record your voice or download some files in the internet, ie. https://freesound.org, https://www.zapsplat.com or watchout for pinned messages in (Discord https://discord.com/channels/802528604067201055/955745166134747196 or https://discord.com/channels/802528604067201055/1019720832647434320).
+
+You need to have sounds-files as mp3 or wav. This files have to be named by 1 to 180, gameshot, busted, playerchange etc. You dont need all files. If you are lazy you can go for 40, 60, 180 or whatever you like. There are a bunch of supported sound-keys (just below this section). 
+You can record your voice or download some files in the internet, ie. https://freesound.org, https://www.zapsplat.com or watchout for pinned messages in (Discord https://discord.com/channels/802528604067201055/955745166134747196 or https://discord.com/channels/802528604067201055/1019720832647434320).
 Put all sound files in one folder and if you like create subfolders in this folder for random caller functionality.
+
+Note: Since version 2.0.0 there is a build-in download-mechanismn that automatically downloads a bunch of curated caller-voices.
+
+
+### Sound-file-keys
 
 ***EVERY SOUND FILE NEEDS TO BE .mp3 or .wav***
 
@@ -167,7 +174,9 @@ Reboot your system.
 - -DL / --downloads [Default: 1] [Possible values: 0 | 1]
 - -DLL / --downloads_limit [Default: 0] [Possible values: 0 .. 1000]
 - -DLP / --downloads_path [Default: 'download']
+- -BAV / --background_audio_volume [Default: 0.0] [Possible values: 0.0 .. 1.0]
 - -HP / --host_port [Default: 8079]
+
 
 
 
@@ -248,6 +257,10 @@ If you wish to stop the application from checking/downloading all possible calle
 #### **-DLP / --downloads_path**
 
 In case you face problems with caller-voices-downloads try to change the download-path (absolute Path). By default this is 'download' in the application`s directory. But make sure you choose an non important folder as the content will be cleared by application.
+
+#### **-BAV / --background_audio_volume**
+
+You can not hear any calls as your music is way too loud? Try to set this to '0.03' and let the calls begin :) Default is '0.0' (no background-audio-muting). Note: Only availble on windows-os.
 
 #### **-HP / --host_port**
 
@@ -334,8 +347,8 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - cricket: do not call marked fields, only call number if field is still open
 - add example start-command to RM (win/linux)
 - Bots no dart-sounds for every turn (at least not for ESF = 0)
-
-
+- keys for dart-number-combinations ie s1s1s1 -> sound
+- add fading option for ambient, *? -> play(loops=0, maxtime=0, fade_ms=0) -> Channel
 
 
 ### Done
@@ -370,6 +383,7 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - optional activation of third dart (-E)
 - add "ambient1More"
 - add Readme-section for updating
+- background-audio-muting for windows-os
 
 
 

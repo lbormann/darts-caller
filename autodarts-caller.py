@@ -16,6 +16,11 @@ from download import download
 import shutil
 import csv
 
+plat = platform.system()
+if plat == 'Windows':
+    from pycaw.pycaw import AudioUtilities
+
+
 sh = logging.StreamHandler()
 sh.setLevel(logging.INFO)
 # '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -31,12 +36,13 @@ logger.addHandler(sh)
 
 
 
-VERSION = '2.0.2'
+VERSION = '2.0.3'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
 DEFAULT_CALLER = None
 DEFAULT_DOWNLOADS = True
+
 DEFAULT_DOWNLOADS_LIMIT = 0
 DEFAULT_DOWNLOADS_PATH = 'downloads'
 DEFAULT_EMPTY_PATH = ''
@@ -68,6 +74,7 @@ CALLER_PROFILES = {
     'kushal-m-english-india': 'https://drive.google.com/file/d/1-GavAG_oa3MrrremanvfYSfMI0U784EN/view?usp=sharing',
     'kylie-f-english-australia': 'https://drive.google.com/file/d/1-Y6XpdFjOotSLBi0sInf5CGpAAV3mv0b/view?usp=sharing',
     'ruby-f-english-uk': 'https://drive.google.com/file/d/1-kqVwCd4HJes0EVNda5EOF6tTwUxql3z/view?usp=sharing',
+    'ethan-m-english-us-canada': 'https://drive.google.com/file/d/106PG96DLzcHHusbQ2zRfub2ZVXbz5TPs/view?usp=sharing',
 }
 
 
@@ -231,8 +238,13 @@ def load_callers():
     for ss_k, ss_v in shared_sounds.items():
         for (root, c_keys) in callers:
             if ss_k in c_keys:
-                for sound_variant in ss_v:
-                    c_keys[ss_k].append(sound_variant)
+                # for sound_variant in ss_v:
+                #     c_keys[ss_k].append(sound_variant)
+                if CALL_EVERY_DART == True and CALL_EVERY_DART_SINGLE_FILE == True:
+                    c_keys[ss_k] = ss_v
+                else:
+                    for sound_variant in ss_v:
+                        c_keys[ss_k].append(sound_variant)
             else:
                 c_keys[ss_k] = ss_v
 
@@ -291,7 +303,9 @@ def play_sound(pathToFile, waitForLast, volumeMult):
     sound = mixer.Sound(pathToFile)
     if AUDIO_CALLER_VOLUME is not None:
         sound.set_volume(AUDIO_CALLER_VOLUME * volumeMult)
+
     sound.play()
+    
     # ppi('Playing: "' + pathToFile + '"')
 
 def play_sound_effect(event, waitForLast = False, volumeMult = 1.0):
@@ -428,7 +442,7 @@ def process_match_x01(m):
             ppi("Next player")
 
     # Call every thrown dart
-    elif CALL_EVERY_DART and turns != None and turns['throws'] != None and len(turns['throws']) >= 1 and busted == False and matchshot == False and gameshot == False: 
+    elif CALL_EVERY_DART == True and turns != None and turns['throws'] != None and len(turns['throws']) >= 1 and busted == False and matchshot == False and gameshot == False: 
 
         throwAmount = len(turns['throws'])
         type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
@@ -439,7 +453,7 @@ def process_match_x01(m):
 
         # ppi("Type: " + str(type) + " - Field-name: " + str(field_name))
 
-        if CALL_EVERY_DART_SINGLE_FILE:
+        if CALL_EVERY_DART_SINGLE_FILE == True:
             if play_sound_effect(field_name) == False:
                 inner_outer = False
                 if type == 'singleouter' or type == 'singleinner':
@@ -536,18 +550,23 @@ def process_match_x01(m):
             }
         broadcast(matchStarted)
 
+        
         if AMBIENT_SOUNDS_AFTER_CALLS == False:
             # play only if it is a real match not just legs!
-            if AMBIENT_SOUNDS != 0.0 and ('legs' in m and 'sets'):
+            if AMBIENT_SOUNDS != 0.0 and ('legs' in m and 'sets' in m):
                 if play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS) == False:
                     play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+
+            play_sound_effect(currentPlayerName)
+            if play_sound_effect('matchon', True) == False:
+                play_sound_effect('gameon', True)
         else:
             play_sound_effect(currentPlayerName)
             if play_sound_effect('matchon', True) == False:
                 play_sound_effect('gameon', True)
 
             # play only if it is a real match not just legs!
-            if AMBIENT_SOUNDS != 0.0 and ('legs' in m and 'sets'):
+            if AMBIENT_SOUNDS != 0.0 and ('legs' in m and 'sets' in m):
                 if play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS) == False:
                     play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
 
@@ -572,6 +591,9 @@ def process_match_x01(m):
         if AMBIENT_SOUNDS_AFTER_CALLS == False:
             if AMBIENT_SOUNDS != 0.0:
                 play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+
+            play_sound_effect(currentPlayerName)
+            play_sound_effect('gameon', True)
         else:
             play_sound_effect(currentPlayerName)
             play_sound_effect('gameon', True)
@@ -1030,6 +1052,63 @@ def client_left(client, server):
 
 
 
+def mute_audio_background(vol):
+    global background_audios
+    session_fails = 0
+    for session in background_audios:
+        try:
+            volume = session.SimpleAudioVolume
+            # autodarts-caller.exe
+            if session.Process and session.Process.name() != "python.exe":
+                volume.SetMasterVolume(vol, None)
+        # Exception as e:
+        except:
+            session_fails += 1
+            # ppe('Failed to mute audio-process', e)
+
+    return session_fails
+
+def unmute_audio_background(mute_vol):
+    global background_audios
+    current_master = mute_vol
+    steps = 0.1
+    wait = 0.1
+    while(current_master < 1.0):
+        time.sleep(wait)          
+        current_master += steps
+        for session in background_audios:
+            try:
+                volume = session.SimpleAudioVolume
+                volume.SetMasterVolume(current_master, None)
+            #  Exception as e:
+            except:
+                continue
+                # ppe('Failed to unmute audio-process', e)
+                
+def mute_background(mute_vol):
+    global background_audios
+
+    muted = False
+    waitDefault = 0.1
+    waitForMore = 1.0
+    wait = waitDefault
+
+    while True:
+        time.sleep(wait)
+        if mixer.get_busy() == True and muted == False:
+            muted = True
+            wait = waitForMore
+            session_fails = mute_audio_background(mute_vol)
+
+            if session_fails >= 3:
+                # ppi('refreshing background audio sessions')
+                background_audios = AudioUtilities.GetAllSessions()
+
+        elif mixer.get_busy() == False and muted == True:    
+            muted = False
+            wait = waitDefault
+            unmute_audio_background(mute_vol)  
+
 
 
 if __name__ == "__main__":
@@ -1055,6 +1134,7 @@ if __name__ == "__main__":
     ap.add_argument("-DL", "--downloads", type=int, choices=range(0, 2), default=DEFAULT_DOWNLOADS, required=False, help="If '1', the application will try to download a curated list of caller-voices")
     ap.add_argument("-DLL", "--downloads_limit", type=int, choices=range(0, 1000), default=DEFAULT_DOWNLOADS_LIMIT, required=False, help="If '1', the application will try to download a only the X newest caller-voices. -DLN needs to be activated.")
     ap.add_argument("-DLP", "--downloads_path", required=False, default=DEFAULT_DOWNLOADS_PATH, help="Absolute path for temporarly downloads")
+    ap.add_argument("-BAV","--background_audio_volume", required=False, type=float, default=0.0, help="Set background-audio-volume between 0.1 (silent) and 1.0 (no mute)")
     ap.add_argument("-HP", "--host_port", required=False, type=int, default=DEFAULT_HOST_PORT, help="Host-Port")
     ap.add_argument("-DEB", "--debug", type=int, choices=range(0, 2), default=False, required=False, help="If '1', the application will output additional information")
     ap.add_argument("-MIF", "--mixer_frequency", type=int, required=False, default=DEFAULT_MIXER_FREQUENCY, help="Pygame mixer frequency")
@@ -1083,6 +1163,7 @@ if __name__ == "__main__":
     DOWNLOADS = args['downloads']
     DOWNLOADS_LIMIT = args['downloads_limit']
     DOWNLOADS_PATH = args['downloads_path']
+    BACKGROUND_AUDIO_VOLUME = args['background_audio_volume']
     HOST_PORT = args['host_port']
     DEBUG = args['debug']
     MIXER_FREQUENCY = args['mixer_frequency']
@@ -1114,9 +1195,12 @@ if __name__ == "__main__":
     global isGameFinished
     isGameFinished = False
 
+    global background_audios
+    background_audios = None
 
 
-    # Initialize sound-output
+
+    # Initialize sound-mixer
     mixer.pre_init(MIXER_FREQUENCY, MIXER_SIZE, MIXER_CHANNELS, MIXER_BUFFERSIZE) 
     mixer.init()
 
@@ -1124,7 +1208,7 @@ if __name__ == "__main__":
         ppi('Started with following arguments:')
         ppi(json.dumps(args, indent=4))
 
-    osType = platform.system()
+    osType = plat
     osName = os.name
     osRelease = platform.release()
     print('\r\n')
@@ -1136,6 +1220,15 @@ if __name__ == "__main__":
     print('SUPPORTED GAME-VARIANTS: ' + " ".join(str(x) for x in SUPPORTED_GAME_VARIANTS) )
     print('\r\n')
     
+
+    if plat == 'Windows' and BACKGROUND_AUDIO_VOLUME > 0.0:
+        try:
+            background_audios = AudioUtilities.GetAllSessions()
+            audio_muter = threading.Thread(target=mute_background, args=[BACKGROUND_AUDIO_VOLUME])
+            audio_muter.start()
+        except Exception as e:
+            ppe("Background-muter failed!", e)
+
     try:
         download_callers()
     except Exception as e:
@@ -1157,7 +1250,7 @@ if __name__ == "__main__":
             server.set_fn_new_client(new_client)
             server.set_fn_client_left(client_left)
             server.set_fn_message_received(client_new_message)
-            server.run_forever()
+            # server.run_forever()
         except Exception as e:
             ppe("Connect failed: ", e)
    

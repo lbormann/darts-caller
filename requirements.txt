@@ -4,3 +4,4 @@ websocket-server==0.6.4
 pygame
 pyinstaller
 download
+pycaw; platform_system == "Windows"
