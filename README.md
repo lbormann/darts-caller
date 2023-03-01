@@ -108,6 +108,7 @@ Note: Since version 2.0.0 there is a build-in download-mechanismn that automatic
 - ambient_120more 
 - ambient_150more 
 - ambient_1-ambient_180 [overrides ambient_Xmore]
+- ambient_{any 3 darts combo, for example "t1s1d1"} [overrides ambient_1-ambient_180]
 
 ______
 
@@ -347,7 +348,7 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - cricket: do not call marked fields, only call number if field is still open
 - add example start-command to RM (win/linux)
 - Bots no dart-sounds for every turn (at least not for ESF = 0)
-- keys for dart-number-combinations ie s1s1s1 -> sound
+
 - add fading option for ambient, *? -> play(loops=0, maxtime=0, fade_ms=0) -> Channel
 - DL limit remove 1000 cap
 
@@ -384,7 +385,8 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - add "ambient1More"
 - add Readme-section for updating
 - background-audio-muting for windows-os
-
+- add linux start-script
+- keys for dart-number-combinations ie ambient_t1d1s1 -> sound
 
 
 ## LAST WORDS

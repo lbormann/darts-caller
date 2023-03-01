@@ -36,7 +36,7 @@ logger.addHandler(sh)
 
 
 
-VERSION = '2.0.4'
+VERSION = '2.0.5'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -450,7 +450,7 @@ def process_match_x01(m):
         throwAmount = len(turns['throws'])
         type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
         field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
-
+# 
         if field_name == '25':
             field_name = 'sbull'
 
@@ -645,7 +645,7 @@ def process_match_x01(m):
     # Check for 3. Dart - Score-call
     elif turns != None and turns['throws'] != None and len(turns['throws']) == 3:
         isGameFinished = False
-        
+
         dartsThrown = {
             "event": "darts-thrown",
             "player": currentPlayerName,
@@ -659,10 +659,19 @@ def process_match_x01(m):
         }
         broadcast(dartsThrown)
 
+
         play_sound_effect(points)
 
         if AMBIENT_SOUNDS != 0.0:
             ambient_x_success = False
+
+            throw_combo = ''
+            for t in turns['throws']:
+                throw_combo += t['segment']['name'].lower()
+            # ppi(throw_combo)
+
+            ambient_x_success = play_sound_effect('ambient_' + str(throw_combo), AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+
             if turns['points'] != 0:
                 ambient_x_success = play_sound_effect('ambient_' + str(turns['points']), AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
 
