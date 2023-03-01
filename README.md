@@ -315,7 +315,7 @@ Try https://www.audacity.de/ to modify your sound-files.
     Column 1 contains the phrase a sound file is based on. For example: "The game is over."
     All further filled columns (separated by semicolon ';') contain "filename-keys".
     All supported filename-keys can be found at https://github.com/lbormann/autodarts-caller#setup-sounds.
-    Moreover you can find powerful template-files in 'caller-templates'; you can also create template files for other languages and share with me so that every contributer can use this to generate new awesome voices!
+    You can find ready-to-go template-files in 'caller-templates'; you can also create template file and share it with me so that every contributer can use it in future!
 
     - **Sounds archive:**
     A ZIP file (*.zip) (filename: "{speaker name}"-"{m|f}"-"{language}".zip - for example: "max-m-german.zip") containing a folder (filename irrelevant) with the sound files. It should be noted that the sounds MUST be in the same order (when sorted alphabetically) as in the template file; however, the actual filename is completely irrelevant.
@@ -349,7 +349,7 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - Bots no dart-sounds for every turn (at least not for ESF = 0)
 - keys for dart-number-combinations ie s1s1s1 -> sound
 - add fading option for ambient, *? -> play(loops=0, maxtime=0, fade_ms=0) -> Channel
-
+- DL limit remove 1000 cap
 
 ### Done
 

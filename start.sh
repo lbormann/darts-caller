@@ -12,6 +12,8 @@ media_path="TODO"
 
 # Optional:
 
+# TODO
+
 # ------------------------------------------
 
 
@@ -22,11 +24,11 @@ media_path="TODO"
 
 # DO NOT CHANGE ANYTHING BY THIS LINE!
 
-python3 -U \
-          "$autodarts_email" \
-          -P \
-          "$autodarts_password" \
-          -B \
-          "$autodarts_board_id" \
-          -M \
-          "$media_path"
+python3 autodarts-caller.py -U \
+                            "$autodarts_email" \
+                            -P \
+                            "$autodarts_password" \
+                            -B \
+                            "$autodarts_board_id" \
+                            -M \
+                            "$media_path"

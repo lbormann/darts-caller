@@ -36,7 +36,7 @@ logger.addHandler(sh)
 
 
 
-VERSION = '2.0.3'
+VERSION = '2.0.4'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -1058,8 +1058,7 @@ def mute_audio_background(vol):
     for session in background_audios:
         try:
             volume = session.SimpleAudioVolume
-            # autodarts-caller.exe
-            if session.Process and session.Process.name() != "python.exe":
+            if session.Process and session.Process.name() != "autodarts-caller.exe":
                 volume.SetMasterVolume(vol, None)
         # Exception as e:
         except:
