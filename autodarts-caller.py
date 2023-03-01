@@ -161,8 +161,8 @@ def download_callers():
                 # Find all supported sound-files and remember names 
                 sounds = []
                 ppi('TREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEENER')
-                for root, dirs, files in sorted(os.walk(dest)):
-                    for file in files:
+                for root, dirs, files in os.walk(dest):
+                    for file in sorted(files):
                         if file.endswith(tuple(SUPPORTED_SOUND_FORMATS)):
                             ppi(file)
                             sounds.append(os.path.join(root, file))
