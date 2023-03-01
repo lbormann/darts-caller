@@ -142,7 +142,6 @@ def download_callers():
                     tts = list(csv.reader(f, delimiter=';'))
                     for event in tts:
                         sanitized = list(filter(None, event))
-                        ppi(sanitized)
                         if len(sanitized) == 1:
                             sanitized.append(sanitized[0].lower())
                         san_list.append(sanitized)
@@ -160,11 +159,9 @@ def download_callers():
 
                 # Find all supported sound-files and remember names 
                 sounds = []
-                ppi('TREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEENER')
                 for root, dirs, files in os.walk(dest):
                     for file in sorted(files):
                         if file.endswith(tuple(SUPPORTED_SOUND_FORMATS)):
-                            ppi(file)
                             sounds.append(os.path.join(root, file))
                 # ppi(sounds)
 
