@@ -36,7 +36,7 @@ logger.addHandler(sh)
 
 
 
-VERSION = '2.0.5'
+VERSION = '2.0.7'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -415,6 +415,7 @@ def process_match_x01(m):
                 # ]
             }
         }
+        ppi(dartsPulled)
         broadcast(dartsPulled)
 
         if gameon == False and isGameFinished == False:
@@ -1265,11 +1266,12 @@ if __name__ == "__main__":
     else:
         try:  
             connect_autodarts()
+
             server = WebsocketServer(host=DEFAULT_HOST_IP, port=HOST_PORT, loglevel=logging.ERROR)
             server.set_fn_new_client(new_client)
             server.set_fn_client_left(client_left)
             server.set_fn_message_received(client_new_message)
-            # server.run_forever()
+            server.run_forever()
         except Exception as e:
             ppe("Connect failed: ", e)
    
