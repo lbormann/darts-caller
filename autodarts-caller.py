@@ -97,6 +97,9 @@ def download_callers():
         if DOWNLOADS_LIMIT > 0:
             download_list = {k: CALLER_PROFILES[k] for k in list(CALLER_PROFILES.keys())[-DOWNLOADS_LIMIT:]}
 
+        if len(download_list) > 0:
+            if os.path.exists(AUDIO_MEDIA_PATH) == False: os.mkdir(AUDIO_MEDIA_PATH)
+
         # Download and parse every caller-profile
         for cpr_name, cpr_download_url in download_list.items():
             try:
