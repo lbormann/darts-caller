@@ -279,7 +279,7 @@ def setup_caller():
             caller = random.choice(callers)
 
     ppi("Your current caller: " + str(os.path.basename(os.path.normpath(caller[0]))) + " knows " + str(len(caller[1].values())) + " Sound(s)")
-    # ppi(caller[1])
+    ppi(caller[1])
     caller = caller[1]
 
 def receive_local_board_address():
