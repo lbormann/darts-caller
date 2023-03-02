@@ -36,7 +36,7 @@ logger.addHandler(sh)
 
 
 
-VERSION = '2.0.7'
+VERSION = '2.0.8'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -415,7 +415,7 @@ def process_match_x01(m):
                 # ]
             }
         }
-        ppi(dartsPulled)
+        # ppi(dartsPulled)
         broadcast(dartsPulled)
 
         if gameon == False and isGameFinished == False:
@@ -451,7 +451,7 @@ def process_match_x01(m):
         throwAmount = len(turns['throws'])
         type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
         field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
-# 
+ 
         if field_name == '25':
             field_name = 'sbull'
 
@@ -1098,8 +1098,9 @@ def unmute_audio_background(mute_vol):
         current_master += steps
         for session in background_audios:
             try:
-                volume = session.SimpleAudioVolume
-                volume.SetMasterVolume(current_master, None)
+                if session.Process and session.Process.name() != "autodarts-caller.exe":
+                    volume = session.SimpleAudioVolume
+                    volume.SetMasterVolume(current_master, None)
             #  Exception as e:
             except:
                 continue

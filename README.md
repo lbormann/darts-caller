@@ -171,7 +171,7 @@ Reboot your system.
 - -PCC / --possible_checkout_call [Default: 1] [Possible values: 0 | 1]
 - -PCCSF / --possible_checkout_call_single_files [Default: 1] [Possible values: 0 | 1]
 - -A / --ambient_sounds [Default: 0.0] [Possible values: 0.0 .. 1.0]
-- -ACC / --ambient_sounds_after_calls [Default: 0] [Possible values: 0 | 1]
+- -AAC / --ambient_sounds_after_calls [Default: 0] [Possible values: 0 | 1]
 - -DL / --downloads [Default: 1] [Possible values: 0 | 1]
 - -DLL / --downloads_limit [Default: 0] [Possible values: 0 .. 1000]
 - -DLP / --downloads_path [Default: 'download']
@@ -243,7 +243,7 @@ If you set this to '0' (default), the application uses two separated sound-files
 If you set this to value between '0.1' and '1.0' the caller will call extra sounds like crowd-shouting or whatever you like (you decide!). Setup sounds {ambient_*}. 
 The configured value will be multiplied by caller_volume. As an example: caller_volume = '0.8' and ambient_sounds = '1.0' means your sound-volume will be 0.8 relative to your system-volume. By default this is '0'.
 
-#### **-ACC / --ambient_sounds_after_calls**
+#### **-AAC / --ambient_sounds_after_calls**
 
 If you set this to '1' ambient_*-sounds will wait until main-calls are finished. By default this is not activated.
 
