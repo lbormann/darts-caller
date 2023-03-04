@@ -340,6 +340,10 @@ def listen_to_newest_match(m, ws):
     if cm == None or (cm != None and newMatch != None and cm != newMatch):
         ppi('Listen to match: ' + newMatch)
 
+        receive_local_board_address()
+        if boardManagerAddress != None:
+            res = requests.put(boardManagerAddress + '/api/start')
+
         if cm != None:
             paramsUnsubscribeMatchEvents = {
                 "type": "unsubscribe",
@@ -991,7 +995,6 @@ def on_open_autodarts(ws):
         }
         ws.send(json.dumps(paramsSubscribeMatchesEvents))
 
-        receive_local_board_address()
     except Exception as e:
         ppe('WS-Open failed: ', e)
 
@@ -1159,7 +1162,7 @@ if __name__ == "__main__":
     ap.add_argument("-A", "--ambient_sounds", type=float, default=0.0, required=False, help="If > '0.0' (volume), the application will call a ambient_*-Sounds")
     ap.add_argument("-AAC", "--ambient_sounds_after_calls", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the ambient sounds will appear after calling is finished") 
     ap.add_argument("-DL", "--downloads", type=int, choices=range(0, 2), default=DEFAULT_DOWNLOADS, required=False, help="If '1', the application will try to download a curated list of caller-voices")
-    ap.add_argument("-DLL", "--downloads_limit", type=int, choices=range(0, 1000), default=DEFAULT_DOWNLOADS_LIMIT, required=False, help="If '1', the application will try to download a only the X newest caller-voices. -DLN needs to be activated.")
+    ap.add_argument("-DLL", "--downloads_limit", type=int, default=DEFAULT_DOWNLOADS_LIMIT, required=False, help="If '1', the application will try to download a only the X newest caller-voices. -DLN needs to be activated.")
     ap.add_argument("-DLP", "--downloads_path", required=False, default=DEFAULT_DOWNLOADS_PATH, help="Absolute path for temporarly downloads")
     ap.add_argument("-BAV","--background_audio_volume", required=False, type=float, default=0.0, help="Set background-audio-volume between 0.1 (silent) and 1.0 (no mute)")
     ap.add_argument("-HP", "--host_port", required=False, type=int, default=DEFAULT_HOST_PORT, help="Host-Port")
@@ -1189,6 +1192,7 @@ if __name__ == "__main__":
     AMBIENT_SOUNDS_AFTER_CALLS = args['ambient_sounds_after_calls']
     DOWNLOADS = args['downloads']
     DOWNLOADS_LIMIT = args['downloads_limit']
+    if DOWNLOADS_LIMIT < 0: DOWNLOADS_LIMIT = 0
     DOWNLOADS_PATH = args['downloads_path']
     BACKGROUND_AUDIO_VOLUME = args['background_audio_volume']
     HOST_PORT = args['host_port']

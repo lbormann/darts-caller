@@ -197,7 +197,7 @@ As an alternative you could add a custom start-script instead of the python comm
 - -A / --ambient_sounds [Default: 0.0] [Possible values: 0.0 .. 1.0]
 - -AAC / --ambient_sounds_after_calls [Default: 0] [Possible values: 0 | 1]
 - -DL / --downloads [Default: 1] [Possible values: 0 | 1]
-- -DLL / --downloads_limit [Default: 0] [Possible values: 0 .. 1000]
+- -DLL / --downloads_limit [Default: 0]
 - -DLP / --downloads_path [Default: 'download']
 - -BAV / --background_audio_volume [Default: 0.0] [Possible values: 0.0 .. 1.0]
 - -HP / --host_port [Default: 8079]
@@ -378,11 +378,9 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - add example start-command to RM (win/linux)
 - Bots no dart-sounds for every turn (at least not for ESF = 0)
 - add fading option for ambient, *? -> play(loops=0, maxtime=0, fade_ms=0) -> Channel
-- DL limit remove 1000 cap
 - bot your aiming for (your require ...) but already gameshot (stop running sounds)
-- add linux start-script
 - consider x.leg/set -> Gameshot / !x_leg! / player
-- start board on app-start if board-address is available!
+
 
 
 ### Done
@@ -419,6 +417,9 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - add Readme-section for updating
 - background-audio-muting for windows-os
 - keys for dart-number-combinations ie ambient_t1d1s1 -> sound
+- add linux start-script
+- start board on app-start if board-address is available!
+- DL limit remove 1000 cap
 
 
 ## LAST WORDS
