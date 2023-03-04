@@ -3,55 +3,182 @@
 
 # -----------------------------------------
 # ARGUMENTS
-
-# Required:
-autodarts_email="TODO"
-autodarts_password="TODO"
-autodarts_board_id="TODO"
-media_path="TODO"
+# Please fill out following arguments. There are required ones and optional ones. 
+# If you do not want to fill an optional argument just leave it blank after the equal-sign ("=").
+# In case you need specific argument explaination visit https://github.com/lbormann/autodarts-caller#arguments
 
 
-# TODO (dev)
-# Optional:
+# REQUIRED:
+
+# -U
+autodarts_email=
+
+# -P
+autodarts_password=
+
+# -B
+autodarts_board_id=
+
+# -M
+media_path=
+
+
+
+
+
+# OPTIONAL:
+
+# -MS
 media_path_shared=
-# caller_volume
-# caller
-# random_caller
-# random_caller_each_leg
-# call_current_player
-# call_every_dart
-# call_every_dart_single_files
-# possible_checkout_call
-# possible_checkout_call_single_files
-# ambient_sounds
-# ambient_sounds_after_calls
-# downloads
-# downloads_limit
-# downloads_path
-# background_audio_volume
-# host_port
+
+# -V
+caller_volume=
+
+# -C
+caller=
+
+# -R
+random_caller=
+
+# -L
+random_caller_each_leg=
+
+# -CCP
+call_current_player=
+
+# -E
+call_every_dart=
+
+# -ESF
+call_every_dart_single_files=
+
+# -PCC
+possible_checkout_call=
+
+# -PCCSF
+possible_checkout_call_single_files=
+
+# -A
+ambient_sounds=
+
+# -AAC
+ambient_sounds_after_calls=
+
+# -DL
+downloads=
+
+# -DLL
+downloads_limit=
+
+# -DLP
+downloads_path=
+
+# -HP
+host_port=
+
+# -DEB
+debug=
+
+# -MIF
+mixer_frequency=
+
+# -MIS
+mixer_size=
+
+# -MIC
+mixer_channels=
+
+# -MIB
+mixer_buffersize=
 
 
 
+
+
+
+
+
+
+
+
+
+# Only change if it says 'python3 is not a recognized command or something like that - you could use python instead'
+py="python3"
+
+
+
+# END
+# DO NOT CHANGE ANYTHING BY THIS LINE!
 # ------------------------------------------
 
-
-
-# String erstellen
-opts=""
-
-# Bedingte Anweisungen, um den String basierend auf den Variablen zu erstellen
+args="-U $autodarts_email -P $autodarts_password -B $autodarts_board_id -M $media_path"
 if [ -n "$media_path_shared" ]; then
-  opts="$opts -MS \"$media_path_shared\""
+  args="$args -MS $media_path_shared"
+fi
+if [ -n "$caller_volume" ]; then
+  args="$args -V $caller_volume"
+fi
+if [ -n "$caller" ]; then
+  args="$args -C $caller"
+fi
+if [ -n "$random_caller" ]; then
+  args="$args -R $random_caller"
+fi
+if [ -n "$random_caller_each_leg" ]; then
+  args="$args -L $random_caller_each_leg"
+fi
+if [ -n "$call_current_player" ]; then
+  args="$args -CCP $call_current_player"
+fi
+if [ -n "$call_every_dart" ]; then
+  args="$args -E $call_every_dart"
+fi
+if [ -n "$call_every_dart_single_files" ]; then
+  args="$args -ESF $call_every_dart_single_files"
+fi
+if [ -n "$possible_checkout_call" ]; then
+  args="$args -PCC $possible_checkout_call"
+fi
+if [ -n "$possible_checkout_call_single_files" ]; then
+  args="$args -PCCSF $possible_checkout_call_single_files"
+fi
+if [ -n "$ambient_sounds" ]; then
+  args="$args -A $ambient_sounds"
+fi
+if [ -n "$ambient_sounds_after_calls" ]; then
+  args="$args -AAC $ambient_sounds_after_calls"
+fi
+if [ -n "$downloads" ]; then
+  args="$args -DL $downloads"
+fi
+if [ -n "$downloads_limit" ]; then
+  args="$args -DLL $downloads_limit"
+fi
+if [ -n "$downloads_path" ]; then
+  args="$args -DLP $downloads_path"
+fi
+#if [ -n "$background_audio_volume" ]; then
+#  args="$args -BAV $background_audio_volume"
+#fi
+if [ -n "$host_port" ]; then
+  args="$args -HP $host_port"
+fi
+if [ -n "$debug" ]; then
+  args="$args -DEB $debug"
+fi
+if [ -n "$mixer_frequency" ]; then
+  args="$args -MIF $mixer_frequency"
+fi
+if [ -n "$mixer_size" ]; then
+  args="$args -MIS $mixer_size"
+fi
+if [ -n "$mixer_channels" ]; then
+  args="$args -MIC $mixer_channels"
+fi
+if [ -n "$mixer_buffersize" ]; then
+  args="$args -MIB $mixer_buffersize"
 fi
 
-# Entfernen des letzten Kommas aus dem String
-# opts="${opts%,}"
+echo "Arguments: $args"
 
-echo "Optional arguments: $opts"
-
-
-
-# DO NOT CHANGE ANYTHING BY THIS LINE!
-
-python3 autodarts-caller.py -U "$autodarts_email" -P "$autodarts_password" -B "$autodarts_board_id" -M "$media_path""$opts"
+"$py" autodarts-caller.py $args

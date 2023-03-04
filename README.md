@@ -130,9 +130,30 @@ Save changes.
 Click on the shortcut to start the caller.
 
 
-### Run by source
+### Run by source (Linux)
 
     python3 autodarts-caller.py -U "your-autodarts-email" -P "your-autodarts-password" -B "your-autodarts-board-id" -M "absolute-folder-to-your-media-files"
+
+
+As an alternative you could start it with a start-script:
+
+Copy the default script:
+
+    cp start.sh start-custom.sh
+
+Edit and fill out arguments:
+
+    nano start-custom.sh
+
+Make it executable:
+
+    chmod +x start-custom.sh
+
+Start the script:
+
+    ./start-custom.sh
+ 
+
 
 
 ### Setup autoboot [linux] (optional)
@@ -148,6 +169,9 @@ Make sure you add an empty line under the added command.
 Save and close the file. 
 
 Reboot your system.
+
+As an alternative you could add a custom start-script instead of the python command; see https://github.com/lbormann/autodarts-caller#run-by-source 
+
 
 ### Arguments
 
@@ -300,11 +324,10 @@ For a list of json-examples look at 'broadcast-examples.dat' - who knows maybe y
 
 Make sure the displayed sound-filename exists! If you rename any of your sound-files you NEED to restart the application as it internally creates a list of available sound-files ONLY on application start AND on a caller-switch (random_caller-functionality)!
 
-
 ### Sound is not playing?!
 
-Sometimes there are sounds that are not readable. In this case you can convert the sound-file(s) with an additional program (https://www.heise.de/download/product/mp3-quality-modifier-66202)
-Make sure you configurate 44100HZ, Stereo
+- Sometimes there are sounds that are not readable. In this case you can convert the sound-file(s) with an additional program (https://www.heise.de/download/product/mp3-quality-modifier-66202) Make sure you configurate 44100HZ, Stereo.
+- Check the console output: in case you do not receive any messages (only 'Receiving live information from ..') -> you should check the given Board-ID (-B) for correctness.
 
 ### Sound does not match up calls?!
 Try https://www.audacity.de/ to modify your sound-files.

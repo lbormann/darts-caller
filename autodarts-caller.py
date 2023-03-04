@@ -984,7 +984,6 @@ def connect_autodarts():
 def on_open_autodarts(ws):
     try:
         ppi('Receiving live information from ' + AUTODART_URL)
-        ppi('!!! In case that calling is not working, please check your Board-ID (-B) for correctness !!!')
         paramsSubscribeMatchesEvents = {
             "channel": "autodarts.matches",
             "type": "subscribe",
