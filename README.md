@@ -288,11 +288,17 @@ For a list of json-examples look at 'broadcast-examples.dat' - who knows maybe y
 
 ## FAQ
 
+
+
 ### App starts and stops immediately?!
 
+- Create a fresh CMD; change to autodarts-caller-directory and start the executable / your start-script from there. If the app crashs the window will not exit. Moreover you can use the start-argument 'DEB="1"' to display more information about a problem.
 - Make sure you follow the rules of each argument you are using.
-- Check your autodarts-credentials (use email-adress and password). 
-- If your are facing "failed keycloakauthentication Error (401 invalid_grant)", you probably need to disable Two-Factor-Auth!
+- Check your autodarts-credentials (use email-adress and password). If your are facing "failed keycloakauthentication Error (401 invalid_grant)", you probably need to disable Two-Factor-Auth!
+
+### >>> Can not play soundfile for event "{your-soundfile}" -> Ignore this or check existance; otherwise convert your file appropriate
+
+Make sure the displayed sound-filename exists! If you rename any of your sound-files you NEED to restart the application as it internally creates a list of available sound-files ONLY on application start AND on a caller-switch (random_caller-functionality)!
 
 
 ### Sound is not playing?!
@@ -348,9 +354,13 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - cricket: do not call marked fields, only call number if field is still open
 - add example start-command to RM (win/linux)
 - Bots no dart-sounds for every turn (at least not for ESF = 0)
-
 - add fading option for ambient, *? -> play(loops=0, maxtime=0, fade_ms=0) -> Channel
 - DL limit remove 1000 cap
+- bot your aiming for (your require ...) but already gameshot (stop running sounds)
+- add linux start-script
+- consider x.leg/set -> Gameshot / !x_leg! / player
+- start board on app-start if board-address is available!
+
 
 ### Done
 
@@ -385,7 +395,6 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - add "ambient1More"
 - add Readme-section for updating
 - background-audio-muting for windows-os
-- add linux start-script
 - keys for dart-number-combinations ie ambient_t1d1s1 -> sound
 
 

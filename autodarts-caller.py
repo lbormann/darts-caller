@@ -23,7 +23,6 @@ if plat == 'Windows':
 
 sh = logging.StreamHandler()
 sh.setLevel(logging.INFO)
-# '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 formatter = logging.Formatter('%(message)s')
 sh.setFormatter(formatter)
 logger=logging.getLogger()
@@ -36,7 +35,7 @@ logger.addHandler(sh)
 
 
 
-VERSION = '2.0.8'
+VERSION = '2.0.9'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -279,7 +278,7 @@ def setup_caller():
             caller = random.choice(callers)
 
     ppi("Your current caller: " + str(os.path.basename(os.path.normpath(caller[0]))) + " knows " + str(len(caller[1].values())) + " Sound(s)")
-    ppi(caller[1])
+    # ppi(caller[1])
     caller = caller[1]
 
 def receive_local_board_address():
@@ -287,13 +286,18 @@ def receive_local_board_address():
         global accessToken
         global boardManagerAddress
 
-        scheme = 'http://'    
-        if boardManagerAddress == None or boardManagerAddress == scheme: 
+        if boardManagerAddress == None:
             res = requests.get(AUTODART_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + accessToken})
             board_ip = res.json()['ip']
-            boardManagerAddress = scheme + board_ip
-            ppi('Board-address: ' + boardManagerAddress)  
+            if board_ip != None and board_ip != '':  
+                boardManagerAddress = 'http://' + board_ip
+                ppi('Board-address: ' + boardManagerAddress) 
+            else:
+                boardManagerAddress = None
+                ppi('Board-address: UNKNOWN') 
+            
     except Exception as e:
+        boardManagerAddress = None
         ppe('Fetching local-board-address failed', e)
 
 
@@ -301,7 +305,7 @@ def receive_local_board_address():
 def play_sound(pathToFile, waitForLast, volumeMult):
     if waitForLast == True:
         while mixer.get_busy():
-            time.sleep(0.1)
+            time.sleep(0.01)
 
     sound = mixer.Sound(pathToFile)
     if AUDIO_CALLER_VOLUME is not None:
@@ -1042,33 +1046,36 @@ def on_error_autodarts(ws, error):
         ppe('WS-Error failed: ', e)
 
 
-def client_new_message(client, server, message):
+def on_message_client(client, server, message):
     def process(*args):
         try:
             ppi('CLIENT MESSAGE: ' + str(message))
 
-            if boardManagerAddress != None and boardManagerAddress != 'http://':
+            receive_local_board_address()
+            if boardManagerAddress != None:
                 if message.startswith('board-start'):
                     msg_splitted = message.split(':')
                     if len(msg_splitted) > 1:
                         time.sleep(float(msg_splitted[1]))
+
                     res = requests.put(boardManagerAddress + '/api/start')
+                    # res = requests.post(boardManagerAddress + '/api/reset')
                     # ppi(res)
 
                 elif message == 'board-stop':
                     res = requests.put(boardManagerAddress + '/api/stop')
                     # ppi(res)
             else:
-              ppi('Can not start board as board-address is unknown: ' + str(boardManagerAddress))  
-
+                ppi('Can not start board as board-address is unknown!')  
         except Exception as e:
             ppe('WS-Message failed: ', e)
+
     threading.Thread(target=process).start()
 
-def new_client(client, server):
+def on_open_client(client, server):
     ppi('NEW CLIENT CONNECTED: ' + str(client))
 
-def client_left(client, server):
+def on_left_client(client, server):
     ppi('CLIENT DISCONNECTED: ' + str(client))
 
 
@@ -1269,9 +1276,9 @@ if __name__ == "__main__":
             connect_autodarts()
 
             server = WebsocketServer(host=DEFAULT_HOST_IP, port=HOST_PORT, loglevel=logging.ERROR)
-            server.set_fn_new_client(new_client)
-            server.set_fn_client_left(client_left)
-            server.set_fn_message_received(client_new_message)
+            server.set_fn_new_client(on_open_client)
+            server.set_fn_client_left(on_left_client)
+            server.set_fn_message_received(on_message_client)
             server.run_forever()
         except Exception as e:
             ppe("Connect failed: ", e)
