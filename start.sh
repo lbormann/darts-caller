@@ -13,7 +13,7 @@ media_path="TODO"
 
 # TODO (dev)
 # Optional:
-# media_path_shared=
+media_path_shared=
 # caller_volume
 # caller
 # random_caller
@@ -41,16 +41,8 @@ media_path="TODO"
 opts=""
 
 # Bedingte Anweisungen, um den String basierend auf den Variablen zu erstellen
-if [ -n "$name" ]; then
-  opts="$opts -MS \"$name\""
-fi
-
-if [ -n "$age" ]; then
-  opts="$opts Alter: $age,"
-fi
-
-if [ -n "$city" ]; then
-  opts="$opts Stadt: $city,"
+if [ -n "$media_path_shared" ]; then
+  opts="$opts -MS \"$media_path_shared\""
 fi
 
 # Entfernen des letzten Kommas aus dem String
