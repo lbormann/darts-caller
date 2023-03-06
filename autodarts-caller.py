@@ -35,7 +35,7 @@ logger.addHandler(sh)
 
 
 
-VERSION = '2.0.10'
+VERSION = '2.0.11'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -1040,7 +1040,7 @@ def on_message_client(client, server, message):
                     # msg_splitted = message.split(':')
                     # if len(msg_splitted) > 1:
                     #     time.sleep(float(msg_splitted[1]))
-                    res = requests.post(boardManagerAddress + '/api/reset')
+                    # res = requests.post(boardManagerAddress + '/api/reset')
                     time.sleep(0.1)
                     res = requests.put(boardManagerAddress + '/api/start')
                     # ppi(res)

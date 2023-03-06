@@ -76,8 +76,8 @@ Note: Since version 2.0.0 there is a build-in download-mechanismn that automatic
 - matchon
 - gameshot
 - matchshot
-- leg_x
-- set_x
+- leg_{x}
+- set_{x}
 - busted
 - 0-180
 - {playername(s)} (Name of Autodarts-player(s) | bot lvl 1-11)
