@@ -59,7 +59,7 @@ Go to download-directory and type:
 ## SETUP SOUNDS
 
 
-You need to have sounds-files as mp3 or wav. This files have to be named by 1 to 180, gameshot, busted, playerchange etc. You dont need all files. If you are lazy you can go for 40, 60, 180 or whatever you like. There are a bunch of supported sound-keys (just below this section). 
+You need to have sounds-files as mp3 or wav. This files have to be named by 1 to 180, gameshot, busted, playerchange etc. You dont need all files. If you are lazy you can go for 40, 60, 180 or whatever you like. There are a bunch of supported sound-file-keys (just below this section). 
 You can record your voice or download some files in the internet, ie. https://freesound.org, https://www.zapsplat.com or watchout for pinned messages in (Discord https://discord.com/channels/802528604067201055/955745166134747196 or https://discord.com/channels/802528604067201055/1019720832647434320).
 Put all sound files in one folder and if you like create subfolders in this folder for random caller functionality.
 
@@ -76,6 +76,8 @@ Note: Since version 2.0.0 there is a build-in download-mechanismn that automatic
 - matchon
 - gameshot
 - matchshot
+- leg_x
+- set_x
 - busted
 - 0-180
 - {playername(s)} (Name of Autodarts-player(s) | bot lvl 1-11)
@@ -86,29 +88,29 @@ Note: Since version 2.0.0 there is a build-in download-mechanismn that automatic
 **SINGLE-DARTS (Argument -E = 1):**
 
 - single 
-- singleinner [overrides single]
-- singleouter [overrides single]
+- singleinner [overrides: single]
+- singleouter [overrides: single]
 - double
 - triple
 - outside
 - sbull
 - bull
-- s1-t20 [overrides single, singleinner, singleouter, double, triple]
+- s1-t20 [overrides: single, singleinner, singleouter, double, triple]
 
 **AMBIENT (Argument -A > 0.0):**
 
-- ambient_matchon  
-- ambient_matchshot
-- ambient_gameon  
+- ambient_gameon 
 - ambient_gameshot
+- ambient_matchon [fallback: ambient_gameon]  
+- ambient_matchshot [fallback: ambient_gameshot]
 - ambient_noscore
 - ambient_1more
 - ambient_50more  
 - ambient_100more 
 - ambient_120more 
 - ambient_150more 
-- ambient_1-ambient_180 [overrides ambient_Xmore]
-- ambient_{any 3 darts combo, for example "t1s1d1"} [overrides ambient_1-ambient_180]
+- ambient_1-ambient_180 [overrides: ambient_Xmore]
+- ambient_{any 3 darts combo, for example "t1s1d1"} [overrides: ambient_1-ambient_180]
 
 ______
 
@@ -156,7 +158,7 @@ Start the script:
 
 
 
-### Setup autoboot [linux] (optional)
+### Setup autostart [linux] (optional)
 
     crontab -e
 
@@ -312,8 +314,6 @@ For a list of json-examples look at 'broadcast-examples.dat' - who knows maybe y
 
 ## FAQ
 
-
-
 ### App starts and stops immediately?!
 
 - Create a fresh CMD; change to autodarts-caller-directory and start the executable / your start-script from there. If the app crashs the window will not exit. Moreover you can use the start-argument 'DEB="1"' to display more information about a problem.
@@ -329,6 +329,10 @@ Make sure the displayed sound-filename exists! If you rename any of your sound-f
 - Sometimes there are sounds that are not readable. In this case you can convert the sound-file(s) with an additional program (https://www.heise.de/download/product/mp3-quality-modifier-66202) Make sure you configurate 44100HZ, Stereo.
 - Check the console output: in case you do not receive any messages (only 'Receiving live information from ..') -> you should check the given Board-ID (-B) for correctness.
 
+### I don't like sound x of caller-voice y!
+
+EVERY sound-file is optional! If you don't like a specific sound just delete it! The Application can even function with no sounds at all!
+
 ### Sound does not match up calls?!
 Try https://www.audacity.de/ to modify your sound-files.
 
@@ -343,8 +347,8 @@ Try https://www.audacity.de/ to modify your sound-files.
     - **Template file:**
     A UTF8-(with a BOM)-encoded CSV file (*.csv) (filename can be chosen freely), which is structured as follows:
     Column 1 contains the phrase a sound file is based on. For example: "The game is over."
-    All further filled columns (separated by semicolon ';') contain "filename-keys".
-    All supported filename-keys can be found at https://github.com/lbormann/autodarts-caller#setup-sounds.
+    All further filled columns (separated by semicolon ';') contain sound-file-keys.
+    A list of supported sound-file-keys can be found at https://github.com/lbormann/autodarts-caller#setup-sounds.
     You can find ready-to-go template-files in 'caller-templates'; you can also create template file and share it with me so that every contributer can use it in future!
 
     - **Sounds archive:**
@@ -379,8 +383,6 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - Bots no dart-sounds for every turn (at least not for ESF = 0)
 - add fading option for ambient, *? -> play(loops=0, maxtime=0, fade_ms=0) -> Channel
 - bot your aiming for (your require ...) but already gameshot (stop running sounds)
-- consider x.leg/set -> Gameshot / !x_leg! / player
-
 
 
 ### Done
@@ -420,6 +422,7 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - add linux start-script
 - start board on app-start if board-address is available!
 - DL limit remove 1000 cap
+- consider x.leg/set -> Gameshot / !x_leg! / player
 
 
 ## LAST WORDS

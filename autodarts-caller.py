@@ -35,7 +35,7 @@ logger.addHandler(sh)
 
 
 
-VERSION = '2.0.9'
+VERSION = '2.0.10'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -63,7 +63,6 @@ SUPPORTED_SOUND_FORMATS = ['.mp3', '.wav']
 SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket', 'Random Checkout']
 SUPPORTED_CRICKET_FIELDS = [15, 16, 17, 18, 19, 20, 25]
 BOGEY_NUMBERS = [169, 168, 166, 165, 163, 162, 159]
-
 
 
 CALLER_PROFILES = {
@@ -110,7 +109,8 @@ def download_callers():
 
                 # clean download-area!
                 shutil.rmtree(DOWNLOADS_PATH, ignore_errors=True)
-                if os.path.exists(DOWNLOADS_PATH) == False: os.mkdir(DOWNLOADS_PATH)
+                if os.path.exists(DOWNLOADS_PATH) == False: 
+                    os.mkdir(DOWNLOADS_PATH)
                 
                 # Download caller-profile and extract archive
                 dest = os.path.join(DOWNLOADS_PATH, 'download.zip')
@@ -277,7 +277,7 @@ def setup_caller():
         else:
             caller = random.choice(callers)
 
-    ppi("Your current caller: " + str(os.path.basename(os.path.normpath(caller[0]))) + " knows " + str(len(caller[1].values())) + " Sound(s)")
+    ppi("Your current caller: " + str(os.path.basename(os.path.normpath(caller[0]))) + " knows " + str(len(caller[1].values())) + " Sound-key(s)")
     # ppi(caller[1])
     caller = caller[1]
 
@@ -342,6 +342,8 @@ def listen_to_newest_match(m, ws):
 
         receive_local_board_address()
         if boardManagerAddress != None:
+            res = requests.post(boardManagerAddress + '/api/reset')
+            time.sleep(0.5)
             res = requests.put(boardManagerAddress + '/api/start')
 
         if cm != None:
@@ -371,6 +373,7 @@ def process_match_x01(m):
     currentPlayer = m['players'][currentPlayerIndex]
     currentPlayerName = str(currentPlayer['name']).lower()
     remainingPlayerScore = m['gameScores'][currentPlayerIndex]
+
     turns = m['turns'][0]
     points = str(turns['points'])
     busted = (turns['busted'] == True)
@@ -487,7 +490,6 @@ def process_match_x01(m):
                 play_sound_effect('outside')
 
 
-
     # Check for matchshot
     if matchshot == True:
         isGameFin = True
@@ -502,22 +504,13 @@ def process_match_x01(m):
             }
         broadcast(matchWon)
 
-        if AMBIENT_SOUNDS_AFTER_CALLS == False:
-            if AMBIENT_SOUNDS != 0.0:
-                if play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS) == False:
-                    play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+        if play_sound_effect('matchshot') == False:
+            play_sound_effect('gameshot')
+    
+        play_sound_effect(currentPlayerName, True)
 
-            if play_sound_effect('matchshot') == False:
-                play_sound_effect('gameshot')
-            play_sound_effect(currentPlayerName, True)
-        else:
-            if play_sound_effect('matchshot') == False:
-                play_sound_effect('gameshot')
-            play_sound_effect(currentPlayerName, True)
-
-            if AMBIENT_SOUNDS != 0.0:
-                if play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS) == False:
-                    play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+        if play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS) == False:
+            play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
 
         setup_caller()
         ppi('Gameshot and match')
@@ -536,21 +529,30 @@ def process_match_x01(m):
             }
         broadcast(gameWon)
 
-        if AMBIENT_SOUNDS_AFTER_CALLS == False:
-            if AMBIENT_SOUNDS != 0.0:
-                play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+        gameshotState = play_sound_effect('gameshot')
 
-            play_sound_effect('gameshot')
-            play_sound_effect(currentPlayerName, True)
+        currentPlayerScoreLegs = m['scores'][currentPlayerIndex]['legs']
+        # currentPlayerScoreSets = m['scores'][currentPlayerIndex]['sets']
+        currentLeg = m['leg']
+        currentSet = m['set']
+        maxLeg = m['legs']
+        # maxSets = m['sets']
+
+        # ppi('currentLeg: ' + str(currentLeg))
+        # ppi('currentSet: ' + str(currentSet))
+
+        if 'sets' not in m:
+            play_sound_effect('leg_' + str(currentLeg), gameshotState)
         else:
-            play_sound_effect('gameshot')
-            play_sound_effect(currentPlayerName, True)
+            if currentPlayerScoreLegs == 0:
+                play_sound_effect('set_' + str(currentSet), gameshotState)
+            else:
+                play_sound_effect('leg_' + str(currentLeg), gameshotState)    
 
-            if AMBIENT_SOUNDS != 0.0:
-                play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+        play_sound_effect(currentPlayerName, True)
 
-        if RANDOM_CALLER_EACH_LEG:
-            setup_caller()
+        if AMBIENT_SOUNDS != 0.0:
+            play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
 
         ppi('Gameshot')
 
@@ -570,25 +572,12 @@ def process_match_x01(m):
             }
         broadcast(matchStarted)
 
-        
-        if AMBIENT_SOUNDS_AFTER_CALLS == False:
-            # play only if it is a real match not just legs!
-            if AMBIENT_SOUNDS != 0.0 and ('legs' in m and 'sets' in m):
-                if play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS) == False:
-                    play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+        callPlayerNameState = play_sound_effect(currentPlayerName)
+        if play_sound_effect('matchon', callPlayerNameState) == False:
+            play_sound_effect('gameon', callPlayerNameState)
 
-            play_sound_effect(currentPlayerName)
-            if play_sound_effect('matchon', True) == False:
-                play_sound_effect('gameon', True)
-        else:
-            play_sound_effect(currentPlayerName)
-            if play_sound_effect('matchon', True) == False:
-                play_sound_effect('gameon', True)
-
-            # play only if it is a real match not just legs!
-            if AMBIENT_SOUNDS != 0.0 and ('legs' in m and 'sets' in m):
-                if play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS) == False:
-                    play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+        if AMBIENT_SOUNDS != 0.0 and play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS) == False:
+            play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
 
         ppi('Matchon')
 
@@ -608,18 +597,11 @@ def process_match_x01(m):
             }
         broadcast(gameStarted)
 
-        if AMBIENT_SOUNDS_AFTER_CALLS == False:
-            if AMBIENT_SOUNDS != 0.0:
-                play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+        callPlayerNameState = play_sound_effect(currentPlayerName)
+        play_sound_effect('gameon', callPlayerNameState)
 
-            play_sound_effect(currentPlayerName)
-            play_sound_effect('gameon', True)
-        else:
-            play_sound_effect(currentPlayerName)
-            play_sound_effect('gameon', True)
-
-            if AMBIENT_SOUNDS != 0.0:
-                play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+        if AMBIENT_SOUNDS != 0.0:
+            play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
 
         ppi('Gameon')
           
@@ -1018,6 +1000,7 @@ def on_message_autodarts(ws, message):
 
                 if lastMessage != data and currentMatch != None and data['id'] == currentMatch:
                     lastMessage = data
+
                     # ppi(json.dumps(data, indent = 4, sort_keys = True))
 
                     variant = data['variant']
@@ -1032,9 +1015,7 @@ def on_message_autodarts(ws, message):
 
 def on_close_autodarts(ws, close_status_code, close_msg):
     try:
-        ppi("Websocket closed")
-        ppi(close_msg)
-        ppi(close_status_code)
+        ppi("Websocket [" + str(ws.url) + "] closed! " + str(close_msg) + " - " + str(close_status_code))
         ppi("Retry : %s" % time.ctime())
         time.sleep(3)
         connect_autodarts()
@@ -1056,12 +1037,12 @@ def on_message_client(client, server, message):
             receive_local_board_address()
             if boardManagerAddress != None:
                 if message.startswith('board-start'):
-                    msg_splitted = message.split(':')
-                    if len(msg_splitted) > 1:
-                        time.sleep(float(msg_splitted[1]))
-
+                    # msg_splitted = message.split(':')
+                    # if len(msg_splitted) > 1:
+                    #     time.sleep(float(msg_splitted[1]))
+                    res = requests.post(boardManagerAddress + '/api/reset')
+                    time.sleep(0.1)
                     res = requests.put(boardManagerAddress + '/api/start')
-                    # res = requests.post(boardManagerAddress + '/api/reset')
                     # ppi(res)
 
                 elif message == 'board-stop':
@@ -1250,7 +1231,9 @@ if __name__ == "__main__":
     print('RUNNING OS: ' + osType + ' | ' + osName + ' | ' + osRelease)
     print('SUPPORTED GAME-VARIANTS: ' + " ".join(str(x) for x in SUPPORTED_GAME_VARIANTS) )
     print('\r\n')
-    
+
+
+
 
     if plat == 'Windows' and BACKGROUND_AUDIO_VOLUME > 0.0:
         try:
@@ -1286,3 +1269,5 @@ if __name__ == "__main__":
         except Exception as e:
             ppe("Connect failed: ", e)
    
+   
+time.sleep(30)
