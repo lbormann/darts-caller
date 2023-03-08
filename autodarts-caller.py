@@ -213,7 +213,7 @@ def load_callers():
 
     # load shared-sounds
     shared_sounds = {}
-    if AUDIO_MEDIA_PATH_SHARED != DEFAULT_EMPTY_PATH and AUDIO_MEDIA_PATH_SHARED != "": 
+    if AUDIO_MEDIA_PATH_SHARED != DEFAULT_EMPTY_PATH: 
         for root, dirs, files in os.walk(AUDIO_MEDIA_PATH_SHARED):
             for filename in files:
                 if filename.endswith(tuple(SUPPORTED_SOUND_FORMATS)):
@@ -1220,7 +1220,10 @@ if __name__ == "__main__":
     AUTODART_USER_PASSWORD = args['autodarts_password']              
     AUTODART_USER_BOARD_ID = args['autodarts_board_id']        
     AUDIO_MEDIA_PATH = Path(args['media_path'])
-    AUDIO_MEDIA_PATH_SHARED = Path(args['media_path_shared']) 
+    if args['media_path_shared'] != DEFAULT_EMPTY_PATH:
+        AUDIO_MEDIA_PATH_SHARED = Path(args['media_path_shared'])
+    else:
+        AUDIO_MEDIA_PATH_SHARED = DEFAULT_EMPTY_PATH
     AUDIO_CALLER_VOLUME = args['caller_volume']
     CALLER = args['caller']
     RANDOM_CALLER = args['random_caller']   
@@ -1248,12 +1251,11 @@ if __name__ == "__main__":
     if DEBUG:
         ppi('Started with following arguments:')
         ppi(json.dumps(args, indent=4))
-
-
+    
     args_post_check = None
     if os.path.commonpath([AUDIO_MEDIA_PATH, main_directory]) == main_directory:
         args_post_check = 'AUDIO_MEDIA_PATH resides inside MAIN-CALLER-DIRECTORY! It is not allowed!'
-    if AUDIO_MEDIA_PATH_SHARED != DEFAULT_EMPTY_PATH and AUDIO_MEDIA_PATH_SHARED != "":
+    if AUDIO_MEDIA_PATH_SHARED != DEFAULT_EMPTY_PATH:
         if os.path.commonpath([AUDIO_MEDIA_PATH_SHARED, main_directory]) == main_directory:
             args_post_check = 'AUDIO_MEDIA_PATH_SHARED resides inside MAIN-CALLER-DIRECTORY! It is not allowed!'
         elif os.path.commonpath([AUDIO_MEDIA_PATH_SHARED, AUDIO_MEDIA_PATH]) == AUDIO_MEDIA_PATH:
