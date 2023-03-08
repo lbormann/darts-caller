@@ -1215,8 +1215,7 @@ if __name__ == "__main__":
     
     args = vars(ap.parse_args())
 
-    args_post_check = None
-
+    
     AUTODART_USER_EMAIL = args['autodarts_email']                          
     AUTODART_USER_PASSWORD = args['autodarts_password']              
     AUTODART_USER_BOARD_ID = args['autodarts_board_id']        
@@ -1245,10 +1244,16 @@ if __name__ == "__main__":
     MIXER_CHANNELS = args['mixer_channels']
     MIXER_BUFFERSIZE = args['mixer_buffersize']
 
+
+    if DEBUG:
+        ppi('Started with following arguments:')
+        ppi(json.dumps(args, indent=4))
+
+
+    args_post_check = None
     if os.path.commonpath([AUDIO_MEDIA_PATH, main_directory]) == main_directory:
         args_post_check = 'AUDIO_MEDIA_PATH resides inside MAIN-CALLER-DIRECTORY! It is not allowed!'
-
-    if AUDIO_MEDIA_PATH_SHARED != DEFAULT_EMPTY_PATH:
+    if AUDIO_MEDIA_PATH_SHARED != DEFAULT_EMPTY_PATH and AUDIO_MEDIA_PATH_SHARED != None:
         if os.path.commonpath([AUDIO_MEDIA_PATH_SHARED, main_directory]) == main_directory:
             args_post_check = 'AUDIO_MEDIA_PATH_SHARED resides inside MAIN-CALLER-DIRECTORY! It is not allowed!'
         elif os.path.commonpath([AUDIO_MEDIA_PATH_SHARED, AUDIO_MEDIA_PATH]) == AUDIO_MEDIA_PATH:
@@ -1289,10 +1294,6 @@ if __name__ == "__main__":
     # Initialize sound-mixer
     mixer.pre_init(MIXER_FREQUENCY, MIXER_SIZE, MIXER_CHANNELS, MIXER_BUFFERSIZE) 
     mixer.init()
-
-    if DEBUG:
-        ppi('Started with following arguments:')
-        ppi(json.dumps(args, indent=4))
 
     osType = plat
     osName = os.name
