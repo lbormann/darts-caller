@@ -15,6 +15,9 @@ import logging
 from download import download
 import shutil
 import csv
+import math
+import numpy as np
+
 
 plat = platform.system()
 if plat == 'Windows':
@@ -156,7 +159,8 @@ def download_callers():
                     origin_file = os.path.join(DOWNLOADS_PATH, files[0])
 
                 # Move template- and origin-file to sound-dir
-                shutil.move(origin_file, dest)
+                if origin_file != None:
+                    shutil.move(origin_file, dest)
                 shutil.move(template_file, dest)   
 
                 # Find all supported sound-files and remember names 
@@ -451,8 +455,8 @@ def process_match_x01(m):
                 pcc_success = play_sound_effect(currentPlayerName)
 
             # Player-change
-            if pcc_success == False:
-                play_sound_effect('playerchange')
+            if pcc_success == False and AMBIENT_SOUNDS != 0.0:
+                play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
 
             ppi("Next player")
 
@@ -679,6 +683,60 @@ def process_match_x01(m):
                     play_sound_effect('ambient_1more', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
                 else:
                     play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+
+
+            # Koordinaten der Pfeile
+
+            coords = []
+            for t in turns['throws']:
+                coords.append({"x": t['coords']['x'], "y": t['coords']['y']})
+            # ppi(str(coords))
+
+            # Suche das Koordinatenpaar, das am weitesten von den beiden Anderen entfernt ist
+
+            # Liste mit allen möglichen Kombinationen von Koordinatenpaaren erstellen
+            combinations = [(coords[0], coords[1]), (coords[0], coords[2]), (coords[1], coords[2])]
+
+            # Variablen für das ausgewählte Koordinatenpaar und die maximale Gesamtdistanz initialisieren
+            selected_coord = None
+            max_total_distance = 0
+
+            # Gesamtdistanz für jede Kombination von Koordinatenpaaren berechnen
+            for combination in combinations:
+                dist1 = math.sqrt((combination[0]["x"] - combination[1]["x"])**2 + (combination[0]["y"] - combination[1]["y"])**2)
+                dist2 = math.sqrt((combination[1]["x"] - combination[0]["x"])**2 + (combination[1]["y"] - combination[0]["y"])**2)
+                total_distance = dist1 + dist2
+                
+                # Überprüfen, ob die Gesamtdistanz größer als die bisher größte Gesamtdistanz ist
+                if total_distance > max_total_distance:
+                    max_total_distance = total_distance
+                    selected_coord = combination[0]
+
+            # Distanz von selected_coord zu coord2 berechnen
+            dist1 = math.sqrt((selected_coord["x"] - coords[1]["x"])**2 + (selected_coord["y"] - coords[1]["y"])**2)
+
+            # Distanz von selected_coord zu coord3 berechnen
+            dist2 = math.sqrt((selected_coord["x"] - coords[2]["x"])**2 + (selected_coord["y"] -  coords[2]["y"])**2)
+
+            # Durchschnitt der beiden Distanzen berechnen
+            avg_dist = (dist1 + dist2) / 2
+
+            group_score = (1.0 - avg_dist) * 100
+
+            # ppi("Distance by max_dis_coord to coord2: " + str(dist1))
+            # ppi("Distance by max_dis_coord to coord3: " + str(dist2))
+            # ppi("Group-score: " + str(group_score))
+
+            if group_score >= 98:
+                play_sound_effect('ambient_group_legendary', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)   
+            elif group_score >= 95:
+                play_sound_effect('ambient_group_perfect', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+            elif group_score >= 92:
+                play_sound_effect('ambient_group_very_nice', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+            elif group_score >= 89:
+                play_sound_effect('ambient_group_good', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+            elif group_score >= 86:
+                play_sound_effect('ambient_group_normal', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
 
         ppi("Turn ended")
 
@@ -922,12 +980,13 @@ def process_match_cricket(m):
         }
         broadcast(dartsPulled)
 
-        play_sound_effect('playerchange')
+        if AMBIENT_SOUNDS != 0.0:
+            play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+        
         ppi("Next player")
 
     if isGameFin == True:
         isGameFinished = True
-
 
 def broadcast(data):
     def process(*args):

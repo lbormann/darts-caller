@@ -59,7 +59,7 @@ Go to download-directory and type:
 ## SETUP SOUNDS
 
 
-You need to have sounds-files as mp3 or wav. This files have to be named by 1 to 180, gameshot, busted, playerchange etc. You dont need all files. If you are lazy you can go for 40, 60, 180 or whatever you like. There are a bunch of supported sound-file-keys (just below this section). 
+You need to have sounds-files as mp3 or wav. This files have to be named by 1 to 180, gameshot, busted etc. You dont need all files. If you are lazy you can go for 40, 60, 180 or whatever you like. There are a bunch of supported sound-file-keys (just below this section). 
 You can record your voice or download some files in the internet, ie. https://freesound.org, https://www.zapsplat.com or watchout for pinned messages in (Discord https://discord.com/channels/802528604067201055/955745166134747196 or https://discord.com/channels/802528604067201055/1019720832647434320).
 Put all sound files in one folder and if you like create subfolders in this folder for random caller functionality.
 
@@ -83,7 +83,6 @@ Note: Since version 2.0.0 there is a build-in download-mechanismn that automatic
 - {playername(s)} (Name of Autodarts-player(s) | bot lvl 1-11)
 - you_require (-PCC = 1 and -PCCSF = 0)
 - yr_2-yr_170 (-PCC = 1 and -PCCSF = 1)
-- playerchange
 
 **SINGLE-DARTS (Argument -E = 1):**
 
@@ -93,12 +92,15 @@ Note: Since version 2.0.0 there is a build-in download-mechanismn that automatic
 - double
 - triple
 - outside
-- sbull
-- bull
-- s1-t20 [overrides: single, singleinner, singleouter, double, triple]
+- s1-s20 [overrides: single, singleinner, singleouter]
+- d1-d20 [overrides: double]
+- t1-t20 [overrides: triple]
+- sbull [overrides: single]
+- bull [overrides: double]
 
 **AMBIENT (Argument -A > 0.0):**
 
+- ambient_playerchange
 - ambient_gameon 
 - ambient_gameshot
 - ambient_matchon [fallback: ambient_gameon]  
@@ -111,6 +113,11 @@ Note: Since version 2.0.0 there is a build-in download-mechanismn that automatic
 - ambient_150more 
 - ambient_1-ambient_180 [overrides: ambient_Xmore]
 - ambient_{any 3 darts combo, for example "t1s1d1"} [overrides: ambient_1-ambient_180]
+- ambient_group_legendary
+- ambient_group_perfect
+- ambient_group_very_nice
+- ambient_group_good
+- ambient_group_normal
 
 ______
 
@@ -134,8 +141,7 @@ Click on the shortcut to start the caller.
 
 ### Run by source (Linux)
 
-    python3 autodarts-caller.py -U "your-autodarts-email" -P "your-autodarts-password" -B "your-autodarts-board-id" -M "absolute-folder-to-your-media-files"
-
+#### Script run (Recommended)
 
 As an alternative you could start it with a start-script:
 
@@ -156,9 +162,100 @@ Start the script:
     ./start-custom.sh
  
 
+#### Direct run
+
+    python3 autodarts-caller.py -U "your-autodarts-email" -P "your-autodarts-password" -B "your-autodarts-board-id" -M "absolute-folder-to-your-media-files"
 
 
 ### Setup autostart [linux] (optional)
+
+Open a new service-file:
+
+    sudo nano /etc/systemd/system/autodartscaller.service
+
+Add and close:
+
+    [Unit]
+    Description=Autodarts Caller
+    After=network-online.target sound.target autodarts.service network.target
+    Requires=sound.target
+    Before=openvpn.service vncserver-x11-serviced.service
+
+    [Service]
+    Type=simple
+    Restart=always
+    ExecStart=/home/NAME/autodarts-caller/start-custom.sh
+    WorkingDirectory=/home/NAME/autodarts-caller
+    StandardOutput=inherit
+    StandardError=inherit
+    Restart=always
+    User=NAME
+    Environment=DISPLAY=:0
+
+    [Install]
+    WantedBy=multi-user.target
+
+Save (Strg + O) and close (Strg + X)
+
+    sudo systemctl enable autodartscaller
+
+
+Anschließend den Service enablen aber noch nicht starten, denn dazu jetzt erst die Reihenfolge ändern...
+
+    sudo systemctl enable autodartscaller
+
+
+Jetzt die Reihenfolge der Soundkarten anpassen. Dazu hab ich erstmal die aktuelle Reihenfolge angeschaut im Terminal mit:
+
+    cat /proc/asound/modules 
+
+Das sah dann bei mir z.B. so aus:
+
+    0 snd_usb_audio
+    1 snd_usb_audio
+    2 snd_hda_intel
+    3 snd_usb_audio
+
+und hier muss man eben die richtige Soundkarte (in meinem Fall hda_intel) auf Stelle 0 bringen im Index. Das hab ich folgend gemacht:
+
+    sudo bash (um als root zu arbeiten)
+
+    sudo nano /etc/modprobe.d/alsa-base.conf
+
+Runter scrollen in der Datei zu der Zeile "# Prevent abnormal drivers from grabbing index 0"
+darunter sind dann einige einträge in der Form von options snd-usb-ua101 index=-2
+und die standen bei mir alle auf -2. Ich habe nun einfach die Intel Karte gesucht und diese auf 0 gesetzt und alle anderen Geräte danach hoch nummeriert. Sieht um ganz genau zu sein nun so aus bei mir:
+
+    options bt87x index=4
+    options cx88_alsa index=-3
+    options saa7134-alsa index=2
+    options snd-atiixp-modem index=5
+    options snd-intel8x0m index=0
+    options snd-via82xx-modem index=6
+    options snd-usb-audio index=1
+    options snd-usb-caiaq index=7
+    options snd-usb-ua101 index=8
+    options snd-usb-us122l index=9
+    options snd-usb-usx2y index=10
+
+Nur diese Zeilen ändern, die Zeilen danach in ruhe lassen, sonst funktioniert es nicht. Danach Datei speichern und reboot...
+
+Nun wieder checken, ob die Intel HDA Karte auf Stelle 0 steht, also ganz oben. Wenn ja, hat es geklappt. 
+
+    cat /proc/asound/modules  Dann nur noch den Service starten:
+
+Service starten:
+
+    sudo systemctl start autodartscaller
+
+Service auf Status prüfen (bekommt man einen statuslog zum Service und kann sehen, ob Fehler auftreten oder ob es läuft. Wenn dort in grün steht "running", dann hat alles geklappt und sollte funktionieren)
+
+    sudo systemctl status autodartscaller 
+
+
+
+
+
 
     crontab -e
 
@@ -166,13 +263,14 @@ At the end of the file add:
 
     @reboot sleep 30 && cd <absolute-path-to>/autodarts-caller && python3 autodarts-caller.py -U "TODO" -P "TODO" -B "TODO" -M "TODO"
 
-Make sure you add an empty line under the added command.
 
 Save and close the file. 
 
 Reboot your system.
 
 As an alternative you could add a custom start-script instead of the python command; see https://github.com/lbormann/autodarts-caller#run-by-source 
+
+
 
 
 ### Arguments
@@ -326,12 +424,13 @@ Make sure the displayed sound-filename exists! If you rename any of your sound-f
 
 ### Sound is not playing?!
 
-- Sometimes there are sounds that are not readable. In this case you can convert the sound-file(s) with an additional program (https://www.heise.de/download/product/mp3-quality-modifier-66202) Make sure you configurate 44100HZ, Stereo.
+- check if the filename is a supported [Sound-file-key](#Sound-file-keys)
+- Sometimes there are sounds that are not readable. In this case you can convert sound-file(s) with an additional program (https://www.heise.de/download/product/mp3-quality-modifier-66202) Make sure you configurate 44100HZ, Stereo.
 - Check the console output: in case you do not receive any messages (only 'Receiving live information from ..') -> you should check the given Board-ID (-B) for correctness.
 
 ### I don't like sound x of caller-voice y!
 
-EVERY sound-file is optional! If you don't like a specific sound just delete it! The Application can even function with no sounds at all!
+EVERY sound is optional! If you don't like a specific sound just delete it! The Application can even function with no sound files at all!
 
 ### Sound does not match up calls?!
 Try https://www.audacity.de/ to modify your sound-files.
@@ -379,10 +478,10 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - Support other games modes
 - cricket 2 players 2x gameon
 - cricket: do not call marked fields, only call number if field is still open
-- add example start-command to RM (win/linux)
 - Bots no dart-sounds for every turn (at least not for ESF = 0)
 - add fading option for ambient, *? -> play(loops=0, maxtime=0, fade_ms=0) -> Channel
 - bot your aiming for (your require ...) but already gameshot (stop running sounds)
+
 
 
 ### Done
@@ -423,6 +522,7 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - start board on app-start if board-address is available!
 - DL limit remove 1000 cap
 - consider x.leg/set -> Gameshot / !x_leg! / player
+- add ambient_group_level
 
 
 ## LAST WORDS
