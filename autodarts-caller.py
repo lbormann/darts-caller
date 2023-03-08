@@ -18,7 +18,6 @@ import csv
 import math
 import numpy as np
 
-# main_directory = os.path.dirname(os.getcwd())
 main_directory = os.path.dirname(os.path.realpath(__file__))
 
 plat = platform.system()
@@ -1246,17 +1245,14 @@ if __name__ == "__main__":
     MIXER_CHANNELS = args['mixer_channels']
     MIXER_BUFFERSIZE = args['mixer_buffersize']
 
-    ppi('Main Dir: ' + main_directory)
-    ppi('commonpath-result: ' + os.path.commonpath([AUDIO_MEDIA_PATH, main_directory]))
-
     if os.path.commonpath([AUDIO_MEDIA_PATH, main_directory]) == main_directory:
-        args_post_check = 'AUDIO_MEDIA_PATH resides inside MAIN-CALLER-DIRECTORY!'
+        args_post_check = 'AUDIO_MEDIA_PATH resides inside MAIN-CALLER-DIRECTORY! It is not allowed!'
     elif os.path.commonpath([AUDIO_MEDIA_PATH_SHARED, main_directory]) == main_directory:
-        args_post_check = 'AUDIO_MEDIA_PATH_SHARED resides inside MAIN-CALLER-DIRECTORY!'
+        args_post_check = 'AUDIO_MEDIA_PATH_SHARED resides inside MAIN-CALLER-DIRECTORY! It is not allowed!'
     elif os.path.commonpath([AUDIO_MEDIA_PATH_SHARED, AUDIO_MEDIA_PATH]) == AUDIO_MEDIA_PATH:
-        args_post_check = 'AUDIO_MEDIA_PATH_SHARED resides inside AUDIO_MEDIA_PATH!'
+        args_post_check = 'AUDIO_MEDIA_PATH_SHARED resides inside AUDIO_MEDIA_PATH! It is not allowed!'
     elif os.path.commonpath([AUDIO_MEDIA_PATH, AUDIO_MEDIA_PATH_SHARED]) == AUDIO_MEDIA_PATH_SHARED:
-        args_post_check = 'AUDIO_MEDIA_PATH resides inside AUDIO_MEDIA_SHARED!'
+        args_post_check = 'AUDIO_MEDIA_PATH resides inside AUDIO_MEDIA_SHARED! It is not allowed!'
     
     
     global server
@@ -1330,8 +1326,8 @@ if __name__ == "__main__":
 
         if caller == None:
             ppi('A caller with name "' + str(CALLER) + '" does NOT exist! Please compare your input with list of possible callers and update -C')
-            time.sleep(30)
-            exit(1)
+            # time.sleep(30)
+            # exit(1)
         else:
             try:  
                 connect_autodarts()
