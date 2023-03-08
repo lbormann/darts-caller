@@ -16,7 +16,6 @@ from download import download
 import shutil
 import csv
 import math
-import numpy as np
 
 main_directory = os.path.dirname(os.path.realpath(__file__))
 
@@ -39,7 +38,7 @@ logger.addHandler(sh)
 
 
 
-VERSION = '2.0.12'
+VERSION = '2.0.13'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
