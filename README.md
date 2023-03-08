@@ -131,7 +131,7 @@ Since Version 1.6.0 you can deposit multiple sounds for EVERY game-event. Theref
 
 ### Run by executable (Windows)
 
-Create a shortcut of the executable; right click on the shortcut -> select properties -> add arguments in the target input at the end of the text field.
+Create a shortcut of the executable; right click on the shortcut -> select properties -> add [Arguments](#Arguments) in the target input at the end of the text field.
 
 Example: C:\Downloads\autodarts-caller.exe -U "your-autodarts-email" -P "your-autodarts-password" -B "your-autodarts-board-id" -M "absolute-folder-to-your-media-files"
 
@@ -145,7 +145,7 @@ Copy the default script:
 
     cp start.sh start-custom.sh
 
-Edit and fill out arguments:
+Edit and fill out [Arguments](#Arguments):
 
     nano start-custom.sh
 
@@ -160,104 +160,72 @@ Start the script:
 
 ### Setup autostart [linux] (optional)
 
-Open a new service-file:
 
-    sudo nano /etc/systemd/system/autodartscaller.service
-
-Add and close:
-
-    [Unit]
-    Description=Autodarts Caller
-    After=network-online.target sound.target autodarts.service network.target
-    Requires=sound.target
-    Before=openvpn.service vncserver-x11-serviced.service
-
-    [Service]
-    Type=simple
-    Restart=always
-    ExecStart=/home/NAME/autodarts-caller/start-custom.sh
-    WorkingDirectory=/home/NAME/autodarts-caller
-    StandardOutput=inherit
-    StandardError=inherit
-    Restart=always
-    User=NAME
-    Environment=DISPLAY=:0
-
-    [Install]
-    WantedBy=multi-user.target
-
-Save (Strg + O) and close (Strg + X)
-
-    sudo systemctl enable autodartscaller
-
-
-Anschließend den Service enablen aber noch nicht starten, denn dazu jetzt erst die Reihenfolge ändern...
-
-    sudo systemctl enable autodartscaller
-
-
-Jetzt die Reihenfolge der Soundkarten anpassen. Dazu hab ich erstmal die aktuelle Reihenfolge angeschaut im Terminal mit:
-
-    cat /proc/asound/modules 
-
-Das sah dann bei mir z.B. so aus:
-
-    0 snd_usb_audio
-    1 snd_usb_audio
-    2 snd_hda_intel
-    3 snd_usb_audio
-
-und hier muss man eben die richtige Soundkarte (in meinem Fall hda_intel) auf Stelle 0 bringen im Index. Das hab ich folgend gemacht:
-
-    sudo bash (um als root zu arbeiten)
-
-    sudo nano /etc/modprobe.d/alsa-base.conf
-
-Runter scrollen in der Datei zu der Zeile "# Prevent abnormal drivers from grabbing index 0"
-darunter sind dann einige einträge in der Form von options snd-usb-ua101 index=-2
-und die standen bei mir alle auf -2. Ich habe nun einfach die Intel Karte gesucht und diese auf 0 gesetzt und alle anderen Geräte danach hoch nummeriert. Sieht um ganz genau zu sein nun so aus bei mir:
-
-    options bt87x index=4
-    options cx88_alsa index=-3
-    options saa7134-alsa index=2
-    options snd-atiixp-modem index=5
-    options snd-intel8x0m index=0
-    options snd-via82xx-modem index=6
-    options snd-usb-audio index=1
-    options snd-usb-caiaq index=7
-    options snd-usb-ua101 index=8
-    options snd-usb-us122l index=9
-    options snd-usb-usx2y index=10
-
-Nur diese Zeilen ändern, die Zeilen danach in ruhe lassen, sonst funktioniert es nicht. Danach Datei speichern und reboot...
-
-Nun wieder checken, ob die Intel HDA Karte auf Stelle 0 steht, also ganz oben. Wenn ja, hat es geklappt. 
-
-    cat /proc/asound/modules  Dann nur noch den Service starten:
-
-Service starten:
-
-    sudo systemctl start autodartscaller
-
-Service auf Status prüfen (bekommt man einen statuslog zum Service und kann sehen, ob Fehler auftreten oder ob es läuft. Wenn dort in grün steht "running", dann hat alles geklappt und sollte funktionieren)
-
-    sudo systemctl status autodartscaller 
-
-
-
-
-
+#### Using a cronjob
 
     crontab -e
 
-At the end of the file add:
+At the end of the file add (Replace USER):
 
-    @reboot sleep 30 && cd <absolute-path-to>/autodarts-caller && python3 autodarts-caller.py -U "TODO" -P "TODO" -B "TODO" -M "TODO"
+    @reboot sleep 30 && cd /home/USER/autodarts-caller && ./start-custom.sh > /home/USER/autodarts-caller.log 2>&1
+
+Reboot your system:
+
+    sudo reboot
+
+Check log:
+
+    tail /home/USER/autodarts-caller.log
 
 
-Save and close the file. 
 
-Reboot your system.
+
+#### Using a desktop-start-task
+
+if you are facing problems with the crontab-solution try this:
+
+    sudo apt install xterm
+
+One can now manually test whether the whole thing starts with the following command (adjust USER):
+
+    xterm -e "cd /home/USER/autodarts-caller && ./start.sh"
+
+A terminal-like window should now open with the running program.
+
+To enable autostart, a .desktop file now needs to be created:
+
+    sudo nano ~/.config/autostart/autodartscaller.desktop
+
+Insert the following into this file and adjust the USER in the path:
+
+    [Desktop Entry]
+    Type=Application
+    Exec=xterm -e "cd /home/USER/autodarts-caller && ./start-custom.sh > /home/USER/autodarts-caller.log 2>&1"
+    Hidden=false
+    NoDisplay=false
+    X-GNOME-Autostart-enabled=true
+    X-GNOME-Autostart-Delay=10
+    Name[de_DE]=Autodarts-Caller
+    Name=Autodarts-Caller
+    Comment[de_DE]=Autostart Autodarts-Caller
+    Comment=Autostart Autodarts-Caller
+
+Afterwards, save the file (Ctrl + O) and close the file (Ctrl + X).
+
+Now the file permissions need to be set for the file (again, adjust USER!):
+
+    sudo chmod u=rw-,g=rw-,o=r-- ~/.config/autostart/autodartscaller.desktop
+    sudo chmod +x ~/.config/autostart/autodartscaller.desktop
+    sudo chown USER ~/.config/autostart/autodartscaller.desktop
+
+Reboot your system:
+
+    sudo reboot
+
+Check log:
+
+    tail /home/USER/autodarts-caller.log
+
 
 
 
@@ -387,7 +355,7 @@ For a list of json-examples look at 'broadcast-examples.dat' - who knows maybe y
 
 ### Windows
 
-- Download the latest executable in the release section.
+Download the latest executable in the release section.
 
 
 ### Linux / Others
@@ -399,17 +367,18 @@ For a list of json-examples look at 'broadcast-examples.dat' - who knows maybe y
     pip install -r requirements.txt
 
 
+
 ## FAQ
 
 ### App starts and stops immediately?!
 
-- Create a fresh CMD; change to autodarts-caller-directory and start the executable / your start-script from there. If the app crashs the window will not exit. Moreover you can use the start-argument 'DEB="1"' to display more information about a problem.
+- Use the start-argument 'DEB="1"' to display more information about a problem.
 - Make sure you follow the rules of each argument you are using.
-- Check your autodarts-credentials (use email-adress and password). If your are facing "failed keycloakauthentication Error (401 invalid_grant)", you probably need to disable Two-Factor-Auth!
+- Check your autodarts-credentials (use email-adress and password); if you are facing "failed keycloakauthentication Error (401 invalid_grant)", you probably need to disable Two-Factor-Auth (2FA)!
 
 ### >>> Can not play soundfile for event "{your-soundfile}" -> Ignore this or check existance; otherwise convert your file appropriate
 
-Make sure the displayed sound-filename exists! If you rename any of your sound-files you NEED to restart the application as it internally creates a list of available sound-files ONLY on application start AND on a caller-switch (random_caller-functionality)!
+Make sure the displayed [Sound-file-name](#Sound-file-keys) exists! If you rename any of your sound-files you NEED to restart the application as it internally creates a list of available sound-files ONLY on application start AND on a caller-switch (random_caller-functionality)!
 
 ### Sound is not playing?!
 

@@ -39,7 +39,7 @@ logger.addHandler(sh)
 
 
 
-VERSION = '2.0.11'
+VERSION = '2.0.12'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -1262,6 +1262,8 @@ if __name__ == "__main__":
             args_post_check = 'AUDIO_MEDIA_PATH_SHARED resides inside AUDIO_MEDIA_PATH! It is not allowed!'
         elif os.path.commonpath([AUDIO_MEDIA_PATH, AUDIO_MEDIA_PATH_SHARED]) == AUDIO_MEDIA_PATH_SHARED:
             args_post_check = 'AUDIO_MEDIA_PATH resides inside AUDIO_MEDIA_SHARED! It is not allowed!'
+        elif AUDIO_MEDIA_PATH == AUDIO_MEDIA_PATH_SHARED:
+            args_post_check = 'AUDIO_MEDIA_PATH is equal to AUDIO_MEDIA_SHARED! It is not allowed!'
     
     
     global server
@@ -1331,8 +1333,6 @@ if __name__ == "__main__":
 
         if caller == None:
             ppi('A caller with name "' + str(CALLER) + '" does NOT exist! Please compare your input with list of possible callers and update -C')
-            # time.sleep(30)
-            # exit(1)
         else:
             try:  
                 connect_autodarts()
