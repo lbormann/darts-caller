@@ -213,7 +213,7 @@ def load_callers():
 
     # load shared-sounds
     shared_sounds = {}
-    if AUDIO_MEDIA_PATH_SHARED != DEFAULT_EMPTY_PATH: 
+    if AUDIO_MEDIA_PATH_SHARED != DEFAULT_EMPTY_PATH and AUDIO_MEDIA_PATH_SHARED != "": 
         for root, dirs, files in os.walk(AUDIO_MEDIA_PATH_SHARED):
             for filename in files:
                 if filename.endswith(tuple(SUPPORTED_SOUND_FORMATS)):
@@ -1253,7 +1253,7 @@ if __name__ == "__main__":
     args_post_check = None
     if os.path.commonpath([AUDIO_MEDIA_PATH, main_directory]) == main_directory:
         args_post_check = 'AUDIO_MEDIA_PATH resides inside MAIN-CALLER-DIRECTORY! It is not allowed!'
-    if AUDIO_MEDIA_PATH_SHARED != DEFAULT_EMPTY_PATH and AUDIO_MEDIA_PATH_SHARED != None:
+    if AUDIO_MEDIA_PATH_SHARED != DEFAULT_EMPTY_PATH and AUDIO_MEDIA_PATH_SHARED != "":
         if os.path.commonpath([AUDIO_MEDIA_PATH_SHARED, main_directory]) == main_directory:
             args_post_check = 'AUDIO_MEDIA_PATH_SHARED resides inside MAIN-CALLER-DIRECTORY! It is not allowed!'
         elif os.path.commonpath([AUDIO_MEDIA_PATH_SHARED, AUDIO_MEDIA_PATH]) == AUDIO_MEDIA_PATH:
