@@ -141,10 +141,6 @@ Click on the shortcut to start the caller.
 
 ### Run by source (Linux)
 
-#### Script run (Recommended)
-
-As an alternative you could start it with a start-script:
-
 Copy the default script:
 
     cp start.sh start-custom.sh
@@ -160,11 +156,6 @@ Make it executable:
 Start the script:
 
     ./start-custom.sh
- 
-
-#### Direct run
-
-    python3 autodarts-caller.py -U "your-autodarts-email" -P "your-autodarts-password" -B "your-autodarts-board-id" -M "absolute-folder-to-your-media-files"
 
 
 ### Setup autostart [linux] (optional)
@@ -268,8 +259,6 @@ Save and close the file.
 
 Reboot your system.
 
-As an alternative you could add a custom start-script instead of the python command; see https://github.com/lbormann/autodarts-caller#run-by-source 
-
 
 
 
@@ -319,11 +308,11 @@ You can find your Board-ID in Board-Manager.
 
 #### **-M / --media_path**
 
-You need to set an absolute Path to your media-file-directory, otherwise you won`t notice any calls. Make sure your sound-files are in a supported file-format (mp3,wav).
+You need to set an absolute Path to your media-file-directory, otherwise you won`t notice any calls. Make sure your sound-files are in a supported file-format (mp3,wav). Moreover make sure the given path doesn't reside inside main-directory (autodarts-caller).
 
 #### **-MS / --media_path_shared**
 
-If you do not want to configure particular sounds for every individual caller, you can specify an absolute path to a shared directory. Every caller will get the sounds of that directory. Have a look at https://github.com/lbormann/autodarts-caller#setup-sounds for supported sound-file-names.
+If you do not want to configure particular sounds for every individual caller, you can specify an absolute path to a shared directory. Every caller will get the sounds of that directory. Have a look at [supported Sound-file-keys](#Sound-file-keys). Moreover make sure the given path neither resides inside main-directory (autodarts-caller) nor inside media-path (-M).
 
 #### **-V / --caller_volume**
 
@@ -446,8 +435,7 @@ Try https://www.audacity.de/ to modify your sound-files.
     - **Template file:**
     A UTF8-(with a BOM)-encoded CSV file (*.csv) (filename can be chosen freely), which is structured as follows:
     Column 1 contains the phrase a sound file is based on. For example: "The game is over."
-    All further filled columns (separated by semicolon ';') contain sound-file-keys.
-    A list of supported sound-file-keys can be found at https://github.com/lbormann/autodarts-caller#setup-sounds.
+    All further filled columns (separated by semicolon ';') contain [Sound-file-keys](#Sound-file-keys).
     You can find ready-to-go template-files in 'caller-templates'; you can also create template file and share it with me so that every contributer can use it in future!
 
     - **Sounds archive:**
@@ -523,6 +511,8 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - DL limit remove 1000 cap
 - consider x.leg/set -> Gameshot / !x_leg! / player
 - add ambient_group_level
+- prohibit -M and -MS in main-directory; prohibit -MS in -M
+
 
 
 ## LAST WORDS

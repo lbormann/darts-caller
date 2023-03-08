@@ -18,6 +18,8 @@ import csv
 import math
 import numpy as np
 
+# main_directory = os.path.dirname(os.getcwd())
+main_directory = os.path.dirname(os.path.realpath(__file__))
 
 plat = platform.system()
 if plat == 'Windows':
@@ -1214,6 +1216,8 @@ if __name__ == "__main__":
     
     args = vars(ap.parse_args())
 
+    args_post_check = None
+
     AUTODART_USER_EMAIL = args['autodarts_email']                          
     AUTODART_USER_PASSWORD = args['autodarts_password']              
     AUTODART_USER_BOARD_ID = args['autodarts_board_id']        
@@ -1242,6 +1246,19 @@ if __name__ == "__main__":
     MIXER_CHANNELS = args['mixer_channels']
     MIXER_BUFFERSIZE = args['mixer_buffersize']
 
+    ppi('Main Dir: ' + main_directory)
+    ppi('commonpath-result: ' + os.path.commonpath([AUDIO_MEDIA_PATH, main_directory]))
+
+    if os.path.commonpath([AUDIO_MEDIA_PATH, main_directory]) == main_directory:
+        args_post_check = 'AUDIO_MEDIA_PATH resides inside MAIN-CALLER-DIRECTORY!'
+    elif os.path.commonpath([AUDIO_MEDIA_PATH_SHARED, main_directory]) == main_directory:
+        args_post_check = 'AUDIO_MEDIA_PATH_SHARED resides inside MAIN-CALLER-DIRECTORY!'
+    elif os.path.commonpath([AUDIO_MEDIA_PATH_SHARED, AUDIO_MEDIA_PATH]) == AUDIO_MEDIA_PATH:
+        args_post_check = 'AUDIO_MEDIA_PATH_SHARED resides inside AUDIO_MEDIA_PATH!'
+    elif os.path.commonpath([AUDIO_MEDIA_PATH, AUDIO_MEDIA_PATH_SHARED]) == AUDIO_MEDIA_PATH_SHARED:
+        args_post_check = 'AUDIO_MEDIA_PATH resides inside AUDIO_MEDIA_SHARED!'
+    
+    
     global server
     server = None
 
@@ -1292,41 +1309,43 @@ if __name__ == "__main__":
     print('\r\n')
 
 
+    if args_post_check == None: 
+        if plat == 'Windows' and BACKGROUND_AUDIO_VOLUME > 0.0:
+            try:
+                background_audios = AudioUtilities.GetAllSessions()
+                audio_muter = threading.Thread(target=mute_background, args=[BACKGROUND_AUDIO_VOLUME])
+                audio_muter.start()
+            except Exception as e:
+                ppe("Background-muter failed!", e)
 
-
-    if plat == 'Windows' and BACKGROUND_AUDIO_VOLUME > 0.0:
         try:
-            background_audios = AudioUtilities.GetAllSessions()
-            audio_muter = threading.Thread(target=mute_background, args=[BACKGROUND_AUDIO_VOLUME])
-            audio_muter.start()
+            download_callers()
         except Exception as e:
-            ppe("Background-muter failed!", e)
+            ppe("Caller-profile fetching failed!", e)
 
-    try:
-        download_callers()
-    except Exception as e:
-        ppe("Caller-profile fetching failed!", e)
+        try:
+            setup_caller()
+        except Exception as e:
+            ppe("Setup callers failed!", e)
 
-    try:
-        setup_caller()
-    except Exception as e:
-        ppe("Setup callers failed!", e)
+        if caller == None:
+            ppi('A caller with name "' + str(CALLER) + '" does NOT exist! Please compare your input with list of possible callers and update -C')
+            time.sleep(30)
+            exit(1)
+        else:
+            try:  
+                connect_autodarts()
 
-    if caller == None:
-        ppi('A caller with name "' + str(CALLER) + '" does NOT exist! Please compare your input with list of possible callers and update -C')
-        time.sleep(30)
-        exit(1)
+                server = WebsocketServer(host=DEFAULT_HOST_IP, port=HOST_PORT, loglevel=logging.ERROR)
+                server.set_fn_new_client(on_open_client)
+                server.set_fn_client_left(on_left_client)
+                server.set_fn_message_received(on_message_client)
+                server.run_forever()
+            except Exception as e:
+                ppe("Connect failed: ", e)
+   
     else:
-        try:  
-            connect_autodarts()
+        ppi('Please check your arguments: ' + args_post_check)
+   
 
-            server = WebsocketServer(host=DEFAULT_HOST_IP, port=HOST_PORT, loglevel=logging.ERROR)
-            server.set_fn_new_client(on_open_client)
-            server.set_fn_client_left(on_left_client)
-            server.set_fn_message_received(on_message_client)
-            server.run_forever()
-        except Exception as e:
-            ppe("Connect failed: ", e)
-   
-   
 time.sleep(30)
