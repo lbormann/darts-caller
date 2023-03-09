@@ -60,8 +60,7 @@ Go to download-directory and type:
 
 
 You need to have sounds-files as mp3 or wav. This files have to be named by 1 to 180, gameshot, busted etc. You dont need all files. If you are lazy you can go for 40, 60, 180 or whatever you like. There are a bunch of supported sound-file-keys (just below this section). 
-You can record your voice or download some files in the internet, ie. https://freesound.org, https://www.zapsplat.com or watchout for pinned messages in (Discord https://discord.com/channels/802528604067201055/955745166134747196 or https://discord.com/channels/802528604067201055/1019720832647434320).
-Put all sound files in one folder and if you like create subfolders in this folder for random caller functionality.
+You can record your voice or download some files in the internet, ie. https://freesound.org, https://www.zapsplat.com, https://mixkit.co/free-sound-effects/hit/ or watchout for pinned messages in Discord. Put all sound files in one folder and if you like create subfolders in this folder for random caller functionality.
 
 Note: Since version 2.0.0 there is a build-in download-mechanismn that automatically downloads a bunch of curated caller-voices.
 
@@ -372,13 +371,13 @@ Download the latest executable in the release section.
 
 ### App starts and stops immediately?!
 
-- Use the start-argument 'DEB="1"' to display more information about a problem.
+- Add '-DEB "1"' to start-arguments to display more information about a problem.
 - Make sure you follow the rules of each argument you are using.
 - Check your autodarts-credentials (use email-adress and password); if you are facing "failed keycloakauthentication Error (401 invalid_grant)", you probably need to disable Two-Factor-Auth (2FA)!
 
 ### >>> Can not play soundfile for event "{your-soundfile}" -> Ignore this or check existance; otherwise convert your file appropriate
 
-Make sure the displayed [Sound-file-name](#Sound-file-keys) exists! If you rename any of your sound-files you NEED to restart the application as it internally creates a list of available sound-files ONLY on application start AND on a caller-switch (random_caller-functionality)!
+Make sure the displayed exists! If you rename any of your sound-files you NEED to restart the application as it internally creates a list of available sound-files ONLY on application-start AND on a caller-switch (random_caller-functionality)!
 
 ### Sound is not playing?!
 
@@ -397,7 +396,7 @@ Try https://www.audacity.de/ to modify your sound-files.
 
 ## CONTRIBUTE
 
-### Do you want to provide your caller profile to the community? It`s easy - read on!
+### Do you want to provide your caller-voice to the community? It`s easy - read on!
 
 1) Create a ZIP archive that contains the following contents:
 

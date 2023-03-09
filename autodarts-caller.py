@@ -38,7 +38,7 @@ logger.addHandler(sh)
 
 
 
-VERSION = '2.0.13'
+VERSION = '2.0.14'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -209,7 +209,6 @@ def download_callers():
                 shutil.rmtree(DOWNLOADS_PATH, ignore_errors=True)
 
 def load_callers():
-
     # load shared-sounds
     shared_sounds = {}
     if AUDIO_MEDIA_PATH_SHARED != DEFAULT_EMPTY_PATH: 
@@ -686,7 +685,6 @@ def process_match_x01(m):
 
 
             # Koordinaten der Pfeile
-
             coords = []
             for t in turns['throws']:
                 coords.append({"x": t['coords']['x'], "y": t['coords']['y']})
@@ -712,16 +710,19 @@ def process_match_x01(m):
                     max_total_distance = total_distance
                     selected_coord = combination[0]
 
-            # Distanz von selected_coord zu coord2 berechnen
-            dist1 = math.sqrt((selected_coord["x"] - coords[1]["x"])**2 + (selected_coord["y"] - coords[1]["y"])**2)
+            group_score = 100.0
+            if selected_coord != None:
+                
+                # Distanz von selected_coord zu coord2 berechnen
+                dist1 = math.sqrt((selected_coord["x"] - coords[1]["x"])**2 + (selected_coord["y"] - coords[1]["y"])**2)
 
-            # Distanz von selected_coord zu coord3 berechnen
-            dist2 = math.sqrt((selected_coord["x"] - coords[2]["x"])**2 + (selected_coord["y"] -  coords[2]["y"])**2)
+                # Distanz von selected_coord zu coord3 berechnen
+                dist2 = math.sqrt((selected_coord["x"] - coords[2]["x"])**2 + (selected_coord["y"] -  coords[2]["y"])**2)
 
-            # Durchschnitt der beiden Distanzen berechnen
-            avg_dist = (dist1 + dist2) / 2
+                # Durchschnitt der beiden Distanzen berechnen
+                avg_dist = (dist1 + dist2) / 2
 
-            group_score = (1.0 - avg_dist) * 100
+                group_score = (1.0 - avg_dist) * 100
 
             # ppi("Distance by max_dis_coord to coord2: " + str(dist1))
             # ppi("Distance by max_dis_coord to coord3: " + str(dist2))
@@ -988,12 +989,7 @@ def process_match_cricket(m):
     if isGameFin == True:
         isGameFinished = True
 
-def broadcast(data):
-    def process(*args):
-        global server
-        server.send_message_to_all(json.dumps(data, indent=2).encode('utf-8'))
-    threading.Thread(target=process).start()
-            
+         
 
 def connect_autodarts():
     def process(*args):
@@ -1096,11 +1092,12 @@ def on_message_client(client, server, message):
             receive_local_board_address()
             if boardManagerAddress != None:
                 if message.startswith('board-start'):
-                    # msg_splitted = message.split(':')
-                    # if len(msg_splitted) > 1:
-                    #     time.sleep(float(msg_splitted[1]))
-                    # res = requests.post(boardManagerAddress + '/api/reset')
-                    time.sleep(0.1)
+                    msg_splitted = message.split(':')
+                    if len(msg_splitted) > 1:
+                        time.sleep(float(msg_splitted[1]))
+                    else:
+                        time.sleep(0.1)
+                    # res = requests.post(boardManagerAddress + '/api/reset')  
                     res = requests.put(boardManagerAddress + '/api/start')
                     # ppi(res)
 
@@ -1120,6 +1117,12 @@ def on_open_client(client, server):
 def on_left_client(client, server):
     ppi('CLIENT DISCONNECTED: ' + str(client))
 
+def broadcast(data):
+    def process(*args):
+        global server
+        server.send_message_to_all(json.dumps(data, indent=2).encode('utf-8'))
+    threading.Thread(target=process).start()
+   
 
 
 def mute_audio_background(vol):
