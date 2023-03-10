@@ -343,11 +343,14 @@ def listen_to_newest_match(m, ws):
     if cm == None or (cm != None and newMatch != None and cm != newMatch):
         ppi('Listen to match: ' + newMatch)
 
+        global isGameFinished
+        isGameFinished = False
+
         receive_local_board_address()
-        if boardManagerAddress != None:
-            res = requests.post(boardManagerAddress + '/api/reset')
-            time.sleep(0.5)
-            res = requests.put(boardManagerAddress + '/api/start')
+        # if boardManagerAddress != None:
+        #     res = requests.post(boardManagerAddress + '/api/reset')
+        #     time.sleep(0.25)
+        #     res = requests.put(boardManagerAddress + '/api/start')
 
         if cm != None:
             paramsUnsubscribeMatchEvents = {
@@ -612,6 +615,7 @@ def process_match_x01(m):
     elif busted == True:
         lastPoints = "B"
         isGameFinished = False
+
         busted = { 
                     "event": "busted",
                     "player": currentPlayerName,
@@ -652,7 +656,6 @@ def process_match_x01(m):
             }
         }
         broadcast(dartsThrown)
-
 
         play_sound_effect(points)
 
@@ -1084,6 +1087,9 @@ def on_error_autodarts(ws, error):
         ppe('WS-Error failed: ', e)
 
 
+def on_open_client(client, server):
+    ppi('NEW CLIENT CONNECTED: ' + str(client))
+
 def on_message_client(client, server, message):
     def process(*args):
         try:
@@ -1093,26 +1099,33 @@ def on_message_client(client, server, message):
             if boardManagerAddress != None:
                 if message.startswith('board-start'):
                     msg_splitted = message.split(':')
+
+                    wait = 0.1
                     if len(msg_splitted) > 1:
-                        time.sleep(float(msg_splitted[1]))
-                    else:
-                        time.sleep(0.1)
-                    # res = requests.post(boardManagerAddress + '/api/reset')  
-                    res = requests.put(boardManagerAddress + '/api/start')
+                        wait = float(msg_splitted[1])
+                    time.sleep(wait)
+                     
+                    res = requests.put(boardManagerAddress + '/api/detection/start')
+                    # res = requests.put(boardManagerAddress + '/api/start')
+                    # ppi(res)
+                    
+                elif message == 'board-stop':
+                    res = requests.put(boardManagerAddress + '/api/detection/stop')
+                    # res = requests.put(boardManagerAddress + '/api/stop')
                     # ppi(res)
 
-                elif message == 'board-stop':
-                    res = requests.put(boardManagerAddress + '/api/stop')
+                elif message == 'board-reset':
+                    res = requests.post(boardManagerAddress + '/api/reset')
                     # ppi(res)
+
+                else:
+                    ppi('This message is not supported')  
             else:
-                ppi('Can not start board as board-address is unknown!')  
+                ppi('Can not change board-state as board-address is unknown!')  
         except Exception as e:
             ppe('WS-Message failed: ', e)
 
     threading.Thread(target=process).start()
-
-def on_open_client(client, server):
-    ppi('NEW CLIENT CONNECTED: ' + str(client))
 
 def on_left_client(client, server):
     ppi('CLIENT DISCONNECTED: ' + str(client))
