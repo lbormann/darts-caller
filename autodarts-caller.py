@@ -1103,6 +1103,8 @@ def on_message_client(client, server, message):
                     wait = 0.1
                     if len(msg_splitted) > 1:
                         wait = float(msg_splitted[1])
+                    if wait == 0.0:
+                        wait = 0.5
                     time.sleep(wait)
                      
                     res = requests.put(boardManagerAddress + '/api/detection/start')
