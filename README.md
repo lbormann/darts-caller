@@ -8,20 +8,17 @@ Tested on Windows 10 & 11 Pro x64, Python 3.9.7 and Raspberry pi 4B 4GB, Python 
 
 ## COMPATIBILITY
 
-x = supported
-o = not (yet) supported
-
 | Variant | Support |
 | ------------- | ------------- |
-| X01 | x |
-| Cricket | x |
-| Bermuda | o |
-| Shanghai | o |
-| Gotcha | o |
-| Around the Clock | o |
-| Round the World | o |
-| Random Checkout | x |
-| Count Up | o |
+| X01 | :heavy_check_mark: |
+| Cricket | :heavy_check_mark: |
+| Bermuda | |
+| Shanghai | |
+| Gotcha | |
+| Around the Clock | |
+| Round the World | |
+| Random Checkout | :heavy_check_mark: |
+| Count Up | |
 
 
 ## INSTALL INSTRUCTION
@@ -437,7 +434,8 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - Bots no dart-sounds for every turn (at least not for ESF = 0)
 - add fading option for ambient, *? -> play(loops=0, maxtime=0, fade_ms=0) -> Channel
 - bot your aiming for (your require ...) but already gameshot (stop running sounds)
-
+- add ambient_x-pendent for every Main/Every-Dart-Sound
+- ambient_25bullbull fail?
 
 
 ### Done
