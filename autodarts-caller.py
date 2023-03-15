@@ -38,7 +38,7 @@ logger.addHandler(sh)
 
 
 
-VERSION = '2.0.14'
+VERSION = '2.1.0'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -253,6 +253,9 @@ def load_callers():
             else:
                 c_keys[ss_k] = ss_v
 
+
+    
+
     return callers
 
 def setup_caller():
@@ -280,9 +283,16 @@ def setup_caller():
         else:
             caller = random.choice(callers)
 
-    ppi("Your current caller: " + str(os.path.basename(os.path.normpath(caller[0]))) + " knows " + str(len(caller[1].values())) + " Sound-key(s)")
-    # ppi(caller[1])
-    caller = caller[1]
+    if(caller != None):
+        for sound_file_key, sound_file_values in caller[1].items():
+            sound_list = list()
+            for sound_file_path in sound_file_values:
+                sound_list.append(mixer.Sound(sound_file_path))
+            caller[1][sound_file_key] = sound_list
+
+        ppi("Your current caller: " + str(os.path.basename(os.path.normpath(caller[0]))) + " knows " + str(len(caller[1].values())) + " Sound-key(s)")
+        # ppi(caller[1])
+        caller = caller[1]
 
 def receive_local_board_address():
     try:
@@ -305,26 +315,25 @@ def receive_local_board_address():
 
 
 
-def play_sound(pathToFile, waitForLast, volumeMult):
-    if waitForLast == True:
+def play_sound(sound, wait_for_last, volume_mult):
+    if wait_for_last == True:
         while mixer.get_busy():
             time.sleep(0.01)
 
-    sound = mixer.Sound(pathToFile)
     if AUDIO_CALLER_VOLUME is not None:
-        sound.set_volume(AUDIO_CALLER_VOLUME * volumeMult)
+        sound.set_volume(AUDIO_CALLER_VOLUME * volume_mult)
 
     sound.play()
     
-    # ppi('Playing: "' + pathToFile + '"')
+    # ppi('Playing: "' + sound + '"')
 
-def play_sound_effect(event, waitForLast = False, volumeMult = 1.0):
+def play_sound_effect(sound_file_key, wait_for_last = False, volume_mult = 1.0):
     try:
         global caller
-        play_sound(random.choice(caller[event]), waitForLast, volumeMult)
+        play_sound(random.choice(caller[sound_file_key]), wait_for_last, volume_mult)
         return True
     except Exception as e:
-        ppe('Can not play soundfile for event "' + event + '" -> Ignore this or check existance; otherwise convert your file appropriate', e)
+        ppe('Can not play sound for sound-file-key "' + sound_file_key + '" -> Ignore this or check existance; otherwise convert your file appropriate', e)
         return False
 
 
@@ -458,7 +467,7 @@ def process_match_x01(m):
 
             # Player-change
             if pcc_success == False and AMBIENT_SOUNDS != 0.0:
-                play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+                play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
 
             ppi("Next player")
 
@@ -515,8 +524,8 @@ def process_match_x01(m):
     
         play_sound_effect(currentPlayerName, True)
 
-        if play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS) == False:
-            play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+        if play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
+            play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
 
         setup_caller()
         ppi('Gameshot and match')
@@ -558,7 +567,7 @@ def process_match_x01(m):
         play_sound_effect(currentPlayerName, True)
 
         if AMBIENT_SOUNDS != 0.0:
-            play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+            play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
 
         ppi('Gameshot')
 
@@ -582,8 +591,8 @@ def process_match_x01(m):
         if play_sound_effect('matchon', callPlayerNameState) == False:
             play_sound_effect('gameon', callPlayerNameState)
 
-        if AMBIENT_SOUNDS != 0.0 and play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS) == False:
-            play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+        if AMBIENT_SOUNDS != 0.0 and play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
+            play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
 
         ppi('Matchon')
 
@@ -607,7 +616,7 @@ def process_match_x01(m):
         play_sound_effect('gameon', callPlayerNameState)
 
         if AMBIENT_SOUNDS != 0.0:
-            play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+            play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
 
         ppi('Gameon')
           
@@ -628,7 +637,7 @@ def process_match_x01(m):
         play_sound_effect('busted')
 
         if AMBIENT_SOUNDS != 0.0:
-            play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+            play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
 
         ppi('Busted')
     
@@ -668,23 +677,23 @@ def process_match_x01(m):
             # ppi(throw_combo)
 
             if turns['points'] != 0:
-                ambient_x_success = play_sound_effect('ambient_' + str(throw_combo), AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+                ambient_x_success = play_sound_effect('ambient_' + str(throw_combo), AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
                 if ambient_x_success == False:
-                    ambient_x_success = play_sound_effect('ambient_' + str(turns['points']), AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+                    ambient_x_success = play_sound_effect('ambient_' + str(turns['points']), AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
 
             if ambient_x_success == False:
                 if turns['points'] >= 150:
-                    play_sound_effect('ambient_150more', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)   
+                    play_sound_effect('ambient_150more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)   
                 elif turns['points'] >= 120:
-                    play_sound_effect('ambient_120more', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+                    play_sound_effect('ambient_120more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
                 elif turns['points'] >= 100:
-                    play_sound_effect('ambient_100more', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+                    play_sound_effect('ambient_100more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
                 elif turns['points'] >= 50:
-                    play_sound_effect('ambient_50more', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+                    play_sound_effect('ambient_50more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
                 elif turns['points'] >= 1:
-                    play_sound_effect('ambient_1more', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+                    play_sound_effect('ambient_1more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
                 else:
-                    play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+                    play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
 
 
             # Koordinaten der Pfeile
@@ -732,15 +741,15 @@ def process_match_x01(m):
             # ppi("Group-score: " + str(group_score))
 
             if group_score >= 98:
-                play_sound_effect('ambient_group_legendary', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)   
+                play_sound_effect('ambient_group_legendary', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)   
             elif group_score >= 95:
-                play_sound_effect('ambient_group_perfect', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+                play_sound_effect('ambient_group_perfect', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
             elif group_score >= 92:
-                play_sound_effect('ambient_group_very_nice', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+                play_sound_effect('ambient_group_very_nice', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
             elif group_score >= 89:
-                play_sound_effect('ambient_group_good', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+                play_sound_effect('ambient_group_good', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
             elif group_score >= 86:
-                play_sound_effect('ambient_group_normal', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+                play_sound_effect('ambient_group_normal', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
 
         ppi("Turn ended")
 
@@ -810,8 +819,8 @@ def process_match_cricket(m):
             play_sound_effect('gameshot')
         play_sound_effect(currentPlayerName, True)
         if AMBIENT_SOUNDS != 0.0:
-            if play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS) == False:
-                play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+            if play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
+                play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
         setup_caller()
         ppi('Gameshot and match')
 
@@ -841,7 +850,7 @@ def process_match_cricket(m):
         play_sound_effect('gameshot')
         play_sound_effect(currentPlayerName, True)
         if AMBIENT_SOUNDS != 0.0:
-            play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+            play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
         if RANDOM_CALLER_EACH_LEG:
             setup_caller()
         ppi('Gameshot')
@@ -867,8 +876,8 @@ def process_match_cricket(m):
             play_sound_effect('gameon', True)
         # play only if it is a real match not just legs!
         if AMBIENT_SOUNDS != 0.0 and ('legs' in m and 'sets'):
-            if play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS) == False:
-                play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+            if play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
+                play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
         ppi('Matchon')
 
     # Check for gameon
@@ -890,7 +899,7 @@ def process_match_cricket(m):
         play_sound_effect(currentPlayerName, False)
         play_sound_effect('gameon', True)
         if AMBIENT_SOUNDS != 0.0:
-            play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+            play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
         ppi('Gameon')
 
     # Check for busted turn
@@ -908,7 +917,7 @@ def process_match_cricket(m):
 
         play_sound_effect('busted')
         if AMBIENT_SOUNDS != 0.0:
-            play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+            play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
         ppi('Busted')
 
     # Check for 1. Dart
@@ -947,17 +956,17 @@ def process_match_cricket(m):
         play_sound_effect(str(throwPoints))
         if AMBIENT_SOUNDS != 0.0:
             if throwPoints == 0:
-                play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+                play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
             elif throwPoints == 180:
-                play_sound_effect('ambient_180', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+                play_sound_effect('ambient_180', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
             elif throwPoints >= 153:
-                play_sound_effect('ambient_150more', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)   
+                play_sound_effect('ambient_150more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)   
             elif throwPoints >= 120:
-                play_sound_effect('ambient_120more', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+                play_sound_effect('ambient_120more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
             elif throwPoints >= 100:
-                play_sound_effect('ambient_100more', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+                play_sound_effect('ambient_100more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
             elif throwPoints >= 50:
-                play_sound_effect('ambient_50more', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+                play_sound_effect('ambient_50more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
 
         ppi("Turn ended")
     
@@ -985,7 +994,7 @@ def process_match_cricket(m):
         broadcast(dartsPulled)
 
         if AMBIENT_SOUNDS != 0.0:
-            play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volumeMult = AMBIENT_SOUNDS)
+            play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
         
         ppi("Next player")
 
