@@ -1,7 +1,6 @@
-python-keycloak
-websocket-client
+python-keycloak==2.13.2
+websocket-client==1.5.1
 websocket-server==0.6.4
-pygame
-pyinstaller
-download
+pygame==2.3.0
+download==0.3.5
 pycaw; platform_system == "Windows"

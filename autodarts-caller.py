@@ -290,7 +290,7 @@ def setup_caller():
                 sound_list.append(mixer.Sound(sound_file_path))
             caller[1][sound_file_key] = sound_list
 
-        ppi("Your current caller: " + str(os.path.basename(os.path.normpath(caller[0]))) + " knows " + str(len(caller[1].values())) + " Sound-key(s)")
+        ppi("Your current caller: " + str(os.path.basename(os.path.normpath(caller[0]))) + " knows " + str(len(caller[1].values())) + " Sound-file-key(s)")
         # ppi(caller[1])
         caller = caller[1]
 
