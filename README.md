@@ -378,7 +378,7 @@ Make sure the displayed exists! If you rename any of your sound-files you NEED t
 
 ### Sound is not playing?!
 
-- check if the filename is a supported [Sound-file-key](#Sound-file-keys)
+- check that the filename is a supported [Sound-file-key](#Sound-file-keys)
 - Sometimes there are sounds that are not readable. In this case you can convert sound-file(s) with an additional program (https://www.heise.de/download/product/mp3-quality-modifier-66202) Make sure you configurate 44100HZ, Stereo.
 - Check the console output: in case you do not receive any messages (only 'Receiving live information from ..') -> you should check the given Board-ID (-B) for correctness.
 
@@ -398,21 +398,21 @@ Try https://www.audacity.de/ to modify your sound-files.
 1) Create a ZIP archive that contains the following contents:
 
     - **Template file:**
-    A UTF8-(with a BOM)-encoded CSV file (*.csv) (filename can be chosen freely), which is structured as follows:
-    Column 1 contains the phrase a sound file is based on. For example: "The game is over."
-    All further filled columns (separated by semicolon ';') contain [Sound-file-keys](#Sound-file-keys).
-    You can find ready-to-go template-files in 'caller-templates'; you can also create template file and share it with me so that every contributer can use it in future!
+    A UTF8-(with a BOM)-encoded CSV file (*.csv) (filename irrelevant), which is structured as follows:
+    Column 1 contains a phrase that a sound file is based on. For example: "The game is over."
+    All other filled columns (separated by semicolon ';') specify [Sound-file-keys](#Sound-file-keys) that are used by autodarts-caller.
+    You can find ready-to-go template-files in 'caller-templates'-directory.
 
     - **Sounds archive:**
-    A ZIP file (*.zip) (filename: "{speaker name}"-"{m|f}"-"{language}".zip - for example: "max-m-german.zip") containing a folder (filename irrelevant) with the sound files. It should be noted that the sounds MUST be in the same order (when sorted alphabetically) as in the template file; however, the actual filename is completely irrelevant.
+    A ZIP file (*.zip) (filename: "{speaker name}"-"{m|f}"-"{language}".zip - for example: "max-m-german.zip"). This ZIP-file must contain a folder (filename irrelevant). The folder contains the sound-files. It should be noted that the sounds-files MUST be in the same order (when sorted alphabetically) as listed in the template-file; however, the actual filename is completely irrelevant.
 
     - **Source file (optional but desirable):**
-    A text file (*.txt) (filename: freely chosen) containing additional information about the origin of the sound files.
-    Examples: Link to the website where the sounds were generated; specific generation profile for this speaker during generation, etc.
+    A text file (*.txt) (filename: irrelevant) containing additional information about the origin of the sound files.
+    For example you could mention a link where the sounds were generated; a specification of generation-parameters and so on.
 
-2) Upload the ZIP archive to a file-hoster: Make sure you choose a filehoster that supports direct-links and unlimited file-persistence wihout restrictions (GoogleDrive, OneDrive, ...). !!IMPORTANT!! Before you upload, check your rights regarding distribution of the sound-files; are you the owner? Are you allowed to share it in public?
+2) Upload the ZIP archive to a file-hoster: Make sure you choose a filehoster that supports direct-links and UNLIMITED file-persistence without restrictions (GoogleDrive, OneDrive, ...). !!IMPORTANT!! Before you upload, check if you are eligible to distribute the sound-files - Are you the owner? Are you allowed to share it in public?
 
-3) Sent me a PM on Discord with the download-link - Wait for a new release :) 
+3) Sent me a your link by PM on Discord - Wait for a new release :) 
 
 
 

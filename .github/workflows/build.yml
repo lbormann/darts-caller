@@ -39,18 +39,18 @@ jobs:
       matrix:
         include:
           - os: macos-latest
-            TARGET: macos
             CMD_BUILD: >
                 pyinstaller -F -n autodarts-caller -i resources/autodarts-caller.icns autodarts-caller.py &&
-                cd dist/ && 
-                zip -r9 autodarts-caller-mac autodarts-caller/
+                cd dist/ &&
+                zip -r9 autodarts-caller-mac.zip autodarts-caller &&
+                mv autodarts-caller-mac.zip ../
             OUT_FILE_NAME: autodarts-caller-mac.zip
             ASSET_MIME: application/zip
 
           - os: ubuntu-20.04
             TARGET: ubuntu
             CMD_BUILD: pyinstaller -F -n autodarts-caller -i resources/autodarts-caller.svg autodarts-caller.py
-            OUT_FILE_NAME: autodarts-caller
+            OUT_FILE_NAME: autodarts-caller.bin
             ASSET_MIME: application/octet-stream
 
           - os: windows-latest
