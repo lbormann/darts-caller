@@ -38,7 +38,7 @@ logger.addHandler(sh)
 
 
 
-VERSION = '2.1.5'
+VERSION = '2.1.6'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
