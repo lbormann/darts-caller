@@ -38,7 +38,7 @@ logger.addHandler(sh)
 
 
 
-VERSION = '2.1.2'
+VERSION = '2.1.3'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -69,6 +69,7 @@ BOGEY_NUMBERS = [169, 168, 166, 165, 163, 162, 159]
 
 
 CALLER_PROFILES = {
+    # C7
     'charles-m-english-us-canada': 'https://drive.google.com/file/d/1-CrWSFHBoT_I9kzDuo7PR7FLCfEO-Qg-/view?usp=sharing',
     'clint-m-english-us-canada': 'https://drive.google.com/file/d/1-IQ9Bvp1i0jG6Bu9fMWhlbyAj9SkoVGb/view?usp=sharing',
     'alicia-f-english-us-canada': 'https://drive.google.com/file/d/1-Cvk-IczRjOphDOCA14NwE1hy4DAB8Tt/view?usp=sharing',
@@ -76,6 +77,11 @@ CALLER_PROFILES = {
     'kylie-f-english-australia': 'https://drive.google.com/file/d/1-Y6XpdFjOotSLBi0sInf5CGpAAV3mv0b/view?usp=sharing',
     'ruby-f-english-uk': 'https://drive.google.com/file/d/1-kqVwCd4HJes0EVNda5EOF6tTwUxql3z/view?usp=sharing',
     'ethan-m-english-us-canada': 'https://drive.google.com/file/d/106PG96DLzcHHusbQ2zRfub2ZVXbz5TPs/view?usp=sharing',
+    'mitch-m-english-australia': 'https://drive.google.com/file/d/10XEf0okustuoHnu2h_4eqRA6G-2d2mH1/view?usp=sharing',
+    'ava-f-english-us-canada': 'https://drive.google.com/file/d/10XtdjfORUreALkcUxbDhjb0Bo6ym7IDK/view?usp=sharing',
+    'aiden-m-english-uk': 'https://drive.google.com/file/d/10bYvcqp1nzqJnBDC7B6u7s8aequ5wGat/view?usp=sharing',
+    'theo-m-english-uk': 'https://drive.google.com/file/d/10eQaYMZM3tkIA2PIDsb0r-5NhyDU86-C/view?usp=sharing',
+    'emily-f-english-scottish': 'https://drive.google.com/file/d/10mOzTjA5tqBZCKI3EqxJ0YvQptqtMNQg/view?usp=sharing',
 }
 
 

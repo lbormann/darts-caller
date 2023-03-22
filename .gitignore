@@ -6,3 +6,5 @@ caller
 build
 dist
 downloads
+playerlist.txt
+playerlist_sanitized.txt
