@@ -38,7 +38,7 @@ logger.addHandler(sh)
 
 
 
-VERSION = '2.1.0'
+VERSION = '2.1.1'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -287,7 +287,7 @@ def setup_caller():
         for sound_file_key, sound_file_values in caller[1].items():
             sound_list = list()
             for sound_file_path in sound_file_values:
-                sound_list.append(mixer.Sound(sound_file_path))
+                sound_list.append(sound_file_path)
             caller[1][sound_file_key] = sound_list
 
         ppi("Your current caller: " + str(os.path.basename(os.path.normpath(caller[0]))) + " knows " + str(len(caller[1].values())) + " Sound-file-key(s)")
@@ -320,10 +320,10 @@ def play_sound(sound, wait_for_last, volume_mult):
         while mixer.get_busy():
             time.sleep(0.01)
 
+    s = mixer.Sound(sound)
     if AUDIO_CALLER_VOLUME is not None:
-        sound.set_volume(AUDIO_CALLER_VOLUME * volume_mult)
-
-    sound.play()
+        s.set_volume(AUDIO_CALLER_VOLUME * volume_mult)
+    s.play()
     
     # ppi('Playing: "' + sound + '"')
 
