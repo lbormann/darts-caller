@@ -56,8 +56,8 @@ Go to download-directory and type:
 ## SETUP SOUNDS
 
 
-You need to have sounds-files as mp3 or wav. This files have to be named by 1 to 180, gameshot, busted etc. You dont need all files. If you are lazy you can go for 40, 60, 180 or whatever you like. There are a bunch of supported sound-file-keys (just below this section). 
-You can record your voice or download some files in the internet, ie. https://freesound.org, https://www.zapsplat.com, https://mixkit.co/free-sound-effects/hit/ or watchout for pinned messages in Discord. Put all sound files in one folder and if you like create subfolders in this folder for random caller functionality.
+You need to have sounds-files as mp3 or wav. This files have to be named by 1 to 180, gameshot, busted etc. You don't need all files. For instance just go for 40, 60, 180. There are a bunch of [supported Sound-file-keys](#Sound-file-keys). 
+You could record your voice or download some files in the internet, ie. https://freesound.org, https://www.zapsplat.com, https://mixkit.co/free-sound-effects/hit/ or watchout for pinned messages in Discord. Put all sound files in one folder and if you like create subfolders in this folder for random caller functionality.
 
 Note: Since version 2.0.0 there is a build-in download-mechanismn that automatically downloads a bunch of curated caller-voices.
 
@@ -125,7 +125,12 @@ Since Version 1.6.0 you can deposit multiple sounds for EVERY game-event. Theref
 
 ## RUN IT
 
-### Run by executable (Windows)
+You can run by source or download the appropriate, os specific executable.
+
+
+### Run by executable
+
+#### Example: Windows 
 
 Create a shortcut of the executable; right click on the shortcut -> select properties -> add [Arguments](#Arguments) in the target input at the end of the text field.
 
@@ -135,7 +140,9 @@ Save changes.
 Click on the shortcut to start the caller.
 
 
-### Run by source (Linux)
+### Run by source
+
+#### Example: Linux
 
 Copy the default script:
 
@@ -154,8 +161,10 @@ Start the script:
     ./start-custom.sh
 
 
+
 ### Setup autostart [linux] (optional)
 
+There are endless possibilities to manage an autostart. You find two ways to do it (both using the start-custom.sh to run it by source)
 
 #### Using a cronjob
 
@@ -176,7 +185,7 @@ Check log:
 
 
 
-#### Using a desktop-start-task
+#### Using a desktop-start-task (linux with gui only)
 
 if you are facing problems with the crontab-solution try this:
 
@@ -184,7 +193,7 @@ if you are facing problems with the crontab-solution try this:
 
 One can now manually test whether the whole thing starts with the following command (adjust USER):
 
-    xterm -e "cd /home/USER/autodarts-caller && ./start.sh"
+    xterm -e "cd /home/USER/autodarts-caller && ./start-custom.sh"
 
 A terminal-like window should now open with the running program.
 
@@ -436,6 +445,7 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - bot your aiming for (your require ...) but already gameshot (stop running sounds)
 - add ambient_x-pendent for every Main/Every-Dart-Sound
 - ambient_25bullbull fail?
+- Check host-port on start
 
 
 ### Done

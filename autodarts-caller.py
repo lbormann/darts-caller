@@ -331,12 +331,13 @@ def play_sound(sound, wait_for_last, volume_mult):
         s.set_volume(AUDIO_CALLER_VOLUME * volume_mult)
     s.play()
     
-    # ppi('Playing: "' + sound + '"')
+    ppi('Playing: "' + sound + '"')
 
 def play_sound_effect(sound_file_key, wait_for_last = False, volume_mult = 1.0):
     try:
         global caller
         play_sound(random.choice(caller[sound_file_key]), wait_for_last, volume_mult)
+        
         return True
     except Exception as e:
         ppe('Can not play sound for sound-file-key "' + sound_file_key + '" -> Ignore this or check existance; otherwise convert your file appropriate', e)
