@@ -79,6 +79,9 @@ host_port=
 # -DEB
 debug=
 
+# -CC
+cert_check=
+
 # -MIF
 mixer_frequency=
 
@@ -90,6 +93,7 @@ mixer_channels=
 
 # -MIB
 mixer_buffersize=
+
 
 
 
@@ -165,6 +169,9 @@ if [ -n "$host_port" ]; then
 fi
 if [ -n "$debug" ]; then
   args="$args -DEB $debug"
+fi
+if [ -n "$cert_check" ]; then
+  args="$args -DEB $cert_check"
 fi
 if [ -n "$mixer_frequency" ]; then
   args="$args -MIF $mixer_frequency"

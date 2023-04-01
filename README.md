@@ -446,6 +446,8 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - add ambient_x-pendent for every Main/Every-Dart-Sound
 - ambient_25bullbull fail?
 - Check host-port on start
+- Care about blocking python process on shutdown
+- https://discord.com/channels/802528604067201055/955745166134747196/1089977962725650603
 
 
 ### Done

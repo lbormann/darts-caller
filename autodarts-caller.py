@@ -16,6 +16,9 @@ from download import download
 import shutil
 import csv
 import math
+import ssl
+
+
 
 main_directory = os.path.dirname(os.path.realpath(__file__))
 
@@ -38,7 +41,7 @@ logger.addHandler(sh)
 
 
 
-VERSION = '2.1.3'
+VERSION = '2.1.4'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -1111,35 +1114,48 @@ def on_message_client(client, server, message):
         try:
             ppi('CLIENT MESSAGE: ' + str(message))
 
-            receive_local_board_address()
-            if boardManagerAddress != None:
-                if message.startswith('board-start'):
-                    msg_splitted = message.split(':')
+        
+            if message.startswith('board'):
+                receive_local_board_address()
 
-                    wait = 0.1
-                    if len(msg_splitted) > 1:
-                        wait = float(msg_splitted[1])
-                    if wait == 0.0:
-                        wait = 0.5
-                    time.sleep(wait)
-                     
-                    res = requests.put(boardManagerAddress + '/api/detection/start')
-                    # res = requests.put(boardManagerAddress + '/api/start')
-                    # ppi(res)
-                    
-                elif message == 'board-stop':
-                    res = requests.put(boardManagerAddress + '/api/detection/stop')
-                    # res = requests.put(boardManagerAddress + '/api/stop')
-                    # ppi(res)
+                if boardManagerAddress != None:
+                    if message.startswith('board-start'):
+                        msg_splitted = message.split(':')
 
-                elif message == 'board-reset':
-                    res = requests.post(boardManagerAddress + '/api/reset')
-                    # ppi(res)
+                        wait = 0.1
+                        if len(msg_splitted) > 1:
+                            wait = float(msg_splitted[1])
+                        if wait == 0.0:
+                            wait = 0.5
+                        time.sleep(wait)
+                        
+                        res = requests.put(boardManagerAddress + '/api/detection/start')
+                        # res = requests.put(boardManagerAddress + '/api/start')
+                        # ppi(res)
+                        
+                    elif message == 'board-stop':
+                        res = requests.put(boardManagerAddress + '/api/detection/stop')
+                        # res = requests.put(boardManagerAddress + '/api/stop')
+                        # ppi(res)
 
+                    elif message == 'board-reset':
+                        res = requests.post(boardManagerAddress + '/api/reset')
+                        # ppi(res)
+
+                    else:
+                        ppi('This message is not supported')  
                 else:
-                    ppi('This message is not supported')  
-            else:
-                ppi('Can not change board-state as board-address is unknown!')  
+                    ppi('Can not change board-state as board-address is unknown!')  
+
+
+            elif message.startswith('call'):
+                msg_splitted = message.split(':')
+                to_call = msg_splitted[1]
+                call_parts = to_call.split(' ')
+                for cp in call_parts:
+                    play_sound_effect(cp, wait_for_last = True, volume_mult = 1.0)
+        
+
         except Exception as e:
             ppe('WS-Message failed: ', e)
 
@@ -1241,6 +1257,7 @@ if __name__ == "__main__":
     ap.add_argument("-BAV","--background_audio_volume", required=False, type=float, default=0.0, help="Set background-audio-volume between 0.1 (silent) and 1.0 (no mute)")
     ap.add_argument("-HP", "--host_port", required=False, type=int, default=DEFAULT_HOST_PORT, help="Host-Port")
     ap.add_argument("-DEB", "--debug", type=int, choices=range(0, 2), default=False, required=False, help="If '1', the application will output additional information")
+    ap.add_argument("-CC", "--cert_check", type=int, choices=range(0, 2), default=True, required=False, help="If '0', the application won't check any ssl certification")
     ap.add_argument("-MIF", "--mixer_frequency", type=int, required=False, default=DEFAULT_MIXER_FREQUENCY, help="Pygame mixer frequency")
     ap.add_argument("-MIS", "--mixer_size", type=int, required=False, default=DEFAULT_MIXER_SIZE, help="Pygame mixer size")
     ap.add_argument("-MIC", "--mixer_channels", type=int, required=False, default=DEFAULT_MIXER_CHANNELS, help="Pygame mixer channels")
@@ -1275,10 +1292,12 @@ if __name__ == "__main__":
     BACKGROUND_AUDIO_VOLUME = args['background_audio_volume']
     HOST_PORT = args['host_port']
     DEBUG = args['debug']
+    CERT_CHECK = args['cert_check']
     MIXER_FREQUENCY = args['mixer_frequency']
     MIXER_SIZE = args['mixer_size']
     MIXER_CHANNELS = args['mixer_channels']
     MIXER_BUFFERSIZE = args['mixer_buffersize']
+
 
 
     if DEBUG:
@@ -1343,6 +1362,14 @@ if __name__ == "__main__":
     print('RUNNING OS: ' + osType + ' | ' + osName + ' | ' + osRelease)
     print('SUPPORTED GAME-VARIANTS: ' + " ".join(str(x) for x in SUPPORTED_GAME_VARIANTS) )
     print('\r\n')
+
+
+    if CERT_CHECK:
+        ssl._create_default_https_context = ssl.create_default_context
+    else:
+        ppi("WARNING: SSL-cert-verification disabled!")
+        ssl._create_default_https_context = ssl._create_unverified_context
+        
 
 
     if args_post_check == None: 
