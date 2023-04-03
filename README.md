@@ -448,6 +448,7 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - Check host-port on start
 - Care about blocking python process on shutdown
 - https://discord.com/channels/802528604067201055/955745166134747196/1089977962725650603
+- If single-darts is on and last arrow hits; the programm also calls last dart effect / that is ie triple, that coming from curated caller-voices = wrong!
 
 
 ### Done

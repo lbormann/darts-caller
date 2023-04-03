@@ -41,7 +41,7 @@ logger.addHandler(sh)
 
 
 
-VERSION = '2.1.4'
+VERSION = '2.1.5'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -89,10 +89,10 @@ CALLER_PROFILES = {
 
 
 
-def ppi(message, info_object = None):
-    logger.info('\r\n>>> ' + str(message))
+def ppi(message, info_object = None, prefix = '\r\n'):
+    logger.info(prefix + str(message))
     if info_object != None:
-        print(str(info_object))
+        logger.info(str(info_object))
     
 def ppe(message, error_object):
     ppi(message)
@@ -278,14 +278,14 @@ def setup_caller():
         wished_caller = CALLER.lower()
         for c in callers:
             caller_name = os.path.basename(os.path.normpath(c[0])).lower()
-            print(caller_name)
+            ppi(caller_name, None, '')
             if caller == None and caller_name == wished_caller:
                 caller = c
 
     else:
         for c in callers: 
             caller_name = os.path.basename(os.path.normpath(c[0])).lower()
-            print(caller_name)
+            ppi(caller_name, None, '')
 
         if RANDOM_CALLER == False:
             caller = callers[0]
@@ -1354,14 +1354,14 @@ if __name__ == "__main__":
     osType = plat
     osName = os.name
     osRelease = platform.release()
-    print('\r\n')
-    print('##########################################')
-    print('       WELCOME TO AUTODARTS-CALLER')
-    print('##########################################')
-    print('VERSION: ' + VERSION)
-    print('RUNNING OS: ' + osType + ' | ' + osName + ' | ' + osRelease)
-    print('SUPPORTED GAME-VARIANTS: ' + " ".join(str(x) for x in SUPPORTED_GAME_VARIANTS) )
-    print('\r\n')
+    ppi('\r\n', None, '')
+    ppi('##########################################', None, '')
+    ppi('       WELCOME TO AUTODARTS-CALLER', None, '')
+    ppi('##########################################', None, '')
+    ppi('VERSION: ' + VERSION, None, '')
+    ppi('RUNNING OS: ' + osType + ' | ' + osName + ' | ' + osRelease, None, '')
+    ppi('SUPPORTED GAME-VARIANTS: ' + " ".join(str(x) for x in SUPPORTED_GAME_VARIANTS), None, '')
+    ppi('\r\n', None, '')
 
 
     if CERT_CHECK:
