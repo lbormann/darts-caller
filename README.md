@@ -23,6 +23,11 @@ Tested on Windows 10 & 11 Pro x64, Python 3.9.7 and Raspberry pi 4B 4GB, Python 
 
 ## INSTALL INSTRUCTION
 
+### Desktop-OS (cross-platform | Windows - Linux - MacOS)
+
+- If you're running a desktop-driven OS (GUI) it's recommended to use autodarts-desktop: https://github.com/lbormann/autodarts-desktop
+
+
 ### Windows
 
 - Download the executable in the release section.
@@ -445,10 +450,10 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - bot your aiming for (your require ...) but already gameshot (stop running sounds)
 - add ambient_x-pendent for every Main/Every-Dart-Sound
 - ambient_25bullbull fail?
+- If single-darts is on and last arrow hits; the programm also calls last dart effect / that is ie triple, 
+  that coming from curated caller-voices = wrong!
 - Check host-port on start
 - Care about blocking python process on shutdown
-- https://discord.com/channels/802528604067201055/955745166134747196/1089977962725650603
-- If single-darts is on and last arrow hits; the programm also calls last dart effect / that is ie triple, that coming from curated caller-voices = wrong!
 
 
 ### Done
@@ -491,7 +496,7 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - consider x.leg/set -> Gameshot / !x_leg! / player
 - add ambient_group_level
 - prohibit -M and -MS in main-directory; prohibit -MS in -M
-
+- https://discord.com/channels/802528604067201055/955745166134747196/1089977962725650603
 
 
 ## LAST WORDS

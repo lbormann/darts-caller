@@ -41,7 +41,7 @@ logger.addHandler(sh)
 
 
 
-VERSION = '2.1.5'
+VERSION = '2.1.6'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -49,7 +49,7 @@ DEFAULT_CALLER = None
 DEFAULT_DOWNLOADS = True
 
 DEFAULT_DOWNLOADS_LIMIT = 0
-DEFAULT_DOWNLOADS_PATH = 'downloads'
+DEFAULT_DOWNLOADS_PATH = 'caller-downloads-temp'
 DEFAULT_EMPTY_PATH = ''
 DEFAULT_MIXER_FREQUENCY = 44100
 DEFAULT_MIXER_SIZE = 32
@@ -1305,17 +1305,20 @@ if __name__ == "__main__":
         ppi(json.dumps(args, indent=4))
     
     args_post_check = None
-    if os.path.commonpath([AUDIO_MEDIA_PATH, main_directory]) == main_directory:
-        args_post_check = 'AUDIO_MEDIA_PATH resides inside MAIN-CALLER-DIRECTORY! It is not allowed!'
-    if AUDIO_MEDIA_PATH_SHARED != DEFAULT_EMPTY_PATH:
-        if os.path.commonpath([AUDIO_MEDIA_PATH_SHARED, main_directory]) == main_directory:
-            args_post_check = 'AUDIO_MEDIA_PATH_SHARED resides inside MAIN-CALLER-DIRECTORY! It is not allowed!'
-        elif os.path.commonpath([AUDIO_MEDIA_PATH_SHARED, AUDIO_MEDIA_PATH]) == AUDIO_MEDIA_PATH:
-            args_post_check = 'AUDIO_MEDIA_PATH_SHARED resides inside AUDIO_MEDIA_PATH! It is not allowed!'
-        elif os.path.commonpath([AUDIO_MEDIA_PATH, AUDIO_MEDIA_PATH_SHARED]) == AUDIO_MEDIA_PATH_SHARED:
-            args_post_check = 'AUDIO_MEDIA_PATH resides inside AUDIO_MEDIA_SHARED! It is not allowed!'
-        elif AUDIO_MEDIA_PATH == AUDIO_MEDIA_PATH_SHARED:
-            args_post_check = 'AUDIO_MEDIA_PATH is equal to AUDIO_MEDIA_SHARED! It is not allowed!'
+    try:
+        if os.path.commonpath([AUDIO_MEDIA_PATH, main_directory]) == main_directory:
+            args_post_check = 'AUDIO_MEDIA_PATH resides inside MAIN-CALLER-DIRECTORY! It is not allowed!'
+        if AUDIO_MEDIA_PATH_SHARED != DEFAULT_EMPTY_PATH:
+            if os.path.commonpath([AUDIO_MEDIA_PATH_SHARED, main_directory]) == main_directory:
+                args_post_check = 'AUDIO_MEDIA_PATH_SHARED resides inside MAIN-CALLER-DIRECTORY! It is not allowed!'
+            elif os.path.commonpath([AUDIO_MEDIA_PATH_SHARED, AUDIO_MEDIA_PATH]) == AUDIO_MEDIA_PATH:
+                args_post_check = 'AUDIO_MEDIA_PATH_SHARED resides inside AUDIO_MEDIA_PATH! It is not allowed!'
+            elif os.path.commonpath([AUDIO_MEDIA_PATH, AUDIO_MEDIA_PATH_SHARED]) == AUDIO_MEDIA_PATH_SHARED:
+                args_post_check = 'AUDIO_MEDIA_PATH resides inside AUDIO_MEDIA_SHARED! It is not allowed!'
+            elif AUDIO_MEDIA_PATH == AUDIO_MEDIA_PATH_SHARED:
+                args_post_check = 'AUDIO_MEDIA_PATH is equal to AUDIO_MEDIA_SHARED! It is not allowed!'
+    except:
+        pass
     
     
     global server
