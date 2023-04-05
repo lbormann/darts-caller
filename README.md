@@ -429,12 +429,6 @@ Try https://www.audacity.de/ to modify your sound-files.
 3) Sent me a your link by PM on Discord - Wait for a new release :) 
 
 
-
-## HELPERS
-
-If you think it is terrible to configure/start/handling this application then go for autodarts-desktop https://github.com/Semtexmagix/autodarts-desktop
-
-
 ## BUGS
 
 It may be buggy. I've just coded it for fast fun with https://autodarts.io. You can give me feedback in Discord > wusaaa

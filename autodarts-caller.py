@@ -1153,7 +1153,7 @@ def on_message_client(client, server, message):
                 to_call = msg_splitted[1]
                 call_parts = to_call.split(' ')
                 for cp in call_parts:
-                    play_sound_effect(cp, wait_for_last = True, volume_mult = 1.0)
+                    play_sound_effect(cp, wait_for_last = False, volume_mult = 1.0)
         
 
         except Exception as e:
