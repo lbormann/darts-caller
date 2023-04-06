@@ -1,11 +1,7 @@
 # AUTODARTS-CALLER
-
-[![Release](https://img.shields.io/github/release/lbormann/autodarts-caller.svg)](https://github.com/lbormann/autodarts-caller/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/lbormann/autodarts-caller/total)](https://github.com/lbormann/autodarts-caller/releases/latest)
 
-
 Autodarts-caller plays sound-files on your local system accordingly to the state of an https://autodarts.io game. Furthermore it acts as a central hub by forwarding game-events to connected clients like https://github.com/lbormann/autodarts-extern that process the incoming data to automate other web-dart-platforms like https://lidarts.org
-
 
 Tested on Windows 10 & 11 Pro x64, Python 3.9.7 and Raspberry pi 4B 4GB, Python 3.9.7
 
