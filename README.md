@@ -1,7 +1,7 @@
 # AUTODARTS-CALLER
 [![Downloads](https://img.shields.io/github/downloads/lbormann/autodarts-caller/total.svg)](https://github.com/lbormann/autodarts-caller/releases/latest)
 
-Autodarts-caller plays sound-files on your local system accordingly to the state of an https://autodarts.io game. Furthermore it acts as a central hub by forwarding game-events to connected clients like https://github.com/lbormann/autodarts-extern that process the incoming data to automate other web-dart-platforms like https://lidarts.org
+Autodarts-caller plays back sound-files accordingly to the state of a https://autodarts.io game. Furthermore it acts as a central hub by forwarding game-events to connected clients like https://github.com/lbormann/autodarts-extern that process incoming data to automate other web-dart-platforms like https://lidarts.org
 
 Tested on Windows 10 & 11 Pro x64, Python 3.9.7 and Raspberry pi 4B 4GB, Python 3.9.7
 
@@ -267,6 +267,7 @@ Check log:
 - -DLL / --downloads_limit [Default: 0]
 - -DLP / --downloads_path [Default: 'download']
 - -BAV / --background_audio_volume [Default: 0.0] [Possible values: 0.0 .. 1.0]
+- -WEB / --web_caller [Default: 0] [Possible values: 0,1,2]
 - -HP / --host_port [Default: 8079]
 
 
@@ -286,7 +287,7 @@ You can find your Board-ID in Board-Manager.
 
 #### **-M / --media_path**
 
-You need to set an absolute Path to your media-file-directory, otherwise you won`t notice any calls. Make sure your sound-files are in a supported file-format (mp3,wav). Moreover make sure the given path doesn't reside inside main-directory (autodarts-caller).
+You need to set an absolute path to your media-file-directory, otherwise you won`t notice any calls. Make sure your sound-files are in a supported file-format (mp3,wav). Moreover make sure the given path doesn't reside inside main-directory (autodarts-caller).
 
 #### **-MS / --media_path_shared**
 
@@ -353,6 +354,10 @@ In case you face problems with caller-voices-downloads try to change the downloa
 #### **-BAV / --background_audio_volume**
 
 You can not hear any calls as your music is way too loud? Try to set this to '0.03' and let the calls begin :) Default is '0.0' (no background-audio-muting). Note: Only availble on windows-os.
+
+#### **-WEB / --web_caller**
+
+If you set this to a '1' or '2' the app will host a web-endpoint to transfer every calling-action to connected devices. A value '1' will play sounds only on connected devices. Value '2' will play locally and on connected devices.
 
 #### **-HP / --host_port**
 
@@ -448,6 +453,11 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
   that coming from curated caller-voices = wrong!
 - Check host-port on start
 - Care about blocking python process on shutdown
+- improve and prettify json
+- cert expired error
+- not only 0.0.0.0 (web-caller not reachable)
+- play multiple sounds (blocks wait for)
+- connects when server crashed before?
 
 
 ### Done
@@ -491,6 +501,7 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - add ambient_group_level
 - prohibit -M and -MS in main-directory; prohibit -MS in -M
 - https://discord.com/channels/802528604067201055/955745166134747196/1089977962725650603
+- adds web-caller
 
 
 ## LAST WORDS

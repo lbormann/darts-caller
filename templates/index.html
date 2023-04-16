@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Darts-caller</title>
+    <style>
+        
+        .success{
+            color: greenyellow;
+        }
+        .failure{
+            color: red;
+        }
+        body{
+            text-align: center;
+            background-color: black;
+            color: white
+        }
+        button{
+            width: 100%;
+            height: 100px;
+            font-size: 50pt;
+            background-color: orangered;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <button id="button">Click me to start calling!</button>
+    <audio id="audio" preload="auto"></audio>
+    <h1 id="status" style="visibility:hidden;">Disconnected!</h1>
+    <h1 id="last-call" style="visibility:hidden;">Waiting for calls ..</h1>
+
+    <script>
+        let socket;
+        let reconnectInterval = 1000; 
+        const audio = document.getElementById('audio');
+        const button = document.getElementById('button');
+        const state = document.getElementById('status');
+        const lastCall = document.getElementById('last-call');
+        const soundCache = {};
+
+        button.addEventListener('click', onButtonClick);
+        function onButtonClick() {
+            // This will allow us to play audio later...
+            audio.load();
+            //playSound("start");
+            button.style.visibility='hidden'; 
+            state.style.visibility='visible'; 
+            lastCall.style.visibility='visible'; 
+            setupWebSocketConnection();            
+        }
+
+
+        
+        const soundQueue = [];
+        let isPlaying = false;
+
+        function addToQueue(data) {
+            soundQueue.push(data);
+            if (!isPlaying) {
+                playNextSound();
+            }
+        }
+
+        async function playNextSound() {
+            if (soundQueue.length === 0) {
+                isPlaying = false;
+                return;
+            }
+            // isPlaying = true;
+            const data = soundQueue.shift();
+            await playSound(data);
+            playNextSound();
+        }
+
+        function setupWebSocketConnection() {
+            // TODO 
+            socket = new WebSocket("ws://192.168.3.19:8079");
+            socket.onopen = function() {
+                console.log("Socket: connected!");
+                state.innerText = "CONNECTED!";
+                state.classList = "success";
+            };
+            socket.onclose = function() {
+                console.log("Socket: disconnected!");
+                state.innerText = "DISCONNECTED!";
+                state.classList = "failure";
+                setTimeout(setupWebSocketConnection, reconnectInterval);
+            };
+            socket.onmessage = function(event) {
+                let data = JSON.parse(event.data);
+                if (data.event === "mirror") {
+                    // playSound(data);
+                    addToQueue(data);
+                }
+            };
+        }
+        
+
+        async function loadSound(file) {
+            if (soundCache[file]) {
+                // Sound ist bereits im Cache, verwende die vorhandene Blob-URL
+                return soundCache[file];
+            }
+
+            // Sound ist noch nicht im Cache, lade ihn und speichere ihn im Cache
+            const response = await fetch(`/sounds/${file}`);
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            soundCache[file] = url;
+
+            return url;
+        }
+
+        async function playSound(data) {
+            console.log("Play sound: ", data.file);
+            lastCall.innerText = "Play: " + unescape(data.file);
+
+            function isAudioPlaying() {
+                audioElement = document.getElementById('audio');
+                return !audioElement.paused && audioElement.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA;
+            }
+
+            async function waitForAudioEnd() {
+                return new Promise(async (resolve) => {
+                    while (isAudioPlaying()) {
+                        await new Promise((r) => setTimeout(r, 100));
+                    }
+                    resolve();
+                });
+            }
+
+            // Funktion, um zu warten, bis das aktuelle Audio abgeschlossen ist
+            // async function waitForAudioEnd() {
+            //     return new Promise((resolve) => {
+            //         if (audio.paused) {
+            //             resolve();
+            //         } else {
+            //             audio.addEventListener('ended', resolve, { once: true });
+            //         }
+            //     });
+            // }
+
+            try {
+                // Prüfen, ob auf das Ende des aktuellen Audios gewartet werden soll
+                if (data.wait = true || data.wait == "true") {
+                    console.log('HELLO HIER WIRD GEWARTET!');
+                    await waitForAudioEnd();
+                }
+
+
+                const soundUrl = await loadSound(data.file);
+                audio.src = soundUrl;
+                await audio.play();
+
+
+                // await fetch(`/sounds/${data.file}`)
+                //     .then(response => response.blob())
+                //     .then(blob => {
+                //         const url = URL.createObjectURL(blob);
+                //         audio.src = url;
+                //         return new Promise((resolve, reject) => {
+                //             audio.addEventListener('canplaythrough', () => {
+                //                 resolve(audio.play());
+                //             }, { once: true });
+                //             audio.addEventListener('error', (e) => {
+                //                 reject(e);
+                //             }, { once: true });
+                //         });
+                //     });
+         
+            } catch (e) {
+                console.log("playback-error: ", e);
+            }
+        }
+
+        // function playSound(data) {
+        //     var str = "Play: " + unescape(data.file);
+        //     console.log(str);
+        //     lastCall.innerText = str;
+
+        //     // Funktion, um zu warten, bis das aktuelle Audio abgeschlossen ist
+        //     function waitForAudioEnd() {
+        //         return new Promise(async (resolve) => {
+        //             while (!audio.paused) {
+        //                 console.log('Waiting for current audio-play..');
+        //                 await new Promise((r) => setTimeout(r, 10));
+        //             }
+        //             resolve();
+        //         });
+        //         // return new Promise((resolve) => {
+        //         //     if (audio.paused) {
+        //         //         resolve();
+        //         //     } else {
+        //         //         audio.addEventListener('ended', resolve, { once: true });
+        //         //     }
+        //         // });
+        //     }
+
+        //     // Prüfen, ob auf das Ende des aktuellen Audios gewartet werden soll
+        //     console.log(data.wait);
+        //     const waitPromise = data.wait ? waitForAudioEnd() : Promise.resolve();
+
+        //     waitPromise
+        //         .then(() => {
+        //             return fetch(`/sounds/${data.file}`);
+        //         })
+        //         .then(response => response.blob())
+        //         .then(blob => {
+        //             const url = URL.createObjectURL(blob);
+        //             audio.src = url;
+        //             return audio.play();
+        //         })
+        //         .then(_ => {
+        //             // Wiedergabe gestartet
+        //         })
+        //         .catch(e => {
+        //             console.log("playback-error: ", e);
+        //         });
+        // }
+
+        // function playSound(file) {
+        //     let audio = document.getElementById("audio");
+        //     if (audio) {
+        //         audio.src = `/sounds/${file}`;
+        //         audio.play();
+        //     } else {
+        //         console.error("Audio-Element nicht gefunden");
+        //     }
+        // }
+
+        // function playSound(data) {
+        //     console.log("Play sound: ", data.file);
+        //     lastCall.innerText = "Play: " + unescape(data.file);
+        //     fetch(`/sounds/${data.file}`)
+        //     .then(response => response.blob())
+        //     .then(blob => {
+        //         const url = URL.createObjectURL(blob);
+        //         audio.src = url;
+        //         return audio.play();
+        //     // audio.srcObject = blob;
+        //     // return audio.play();
+        //     })
+        //     .then(_ => {
+        //     // playback started ;)
+        //     })
+        //     .catch(e => {
+        //         console.log("playback-error: ", e);
+        //     })
+        // }
+
+
+
+
+        // window.onload = function() {
+        //     setupWebSocketConnection();
+        // };
+    </script>
+
+</body>
+
+</html>

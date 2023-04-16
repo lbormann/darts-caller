@@ -73,6 +73,9 @@ downloads_limit=
 # -DLP
 downloads_path=
 
+# -WEB
+web_caller=
+
 # -HP
 host_port=
 
@@ -164,6 +167,9 @@ fi
 #if [ -n "$background_audio_volume" ]; then
 #  args="$args -BAV $background_audio_volume"
 #fi
+if [ -n "$web_caller" ]; then
+  args="$args -WEB $web_caller"
+fi
 if [ -n "$host_port" ]; then
   args="$args -HP $host_port"
 fi

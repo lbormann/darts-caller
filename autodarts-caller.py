@@ -17,10 +17,8 @@ import shutil
 import csv
 import math
 import ssl
-
-
-
-main_directory = os.path.dirname(os.path.realpath(__file__))
+from urllib.parse import quote, unquote
+from flask import Flask, render_template, send_from_directory
 
 plat = platform.system()
 if plat == 'Windows':
@@ -36,12 +34,16 @@ logger.handlers.clear()
 logger.setLevel(logging.INFO)
 logger.addHandler(sh)
 
+app = Flask(__name__)
+main_directory = os.path.dirname(os.path.realpath(__file__))
 
 
 
 
 
-VERSION = '2.1.6'
+
+
+VERSION = '2.2.0'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -325,15 +327,24 @@ def receive_local_board_address():
 
 
 def play_sound(sound, wait_for_last, volume_mult):
-    if wait_for_last == True:
-        while mixer.get_busy():
-            time.sleep(0.01)
+    if WEB == 1 or WEB == 2:
+        mirror = {
+                "event": "mirror",
+                "file": quote(sound, safe=""),
+                "wait": wait_for_last
+            }
+        broadcast(mirror)
 
-    s = mixer.Sound(sound)
-    if AUDIO_CALLER_VOLUME is not None:
-        s.set_volume(AUDIO_CALLER_VOLUME * volume_mult)
-    s.play()
-    
+    if WEB == 0 or WEB == 2:
+        if wait_for_last == True:
+            while mixer.get_busy():
+                time.sleep(0.01)
+
+        s = mixer.Sound(sound)
+        if AUDIO_CALLER_VOLUME is not None:
+            s.set_volume(AUDIO_CALLER_VOLUME * volume_mult)
+        s.play()
+
     ppi('Playing: "' + sound + '"')
 
 def play_sound_effect(sound_file_key, wait_for_last = False, volume_mult = 1.0):
@@ -671,7 +682,6 @@ def process_match_x01(m):
                 "pointsLeft": str(remainingPlayerScore),
                 "dartNumber": "3",
                 "dartValue": points,        
-
             }
         }
         broadcast(dartsThrown)
@@ -1159,7 +1169,7 @@ def on_message_client(client, server, message):
         except Exception as e:
             ppe('WS-Message failed: ', e)
 
-    threading.Thread(target=process).start()
+    t = threading.Thread(target=process).start()
 
 def on_left_client(client, server):
     ppi('CLIENT DISCONNECTED: ' + str(client))
@@ -1168,7 +1178,9 @@ def broadcast(data):
     def process(*args):
         global server
         server.send_message_to_all(json.dumps(data, indent=2).encode('utf-8'))
-    threading.Thread(target=process).start()
+    t = threading.Thread(target=process)
+    t.start()
+    t.join()
    
 
 
@@ -1231,6 +1243,31 @@ def mute_background(mute_vol):
 
 
 
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/sounds/<path:file_id>', methods=['GET'])
+def sound(file_id):
+    file_id = unquote(file_id)
+    directory = os.path.dirname(file_id)
+    file_name = os.path.basename(file_id)
+    return send_from_directory(directory, file_name)
+
+
+def start_websocket_server(host, port):
+    global server
+    server = WebsocketServer(host=host, port=port, loglevel=logging.ERROR)
+    server.set_fn_new_client(on_open_client)
+    server.set_fn_client_left(on_left_client)
+    server.set_fn_message_received(on_message_client)
+    server.run_forever()
+
+def start_flask_app():
+    app.run(host='192.168.3.19', port='5000', debug=False)
+
+
 if __name__ == "__main__":
 
     ap = argparse.ArgumentParser()
@@ -1255,6 +1292,7 @@ if __name__ == "__main__":
     ap.add_argument("-DLL", "--downloads_limit", type=int, default=DEFAULT_DOWNLOADS_LIMIT, required=False, help="If '1', the application will try to download a only the X newest caller-voices. -DLN needs to be activated.")
     ap.add_argument("-DLP", "--downloads_path", required=False, default=DEFAULT_DOWNLOADS_PATH, help="Absolute path for temporarly downloads")
     ap.add_argument("-BAV","--background_audio_volume", required=False, type=float, default=0.0, help="Set background-audio-volume between 0.1 (silent) and 1.0 (no mute)")
+    ap.add_argument("-WEB", "--web_caller", required=False, type=int, choices=range(0, 3), default=0, help="If '1' the application will host an web-endpoint, '2' it will do '1' and default caller-functionality.")
     ap.add_argument("-HP", "--host_port", required=False, type=int, default=DEFAULT_HOST_PORT, help="Host-Port")
     ap.add_argument("-DEB", "--debug", type=int, choices=range(0, 2), default=False, required=False, help="If '1', the application will output additional information")
     ap.add_argument("-CC", "--cert_check", type=int, choices=range(0, 2), default=True, required=False, help="If '0', the application won't check any ssl certification")
@@ -1290,6 +1328,7 @@ if __name__ == "__main__":
     if DOWNLOADS_LIMIT < 0: DOWNLOADS_LIMIT = 0
     DOWNLOADS_PATH = args['downloads_path']
     BACKGROUND_AUDIO_VOLUME = args['background_audio_volume']
+    WEB = args['web_caller']
     HOST_PORT = args['host_port']
     DEBUG = args['debug']
     CERT_CHECK = args['cert_check']
@@ -1307,10 +1346,10 @@ if __name__ == "__main__":
     args_post_check = None
     try:
         if os.path.commonpath([AUDIO_MEDIA_PATH, main_directory]) == main_directory:
-            args_post_check = 'AUDIO_MEDIA_PATH resides inside MAIN-CALLER-DIRECTORY! It is not allowed!'
+            args_post_check = 'AUDIO_MEDIA_PATH resides inside MAIN-DIRECTORY! It is not allowed!'
         if AUDIO_MEDIA_PATH_SHARED != DEFAULT_EMPTY_PATH:
             if os.path.commonpath([AUDIO_MEDIA_PATH_SHARED, main_directory]) == main_directory:
-                args_post_check = 'AUDIO_MEDIA_PATH_SHARED resides inside MAIN-CALLER-DIRECTORY! It is not allowed!'
+                args_post_check = 'AUDIO_MEDIA_PATH_SHARED resides inside MAIN-DIRECTORY! It is not allowed!'
             elif os.path.commonpath([AUDIO_MEDIA_PATH_SHARED, AUDIO_MEDIA_PATH]) == AUDIO_MEDIA_PATH:
                 args_post_check = 'AUDIO_MEDIA_PATH_SHARED resides inside AUDIO_MEDIA_PATH! It is not allowed!'
             elif os.path.commonpath([AUDIO_MEDIA_PATH, AUDIO_MEDIA_PATH_SHARED]) == AUDIO_MEDIA_PATH_SHARED:
@@ -1400,11 +1439,19 @@ if __name__ == "__main__":
             try:  
                 connect_autodarts()
 
-                server = WebsocketServer(host=DEFAULT_HOST_IP, port=HOST_PORT, loglevel=logging.ERROR)
-                server.set_fn_new_client(on_open_client)
-                server.set_fn_client_left(on_left_client)
-                server.set_fn_message_received(on_message_client)
-                server.run_forever()
+                # TODO: 192.168.3.19
+                websocket_server_thread = threading.Thread(target=start_websocket_server, args=('0.0.0.0', HOST_PORT))
+                websocket_server_thread.start()
+
+                if WEB > 0:
+                    flask_app_thread = threading.Thread(target=start_flask_app)
+                    flask_app_thread.start()
+
+                websocket_server_thread.join()
+
+                if WEB > 0:
+                    flask_app_thread.join() 
+
             except Exception as e:
                 ppe("Connect failed: ", e)
    
