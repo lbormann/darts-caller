@@ -9,6 +9,7 @@ from keycloak import KeycloakOpenID
 import requests
 from pygame import mixer
 import websocket
+import socket
 from websocket_server import WebsocketServer
 import threading
 import logging
@@ -17,6 +18,7 @@ import shutil
 import csv
 import math
 import ssl
+import sys
 from urllib.parse import quote, unquote
 from flask import Flask, render_template, send_from_directory
 
@@ -101,6 +103,13 @@ def ppe(message, error_object):
     if DEBUG:
         logger.exception("\r\n" + str(error_object))
 
+def get_local_ip_address():
+    try:
+        hostname = socket.gethostname()
+        ip_address = socket.gethostbyname(hostname)
+    except:
+        ip_address = DEFAULT_HOST_IP
+    return ip_address
 
 
 def download_callers(): 
@@ -327,7 +336,7 @@ def receive_local_board_address():
 
 
 def play_sound(sound, wait_for_last, volume_mult):
-    if WEB == 1 or WEB == 2:
+    if WEB > 0:
         mirror = {
                 "event": "mirror",
                 "file": quote(sound, safe=""),
@@ -1246,13 +1255,18 @@ def mute_background(mute_vol):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', host=WEB_HOST)
 
 @app.route('/sounds/<path:file_id>', methods=['GET'])
 def sound(file_id):
     file_id = unquote(file_id)
-    directory = os.path.dirname(file_id)
-    file_name = os.path.basename(file_id)
+    if getattr(sys, 'frozen', False):
+        main_directory = os.path.dirname(sys.executable)
+    else:
+        main_directory = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(main_directory, file_id)
+    directory = os.path.dirname(file_path)
+    file_name = os.path.basename(file_path)
     return send_from_directory(directory, file_name)
 
 
@@ -1439,11 +1453,11 @@ if __name__ == "__main__":
             try:  
                 connect_autodarts()
 
-                # TODO: 192.168.3.19
-                websocket_server_thread = threading.Thread(target=start_websocket_server, args=('0.0.0.0', HOST_PORT))
+                websocket_server_thread = threading.Thread(target=start_websocket_server, args=(DEFAULT_HOST_IP, HOST_PORT))
                 websocket_server_thread.start()
 
                 if WEB > 0:
+                    WEB_HOST = get_local_ip_address()
                     flask_app_thread = threading.Thread(target=start_flask_app)
                     flask_app_thread.start()
 

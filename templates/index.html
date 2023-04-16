@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Darts-caller</title>
+    <title>autodarts-caller</title>
     <style>
-        
         .success{
             color: greenyellow;
         }
@@ -41,10 +40,12 @@
         const state = document.getElementById('status');
         const lastCall = document.getElementById('last-call');
         const soundCache = {};
-
+        const soundQueue = [];
+        let isPlaying = false;
         button.addEventListener('click', onButtonClick);
+
+
         function onButtonClick() {
-            // This will allow us to play audio later...
             audio.load();
             //playSound("start");
             button.style.visibility='hidden'; 
@@ -52,11 +53,6 @@
             lastCall.style.visibility='visible'; 
             setupWebSocketConnection();            
         }
-
-
-        
-        const soundQueue = [];
-        let isPlaying = false;
 
         function addToQueue(data) {
             soundQueue.push(data);
@@ -77,8 +73,7 @@
         }
 
         function setupWebSocketConnection() {
-            // TODO 
-            socket = new WebSocket("ws://192.168.3.19:8079");
+            socket = new WebSocket("ws://{{ host }}:8079");
             socket.onopen = function() {
                 console.log("Socket: connected!");
                 state.innerText = "CONNECTED!";
@@ -99,19 +94,14 @@
             };
         }
         
-
         async function loadSound(file) {
             if (soundCache[file]) {
-                // Sound ist bereits im Cache, verwende die vorhandene Blob-URL
                 return soundCache[file];
             }
-
-            // Sound ist noch nicht im Cache, lade ihn und speichere ihn im Cache
             const response = await fetch(`/sounds/${file}`);
             const blob = await response.blob();
             const url = URL.createObjectURL(blob);
             soundCache[file] = url;
-
             return url;
         }
 
@@ -127,133 +117,23 @@
             async function waitForAudioEnd() {
                 return new Promise(async (resolve) => {
                     while (isAudioPlaying()) {
-                        await new Promise((r) => setTimeout(r, 100));
+                        await new Promise((r) => setTimeout(r, 10));
                     }
                     resolve();
                 });
             }
 
-            // Funktion, um zu warten, bis das aktuelle Audio abgeschlossen ist
-            // async function waitForAudioEnd() {
-            //     return new Promise((resolve) => {
-            //         if (audio.paused) {
-            //             resolve();
-            //         } else {
-            //             audio.addEventListener('ended', resolve, { once: true });
-            //         }
-            //     });
-            // }
-
             try {
-                // Prüfen, ob auf das Ende des aktuellen Audios gewartet werden soll
                 if (data.wait = true || data.wait == "true") {
-                    console.log('HELLO HIER WIRD GEWARTET!');
                     await waitForAudioEnd();
                 }
-
-
                 const soundUrl = await loadSound(data.file);
                 audio.src = soundUrl;
                 await audio.play();
-
-
-                // await fetch(`/sounds/${data.file}`)
-                //     .then(response => response.blob())
-                //     .then(blob => {
-                //         const url = URL.createObjectURL(blob);
-                //         audio.src = url;
-                //         return new Promise((resolve, reject) => {
-                //             audio.addEventListener('canplaythrough', () => {
-                //                 resolve(audio.play());
-                //             }, { once: true });
-                //             audio.addEventListener('error', (e) => {
-                //                 reject(e);
-                //             }, { once: true });
-                //         });
-                //     });
-         
             } catch (e) {
                 console.log("playback-error: ", e);
             }
         }
-
-        // function playSound(data) {
-        //     var str = "Play: " + unescape(data.file);
-        //     console.log(str);
-        //     lastCall.innerText = str;
-
-        //     // Funktion, um zu warten, bis das aktuelle Audio abgeschlossen ist
-        //     function waitForAudioEnd() {
-        //         return new Promise(async (resolve) => {
-        //             while (!audio.paused) {
-        //                 console.log('Waiting for current audio-play..');
-        //                 await new Promise((r) => setTimeout(r, 10));
-        //             }
-        //             resolve();
-        //         });
-        //         // return new Promise((resolve) => {
-        //         //     if (audio.paused) {
-        //         //         resolve();
-        //         //     } else {
-        //         //         audio.addEventListener('ended', resolve, { once: true });
-        //         //     }
-        //         // });
-        //     }
-
-        //     // Prüfen, ob auf das Ende des aktuellen Audios gewartet werden soll
-        //     console.log(data.wait);
-        //     const waitPromise = data.wait ? waitForAudioEnd() : Promise.resolve();
-
-        //     waitPromise
-        //         .then(() => {
-        //             return fetch(`/sounds/${data.file}`);
-        //         })
-        //         .then(response => response.blob())
-        //         .then(blob => {
-        //             const url = URL.createObjectURL(blob);
-        //             audio.src = url;
-        //             return audio.play();
-        //         })
-        //         .then(_ => {
-        //             // Wiedergabe gestartet
-        //         })
-        //         .catch(e => {
-        //             console.log("playback-error: ", e);
-        //         });
-        // }
-
-        // function playSound(file) {
-        //     let audio = document.getElementById("audio");
-        //     if (audio) {
-        //         audio.src = `/sounds/${file}`;
-        //         audio.play();
-        //     } else {
-        //         console.error("Audio-Element nicht gefunden");
-        //     }
-        // }
-
-        // function playSound(data) {
-        //     console.log("Play sound: ", data.file);
-        //     lastCall.innerText = "Play: " + unescape(data.file);
-        //     fetch(`/sounds/${data.file}`)
-        //     .then(response => response.blob())
-        //     .then(blob => {
-        //         const url = URL.createObjectURL(blob);
-        //         audio.src = url;
-        //         return audio.play();
-        //     // audio.srcObject = blob;
-        //     // return audio.play();
-        //     })
-        //     .then(_ => {
-        //     // playback started ;)
-        //     })
-        //     .catch(e => {
-        //         console.log("playback-error: ", e);
-        //     })
-        // }
-
-
-
 
         // window.onload = function() {
         //     setupWebSocketConnection();
@@ -261,5 +141,4 @@
     </script>
 
 </body>
-
 </html>

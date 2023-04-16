@@ -23,17 +23,17 @@ Tested on Windows 10 & 11 Pro x64, Python 3.9.7 and Raspberry pi 4B 4GB, Python 
 
 ## INSTALL INSTRUCTION
 
-### Desktop-OS (cross-platform | Windows - Linux - MacOS)
+### Desktop-OS: Windows - Linux - MacOS
 
 - If you're running a desktop-driven OS (GUI) it's recommended to use autodarts-desktop: https://github.com/lbormann/autodarts-desktop
 
 
-### Windows
+### Headless-OS: Windows - Linux - MacOS
 
 - Download the executable in the release section.
 
 
-### Linux / Others
+### By Source: Windows - Linux - MacOS
 
 #### Setup python3
 
@@ -49,7 +49,7 @@ Go to download-directory and type:
 
     pip install -r requirements.txt
 
-(Optional) When you encounter problems with playing sound:
+(Optional for Linux) When you encounter problems with playing sound:
 
     sudo apt-get install python3-sdl2
 
@@ -366,23 +366,6 @@ For a list of json-examples look at 'broadcast-examples.dat' - who knows maybe y
 
 
 
-## UPDATE TO RECENT APP VERSION
-
-### Windows
-
-Download the latest executable in the release section.
-
-
-### Linux / Others
-
-    cd autodarts-caller
-
-    git pull
-
-    pip install -r requirements.txt
-
-
-
 ## FAQ
 
 ### App starts and stops immediately?!
@@ -451,13 +434,11 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - ambient_25bullbull fail?
 - If single-darts is on and last arrow hits; the programm also calls last dart effect / that is ie triple, 
   that coming from curated caller-voices = wrong!
-- Check host-port on start
 - Care about blocking python process on shutdown
 - improve and prettify json
 - cert expired error
-- not only 0.0.0.0 (web-caller not reachable)
-- play multiple sounds (blocks wait for)
-- connects when server crashed before?
+- use autodarts-third-party api
+- rework structure to support 'calling-blocks' for web-calling
 
 
 ### Done
@@ -501,7 +482,7 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - add ambient_group_level
 - prohibit -M and -MS in main-directory; prohibit -MS in -M
 - https://discord.com/channels/802528604067201055/955745166134747196/1089977962725650603
-- adds web-caller
+- add web-caller
 
 
 ## LAST WORDS
