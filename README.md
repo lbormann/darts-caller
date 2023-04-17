@@ -25,12 +25,12 @@ Tested on Windows 10 & 11 Pro x64, Python 3.9.7 and Raspberry pi 4B 4GB, Python 
 
 ### Desktop-OS: Windows - Linux - MacOS
 
-- If you're running a desktop-driven OS (GUI) it's recommended to use autodarts-desktop: https://github.com/lbormann/autodarts-desktop
+- If you're running a desktop-driven OS it's recommended to use [autodarts-desktop](https://github.com/lbormann/autodarts-desktop) as it takes care of starting, updating, configurating and managing multiple apps.
 
 
-### Headless-OS: Windows - Linux - MacOS
+### Headless-OS:
 
-- Download the executable in the release section.
+- Download the appropriate executable in the release section.
 
 
 ### By Source: Windows - Linux - MacOS
@@ -49,7 +49,7 @@ Go to download-directory and type:
 
     pip install -r requirements.txt
 
-(Optional for Linux) When you encounter problems with playing sound:
+Optional for Linux: If you encounter problems with playing sound:
 
     sudo apt-get install python3-sdl2
 
@@ -130,7 +130,7 @@ Since Version 1.6.0 you can deposit multiple sounds for EVERY game-event. Theref
 
 ## RUN IT
 
-You can run by source or download the appropriate, os specific executable.
+You can run by source or run an os specific executable.
 
 
 ### Run by executable
@@ -164,79 +164,6 @@ Make it executable:
 Start the script:
 
     ./start-custom.sh
-
-
-
-### Setup autostart [linux] (optional)
-
-There are endless possibilities to manage an autostart. You find two ways to do it (both using the start-custom.sh to run it by source)
-
-#### Using a cronjob
-
-    crontab -e
-
-At the end of the file add (Replace USER):
-
-    @reboot sleep 30 && cd /home/USER/autodarts-caller && ./start-custom.sh > /home/USER/autodarts-caller.log 2>&1
-
-Reboot your system:
-
-    sudo reboot
-
-Check log:
-
-    tail /home/USER/autodarts-caller.log
-
-
-
-
-#### Using a desktop-start-task (linux with gui only)
-
-if you are facing problems with the crontab-solution try this:
-
-    sudo apt install xterm
-
-One can now manually test whether the whole thing starts with the following command (adjust USER):
-
-    xterm -e "cd /home/USER/autodarts-caller && ./start-custom.sh"
-
-A terminal-like window should now open with the running program.
-
-To enable autostart, a .desktop file now needs to be created:
-
-    sudo nano ~/.config/autostart/autodartscaller.desktop
-
-Insert the following into this file and adjust the USER in the path:
-
-    [Desktop Entry]
-    Type=Application
-    Exec=xterm -e "cd /home/USER/autodarts-caller && ./start-custom.sh > /home/USER/autodarts-caller.log 2>&1"
-    Hidden=false
-    NoDisplay=false
-    X-GNOME-Autostart-enabled=true
-    X-GNOME-Autostart-Delay=10
-    Name[de_DE]=Autodarts-Caller
-    Name=Autodarts-Caller
-    Comment[de_DE]=Autostart Autodarts-Caller
-    Comment=Autostart Autodarts-Caller
-
-Afterwards, save the file (Ctrl + O) and close the file (Ctrl + X).
-
-Now the file permissions need to be set for the file (again, adjust USER!):
-
-    sudo chmod u=rw-,g=rw-,o=r-- ~/.config/autostart/autodartscaller.desktop
-    sudo chmod +x ~/.config/autostart/autodartscaller.desktop
-    sudo chown USER ~/.config/autostart/autodartscaller.desktop
-
-Reboot your system:
-
-    sudo reboot
-
-Check log:
-
-    tail /home/USER/autodarts-caller.log
-
-
 
 
 
@@ -363,6 +290,78 @@ If you set this to a '1' or '2' the app will host a web-endpoint to transfer eve
 
 The app provides a websocket-service. Other extensions like autodarts-extern or autodarts-wled can connect to this service (ws://ip:port).
 For a list of json-examples look at 'broadcast-examples.dat' - who knows maybe you build your own extension upon this?!
+
+
+
+
+### Setup autostart [linux] (optional)
+
+There are endless possibilities to manage an autostart. You find two ways to do it (both using the start-custom.sh to run it by source)
+
+#### Using a cronjob
+
+    crontab -e
+
+At the end of the file add (Replace USER):
+
+    @reboot sleep 30 && cd /home/USER/autodarts-caller && ./start-custom.sh > /home/USER/autodarts-caller.log 2>&1
+
+Reboot your system:
+
+    sudo reboot
+
+Check log:
+
+    tail /home/USER/autodarts-caller.log
+
+
+
+
+#### Using a desktop-start-task (linux with gui only)
+
+if you are facing problems with the crontab-solution try this:
+
+    sudo apt install xterm
+
+One can now manually test whether the whole thing starts with the following command (adjust USER):
+
+    xterm -e "cd /home/USER/autodarts-caller && ./start-custom.sh"
+
+A terminal-like window should now open with the running program.
+
+To enable autostart, a .desktop file now needs to be created:
+
+    sudo nano ~/.config/autostart/autodartscaller.desktop
+
+Insert the following into this file and adjust the USER in the path:
+
+    [Desktop Entry]
+    Type=Application
+    Exec=xterm -e "cd /home/USER/autodarts-caller && ./start-custom.sh > /home/USER/autodarts-caller.log 2>&1"
+    Hidden=false
+    NoDisplay=false
+    X-GNOME-Autostart-enabled=true
+    X-GNOME-Autostart-Delay=10
+    Name[de_DE]=Autodarts-Caller
+    Name=Autodarts-Caller
+    Comment[de_DE]=Autostart Autodarts-Caller
+    Comment=Autostart Autodarts-Caller
+
+Afterwards, save the file (Ctrl + O) and close the file (Ctrl + X).
+
+Now the file permissions need to be set for the file (again, adjust USER!):
+
+    sudo chmod u=rw-,g=rw-,o=r-- ~/.config/autostart/autodartscaller.desktop
+    sudo chmod +x ~/.config/autostart/autodartscaller.desktop
+    sudo chown USER ~/.config/autostart/autodartscaller.desktop
+
+Reboot your system:
+
+    sudo reboot
+
+Check log:
+
+    tail /home/USER/autodarts-caller.log
 
 
 
