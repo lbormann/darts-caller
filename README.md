@@ -3,8 +3,6 @@
 
 Autodarts-caller plays back sound-files accordingly to the state of a https://autodarts.io game. Furthermore it acts as a central hub by forwarding game-events to connected clients like https://github.com/lbormann/autodarts-extern that process incoming data to automate other web-dart-platforms like https://lidarts.org
 
-Tested on Windows 10 & 11 Pro x64, Python 3.9.7 and Raspberry pi 4B 4GB, Python 3.9.7
-
 
 ## COMPATIBILITY
 
@@ -23,7 +21,7 @@ Tested on Windows 10 & 11 Pro x64, Python 3.9.7 and Raspberry pi 4B 4GB, Python 
 
 ## INSTALL INSTRUCTION
 
-### Desktop-OS: Windows - Linux - MacOS
+### Desktop-OS:
 
 - If you're running a desktop-driven OS it's recommended to use [autodarts-desktop](https://github.com/lbormann/autodarts-desktop) as it takes care of starting, updating, configurating and managing multiple apps.
 
@@ -33,7 +31,7 @@ Tested on Windows 10 & 11 Pro x64, Python 3.9.7 and Raspberry pi 4B 4GB, Python 
 - Download the appropriate executable in the release section.
 
 
-### By Source: Windows - Linux - MacOS
+### By Source:
 
 #### Setup python3
 
