@@ -198,11 +198,11 @@ Start the script:
 
 
 
-#### **-U / --autodarts_email**
+*`-U / --autodarts_email`*
 
 You should know your autodarts.io registered email-adress.
 
-#### **-P / --autodarts_password**
+*`-P / --autodarts_password`*
 
 You should know your autodarts.io registered password. Make sure you disable 2FA (Two-Factor-Auth).
 

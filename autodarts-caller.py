@@ -21,6 +21,11 @@ import ssl
 import sys
 from urllib.parse import quote, unquote
 from flask import Flask, render_template, send_from_directory
+from waitress import serve
+import signal
+import rel
+
+
 
 plat = platform.system()
 if plat == 'Windows':
@@ -1033,35 +1038,37 @@ def process_match_cricket(m):
          
 
 def connect_autodarts():
-    def process(*args):
-        global accessToken
+    # def process(*args):
+    global accessToken
 
-        # Configure client
-        keycloak_openid = KeycloakOpenID(server_url = AUTODART_AUTH_URL,
-                                            client_id = AUTODART_CLIENT_ID,
-                                            realm_name = AUTODART_REALM_NAME,
-                                            verify = True)
+    # Configure client
+    keycloak_openid = KeycloakOpenID(server_url = AUTODART_AUTH_URL,
+                                        client_id = AUTODART_CLIENT_ID,
+                                        realm_name = AUTODART_REALM_NAME,
+                                        verify = True)
 
-        # Get Token
-        token = keycloak_openid.token(AUTODART_USER_EMAIL, AUTODART_USER_PASSWORD)
-        accessToken = token['access_token']
-        # ppi(token)
-
-
-        # Get Ticket
-        ticket = requests.post(AUTODART_AUTH_TICKET_URL, headers={'Authorization': 'Bearer ' + token['access_token']})
-        # ppi(ticket.text)
+    # Get Token
+    token = keycloak_openid.token(AUTODART_USER_EMAIL, AUTODART_USER_PASSWORD)
+    accessToken = token['access_token']
+    # ppi(token)
 
 
-        websocket.enableTrace(False)
-        ws = websocket.WebSocketApp(AUTODART_WEBSOCKET_URL + ticket.text,
-                                on_open = on_open_autodarts,
-                                on_message = on_message_autodarts,
-                                on_error = on_error_autodarts,
-                                on_close = on_close_autodarts)
+    # Get Ticket
+    ticket = requests.post(AUTODART_AUTH_TICKET_URL, headers={'Authorization': 'Bearer ' + token['access_token']})
+    # ppi(ticket.text)
 
-        ws.run_forever()
-    threading.Thread(target=process).start()
+
+    websocket.enableTrace(False)
+    ws = websocket.WebSocketApp(AUTODART_WEBSOCKET_URL + ticket.text,
+                            on_open = on_open_autodarts,
+                            on_message = on_message_autodarts,
+                            on_error = on_error_autodarts,
+                            on_close = on_close_autodarts)
+
+    ws.run_forever(dispatcher=rel, reconnect=5)  # Set dispatcher to automatic reconnection, 5 second reconnect delay if connection closed unexpectedly
+
+     
+    # threading.Thread(target=process).start()
 
 def on_open_autodarts(ws):
     try:
@@ -1077,37 +1084,37 @@ def on_open_autodarts(ws):
         ppe('WS-Open failed: ', e)
 
 def on_message_autodarts(ws, message):
-    def process(*args):
-        try:
-            global lastMessage
-            m = json.loads(message)
+    # def process(*args):
+    try:
+        global lastMessage
+        m = json.loads(message)
 
-            # ppi(json.dumps(data, indent = 4, sort_keys = True))
+        # ppi(json.dumps(data, indent = 4, sort_keys = True))
 
-            if m['channel'] == 'autodarts.matches':
-                global currentMatch
-                data = m['data']
-                listen_to_newest_match(data, ws)
+        if m['channel'] == 'autodarts.matches':
+            global currentMatch
+            data = m['data']
+            listen_to_newest_match(data, ws)
 
-                # ppi('Current Match: ' + currentMatch)
-                if('turns' in data and len(data['turns']) >=1):
-                    data['turns'][0].pop("id", None)
-                    data['turns'][0].pop("createdAt", None)
+            # ppi('Current Match: ' + currentMatch)
+            if('turns' in data and len(data['turns']) >=1):
+                data['turns'][0].pop("id", None)
+                data['turns'][0].pop("createdAt", None)
 
-                if lastMessage != data and currentMatch != None and data['id'] == currentMatch:
-                    lastMessage = data
+            if lastMessage != data and currentMatch != None and data['id'] == currentMatch:
+                lastMessage = data
 
-                    # ppi(json.dumps(data, indent = 4, sort_keys = True))
+                # ppi(json.dumps(data, indent = 4, sort_keys = True))
 
-                    variant = data['variant']
-                    if variant == 'X01' or variant == 'Random Checkout':
-                        process_match_x01(data)
-                    elif variant == 'Cricket':
-                        process_match_cricket(data)
-        except Exception as e:
+                variant = data['variant']
+                if variant == 'X01' or variant == 'Random Checkout':
+                    process_match_x01(data)
+                elif variant == 'Cricket':
+                    process_match_cricket(data)
+    except Exception as e:
             ppe('WS-Message failed: ', e)
 
-    threading.Thread(target=process).start()
+    # threading.Thread(target=process).start()
 
 def on_close_autodarts(ws, close_status_code, close_msg):
     try:
@@ -1125,71 +1132,95 @@ def on_error_autodarts(ws, error):
         ppe('WS-Error failed: ', e)
 
 
+
+def start_hub(host, port):
+    global server, server_thread
+    server = WebsocketServer(host=host, port=port, loglevel=logging.ERROR)
+    server.set_fn_new_client(on_open_client)
+    server.set_fn_client_left(on_left_client)
+    server.set_fn_message_received(on_message_client)
+    server_thread = threading.Thread(target=server.run_forever)
+    server_thread.daemon = True
+    server_thread.start()
+
+def stop_hub(signal, frame):
+    global server
+    if server:
+        print("Stopping Hub...")
+        server.shutdown_gracefully()
+
 def on_open_client(client, server):
     ppi('NEW CLIENT CONNECTED: ' + str(client))
 
 def on_message_client(client, server, message):
-    def process(*args):
-        try:
-            ppi('CLIENT MESSAGE: ' + str(message))
+    try:
+        ppi('CLIENT MESSAGE: ' + str(message))
 
-        
-            if message.startswith('board'):
-                receive_local_board_address()
+    
+        if message.startswith('board'):
+            receive_local_board_address()
 
-                if boardManagerAddress != None:
-                    if message.startswith('board-start'):
-                        msg_splitted = message.split(':')
+            if boardManagerAddress != None:
+                if message.startswith('board-start'):
+                    msg_splitted = message.split(':')
 
-                        wait = 0.1
-                        if len(msg_splitted) > 1:
-                            wait = float(msg_splitted[1])
-                        if wait == 0.0:
-                            wait = 0.5
-                        time.sleep(wait)
-                        
-                        res = requests.put(boardManagerAddress + '/api/detection/start')
-                        # res = requests.put(boardManagerAddress + '/api/start')
-                        # ppi(res)
-                        
-                    elif message == 'board-stop':
-                        res = requests.put(boardManagerAddress + '/api/detection/stop')
-                        # res = requests.put(boardManagerAddress + '/api/stop')
-                        # ppi(res)
+                    wait = 0.1
+                    if len(msg_splitted) > 1:
+                        wait = float(msg_splitted[1])
+                    if wait == 0.0:
+                        wait = 0.5
+                    time.sleep(wait)
+                    
+                    res = requests.put(boardManagerAddress + '/api/detection/start')
+                    # res = requests.put(boardManagerAddress + '/api/start')
+                    # ppi(res)
+                    
+                elif message == 'board-stop':
+                    res = requests.put(boardManagerAddress + '/api/detection/stop')
+                    # res = requests.put(boardManagerAddress + '/api/stop')
+                    # ppi(res)
 
-                    elif message == 'board-reset':
-                        res = requests.post(boardManagerAddress + '/api/reset')
-                        # ppi(res)
+                elif message == 'board-reset':
+                    res = requests.post(boardManagerAddress + '/api/reset')
+                    # ppi(res)
 
-                    else:
-                        ppi('This message is not supported')  
                 else:
-                    ppi('Can not change board-state as board-address is unknown!')  
+                    ppi('This message is not supported')  
+            else:
+                ppi('Can not change board-state as board-address is unknown!')  
 
 
-            elif message.startswith('call'):
-                msg_splitted = message.split(':')
-                to_call = msg_splitted[1]
-                call_parts = to_call.split(' ')
-                for cp in call_parts:
-                    play_sound_effect(cp, wait_for_last = False, volume_mult = 1.0)
+        elif message.startswith('call'):
+            msg_splitted = message.split(':')
+            to_call = msg_splitted[1]
+            call_parts = to_call.split(' ')
+            for cp in call_parts:
+                play_sound_effect(cp, wait_for_last = False, volume_mult = 1.0)
+    
+
+    except Exception as e:
+        ppe('WS-Message failed: ', e)
+
+    # TODO: REMOVE
+    # def process(*args):
         
 
-        except Exception as e:
-            ppe('WS-Message failed: ', e)
-
-    t = threading.Thread(target=process).start()
+    # t = threading.Thread(target=process).start()
 
 def on_left_client(client, server):
     ppi('CLIENT DISCONNECTED: ' + str(client))
 
 def broadcast(data):
-    def process(*args):
-        global server
+    global server
+    if server:
         server.send_message_to_all(json.dumps(data, indent=2).encode('utf-8'))
-    t = threading.Thread(target=process)
-    t.start()
-    t.join()
+
+    # TODO: REMVOE
+    # def process(*args):
+
+    #     t = threading.Thread(target=process)
+    #     t.start()
+    #     t.join()
    
 
 
@@ -1270,16 +1301,6 @@ def sound(file_id):
     return send_from_directory(directory, file_name)
 
 
-def start_websocket_server(host, port):
-    global server
-    server = WebsocketServer(host=host, port=port, loglevel=logging.ERROR)
-    server.set_fn_new_client(on_open_client)
-    server.set_fn_client_left(on_left_client)
-    server.set_fn_message_received(on_message_client)
-    server.run_forever()
-
-def start_flask_app():
-    app.run(host='192.168.3.19', port='5000', debug=False)
 
 
 if __name__ == "__main__":
@@ -1429,6 +1450,7 @@ if __name__ == "__main__":
 
 
     if args_post_check == None: 
+
         if plat == 'Windows' and BACKGROUND_AUDIO_VOLUME > 0.0:
             try:
                 background_audios = AudioUtilities.GetAllSessions()
@@ -1451,26 +1473,24 @@ if __name__ == "__main__":
             ppi('A caller with name "' + str(CALLER) + '" does NOT exist! Please compare your input with list of possible callers and update -C')
         else:
             try:  
-                connect_autodarts()
+                
+                def signal_handler(signal, frame):
+                    print("CTRL+C received. Shutting down.")
+                    sys.exit(0)
 
-                websocket_server_thread = threading.Thread(target=start_websocket_server, args=(DEFAULT_HOST_IP, HOST_PORT))
-                websocket_server_thread.start()
+                signal.signal(signal.SIGINT, signal_handler)
+                signal.signal(signal.SIGTERM, signal_handler)
+                
+                connect_autodarts()
+                start_hub(DEFAULT_HOST_IP, HOST_PORT)
 
                 if WEB > 0:
                     WEB_HOST = get_local_ip_address()
-                    flask_app_thread = threading.Thread(target=start_flask_app)
-                    flask_app_thread.start()
-
-                websocket_server_thread.join()
-
-                if WEB > 0:
-                    flask_app_thread.join() 
+                    serve(app, host=WEB_HOST, port=5000)
+                 
 
             except Exception as e:
                 ppe("Connect failed: ", e)
    
     else:
         ppi('Please check your arguments: ' + args_post_check)
-   
-
-time.sleep(30)

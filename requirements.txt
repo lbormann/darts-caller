@@ -7,3 +7,5 @@ download==0.3.5
 certifi
 pycaw; platform_system == "Windows"
 Flask
+waitress
+rel
