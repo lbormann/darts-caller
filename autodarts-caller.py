@@ -50,7 +50,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 
 
 
-VERSION = '2.2.0'
+VERSION = '2.2.1'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -1038,7 +1038,6 @@ def process_match_cricket(m):
          
 
 def connect_autodarts():
-    # def process(*args):
     global accessToken
 
     # Configure client
@@ -1067,8 +1066,6 @@ def connect_autodarts():
 
     ws.run_forever(dispatcher=rel, reconnect=5)  # Set dispatcher to automatic reconnection, 5 second reconnect delay if connection closed unexpectedly
 
-     
-    # threading.Thread(target=process).start()
 
 def on_open_autodarts(ws):
     try:
@@ -1084,7 +1081,6 @@ def on_open_autodarts(ws):
         ppe('WS-Open failed: ', e)
 
 def on_message_autodarts(ws, message):
-    # def process(*args):
     try:
         global lastMessage
         m = json.loads(message)
@@ -1114,8 +1110,6 @@ def on_message_autodarts(ws, message):
     except Exception as e:
             ppe('WS-Message failed: ', e)
 
-    # threading.Thread(target=process).start()
-
 def on_close_autodarts(ws, close_status_code, close_msg):
     try:
         ppi("Websocket [" + str(ws.url) + "] closed! " + str(close_msg) + " - " + str(close_status_code))
@@ -1143,7 +1137,7 @@ def start_hub(host, port):
     server_thread.daemon = True
     server_thread.start()
 
-def stop_hub(signal, frame):
+def stop_hub():
     global server
     if server:
         print("Stopping Hub...")
@@ -1156,7 +1150,6 @@ def on_message_client(client, server, message):
     try:
         ppi('CLIENT MESSAGE: ' + str(message))
 
-    
         if message.startswith('board'):
             receive_local_board_address()
 
@@ -1201,11 +1194,6 @@ def on_message_client(client, server, message):
     except Exception as e:
         ppe('WS-Message failed: ', e)
 
-    # TODO: REMOVE
-    # def process(*args):
-        
-
-    # t = threading.Thread(target=process).start()
 
 def on_left_client(client, server):
     ppi('CLIENT DISCONNECTED: ' + str(client))
@@ -1214,13 +1202,6 @@ def broadcast(data):
     global server
     if server:
         server.send_message_to_all(json.dumps(data, indent=2).encode('utf-8'))
-
-    # TODO: REMVOE
-    # def process(*args):
-
-    #     t = threading.Thread(target=process)
-    #     t.start()
-    #     t.join()
    
 
 

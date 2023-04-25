@@ -1,7 +1,7 @@
 # AUTODARTS-CALLER
 [![Downloads](https://img.shields.io/github/downloads/lbormann/autodarts-caller/total.svg)](https://github.com/lbormann/autodarts-caller/releases/latest)
 
-Autodarts-caller plays back sound-files accordingly to the state of a https://autodarts.io game. Furthermore it acts as a central hub by forwarding game-events to connected clients like https://github.com/lbormann/autodarts-extern that process incoming data to automate other web-dart-platforms like https://lidarts.org
+Autodarts-caller plays back sound-files accordingly to the state of a https://autodarts.io game. Furthermore it acts as a central hub by forwarding game-events to connected clients like https://github.com/lbormann/autodarts-extern that process incoming data to automate other dart-web-platforms like https://lidarts.org
 
 
 ## COMPATIBILITY
@@ -206,85 +206,85 @@ You should know your autodarts.io registered email-adress.
 
 You should know your autodarts.io registered password. Make sure you disable 2FA (Two-Factor-Auth).
 
-#### **-B / --autodarts_board_id**
+*`-B / --autodarts_board_id`*
 
 You can find your Board-ID in Board-Manager.
 
-#### **-M / --media_path**
+*`-M / --media_path`*
 
 You need to set an absolute path to your media-file-directory, otherwise you won`t notice any calls. Make sure your sound-files are in a supported file-format (mp3,wav). Moreover make sure the given path doesn't reside inside main-directory (autodarts-caller).
 
-#### **-MS / --media_path_shared**
+*`-MS / --media_path_shared`*
 
 If you do not want to configure particular sounds for every individual caller, you can specify an absolute path to a shared directory. Every caller will get the sounds of that directory. Have a look at [supported Sound-file-keys](#Sound-file-keys). Moreover make sure the given path neither resides inside main-directory (autodarts-caller) nor inside media-path (-M).
 
-#### **-V / --caller_volume**
+*`-V / --caller_volume`*
 
 You can lower the call-volume in relation to current system-volume. '1.0' is system-volume. '0.5' is "half" volume. By default this is '1.0'
 
-#### **-C / --caller**
+*`-C / --caller`*
 
 Sets a specific caller. On start the application displays a list of installed callers; copy the name of chosen one and paste it here. By default this is 'None' meaning the application uses sound-files of argument '-M' or a random caller if this is configurated (see next). Note: if you set this to '1' the arguments '-R' and '-L' are no more relevant.
 
-#### **-R / --random_caller**
+*`-R / --random_caller`*
 
 If you set this to '1' you will get a random caller each time you start the application. For this to work you need to setup subfolders in your media_path. Each subfolder represents an individual caller. By default this is not activated.
 
-#### **-L / --random_caller_each_leg**
+*`-L / --random_caller_each_leg`*
 
 If you set this to 1' you will get a random caller each time a new leg starts. By default this is not activated.
 
-#### **-CCP / --call_current_player**
+*`-CCP / --call_current_player`*
 
 If you set this to 1' the application will call the playername at the start of his turn. By default this is not activated.
 
-#### **-E / --call_every_dart**
+*`-E / --call_every_dart`*
 
 If you set this to '1' the caller calls every dart. Setup sounds 's1'-'t20', single, double and others. This is pretty handy if you want to play sound-effects. Note: the third dart will only considered if argument '-ESF' is set to '1'.
 
-#### **-ESF / --call_every_dart_single_files**
+*`-ESF / --call_every_dart_single_files`*
 
 If you set this to '0' the application calls every dart by combining the type of hit (single, double ..) with hit-number (20, 30, ..) so that it reuses
 the sounds of score-values (0-180). If you set this to '1' (default) it will call by using only one file (ie. single, double, t19, ..).
 
-#### **-PCC / --possible_checkout_call**
+*`-PCC / --possible_checkout_call`*
 
 If you set this to '1' the caller will call if there is a checkout possibility. Setup sounds {playername}{yr_2-yr_170} or {2-170} as a fallback. By default this is activated.
 
-#### **-PCCSF / --possible_checkout_call_single_file**
+*`-PCCSF / --possible_checkout_call_single_file`*
 
 If you set this to '0' (default), the application uses two separated sound-files named: 'you_require' and 'x' (score-value). If you set this to '1' the application will call a possible checkout by using one file 'yr_2-yr_170'.  
 
-#### **-A / --ambient_sounds**
+*`-A / --ambient_sounds`*
 
 If you set this to value between '0.1' and '1.0' the caller will call extra sounds like crowd-shouting or whatever you like (you decide!). Setup sounds {ambient_*}. 
 The configured value will be multiplied by caller_volume. As an example: caller_volume = '0.8' and ambient_sounds = '1.0' means your sound-volume will be 0.8 relative to your system-volume. By default this is '0'.
 
-#### **-AAC / --ambient_sounds_after_calls**
+*`-AAC / --ambient_sounds_after_calls`*
 
 If you set this to '1' ambient_*-sounds will wait until main-calls are finished. By default this is not activated.
 
-#### **-DL / --downloads**
+*`-DL / --downloads`*
 
 If you set this to '1' the application will download all possible caller-voices that are not already installed. By default this is activated.
 
-#### **-DLL / --downloads_limit**
+*`-DLL / --downloads_limit`*
 
 If you wish to stop the application from checking/downloading all possible caller-voices, you can limit it to x most recent. By default this is '0' (no limitation).
 
-#### **-DLP / --downloads_path**
+*`-DLP / --downloads_path`*
 
 In case you face problems with caller-voices-downloads try to change the download-path (absolute Path). By default this is 'download' in the application`s directory. But make sure you choose an non important folder as the content will be cleared by application.
 
-#### **-BAV / --background_audio_volume**
+*`-BAV / --background_audio_volume`*
 
 You can not hear any calls as your music is way too loud? Try to set this to '0.03' and let the calls begin :) Default is '0.0' (no background-audio-muting). Note: Only availble on windows-os.
 
-#### **-WEB / --web_caller**
+*`-WEB / --web_caller`*
 
 If you set this to a '1' or '2' the app will host a web-endpoint to transfer every calling-action to connected devices. A value '1' will play sounds only on connected devices. Value '2' will play locally and on connected devices.
 
-#### **-HP / --host_port**
+*`-HP / --host_port`*
 
 The app provides a websocket-service. Other extensions like autodarts-extern or autodarts-wled can connect to this service (ws://ip:port).
 For a list of json-examples look at 'broadcast-examples.dat' - who knows maybe you build your own extension upon this?!
