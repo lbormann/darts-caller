@@ -45,7 +45,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 
 
 
-VERSION = '2.2.0'
+VERSION = '2.2.2'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -370,6 +370,18 @@ def play_sound_effect(sound_file_key, wait_for_last = False, volume_mult = 1.0):
 def listen_to_newest_match(m, ws):
     global currentMatch
     cm = str(currentMatch)
+
+    # EXAMPLE
+    # {
+    #     "channel": "autodarts.boards",
+    #     "data": {
+    #         "event": "start",
+    #         "id": "82f917d0-0308-2c27-c4e9-f53ef2e98ad2"
+    #     },
+    #     "topic": "1ba2df53-9a04-51bc-9a5f-667b2c5f315f.matches"  
+    # }
+
+
 
     # look for supported match that match my board-id and take it as ongoing match
     newMatch = None
@@ -1064,13 +1076,33 @@ def connect_autodarts():
     threading.Thread(target=process).start()
 
 def on_open_autodarts(ws):
+
+    # const unsub = MessageBroker.getInstance().subscribe<{ id: string; event: 'start' | 'finish' | 'delete' }>(
+    # 'autodarts.boards',
+    # id + '.matches',
+    # (msg) => {
+    #     if (msg.event === 'start') {
+    #     setMatchId(msg.id);
+    #     } else {
+    #     setMatchId(undefined);
+    #     }
+    # }
+    # );
+
     try:
         ppi('Receiving live information from ' + AUTODART_URL)
+        # paramsSubscribeMatchesEvents = {
+        #     "channel": "autodarts.matches",
+        #     "type": "subscribe",
+        #     "topic": "*.state"
+        # }
+        
         paramsSubscribeMatchesEvents = {
-            "channel": "autodarts.matches",
+            "channel": "autodarts.boards",
             "type": "subscribe",
-            "topic": "*.state"
+            "topic": AUTODART_USER_BOARD_ID + ".matches"
         }
+
         ws.send(json.dumps(paramsSubscribeMatchesEvents))
 
     except Exception as e:
@@ -1082,28 +1114,32 @@ def on_message_autodarts(ws, message):
             global lastMessage
             m = json.loads(message)
 
-            # ppi(json.dumps(data, indent = 4, sort_keys = True))
-
+            ppi(json.dumps(m, indent = 4, sort_keys = True))
+  
             if m['channel'] == 'autodarts.matches':
-                global currentMatch
+                # global currentMatch
                 data = m['data']
-                listen_to_newest_match(data, ws)
 
                 # ppi('Current Match: ' + currentMatch)
                 if('turns' in data and len(data['turns']) >=1):
                     data['turns'][0].pop("id", None)
                     data['turns'][0].pop("createdAt", None)
 
-                if lastMessage != data and currentMatch != None and data['id'] == currentMatch:
-                    lastMessage = data
+                # if lastMessage != data and currentMatch != None and data['id'] == currentMatch:
+                #     lastMessage = data
 
-                    # ppi(json.dumps(data, indent = 4, sort_keys = True))
+                # ppi(json.dumps(data, indent = 4, sort_keys = True))
 
-                    variant = data['variant']
-                    if variant == 'X01' or variant == 'Random Checkout':
-                        process_match_x01(data)
-                    elif variant == 'Cricket':
-                        process_match_cricket(data)
+                variant = data['variant']
+                if variant == 'X01' or variant == 'Random Checkout':
+                    process_match_x01(data)
+                elif variant == 'Cricket':
+                    process_match_cricket(data)
+
+            elif m['channel'] == 'autodarts.boards':
+                data = m['data']
+                listen_to_newest_match(data, ws)
+
         except Exception as e:
             ppe('WS-Message failed: ', e)
 
