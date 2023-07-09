@@ -45,7 +45,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 
 
 
-VERSION = '2.2.1'
+VERSION = '2.2.2'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -333,8 +333,6 @@ def receive_local_board_address():
         boardManagerAddress = None
         ppe('Fetching local-board-address failed', e)
 
-
-
 def play_sound(sound, wait_for_last, volume_mult):
     if WEB > 0:
         mirror = {
@@ -369,18 +367,71 @@ def play_sound_effect(sound_file_key, wait_for_last = False, volume_mult = 1.0):
 
 def listen_to_newest_match(m, ws):
     global currentMatch
-    cm = str(currentMatch)
 
-    # look for supported match that match my board-id and take it as ongoing match
-    newMatch = None
-    if m['variant'] in SUPPORTED_GAME_VARIANTS and m['finished'] == False:
-        for p in m['players']:
-            if 'boardId' in p and p['boardId'] == AUTODART_USER_BOARD_ID:
-                newMatch = m['id']   
-                break
+    # EXAMPLE
+    # {
+    #     "channel": "autodarts.boards",
+    #     "data": {
+    #         "event": "start",
+    #         "id": "82f917d0-0308-2c27-c4e9-f53ef2e98ad2"
+    #     },
+    #     "topic": "1ba2df53-9a04-51bc-9a5f-667b2c5f315f.matches"  
+    # }
 
-    if cm == None or (cm != None and newMatch != None and cm != newMatch):
-        ppi('Listen to match: ' + newMatch)
+    if m['event'] == 'start':
+        currentMatch = m['id']
+        ppi('Listen to match: ' + currentMatch)
+
+        try:
+            global accessToken
+            res = requests.get(AUTODART_MATCHES_URL + currentMatch, headers={'Authorization': 'Bearer ' + accessToken})
+            m = res.json()
+            mode = m['variant']
+
+            # ppi(json.dumps(m, indent = 4, sort_keys = True))
+
+            if mode == 'X01':
+                # Determine "baseScore"-Key
+                base = 'baseScore'
+                if 'target' in m['settings']:
+                    base = 'target'
+
+                matchStarted = {
+                    "event": "match-started",
+                    "player": m['players'][0]['name'],
+                    "game": {
+                        "mode": mode,
+                        "pointsStart": str(m['settings'][base]),
+                        # TODO: fix
+                        "special": "TODO"
+                        }     
+                    }
+                broadcast(matchStarted)
+
+            elif mode == 'Cricket':
+                matchStarted = {
+                    "event": "match-started",
+                    "player": m['players'][0]['name'],
+                    "game": {
+                        "mode": mode,
+                        # TODO: fix
+                        "special": "TODO"
+                        }     
+                    }
+                broadcast(matchStarted)
+
+
+            callPlayerNameState = play_sound_effect(m['players'][0]['name'])
+            if play_sound_effect('matchon', callPlayerNameState) == False:
+                play_sound_effect('gameon', callPlayerNameState)
+
+            if AMBIENT_SOUNDS != 0.0 and play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
+                play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+
+            ppi('Matchon')
+
+        except Exception as e:
+            ppe('Fetching initial match-data failed', e)
 
         global isGameFinished
         isGameFinished = False
@@ -391,22 +442,34 @@ def listen_to_newest_match(m, ws):
         #     time.sleep(0.25)
         #     res = requests.put(boardManagerAddress + '/api/start')
 
-        if cm != None:
-            paramsUnsubscribeMatchEvents = {
-                "type": "unsubscribe",
-                "channel": "autodarts.matches",
-                "topic": cm + ".state"
-            }
-            ws.send(json.dumps(paramsUnsubscribeMatchEvents))
-
-        paramsSubscribeMatchEvents = {
-            "type": "subscribe",
+        paramsSubscribeMatchesEvents = {
             "channel": "autodarts.matches",
-            "topic": newMatch + ".state"
+            "type": "subscribe",
+            "topic": currentMatch + ".state"
         }
-        ws.send(json.dumps(paramsSubscribeMatchEvents))
-        currentMatch = newMatch
-    
+
+        ws.send(json.dumps(paramsSubscribeMatchesEvents))
+        
+    elif m['event'] == 'finish' or m['event'] == 'delete':
+        ppi('Stop listening to match: ' + m['id'])
+
+        paramsUnsubscribeMatchEvents = {
+            "type": "unsubscribe",
+            "channel": "autodarts.matches",
+            "topic": m['id'] + ".state"
+        }
+        ws.send(json.dumps(paramsUnsubscribeMatchEvents))
+
+        if m['event'] == 'delete':
+            play_sound_effect('matchcancel')
+
+def process_match(m):
+    variant = m['variant']
+    if variant == 'X01' or variant == 'Random Checkout':
+        process_match_x01(m)
+    elif variant == 'Cricket':
+        process_match_cricket(m)
+
 def process_match_x01(m):
     global accessToken
     global currentMatch
@@ -1065,11 +1128,42 @@ def connect_autodarts():
 
 def on_open_autodarts(ws):
     try:
+        global accessToken
+        res = requests.get(AUTODART_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + accessToken})
+        # ppi(json.dumps(res.json(), indent = 4, sort_keys = True))
+
+        match_id = res.json()['matchId']
+        if match_id != None and match_id != '':  
+            m = {
+                    "event": "start",
+                    "id": match_id
+                }
+            listen_to_newest_match(m, ws)
+            
+    except Exception as e:
+        ppe('Fetching matches failed', e)
+
+
+    try:
         ppi('Receiving live information from ' + AUTODART_URL)
+
+        # EXAMPLE:
+        # const unsub = MessageBroker.getInstance().subscribe<{ id: string; event: 'start' | 'finish' | 'delete' }>(
+        # 'autodarts.boards',
+        # id + '.matches',
+
+        # (msg) => {
+        #     if (msg.event === 'start') {
+        #     setMatchId(msg.id);
+        #     } else {
+        #     setMatchId(undefined);
+        #     }
+        # }
+        # );
         paramsSubscribeMatchesEvents = {
-            "channel": "autodarts.matches",
+            "channel": "autodarts.boards",
             "type": "subscribe",
-            "topic": "*.state"
+            "topic": AUTODART_USER_BOARD_ID + ".matches"
         }
         ws.send(json.dumps(paramsSubscribeMatchesEvents))
 
@@ -1082,28 +1176,28 @@ def on_message_autodarts(ws, message):
             global lastMessage
             m = json.loads(message)
 
-            # ppi(json.dumps(data, indent = 4, sort_keys = True))
-
+            # ppi(json.dumps(m, indent = 4, sort_keys = True))
+  
             if m['channel'] == 'autodarts.matches':
-                global currentMatch
+                # global currentMatch
                 data = m['data']
-                listen_to_newest_match(data, ws)
 
                 # ppi('Current Match: ' + currentMatch)
                 if('turns' in data and len(data['turns']) >=1):
                     data['turns'][0].pop("id", None)
                     data['turns'][0].pop("createdAt", None)
 
-                if lastMessage != data and currentMatch != None and data['id'] == currentMatch:
-                    lastMessage = data
+                # if lastMessage != data and currentMatch != None and data['id'] == currentMatch:
+                #     lastMessage = data
 
-                    # ppi(json.dumps(data, indent = 4, sort_keys = True))
+                # ppi(json.dumps(data, indent = 4, sort_keys = True))
 
-                    variant = data['variant']
-                    if variant == 'X01' or variant == 'Random Checkout':
-                        process_match_x01(data)
-                    elif variant == 'Cricket':
-                        process_match_cricket(data)
+                process_match(data)
+
+            elif m['channel'] == 'autodarts.boards':
+                data = m['data']
+                listen_to_newest_match(data, ws)
+
         except Exception as e:
             ppe('WS-Message failed: ', e)
 
@@ -1278,8 +1372,9 @@ def start_websocket_server(host, port):
     server.set_fn_message_received(on_message_client)
     server.run_forever()
 
-def start_flask_app():
-    app.run(host='192.168.3.19', port='5000', debug=False)
+def start_flask_app(host, port):
+    ppi('Visit WEB-CALLER with other devices at "http://' + str(host) + ':' + str(port) + '"')
+    app.run(host=host, port=port, debug=False)
 
 
 if __name__ == "__main__":
@@ -1458,7 +1553,7 @@ if __name__ == "__main__":
 
                 if WEB > 0:
                     WEB_HOST = get_local_ip_address()
-                    flask_app_thread = threading.Thread(target=start_flask_app)
+                    flask_app_thread = threading.Thread(target=start_flask_app, args=(WEB_HOST, 5000))
                     flask_app_thread.start()
 
                 websocket_server_thread.join()

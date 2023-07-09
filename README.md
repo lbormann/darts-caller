@@ -75,6 +75,7 @@ Note: Since version 2.0.0 there is a build-in download-mechanismn that automatic
 - matchon
 - gameshot
 - matchshot
+- matchcancel
 - leg_{x}
 - set_{x}
 - busted
@@ -282,7 +283,7 @@ You can not hear any calls as your music is way too loud? Try to set this to '0.
 
 *`-WEB / --web_caller`*
 
-If you set this to a '1' or '2' the app will host a web-endpoint to transfer every calling-action to connected devices. A value '1' will play sounds only on connected devices. Value '2' will play locally and on connected devices.
+If you set this to a '1' or '2' the app will host a web-endpoint to transfer every calling-action to connected devices. A value '1' will play sounds only on connected devices. Value '2' will play locally and on connected devices. You start web-calling by typing <machine-ip-address>:5000 in browser of your desired device. 
 
 *`-HP / --host_port`*
 
