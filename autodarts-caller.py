@@ -45,7 +45,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 
 
 
-VERSION = '2.2.2'
+VERSION = '2.2.3'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -462,13 +462,6 @@ def listen_to_newest_match(m, ws):
 
         if m['event'] == 'delete':
             play_sound_effect('matchcancel')
-
-def process_match(m):
-    variant = m['variant']
-    if variant == 'X01' or variant == 'Random Checkout':
-        process_match_x01(m)
-    elif variant == 'Cricket':
-        process_match_cricket(m)
 
 def process_match_x01(m):
     global accessToken
@@ -1179,7 +1172,7 @@ def on_message_autodarts(ws, message):
             # ppi(json.dumps(m, indent = 4, sort_keys = True))
   
             if m['channel'] == 'autodarts.matches':
-                # global currentMatch
+                global currentMatch
                 data = m['data']
 
                 # ppi('Current Match: ' + currentMatch)
@@ -1187,12 +1180,17 @@ def on_message_autodarts(ws, message):
                     data['turns'][0].pop("id", None)
                     data['turns'][0].pop("createdAt", None)
 
-                # if lastMessage != data and currentMatch != None and data['id'] == currentMatch:
-                #     lastMessage = data
+                if lastMessage != data and currentMatch != None and data['id'] == currentMatch:
+                    lastMessage = data
 
-                # ppi(json.dumps(data, indent = 4, sort_keys = True))
+                    # ppi(json.dumps(data, indent = 4, sort_keys = True))
 
-                process_match(data)
+                    variant = data['variant']
+                    if variant == 'X01' or variant == 'Random Checkout':
+                        process_match_x01(data)
+                        
+                    elif variant == 'Cricket':
+                        process_match_cricket(data)
 
             elif m['channel'] == 'autodarts.boards':
                 data = m['data']
