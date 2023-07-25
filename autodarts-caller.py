@@ -1356,20 +1356,8 @@ def index():
 @app.route('/sounds/<path:file_id>', methods=['GET'])
 def sound(file_id):
     file_id = unquote(file_id)
-    
-    # Teile den Pfad in Segmente auf
-    path_parts = file_id.split('/')
-    
-    # Entferne doppelte Einträge
-    cleaned_path_parts = []
-    for part in path_parts:
-        if part not in cleaned_path_parts:
-            cleaned_path_parts.append(part)
-    
-    # Setze den Pfad wieder zusammen
-    cleaned_path = '/'.join(cleaned_path_parts)
-    
-    return send_file(cleaned_path)
+    return send_file(file_id)
+
 
 
 # @app.route('/sounds/<path:file_id>', methods=['GET'])
