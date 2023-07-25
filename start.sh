@@ -76,6 +76,9 @@ downloads_path=
 # -WEB
 web_caller=
 
+# -WEBP
+web_caller_port=
+
 # -HP
 host_port=
 
@@ -169,6 +172,9 @@ fi
 #fi
 if [ -n "$web_caller" ]; then
   args="$args -WEB $web_caller"
+fi
+if [ -n "$web_caller_port" ]; then
+  args="$args -WEBP $web_caller_port"
 fi
 if [ -n "$host_port" ]; then
   args="$args -HP $host_port"

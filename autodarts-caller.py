@@ -45,12 +45,13 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 
 
 
-VERSION = '2.2.3'
+VERSION = '2.2.4'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
 DEFAULT_CALLER = None
 DEFAULT_DOWNLOADS = True
+DEFAULT_WEB_CALLER_PORT = 5000
 
 DEFAULT_DOWNLOADS_LIMIT = 0
 DEFAULT_DOWNLOADS_PATH = 'caller-downloads-temp'
@@ -1347,7 +1348,7 @@ def mute_background(mute_vol):
 
 @app.route('/')
 def index():
-    return render_template('index.html', host=WEB_HOST)
+    return render_template('index.html', host=WEB_HOST, ws_port=HOST_PORT)
 
 @app.route('/sounds/<path:file_id>', methods=['GET'])
 def sound(file_id):
@@ -1400,6 +1401,7 @@ if __name__ == "__main__":
     ap.add_argument("-DLP", "--downloads_path", required=False, default=DEFAULT_DOWNLOADS_PATH, help="Absolute path for temporarly downloads")
     ap.add_argument("-BAV","--background_audio_volume", required=False, type=float, default=0.0, help="Set background-audio-volume between 0.1 (silent) and 1.0 (no mute)")
     ap.add_argument("-WEB", "--web_caller", required=False, type=int, choices=range(0, 3), default=0, help="If '1' the application will host an web-endpoint, '2' it will do '1' and default caller-functionality.")
+    ap.add_argument("-WEBP", "--web_caller_port", required=False, type=int, default=DEFAULT_WEB_CALLER_PORT, help="Web-Caller-Port")
     ap.add_argument("-HP", "--host_port", required=False, type=int, default=DEFAULT_HOST_PORT, help="Host-Port")
     ap.add_argument("-DEB", "--debug", type=int, choices=range(0, 2), default=False, required=False, help="If '1', the application will output additional information")
     ap.add_argument("-CC", "--cert_check", type=int, choices=range(0, 2), default=True, required=False, help="If '0', the application won't check any ssl certification")
@@ -1436,6 +1438,7 @@ if __name__ == "__main__":
     DOWNLOADS_PATH = args['downloads_path']
     BACKGROUND_AUDIO_VOLUME = args['background_audio_volume']
     WEB = args['web_caller']
+    WEB_PORT = args['web_caller_port']
     HOST_PORT = args['host_port']
     DEBUG = args['debug']
     CERT_CHECK = args['cert_check']
@@ -1551,7 +1554,7 @@ if __name__ == "__main__":
 
                 if WEB > 0:
                     WEB_HOST = get_local_ip_address()
-                    flask_app_thread = threading.Thread(target=start_flask_app, args=(WEB_HOST, 5000))
+                    flask_app_thread = threading.Thread(target=start_flask_app, args=(DEFAULT_HOST_IP, WEB_PORT))
                     flask_app_thread.start()
 
                 websocket_server_thread.join()

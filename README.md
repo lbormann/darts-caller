@@ -194,6 +194,7 @@ Start the script:
 - -DLP / --downloads_path [Default: 'download']
 - -BAV / --background_audio_volume [Default: 0.0] [Possible values: 0.0 .. 1.0]
 - -WEB / --web_caller [Default: 0] [Possible values: 0,1,2]
+- -WEBP / --web_caller_port [Default: 5000]
 - -HP / --host_port [Default: 8079]
 
 
@@ -283,7 +284,12 @@ You can not hear any calls as your music is way too loud? Try to set this to '0.
 
 *`-WEB / --web_caller`*
 
-If you set this to a '1' or '2' the app will host a web-endpoint to transfer every calling-action to connected devices. A value '1' will play sounds only on connected devices. Value '2' will play locally and on connected devices. You start web-calling by typing http://{machine-ip-address}:5000 in browser of your desired device. 
+If you set this to a '1' or '2' the app will host a web-endpoint to transfer every calling-action to connected devices. A value '1' will play sounds only on connected devices. Value '2' will play locally and on connected devices. You start web-calling by typing http://{machine-ip-address}:{web-caller-port / see below} in browser of your desired device. 
+
+*`-WEBP / --web_caller_port`*
+
+If you setup web-calling (-WEB = 1 / 2) you can configure a custom port. By default this is '5000'.
+
 
 *`-HP / --host_port`*
 
@@ -481,6 +487,7 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - prohibit -M and -MS in main-directory; prohibit -MS in -M
 - https://discord.com/channels/802528604067201055/955745166134747196/1089977962725650603
 - add web-caller
+- configure custom web-caller-port
 
 
 ## LAST WORDS
