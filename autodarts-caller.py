@@ -1352,10 +1352,29 @@ from flask import send_file
 def index():
     return render_template('index.html', host=WEB_HOST, ws_port=HOST_PORT)
 
+
 @app.route('/sounds/<path:file_id>', methods=['GET'])
 def sound(file_id):
     file_id = unquote(file_id)
+    # Erhalten Sie das aktuelle Arbeitsverzeichnis
+    current_directory = os.getcwd()
+    # Fügen Sie ein '/' am Ende hinzu, falls es nicht bereits vorhanden ist
+    if not current_directory.endswith('/'):
+        current_directory += '/'
+    # Ersetzen Sie das aktuelle Verzeichnis durch einen leeren String
+    file_id = file_id.replace(current_directory, '')
     return send_file(file_id)
+
+# @app.route('/sounds/<path:file_id>', methods=['GET'])
+# def sound(file_id):
+#     file_id = unquote(file_id)
+#     file_path = os.path.join('/home/pi/autodarts-caller-speaker/', file_id)
+#     return send_file(file_path)
+
+# @app.route('/sounds/<path:file_id>', methods=['GET'])
+# def sound(file_id):
+#     file_id = unquote(file_id)
+#     return send_file(file_id)
 
 # @app.route('/sounds/<path:file_id>', methods=['GET'])
 # def sound(file_id):
