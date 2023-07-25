@@ -45,7 +45,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 
 
 
-VERSION = '2.2.4'
+VERSION = '2.2.5'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -114,16 +114,6 @@ def get_local_ip_address(target='8.8.8.8'):
     except:
         ip_address = DEFAULT_HOST_IP
     return ip_address
-
-
-# def get_local_ip_address():
-#     try:
-#         hostname = socket.gethostname()
-#         ip_address = socket.gethostbyname(hostname)
-#     except:
-#         ip_address = DEFAULT_HOST_IP
-#     return ip_address
-
 
 def download_callers(): 
     if DOWNLOADS:
