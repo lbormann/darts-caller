@@ -1356,14 +1356,20 @@ def index():
 @app.route('/sounds/<path:file_id>', methods=['GET'])
 def sound(file_id):
     file_id = unquote(file_id)
-    # Erhalten Sie das Verzeichnis des aktuellen Python-Skripts
-    script_directory = os.path.dirname(os.path.realpath(__file__))
-    # Fügen Sie ein '/' am Ende hinzu, falls es nicht bereits vorhanden ist
-    if not script_directory.endswith('/'):
-        script_directory += '/'
-    # Ersetzen Sie das Skriptverzeichnis durch einen leeren String
-    file_id = file_id.replace(script_directory, '')
-    return send_file(file_id)
+    
+    # Teile den Pfad in Segmente auf
+    path_parts = file_id.split('/')
+    
+    # Entferne doppelte Einträge
+    cleaned_path_parts = []
+    for part in path_parts:
+        if part not in cleaned_path_parts:
+            cleaned_path_parts.append(part)
+    
+    # Setze den Pfad wieder zusammen
+    cleaned_path = '/'.join(cleaned_path_parts)
+    
+    return send_file(cleaned_path)
 
 
 # @app.route('/sounds/<path:file_id>', methods=['GET'])
