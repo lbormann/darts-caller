@@ -104,13 +104,25 @@ def ppe(message, error_object):
     if DEBUG:
         logger.exception("\r\n" + str(error_object))
 
-def get_local_ip_address():
+
+def get_local_ip_address(target='8.8.8.8'):
     try:
-        hostname = socket.gethostname()
-        ip_address = socket.gethostbyname(hostname)
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect((target, 80))
+        ip_address = s.getsockname()[0]
+        s.close()
     except:
         ip_address = DEFAULT_HOST_IP
     return ip_address
+
+
+# def get_local_ip_address():
+#     try:
+#         hostname = socket.gethostname()
+#         ip_address = socket.gethostbyname(hostname)
+#     except:
+#         ip_address = DEFAULT_HOST_IP
+#     return ip_address
 
 
 def download_callers(): 
