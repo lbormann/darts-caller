@@ -45,7 +45,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 
 
 
-VERSION = '2.2.5'
+VERSION = '2.2.6'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -1347,7 +1347,6 @@ def mute_background(mute_vol):
 
 
 
-
 @app.route('/')
 def index():
     return render_template('index.html', host=WEB_HOST, ws_port=HOST_PORT)
@@ -1355,12 +1354,11 @@ def index():
 @app.route('/sounds/<path:file_id>', methods=['GET'])
 def sound(file_id):
     file_id = unquote(file_id)
-    if getattr(sys, 'frozen', False):
-        main_directory = os.path.dirname(sys.executable)
-    else:
-        main_directory = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.join(main_directory, file_id)
-    directory = os.path.dirname(file_path)
+    file_path = file_id
+    if os.name == 'posix':  # Unix/Linux/MacOS
+        directory = '/' + os.path.dirname(file_path)
+    else:  # Windows
+        directory = os.path.dirname(file_path)
     file_name = os.path.basename(file_path)
     return send_from_directory(directory, file_name)
 
