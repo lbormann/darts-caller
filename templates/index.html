@@ -73,7 +73,7 @@
         }
 
         function setupWebSocketConnection() {
-            socket = new WebSocket("ws://{{ host }}:8079");
+            socket = new WebSocket("ws://{{ host }}:{{ ws_port }}");
             socket.onopen = function() {
                 console.log("Socket: connected!");
                 state.innerText = "CONNECTED!";
