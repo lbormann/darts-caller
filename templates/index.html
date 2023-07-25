@@ -95,9 +95,9 @@
         }
         
         async function loadSound(file) {
-            // if (soundCache[file]) {
-            //     return soundCache[file];
-            // }
+            if (soundCache[file]) {
+                return soundCache[file];
+            }
             const response = await fetch(`/sounds/${file}`);
             const blob = await response.blob();
             const url = URL.createObjectURL(blob);

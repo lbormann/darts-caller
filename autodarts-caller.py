@@ -1356,7 +1356,7 @@ def index():
 def sound(file_id):
     file_id = unquote(file_id)
     file_path = file_id
-    directory = os.path.dirname(file_path)
+    directory = '/' + os.path.dirname(file_path)
     file_name = os.path.basename(file_path)
 
     ppi(f'directory: {directory}', None, '')
