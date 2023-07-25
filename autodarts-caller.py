@@ -1346,7 +1346,7 @@ def mute_background(mute_vol):
             unmute_audio_background(mute_vol)  
 
 
-
+from flask import send_file
 
 @app.route('/')
 def index():
@@ -1355,17 +1355,22 @@ def index():
 @app.route('/sounds/<path:file_id>', methods=['GET'])
 def sound(file_id):
     file_id = unquote(file_id)
-    if os.path.isabs(file_id):
-        file_path = file_id
-    else:
-        if getattr(sys, 'frozen', False):
-            main_directory = os.path.dirname(sys.executable)
-        else:
-            main_directory = os.path.dirname(os.path.abspath(__file__))
-        file_path = os.path.join(main_directory, file_id)
-    directory = os.path.dirname(file_path)
-    file_name = os.path.basename(file_path)
-    return send_from_directory(directory, file_name)
+    return send_file(file_id)
+
+# @app.route('/sounds/<path:file_id>', methods=['GET'])
+# def sound(file_id):
+#     file_id = unquote(file_id)
+#     if os.path.isabs(file_id):
+#         file_path = file_id
+#     else:
+#         if getattr(sys, 'frozen', False):
+#             main_directory = os.path.dirname(sys.executable)
+#         else:
+#             main_directory = os.path.dirname(os.path.abspath(__file__))
+#         file_path = os.path.join(main_directory, file_id)
+#     directory = os.path.dirname(file_path)
+#     file_name = os.path.basename(file_path)
+#     return send_from_directory(directory, file_name)
 
 # @app.route('/sounds/<path:file_id>', methods=['GET'])
 # def sound(file_id):
