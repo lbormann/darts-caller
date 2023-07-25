@@ -1358,6 +1358,9 @@ def sound(file_id):
     file_path = file_id
     directory = os.path.dirname(file_path)
     file_name = os.path.basename(file_path)
+    ppi(f'file_id: {file_id}', None, '')
+    ppi(f'directory: {directory}', None, '')
+    ppi(f'file_name: {file_name}', None, '')
     return send_from_directory(directory, file_name)
 
 # @app.route('/sounds/<path:file_id>', methods=['GET'])
