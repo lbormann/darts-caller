@@ -45,7 +45,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 
 
 
-VERSION = '2.2.7'
+VERSION = '2.2.8'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -1521,6 +1521,7 @@ if __name__ == "__main__":
     else:
         ppi("WARNING: SSL-cert-verification disabled!")
         ssl._create_default_https_context = ssl._create_unverified_context
+        os.environ['PYTHONHTTPSVERIFY'] = '0'
         
 
 
