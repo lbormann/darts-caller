@@ -45,7 +45,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 
 
 
-VERSION = '2.2.8'
+VERSION = '2.2.9'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -75,7 +75,7 @@ SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket', 'Random Checkout']
 SUPPORTED_CRICKET_FIELDS = [15, 16, 17, 18, 19, 20, 25]
 BOGEY_NUMBERS = [169, 168, 166, 165, 163, 162, 159]
 
-
+# 'TODONAME': 'TODOLINK',
 CALLER_PROFILES = {
     # C7
     'charles-m-english-us-canada': 'https://drive.google.com/file/d/1-CrWSFHBoT_I9kzDuo7PR7FLCfEO-Qg-/view?usp=sharing',
@@ -90,6 +90,12 @@ CALLER_PROFILES = {
     'aiden-m-english-uk': 'https://drive.google.com/file/d/10bYvcqp1nzqJnBDC7B6u7s8aequ5wGat/view?usp=sharing',
     'theo-m-english-uk': 'https://drive.google.com/file/d/10eQaYMZM3tkIA2PIDsb0r-5NhyDU86-C/view?usp=sharing',
     'emily-f-english-scottish': 'https://drive.google.com/file/d/10mOzTjA5tqBZCKI3EqxJ0YvQptqtMNQg/view?usp=sharing',
+    'en-US-Wavenet-E-FEMALE': 'https://drive.google.com/file/d/1GdhQRbNeHW2vyTmn3g67SiWDDh8_7Erq/view?usp=sharing',
+    'en-US-Wavenet-G-FEMALE': 'https://drive.google.com/file/d/1pWVKOgx-4V-1TKOi-g8rJDOlcyWE4zdq/view?usp=sharing',
+    'en-US-Wavenet-H-FEMALE': 'https://drive.google.com/file/d/1c2FO385Fb7d4Q8xeVd-f8WnkCVh-KqDs/view?usp=sharing',
+    'en-US-Wavenet-I-MALE': 'https://drive.google.com/file/d/1UZqw_KIGBqCJynftLuWi-b2p5ONOS6ue/view?usp=sharing',
+    'en-US-Wavenet-J-MALE': 'https://drive.google.com/file/d/16wiopEwx56NrBcnMt0LSZqsgemHkJhvR/view?usp=sharing',
+    'en-US-Wavenet-A-MALE': 'https://drive.google.com/file/d/1v1EfisMblN68GDbdHa-9Qg9xryGFM7mD/view?usp=sharing',
 }
 
 
