@@ -90,7 +90,8 @@ CALLER_PROFILES = {
     'aiden-m-english-uk': 'https://drive.google.com/file/d/10bYvcqp1nzqJnBDC7B6u7s8aequ5wGat/view?usp=sharing',
     'theo-m-english-uk': 'https://drive.google.com/file/d/10eQaYMZM3tkIA2PIDsb0r-5NhyDU86-C/view?usp=sharing',
     'emily-f-english-scottish': 'https://drive.google.com/file/d/10mOzTjA5tqBZCKI3EqxJ0YvQptqtMNQg/view?usp=sharing',
-    'en-US-Wavenet-E-FEMALE': 'https://drive.google.com/file/d/11-dYqZJd6oqdB4L6E5WojLpBWP2cOQnU/view?usp=sharing'
+    'en-US-Wavenet-E-FEMALE': 'https://drive.google.com/file/d/11-dYqZJd6oqdB4L6E5WojLpBWP2cOQnU/view?usp=sharing',
+    'en-US-Wavenet-G-FEMALE': 'https://drive.google.com/file/d/1pWVKOgx-4V-1TKOi-g8rJDOlcyWE4zdq/view?usp=sharing', 
 }
 
 
