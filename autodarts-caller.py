@@ -95,7 +95,7 @@ CALLER_PROFILES = {
     'en-US-Wavenet-H-FEMALE': 'https://drive.google.com/file/d/1c2FO385Fb7d4Q8xeVd-f8WnkCVh-KqDs/view?usp=sharing',
     'en-US-Wavenet-I-MALE': 'https://drive.google.com/file/d/1UZqw_KIGBqCJynftLuWi-b2p5ONOS6ue/view?usp=sharing',
     'en-US-Wavenet-J-MALE': 'https://drive.google.com/file/d/16wiopEwx56NrBcnMt0LSZqsgemHkJhvR/view?usp=sharing',
-    'en-US-Wavenet-A-MALE': 'https://drive.google.com/file/d/1uvr2jnmqgskV1FLI2bmid6DKcnYzbKUd/view?usp=sharing',
+    'en-US-Wavenet-A-MALE': 'https://drive.google.com/file/d/1v1EfisMblN68GDbdHa-9Qg9xryGFM7mD/view?usp=sharing',
 }
 
 
