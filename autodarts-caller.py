@@ -45,7 +45,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 
 
 
-VERSION = '2.2.9'
+VERSION = '2.2.10'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -96,6 +96,13 @@ CALLER_PROFILES = {
     'en-US-Wavenet-I-MALE': 'https://drive.google.com/file/d/1UZqw_KIGBqCJynftLuWi-b2p5ONOS6ue/view?usp=sharing',
     'en-US-Wavenet-J-MALE': 'https://drive.google.com/file/d/16wiopEwx56NrBcnMt0LSZqsgemHkJhvR/view?usp=sharing',
     'en-US-Wavenet-A-MALE': 'https://drive.google.com/file/d/1v1EfisMblN68GDbdHa-9Qg9xryGFM7mD/view?usp=sharing',
+    'en-US-Wavenet-F-FEMALE': 'https://drive.google.com/file/d/1iJ1duwQVFBCMGhqHdLmoz20s7uFfLhoA/view?usp=sharing',
+    'fr-FR-Wavenet-E-FEMALE': 'https://drive.google.com/file/d/1G39Cet8MrY_KqXUHS8q8cDRYJ9lPHxpj/view?usp=sharing',
+    'fr-FR-Wavenet-B-MALE': 'https://drive.google.com/file/d/1feFvXtrB5EKD72g3qc1DPrLTUUW7yHK0/view?usp=sharing',
+    # 'TODONAME': 'TODOLINK',  
+    # 'TODONAME': 'TODOLINK',
+    # 'TODONAME': 'TODOLINK',  
+    # 'TODONAME': 'TODOLINK',
 }
 
 
