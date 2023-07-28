@@ -62,7 +62,7 @@ Optional for Linux: If you encounter problems with playing sound:
 You need to have sounds-files as mp3 or wav. This files have to be named by 1 to 180, gameshot, busted etc. You don't need all files. For instance just go for 40, 60, 180. There are a bunch of [supported Sound-file-keys](#Sound-file-keys). 
 You could record your voice or download some files in the internet, ie. https://freesound.org, https://www.zapsplat.com, https://mixkit.co/free-sound-effects/hit/ or watchout for pinned messages in Discord. Put all sound files in one folder and if you like create subfolders in this folder for random caller functionality.
 
-Note: Since version 2.0.0 there is a build-in download-mechanismn that automatically downloads a bunch of curated caller-voices.
+Note: Since version 2.0.0 there is a build-in download-mechanismn that automatically downloads a bunch of curated caller-voices in different languages.
 
 
 ### Sound-file-keys
@@ -182,6 +182,8 @@ Start the script:
 - -C / --caller [Default: None] [Possible values: look at description below]
 - -R / --random_caller [Default: 0] [Possible values: 0 | 1]
 - -L / --random_caller_each_leg [Default: 0] [Possible values: 0 | 1]
+- -RL / --random_caller_language [Default: 0] [Possible values: 0 (every language) | 1 (english) | 2 (french) | 3 (russian) | 4 (german) | 5 (spanish) | 6 (dutch)]
+- -RG / --random_caller_gender [Default: 0] [Possible values: 0 (every gender) | 1 (female) | 2 (male) ]
 - -CCP / --call_current_player [Default: 0] [Possible values: 0 | 1]
 - -E / --call_every_dart [Default: 0] [Possible values: 0 | 1]
 - -ESF / --call_every_dart_single_files [Default: 1] [Possible values: 0 | 1]
@@ -230,11 +232,19 @@ Sets a specific caller. On start the application displays a list of installed ca
 
 *`-R / --random_caller`*
 
-If you set this to '1' you will get a random caller each time you start the application. For this to work you need to setup subfolders in your media_path. Each subfolder represents an individual caller. By default this is not activated.
+If you set this to '1' you will get a random caller every match. For this to work you need to setup subfolders in your media_path. Each subfolder represents an individual caller. By default this is not activated.
 
 *`-L / --random_caller_each_leg`*
 
 If you set this to 1' you will get a random caller each time a new leg starts. By default this is not activated.
+
+*`-RL / --random_caller_language`*
+
+If you set this to '0' randomly chosen caller is not limited to specific language. By default this is '0'.
+
+*`-RG / --random_caller_gender`*
+
+If you set this to '0' randomly chosen caller is not limited to specific gender. By default this is '0'.
 
 *`-CCP / --call_current_player`*
 
@@ -407,7 +417,7 @@ Try https://www.audacity.de/ to modify your sound-files.
     A UTF8-(with a BOM)-encoded CSV file (*.csv) (filename irrelevant), which is structured as follows:
     Column 1 contains a phrase that a sound file is based on. For example: "The game is over."
     All other filled columns (separated by semicolon ';') specify [Sound-file-keys](#Sound-file-keys) that are used by autodarts-caller.
-    You can find ready-to-go template-files in 'caller-templates'-directory.
+    You can find ready-to-go template-files in 'voice-generation'-directory.
 
     - **Sounds archive:**
     A ZIP file (*.zip) (filename: "{speaker name}"-"{m|f}"-"{language}".zip - for example: "max-m-german.zip"). This ZIP-file must contain a folder (filename irrelevant). The folder contains the sound-files. It should be noted that the sounds-files MUST be in the same order (when sorted alphabetically) as listed in the template-file; however, the actual filename is completely irrelevant.
@@ -488,6 +498,8 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - https://discord.com/channels/802528604067201055/955745166134747196/1089977962725650603
 - add web-caller
 - configure custom web-caller-port
+- added caller language and gender filter
+- fixed random-caller and random-caller-each-leg
 
 
 ## LAST WORDS

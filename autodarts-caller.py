@@ -45,7 +45,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 
 
 
-VERSION = '2.2.10'
+VERSION = '2.3.0'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -75,6 +75,20 @@ SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket', 'Random Checkout']
 SUPPORTED_CRICKET_FIELDS = [15, 16, 17, 18, 19, 20, 25]
 BOGEY_NUMBERS = [169, 168, 166, 165, 163, 162, 159]
 
+CALLER_LANGUAGES = {
+    1: ['english', 'en', ],
+    2: ['french', 'fr', ],
+    3: ['russian', 'ru', ],
+    4: ['german', 'de', ],
+    5: ['spanish', 'es', ],
+    6: ['dutch', 'nl', ],
+}
+
+CALLER_GENDERS = {
+    1: ['female', 'f'],
+    2: ['male', 'm'],
+}
+
 # 'TODONAME': 'TODOLINK',
 CALLER_PROFILES = {
     # C7
@@ -99,8 +113,14 @@ CALLER_PROFILES = {
     'en-US-Wavenet-F-FEMALE': 'https://drive.google.com/file/d/1iJ1duwQVFBCMGhqHdLmoz20s7uFfLhoA/view?usp=sharing',
     'fr-FR-Wavenet-E-FEMALE': 'https://drive.google.com/file/d/1G39Cet8MrY_KqXUHS8q8cDRYJ9lPHxpj/view?usp=sharing',
     'fr-FR-Wavenet-B-MALE': 'https://drive.google.com/file/d/1feFvXtrB5EKD72g3qc1DPrLTUUW7yHK0/view?usp=sharing',
-    # 'TODONAME': 'TODOLINK',  
-    # 'TODONAME': 'TODOLINK',
+    'ru-RU-Wavenet-E-FEMALE': 'https://drive.google.com/file/d/1A_4iAsmPkmC2BBWaUGQ7xwFeueAMszhj/view?usp=sharing',  
+    'ru-RU-Wavenet-B-MALE': 'https://drive.google.com/file/d/1-3SNrGeDwyTuGgt0hEKFpMpJyT_idF_0/view?usp=sharing',
+    'de-DE-Wavenet-F-FEMALE': 'https://drive.google.com/file/d/1o_l--T7YEvGWcRlUvhwPWxWqNFN3LGMz/view?usp=sharing',  
+    'de-DE-Wavenet-B-MALE': 'https://drive.google.com/file/d/1IhPiCyZoRP1jLZGEvBe1N4HAV1vQhD1t/view?usp=sharing',
+    'es-ES-Wavenet-C-FEMALE': 'https://drive.google.com/file/d/1h6RrJxTT1vZfecOG84UOpLP_2FYsDtES/view?usp=sharing',  
+    'es-ES-Wavenet-B-MALE': 'https://drive.google.com/file/d/1ErnbxFXJa69ccJVfSzAvqmD49QLz3Rez/view?usp=sharing',
+    'nl-NL-Wavenet-B-MALE': 'https://drive.google.com/file/d/12mlrKqjEO87W10lmZiDAqcTnwzc8bUCv/view?usp=sharing',  
+    'nl-NL-Wavenet-D-FEMALE': 'https://drive.google.com/file/d/1tTe9viNMPXPsQIrZtPRF0KuBXkgeESA3/view?usp=sharing',
     # 'TODONAME': 'TODOLINK',  
     # 'TODONAME': 'TODOLINK',
 }
@@ -294,6 +314,39 @@ def load_callers():
 
     return callers
 
+def grab_caller_name(caller_root):
+    return os.path.basename(os.path.normpath(caller_root[0])).lower()
+
+def grab_caller_language(caller_name):
+    first_occurrences = []
+    for key in CALLER_LANGUAGES:
+        for tag in CALLER_LANGUAGES[key]:
+            index = caller_name.find(tag)
+            if index != -1:  # find returns -1 if the tag is not found
+                first_occurrences.append((index, key))
+
+    if not first_occurrences:  # if the list is empty
+        return None
+
+    # Sort the list of first occurrences and get the language of the tag that appears first
+    first_occurrences.sort(key=lambda x: x[0])
+    return first_occurrences[0][1]
+
+def grab_caller_gender(caller_name):
+    first_occurrences = []
+    for key in CALLER_GENDERS:
+        for tag in CALLER_GENDERS[key]:
+            index = caller_name.find(tag)
+            if index != -1:  # find returns -1 if the tag is not found
+                first_occurrences.append((index, key))
+
+    if not first_occurrences:  # if the list is empty
+        return None
+
+    # Sort the list of first occurrences and get the gender of the tag that appears first
+    first_occurrences.sort(key=lambda x: x[0])
+    return first_occurrences[0][1]
+
 def setup_caller():
     global caller
     caller = None
@@ -311,13 +364,28 @@ def setup_caller():
 
     else:
         for c in callers: 
-            caller_name = os.path.basename(os.path.normpath(c[0])).lower()
+            caller_name = grab_caller_name(c)
             ppi(caller_name, None, '')
 
         if RANDOM_CALLER == False:
             caller = callers[0]
         else:
-            caller = random.choice(callers)
+            callers_filtered = []
+            for c in callers:
+                caller_name = grab_caller_name(c)
+
+                if RANDOM_CALLER_LANGUAGE != 0:
+                    caller_language_key = grab_caller_language(caller_name)
+                    if caller_language_key != RANDOM_CALLER_LANGUAGE:
+                        continue
+    
+                if RANDOM_CALLER_GENDER != 0:
+                    caller_gender_key = grab_caller_gender(caller_name)
+                    if caller_gender_key != RANDOM_CALLER_GENDER:
+                        continue
+                callers_filtered.append(c)
+
+            caller = random.choice(callers_filtered)
 
     if(caller != None):
         for sound_file_key, sound_file_values in caller[1].items():
@@ -397,6 +465,11 @@ def listen_to_newest_match(m, ws):
     if m['event'] == 'start':
         currentMatch = m['id']
         ppi('Listen to match: ' + currentMatch)
+
+        try:
+            setup_caller()
+        except Exception as e:
+            ppe("Setup callers failed!", e)
 
         try:
             global accessToken
@@ -629,7 +702,8 @@ def process_match_x01(m):
         if play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
             play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
 
-        setup_caller()
+        if RANDOM_CALLER_EACH_LEG:
+            setup_caller()
         ppi('Gameshot and match')
 
     # Check for gameshot
@@ -671,6 +745,8 @@ def process_match_x01(m):
         if AMBIENT_SOUNDS != 0.0:
             play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
 
+        if RANDOM_CALLER_EACH_LEG:
+            setup_caller()
         ppi('Gameshot')
 
     # Check for matchon
@@ -1385,7 +1461,7 @@ def start_websocket_server(host, port):
     server.run_forever()
 
 def start_flask_app(host, port):
-    ppi('Visit WEB-CALLER with other devices at "http://' + str(host) + ':' + str(port) + '"')
+    # ppi('Visit WEB-CALLER with other devices at "http://' + str(host) + ':' + str(port) + '"')
     app.run(host=host, port=port, debug=False)
 
 
@@ -1402,6 +1478,8 @@ if __name__ == "__main__":
     ap.add_argument("-C", "--caller", default=DEFAULT_CALLER, required=False, help="Sets a particular caller")
     ap.add_argument("-R", "--random_caller", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will randomly choose a caller each game. It only works when your base-media-folder has subfolders with its files")
     ap.add_argument("-L", "--random_caller_each_leg", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will randomly choose a caller each leg instead of each game. It only works when 'random_caller=1'")
+    ap.add_argument("-RL", "--random_caller_language", type=int, choices=range(0, len(CALLER_LANGUAGES) + 1), default=0, required=False, help="If '0', the application will allow every language.., else it will limit caller selection by specific language")
+    ap.add_argument("-RG", "--random_caller_gender", type=int, choices=range(0, len(CALLER_GENDERS) + 1), default=0, required=False, help="If '0', the application will allow every gender.., else it will limit caller selection by specific gender")
     ap.add_argument("-CCP", "--call_current_player", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will call who is the current player to throw")
     ap.add_argument("-E", "--call_every_dart", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will call every thrown dart")
     ap.add_argument("-ESF", "--call_every_dart_single_files", type=int, choices=range(0, 2), default=1, required=False, help="If '1', the application will call a every dart by using single, dou.., else it uses two separated sounds: single + x (score)")
@@ -1438,6 +1516,8 @@ if __name__ == "__main__":
     CALLER = args['caller']
     RANDOM_CALLER = args['random_caller']   
     RANDOM_CALLER_EACH_LEG = args['random_caller_each_leg']   
+    RANDOM_CALLER_LANGUAGE = args['random_caller_language'] 
+    RANDOM_CALLER_GENDER = args['random_caller_gender'] 
     CALL_CURRENT_PLAYER = args['call_current_player']
     CALL_EVERY_DART = args['call_every_dart']
     CALL_EVERY_DART_SINGLE_FILE = args['call_every_dart_single_files']

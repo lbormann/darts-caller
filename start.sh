@@ -43,6 +43,12 @@ random_caller=
 # -L
 random_caller_each_leg=
 
+# -RL
+random_caller_language=
+
+# -RG
+random_caller_gender=
+
 # -CCP
 call_current_player=
 
@@ -136,6 +142,12 @@ if [ -n "$random_caller" ]; then
 fi
 if [ -n "$random_caller_each_leg" ]; then
   args="$args -L $random_caller_each_leg"
+fi
+if [ -n "$random_caller_language" ]; then
+  args="$args -RL $random_caller_language"
+fi
+if [ -n "$random_caller_gender" ]; then
+  args="$args -RG $random_caller_gender"
 fi
 if [ -n "$call_current_player" ]; then
   args="$args -CCP $call_current_player"
