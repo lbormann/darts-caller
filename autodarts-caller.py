@@ -44,7 +44,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 
 
 
-VERSION = '2.3.1'
+VERSION = '2.3.2'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -318,9 +318,11 @@ def grab_caller_name(caller_root):
 
 def grab_caller_language(caller_name):
     first_occurrences = []
+    caller_name = '-' + caller_name + '-'
     for key in CALLER_LANGUAGES:
         for tag in CALLER_LANGUAGES[key]:
-            index = caller_name.find(tag)
+            tag_with_dashes = '-' + tag + '-'
+            index = caller_name.find(tag_with_dashes)
             if index != -1:  # find returns -1 if the tag is not found
                 first_occurrences.append((index, key))
 
@@ -332,6 +334,22 @@ def grab_caller_language(caller_name):
     return first_occurrences[0][1]
 
 def grab_caller_gender(caller_name):
+    first_occurrences = []
+    caller_name = '-' + caller_name + '-'
+    for key in CALLER_GENDERS:
+        for tag in CALLER_GENDERS[key]:
+            tag_with_dashes = '-' + tag + '-'
+            index = caller_name.find(tag_with_dashes)
+            if index != -1:  # find returns -1 if the tag is not found
+                first_occurrences.append((index, key))
+
+    if not first_occurrences:  # if the list is empty
+        return None
+
+    # Sort the list of first occurrences and get the gender of the tag that appears first
+    first_occurrences.sort(key=lambda x: x[0])
+    return first_occurrences[0][1]
+
     first_occurrences = []
     for key in CALLER_GENDERS:
         for tag in CALLER_GENDERS[key]:
