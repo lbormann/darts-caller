@@ -39,11 +39,59 @@
         const button = document.getElementById('button');
         const state = document.getElementById('status');
         const lastCall = document.getElementById('last-call');
-        const soundCache = {};
-        const soundQueue = [];
-        let isPlaying = false;
+
         button.addEventListener('click', onButtonClick);
 
+        let audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let audioQueue = Promise.resolve();
+        let previousWait = false;
+
+        function getFilename(path) {
+            let separator = path.includes('/') ? '/' : '\\';
+            let parts = path.split(separator);
+            return parts[parts.length - 1];
+        }
+
+        function fetchAndPlay(file) {
+            return new Promise((resolve, reject) => {
+                let file_url = `/sounds/${file.path}`;
+                fetch(file_url, {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "audio/mpeg"
+                    },
+                })
+                .then(response => response.arrayBuffer())
+                .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
+                .then(audioBuffer => {
+                    console.log("Play sound: ", file.path);
+                    lastCall.innerText = getFilename(unescape(file.path));
+                    let source = audioContext.createBufferSource();
+                    source.buffer = audioBuffer;
+                    source.connect(audioContext.destination);
+                    source.start();
+                    source.onended = resolve;
+                })
+                .catch(err => {
+                    console.error(err);
+                    reject(err);
+                });
+            });
+        }
+
+        function handleEvent(event) {
+            if(event.event === 'mirror') {
+                previousWait = true;
+                for(let file of event.files) {
+                    if(file.wait || previousWait) {
+                        audioQueue = audioQueue.then(() => fetchAndPlay(file));
+                    } else {
+                        fetchAndPlay(file).catch(err => console.error(err));
+                    }
+                    previousWait = file.wait;
+                }
+            }
+        }
 
         function onButtonClick() {
             audio.load();
@@ -54,23 +102,7 @@
             setupWebSocketConnection();            
         }
 
-        function addToQueue(data) {
-            soundQueue.push(data);
-            if (!isPlaying) {
-                playNextSound();
-            }
-        }
-
-        async function playNextSound() {
-            if (soundQueue.length === 0) {
-                isPlaying = false;
-                return;
-            }
-            // isPlaying = true;
-            const data = soundQueue.shift();
-            await playSound(data);
-            playNextSound();
-        }
+        
 
         function setupWebSocketConnection() {
             socket = new WebSocket("ws://{{ host }}:{{ ws_port }}");
@@ -87,53 +119,15 @@
             };
             socket.onmessage = function(event) {
                 let data = JSON.parse(event.data);
-                if (data.event === "mirror") {
-                    // playSound(data);
-                    addToQueue(data);
-                }
+
+                handleEvent(data);
+                // if (data.event === "mirror") {
+                //     // playSound(data);
+                //     addToQueue(data);
+                // }
             };
         }
         
-        async function loadSound(file) {
-            if (soundCache[file]) {
-                return soundCache[file];
-            }
-            const response = await fetch(`/sounds/${file}`);
-            const blob = await response.blob();
-            const url = URL.createObjectURL(blob);
-            soundCache[file] = url;
-            return url;
-        }
-
-        async function playSound(data) {
-            console.log("Play sound: ", data.file);
-            lastCall.innerText = "Play: " + unescape(data.file);
-
-            function isAudioPlaying() {
-                audioElement = document.getElementById('audio');
-                return !audioElement.paused && audioElement.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA;
-            }
-
-            async function waitForAudioEnd() {
-                return new Promise(async (resolve) => {
-                    while (isAudioPlaying()) {
-                        await new Promise((r) => setTimeout(r, 10));
-                    }
-                    resolve();
-                });
-            }
-
-            try {
-                if (data.wait = true || data.wait == "true") {
-                    await waitForAudioEnd();
-                }
-                const soundUrl = await loadSound(data.file);
-                audio.src = soundUrl;
-                await audio.play();
-            } catch (e) {
-                console.log("playback-error: ", e);
-            }
-        }
 
         // window.onload = function() {
         //     setupWebSocketConnection();

@@ -18,7 +18,6 @@ import shutil
 import csv
 import math
 import ssl
-import sys
 from urllib.parse import quote, unquote
 from flask import Flask, render_template, send_from_directory
 
@@ -45,7 +44,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 
 
 
-VERSION = '2.3.0'
+VERSION = '2.3.1'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -419,12 +418,20 @@ def receive_local_board_address():
 
 def play_sound(sound, wait_for_last, volume_mult):
     if WEB > 0:
-        mirror = {
-                "event": "mirror",
-                "file": quote(sound, safe=""),
-                "wait": wait_for_last
-            }
-        broadcast(mirror)
+        global mirror_files
+        
+        mirror_file = {
+                    "path": quote(sound, safe=""),
+                    "wait": wait_for_last,
+                }
+        mirror_files.append(mirror_file)
+
+        # mirror = {
+        #         "event": "mirror",
+        #         "file": quote(sound, safe=""),
+        #         "wait": wait_for_last
+        #     }
+        # broadcast(mirror)
 
     if WEB == 0 or WEB == 2:
         if wait_for_last == True:
@@ -432,6 +439,7 @@ def play_sound(sound, wait_for_last, volume_mult):
                 time.sleep(0.01)
 
         s = mixer.Sound(sound)
+
         if AUDIO_CALLER_VOLUME is not None:
             s.set_volume(AUDIO_CALLER_VOLUME * volume_mult)
         s.play()
@@ -442,11 +450,38 @@ def play_sound_effect(sound_file_key, wait_for_last = False, volume_mult = 1.0):
     try:
         global caller
         play_sound(random.choice(caller[sound_file_key]), wait_for_last, volume_mult)
-        
         return True
     except Exception as e:
         ppe('Can not play sound for sound-file-key "' + sound_file_key + '" -> Ignore this or check existance; otherwise convert your file appropriate', e)
         return False
+    
+def mirror_sounds():
+    global mirror_files
+    if WEB > 0: 
+        # Example
+        # {
+        #     "event": "mirror",
+        #     "files": [
+        #         {
+        #             "path": "C:\sounds\luca.mp3",
+        #             "wait": False,
+        #         },
+        #         {
+        #             "path": "C:\sounds\you_require.mp3",
+        #             "wait": True,
+        #         },
+        #         {
+        #             "path": "C:\sounds\40.mp3",
+        #             "wait": True,
+        #         }
+        #     ]
+        # }
+        mirror = {
+            "event": "mirror",
+            "files": mirror_files
+        }
+        broadcast(mirror)
+        mirror_files = []
 
 
 def listen_to_newest_match(m, ws):
@@ -517,6 +552,7 @@ def listen_to_newest_match(m, ws):
             if AMBIENT_SOUNDS != 0.0 and play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
                 play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
 
+            mirror_sounds()
             ppi('Matchon')
 
         except Exception as e:
@@ -551,6 +587,7 @@ def listen_to_newest_match(m, ws):
 
         if m['event'] == 'delete':
             play_sound_effect('matchcancel')
+            mirror_sounds()
 
 def process_match_x01(m):
     global accessToken
@@ -634,6 +671,7 @@ def process_match_x01(m):
                 else:
                     pcc_success = (play_sound_effect('you_require', True) and play_sound_effect(remaining, True))
 
+                
                 ppi('Checkout possible: ' + remaining)
 
             # Player`s turn-call
@@ -643,6 +681,7 @@ def process_match_x01(m):
             # Player-change
             if pcc_success == False and AMBIENT_SOUNDS != 0.0:
                 play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                
 
             ppi("Next player")
 
@@ -667,6 +706,7 @@ def process_match_x01(m):
                         play_sound_effect('single')
                 else:
                     play_sound_effect(type)
+            
 
         elif len(turns['throws']) <= 2:
             field_number = str(turns['throws'][throwAmount - 1]['segment']['number'])
@@ -678,7 +718,7 @@ def process_match_x01(m):
                 play_sound_effect(field_number, True)
             else:
                 play_sound_effect('outside')
-
+            
 
     # Check for matchshot
     if matchshot == True:
@@ -701,6 +741,8 @@ def process_match_x01(m):
 
         if play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
             play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+
+        
 
         if RANDOM_CALLER_EACH_LEG:
             setup_caller()
@@ -745,6 +787,8 @@ def process_match_x01(m):
         if AMBIENT_SOUNDS != 0.0:
             play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
 
+        
+
         if RANDOM_CALLER_EACH_LEG:
             setup_caller()
         ppi('Gameshot')
@@ -772,6 +816,7 @@ def process_match_x01(m):
         if AMBIENT_SOUNDS != 0.0 and play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
             play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
 
+        
         ppi('Matchon')
 
     # Check for gameon
@@ -796,6 +841,7 @@ def process_match_x01(m):
         if AMBIENT_SOUNDS != 0.0:
             play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
 
+        
         ppi('Gameon')
           
     # Check for busted turn
@@ -817,6 +863,7 @@ def process_match_x01(m):
         if AMBIENT_SOUNDS != 0.0:
             play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
 
+        
         ppi('Busted')
     
     # Check for 1. Dart
@@ -928,10 +975,10 @@ def process_match_x01(m):
             elif group_score >= 86:
                 play_sound_effect('ambient_group_normal', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
 
+        
         ppi("Turn ended")
 
-
-
+    mirror_sounds()
     if isGameFin == True:
         isGameFinished = True
 
@@ -1175,9 +1222,11 @@ def process_match_cricket(m):
         
         ppi("Next player")
 
+    mirror_sounds()
     if isGameFin == True:
         isGameFinished = True
-
+    
+    
          
 
 def connect_autodarts():
@@ -1590,6 +1639,9 @@ if __name__ == "__main__":
     global background_audios
     background_audios = None
 
+    global mirror_files
+    mirror_files = []
+
 
 
     # Initialize sound-mixer
@@ -1641,8 +1693,6 @@ if __name__ == "__main__":
             ppi('A caller with name "' + str(CALLER) + '" does NOT exist! Please compare your input with list of possible callers and update -C')
         else:
             try:  
-                connect_autodarts()
-
                 websocket_server_thread = threading.Thread(target=start_websocket_server, args=(DEFAULT_HOST_IP, HOST_PORT))
                 websocket_server_thread.start()
 
@@ -1650,6 +1700,8 @@ if __name__ == "__main__":
                     WEB_HOST = get_local_ip_address()
                     flask_app_thread = threading.Thread(target=start_flask_app, args=(DEFAULT_HOST_IP, WEB_PORT))
                     flask_app_thread.start()
+
+                connect_autodarts()
 
                 websocket_server_thread.join()
 

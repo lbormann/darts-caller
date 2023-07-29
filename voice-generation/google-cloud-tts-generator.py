@@ -1,4 +1,5 @@
 """Synthesizes speech from input strings of caller-template-files.
+https://cloud.google.com/text-to-speech?utm_source=google&utm_medium=cpc&utm_campaign=emea-de-all-de-dr-bkws-all-all-trial-b-gcp-1011340&utm_content=text-ad-none-any-dev_c-cre_654782172903-adgp_Hybrid%20%7C%20BKWS%20-%20BRO%20%7C%20Txt%20~%20AI%20&%20ML%20~%20Text-to-Speech&hl=de#v1-kwid_43700076017151607-aud-606988878854:kwd-1192006603412-userloc_9043912&utm_term=kw_google%20text%20to%20speech-net_g-plac_&gad=1&gclid=Cj0KCQjwiIOmBhDjARIsAP6YhSXPvIvzrbxc4WLGzZ2KNMeVA0BQmNsmzI9YteXptAlh28F4WJEETn4aAsS7EALw_wcB&gclsrc=aw.ds&hl=de
 https://cloud.google.com/text-to-speech/pricing?hl=de
 """
 import os
@@ -47,7 +48,7 @@ def display_menu(options):
 
 
 def list_template_files():
-    return get_files(f'*-*-*{TEMPLATE_FILE_EXTENSION}')
+    return get_files(f'*-*-v*{TEMPLATE_FILE_EXTENSION}')
 def choose_template_file():
     template_files = list_template_files()
     return display_menu(template_files)

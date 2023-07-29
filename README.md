@@ -286,7 +286,7 @@ If you wish to stop the application from checking/downloading all possible calle
 
 *`-DLP / --downloads_path`*
 
-In case you face problems with caller-voices-downloads try to change the download-path (absolute Path). By default this is 'download' in the application`s directory. But make sure you choose an non important folder as the content will be cleared by application.
+In case you face problems with caller-voices-downloads try to change the download-path. By default this is 'caller-downloads-temp' in the application`s directory. But make sure you choose an non important folder as the content will be cleared by application.
 
 *`-BAV / --background_audio_volume`*
 
