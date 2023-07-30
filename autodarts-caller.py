@@ -444,13 +444,6 @@ def play_sound(sound, wait_for_last, volume_mult):
                 }
         mirror_files.append(mirror_file)
 
-        # mirror = {
-        #         "event": "mirror",
-        #         "file": quote(sound, safe=""),
-        #         "wait": wait_for_last
-        #     }
-        # broadcast(mirror)
-
     if WEB == 0 or WEB == 2:
         if wait_for_last == True:
             while mixer.get_busy():
@@ -737,7 +730,6 @@ def process_match_x01(m):
             else:
                 play_sound_effect('outside')
             
-
     # Check for matchshot
     if matchshot == True:
         isGameFin = True

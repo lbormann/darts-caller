@@ -45,8 +45,6 @@ def display_menu(options):
 
     return options[selection - 1]  # Return selected string from options list
 
-
-
 def list_template_files():
     return get_files(f'*-*-v*{TEMPLATE_FILE_EXTENSION}')
 def choose_template_file():
@@ -92,7 +90,6 @@ def list_google_voice_names(language_code):
 def choose_google_voice_name(language_code):
     google_voices = list_google_voice_names(language_code)
     return display_menu(google_voices)
-
 
 def read_generation_keys(template_file):
     keys = []
