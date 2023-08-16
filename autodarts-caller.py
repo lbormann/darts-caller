@@ -48,7 +48,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 # sounddevice==0.4.6
 
 
-VERSION = '2.3.5'
+VERSION = '2.3.6'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -1572,6 +1572,7 @@ def on_message_autodarts(ws, message):
                     for p in players:
                         if p['boardId'] == AUTODART_USER_BOARD_ID:
                             play_sound_effect("lobbychanged")
+                            mirror_sounds()
                             break
                 
 
