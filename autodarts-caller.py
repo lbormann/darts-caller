@@ -43,7 +43,9 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 
 
 
-
+# pyaudio==0.2.12
+# vosk==0.3.45
+# sounddevice==0.4.6
 
 
 
