@@ -119,6 +119,11 @@ Note: Since version 2.0.0 there is a build-in download-mechanismn that automatic
 - ambient_group_good
 - ambient_group_normal
 
+**LOBBY-CALLING:**
+
+- lobbychanged
+
+
 ______
 
 Since Version 1.6.0 you can deposit multiple sounds for EVERY game-event. Therefor you have to add a "+" to the filename. After the "+" you can add whatever text you prefer; as an example: let`s say we want multiple sounds for the 'gameon'-event. Our default file is 'gameon.mp3/gameon.wav'. Now we add some more: 'gameon+1.mp3', 'gameon+2.mp3', 'gameon+BEST.mp3'. You are not limited to gameon, even score-sounds can have multiple soundfiles.
@@ -294,7 +299,7 @@ You can not hear any calls as your music is way too loud? Try to set this to '0.
 
 *`-WEB / --web_caller`*
 
-If you set this to a '1' or '2' the app will host a web-endpoint to transfer every calling-action to connected devices. A value '1' will play sounds only on connected devices. Value '2' will play locally and on connected devices. You start web-calling by typing http://{machine-ip-address}:{web-caller-port / see below} in browser of your desired device. 
+If you set this to a '1' or '2' the app will host a web-endpoint to transfer every calling-action to connected devices. A value '1' will play sounds only on connected devices. Value '2' will play locally and on connected devices. You start web-calling by typing http://{machine-ip-address}:{web-caller-port / see below} in browser on your desired device. 
 
 *`-WEBP / --web_caller_port`*
 

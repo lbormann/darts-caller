@@ -6,4 +6,7 @@ pygame==2.3.0
 download==0.3.5
 certifi==2023.7.22
 pycaw; platform_system == "Windows"
-Flask
+Flask==2.1.0
+pyaudio==0.2.12
+vosk==0.3.45
+sounddevice==0.4.6

@@ -95,14 +95,11 @@
 
         function onButtonClick() {
             audio.load();
-            //playSound("start");
             button.style.visibility='hidden'; 
             state.style.visibility='visible'; 
             lastCall.style.visibility='visible'; 
             setupWebSocketConnection();            
         }
-
-        
 
         function setupWebSocketConnection() {
             socket = new WebSocket("ws://{{ host }}:{{ ws_port }}");
@@ -119,19 +116,9 @@
             };
             socket.onmessage = function(event) {
                 let data = JSON.parse(event.data);
-
                 handleEvent(data);
-                // if (data.event === "mirror") {
-                //     // playSound(data);
-                //     addToQueue(data);
-                // }
             };
         }
-        
-
-        // window.onload = function() {
-        //     setupWebSocketConnection();
-        // };
     </script>
 
 </body>
