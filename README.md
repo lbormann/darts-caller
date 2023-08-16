@@ -119,6 +119,11 @@ Note: Since version 2.0.0 there is a build-in download-mechanismn that automatic
 - ambient_group_good
 - ambient_group_normal
 
+**LOBBY-CALLING:**
+
+- lobbychanged
+
+
 ______
 
 Since Version 1.6.0 you can deposit multiple sounds for EVERY game-event. Therefor you have to add a "+" to the filename. After the "+" you can add whatever text you prefer; as an example: let`s say we want multiple sounds for the 'gameon'-event. Our default file is 'gameon.mp3/gameon.wav'. Now we add some more: 'gameon+1.mp3', 'gameon+2.mp3', 'gameon+BEST.mp3'. You are not limited to gameon, even score-sounds can have multiple soundfiles.

@@ -20,6 +20,9 @@ import math
 import ssl
 from urllib.parse import quote, unquote
 from flask import Flask, render_template, send_from_directory
+import queue
+import sounddevice as sd
+from vosk import Model, KaldiRecognizer
 
 plat = platform.system()
 if plat == 'Windows':
@@ -44,7 +47,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 
 
 
-VERSION = '2.3.2'
+VERSION = '2.3.3'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -123,6 +126,74 @@ CALLER_PROFILES = {
     # 'TODONAME': 'TODOLINK',  
     # 'TODONAME': 'TODOLINK',
 }
+
+
+FIELD_COORDS = {
+    "0": {"x": 0.016160134143785285,"y": 1.1049884720184449},
+    "S1": {"x": 0.2415216935652902,"y": 0.7347516243974009}, 
+    "D1": {"x": 0.29786208342066656,"y": 0.9359673024523162}, 
+    "T1": {"x": 0.17713267658771747,"y": 0.5818277090756655},
+    "S2": {"x": 0.4668832529867955,"y": -0.6415636134982183}, 
+    "D2": {"x": 0.5876126598197445,"y": -0.7783902745755609}, 
+    "T2": {"x": 0.35420247327604254,"y": -0.4725424439320897},
+    "S3": {"x": 0.008111507021588693,"y": -0.7864389016977573}, 
+    "D3": {"x": -0.007985747222804492,"y": -0.9715573255082791}, 
+    "T3": {"x": -0.007985747222804492,"y": -0.5932718507650387},
+    "S4": {"x": 0.6439530496751206,"y": 0.4530496751205198}, 
+    "D4": {"x": 0.7888283378746596,"y": 0.5657304548312723}, 
+    "T4": {"x": 0.48298050723118835,"y": 0.36451477677635713},
+    "S5": {"x": -0.23334730664430925,"y": 0.7508488786417943}, 
+    "D5": {"x": -0.31383357786627536,"y": 0.9279186753301195}, 
+    "T5": {"x": -0.1850555439111297,"y": 0.5737790819534688},
+    "S6": {"x": 0.7888283378746596,"y": -0.013770697966883233}, 
+    "D6": {"x": 0.9739467616851814,"y": 0.010375183399706544}, 
+    "T6": {"x": 0.5956612869419406,"y": -0.005722070844686641},
+    "S7": {"x": -0.4506602389436176,"y": -0.6335149863760215}, 
+    "D7": {"x": -0.5713896457765667,"y": -0.7703416474533641}, 
+    "T7": {"x": -0.3540767134772585,"y": -0.4725424439320897},
+    "S8": {"x": -0.7323621882204988,"y": -0.239132257388388}, 
+    "D8": {"x": -0.9255292391532174,"y": -0.2954726472437643}, 
+    "T8": {"x": -0.5713896457765667,"y": -0.18279186753301202},
+    "S9": {"x": -0.627730035631943,"y": 0.4691469293649132}, 
+    "D9": {"x": -0.7726053238314818,"y": 0.5657304548312723}, 
+    "T9": {"x": -0.48285474743240414,"y": 0.34841752253196395},
+    "S10": {"x": 0.7244393208970865,"y": -0.23108363026619158}, 
+    "D10": {"x": 0.9256549989520018,"y": -0.28742402012156787}, 
+    "T10": {"x": 0.5715154055753511,"y": -0.19084049465520878},
+    "S11": {"x": -0.7726053238314818,"y": -0.005722070844686641}, 
+    "D11": {"x": -0.9657723747642004,"y": -0.005722070844686641}, 
+    "T11": {"x": -0.5955355271431566,"y": 0.0023265562775099512},
+    "S12": {"x": -0.4506602389436176,"y": 0.6140222175644519}, 
+    "D12": {"x": -0.5633410186543703,"y": 0.7910920142527772}, 
+    "T12": {"x": -0.3540767134772585,"y": 0.4932928107315028},
+    "S13": {"x": 0.7244393208970865,"y": 0.24378536994340808}, 
+    "D13": {"x": 0.917606371829805,"y": 0.308174386920981}, 
+    "T13": {"x": 0.5634667784531546,"y": 0.18744498008803193},
+    "S14": {"x": 0.6278557954307273,"y": -0.46449381680989327}, 
+    "D14": {"x": -0.9255292391532174,"y": 0.308174386920981}, 
+    "T14": {"x": -0.5713896457765667,"y": 0.19549360721022835},
+    "S15": {"x": 0.6278557954307273,"y": -0.46449381680989327}, 
+    "D15": {"x": 0.7888283378746596,"y": -0.5771745965206456}, 
+    "T15": {"x": 0.4910291343533851,"y": -0.34376440997694424},
+    "S16": {"x": -0.6196814085097464,"y": -0.4725424439320897}, 
+    "D16": {"x": -0.7967512051980717,"y": -0.5610773422762524}, 
+    "T16": {"x": -0.49090337455460076,"y": -0.33571578285474746},
+    "S17": {"x": 0.2415216935652902,"y": -0.730098511842381}, 
+    "D17": {"x": 0.29786208342066656,"y": -0.9152169356529029}, 
+    "T17": {"x": 0.18518130370991423,"y": -0.5691259693984492},
+    "S18": {"x": 0.48298050723118835,"y": 0.6462167260532384}, 
+    "D18": {"x": 0.5554181513309578,"y": 0.799140641374974}, 
+    "T18": {"x": 0.3292712798530314,"y": 0.49608083282302506},
+    "S19": {"x": -0.2586037966932027,"y": -0.7658909981628906}, 
+    "D19": {"x": -0.3134721371708513,"y": -0.9148193508879362}, 
+    "T19": {"x": -0.19589712186160443,"y": -0.562094304960196},
+    "S20": {"x": 0.00006123698714003468,"y": 0.7939375382731171}, 
+    "D20": {"x": 0.01119619445411297, "y": 0.9726766446223462}, 
+    "T20": {"x": 0.00006123698714003468, "y": 0.6058175137783223},
+    "25": {"x": 0.06276791181873864, "y": 0.01794243723208814}, 
+    "50": {"x": -0.007777097366809472, "y": 0.0022657685241886157},
+}
+
 
 
 
@@ -468,7 +539,7 @@ def play_sound_effect(sound_file_key, wait_for_last = False, volume_mult = 1.0):
     
 def mirror_sounds():
     global mirror_files
-    if WEB > 0: 
+    if WEB > 0 and len(mirror_files) != 0: 
         # Example
         # {
         #     "event": "mirror",
@@ -494,7 +565,143 @@ def mirror_sounds():
         broadcast(mirror)
         mirror_files = []
 
+def text2dart_score(text):
+    try:
+        throw_number = None
+        field_name = None
 
+        words = text.split(" ")
+        # Überprüfung und Zuordnung der throw-number
+        if words[0] in THROW_NUMBER_MAP:
+            throw_number = THROW_NUMBER_MAP[words[0]]
+        
+        # Überprüfung und Zuordnung der field-name
+        # Beginnen bei der gesamten Wortliste und sukzessive das erste Wort entfernen
+        for i in range(len(words)):
+            possible_field = " ".join(words[i:])
+            if possible_field in FIELD_NAME_MAP:
+                field_name = FIELD_NAME_MAP[possible_field]
+                break
+
+        return (throw_number, field_name)
+
+    except Exception as e:
+        print(e)
+        return (None, None)
+
+def text2next(text):
+    mapping = ["next"]
+    if text in mapping:
+        next_throw()
+        return True
+    return False
+   
+def update_throw(throw_index, score):
+    # patch
+    # https://api.autodarts.io/gs/v0/matches/<match-id>/throws
+    # {
+    #     "changes": {
+    #         "2": {
+    #             "x": x-coord,
+    #             "y": y-coord
+    #         }
+    #     }
+    # }
+    try:
+        global accessToken
+        global boardManagerAddress
+        global currentMatch
+        global lastUpdateThrow
+
+        if boardManagerAddress != None and FIELD_COORDS[score] != None:
+            data = {
+                "changes": {
+                    throw_index: FIELD_COORDS[score]
+                }
+            }
+            if lastUpdateThrow == None or lastUpdateThrow != data:
+                lastUpdateThrow = data
+                requests.patch(AUTODART_MATCHES_URL + currentMatch + "/throws", json=data, headers={'Authorization': 'Bearer ' + accessToken})
+            else:
+               lastUpdateThrow = None 
+    except Exception as e:
+        ppe('Updating throw failed', e)
+
+def next_throw():
+    # poost
+    # https://api.autodarts.io/gs/v0/matches/<match-id>/players/next
+    try:
+        global accessToken
+        global currentMatch
+        requests.post(AUTODART_MATCHES_URL + currentMatch + "/players/next", headers={'Authorization': 'Bearer ' + accessToken})
+    except Exception as e:
+        ppe('Next throw failed', e)
+
+def init_voice_patterns():
+    reverse_mapping = {}
+    for k, values in dart_word_map.items():
+        for v in values:
+            reverse_mapping[v] = k
+
+    for word, number in number_word_map.items():
+        for kd in KEYWORD_DOUBLES:
+            FIELD_NAME_MAP[kd + " " + word] = "D" + number
+        for kt in KEYWORD_TRIPLES:
+            FIELD_NAME_MAP[kt + " " + word] = "T" + number
+        for ks in KEYWORD_SINGLES: 
+            FIELD_NAME_MAP[ks + " " + word] = "S" + number
+        FIELD_NAME_MAP[word] = "S" + number
+    return reverse_mapping
+
+def start_speech_correction():
+    def process(*args):
+        if WEB == 0 or WEB == 2:
+
+            q = queue.Queue()
+            device_info = sd.query_devices(None, "input")
+            # soundfile expects an int, sounddevice provides a float:
+            samplerate = int(device_info["default_samplerate"])
+            # lang="en-us"
+            # vosk-model-en-us-daanzu-20200905
+            model = Model(model_path="stt-models\\vosk-model-en-us-0.42-gigaspeech")
+            rec = KaldiRecognizer(model, samplerate)
+
+            THROW_NUMBER_MAP = init_voice_patterns()
+
+            with sd.RawInputStream(samplerate = samplerate, 
+                                blocksize = 8000, 
+                                device = None,
+                                dtype = "int16", 
+                                channels = 1, 
+                                callback = callback):
+                while True:
+                    while mixer.get_busy():
+                        time.sleep(0.01)
+
+                    data = q.get()
+                    if rec.AcceptWaveform(data):
+                        stt_result = rec.Result()
+                        stt_result = json.loads(stt_result)
+                        stt_result = stt_result['text']
+                        if stt_result != '':
+                            ppi(f"Voice-Recognition: {stt_result}")
+
+
+
+                            if not text2next(stt_result):
+                                (dart_number, dart_field) = text2dart_score(stt_result)
+                                if dart_number != None and dart_field != None:
+                                    ppi(f"Dart-Number: {dart_number} = {dart_field}")
+                                    update_throw(dart_number - 1, dart_field)
+                    # else:
+                    #     pass
+                        # stt_result = rec.PartialResult()
+                        # stt_result = json.loads(stt_result)
+                        # stt_result = stt_result['transcription']
+                        # ppi(f"Voice-Recognition: (Partial): {stt_result}")
+
+    threading.Thread(target=process).start()
+     
 def listen_to_newest_match(m, ws):
     global currentMatch
 
@@ -929,63 +1136,64 @@ def process_match_x01(m):
                 else:
                     play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
 
-
             # Koordinaten der Pfeile
             coords = []
             for t in turns['throws']:
-                coords.append({"x": t['coords']['x'], "y": t['coords']['y']})
+                if 'coords' in t:
+                    coords.append({"x": t['coords']['x'], "y": t['coords']['y']})
+
             # ppi(str(coords))
 
             # Suche das Koordinatenpaar, das am weitesten von den beiden Anderen entfernt ist
 
-            # Liste mit allen möglichen Kombinationen von Koordinatenpaaren erstellen
-            combinations = [(coords[0], coords[1]), (coords[0], coords[2]), (coords[1], coords[2])]
+            if len(coords) > 0:
+                # Liste mit allen möglichen Kombinationen von Koordinatenpaaren erstellen
+                combinations = [(coords[0], coords[1]), (coords[0], coords[2]), (coords[1], coords[2])]
 
-            # Variablen für das ausgewählte Koordinatenpaar und die maximale Gesamtdistanz initialisieren
-            selected_coord = None
-            max_total_distance = 0
+                # Variablen für das ausgewählte Koordinatenpaar und die maximale Gesamtdistanz initialisieren
+                selected_coord = None
+                max_total_distance = 0
 
-            # Gesamtdistanz für jede Kombination von Koordinatenpaaren berechnen
-            for combination in combinations:
-                dist1 = math.sqrt((combination[0]["x"] - combination[1]["x"])**2 + (combination[0]["y"] - combination[1]["y"])**2)
-                dist2 = math.sqrt((combination[1]["x"] - combination[0]["x"])**2 + (combination[1]["y"] - combination[0]["y"])**2)
-                total_distance = dist1 + dist2
-                
-                # Überprüfen, ob die Gesamtdistanz größer als die bisher größte Gesamtdistanz ist
-                if total_distance > max_total_distance:
-                    max_total_distance = total_distance
-                    selected_coord = combination[0]
+                # Gesamtdistanz für jede Kombination von Koordinatenpaaren berechnen
+                for combination in combinations:
+                    dist1 = math.sqrt((combination[0]["x"] - combination[1]["x"])**2 + (combination[0]["y"] - combination[1]["y"])**2)
+                    dist2 = math.sqrt((combination[1]["x"] - combination[0]["x"])**2 + (combination[1]["y"] - combination[0]["y"])**2)
+                    total_distance = dist1 + dist2
+                    
+                    # Überprüfen, ob die Gesamtdistanz größer als die bisher größte Gesamtdistanz ist
+                    if total_distance > max_total_distance:
+                        max_total_distance = total_distance
+                        selected_coord = combination[0]
 
-            group_score = 100.0
-            if selected_coord != None:
-                
-                # Distanz von selected_coord zu coord2 berechnen
-                dist1 = math.sqrt((selected_coord["x"] - coords[1]["x"])**2 + (selected_coord["y"] - coords[1]["y"])**2)
+                group_score = 100.0
+                if selected_coord != None:
+                    
+                    # Distanz von selected_coord zu coord2 berechnen
+                    dist1 = math.sqrt((selected_coord["x"] - coords[1]["x"])**2 + (selected_coord["y"] - coords[1]["y"])**2)
 
-                # Distanz von selected_coord zu coord3 berechnen
-                dist2 = math.sqrt((selected_coord["x"] - coords[2]["x"])**2 + (selected_coord["y"] -  coords[2]["y"])**2)
+                    # Distanz von selected_coord zu coord3 berechnen
+                    dist2 = math.sqrt((selected_coord["x"] - coords[2]["x"])**2 + (selected_coord["y"] -  coords[2]["y"])**2)
 
-                # Durchschnitt der beiden Distanzen berechnen
-                avg_dist = (dist1 + dist2) / 2
+                    # Durchschnitt der beiden Distanzen berechnen
+                    avg_dist = (dist1 + dist2) / 2
 
-                group_score = (1.0 - avg_dist) * 100
+                    group_score = (1.0 - avg_dist) * 100
 
-            # ppi("Distance by max_dis_coord to coord2: " + str(dist1))
-            # ppi("Distance by max_dis_coord to coord3: " + str(dist2))
-            # ppi("Group-score: " + str(group_score))
+                # ppi("Distance by max_dis_coord to coord2: " + str(dist1))
+                # ppi("Distance by max_dis_coord to coord3: " + str(dist2))
+                # ppi("Group-score: " + str(group_score))
 
-            if group_score >= 98:
-                play_sound_effect('ambient_group_legendary', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)   
-            elif group_score >= 95:
-                play_sound_effect('ambient_group_perfect', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
-            elif group_score >= 92:
-                play_sound_effect('ambient_group_very_nice', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
-            elif group_score >= 89:
-                play_sound_effect('ambient_group_good', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
-            elif group_score >= 86:
-                play_sound_effect('ambient_group_normal', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
-
-        
+                if group_score >= 98:
+                    play_sound_effect('ambient_group_legendary', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)   
+                elif group_score >= 95:
+                    play_sound_effect('ambient_group_perfect', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                elif group_score >= 92:
+                    play_sound_effect('ambient_group_very_nice', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                elif group_score >= 89:
+                    play_sound_effect('ambient_group_good', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                elif group_score >= 86:
+                    play_sound_effect('ambient_group_normal', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+     
         ppi("Turn ended")
 
     mirror_sounds()
@@ -1235,9 +1443,6 @@ def process_match_cricket(m):
     mirror_sounds()
     if isGameFin == True:
         isGameFinished = True
-    
-    
-         
 
 def connect_autodarts():
     def process(*args):
@@ -1312,7 +1517,17 @@ def on_open_autodarts(ws):
         ws.send(json.dumps(paramsSubscribeMatchesEvents))
 
     except Exception as e:
-        ppe('WS-Open failed: ', e)
+        ppe('WS-Open-boards failed: ', e)
+
+    try:
+        paramsSubscribeLobbiesEvents = {
+            "channel": "autodarts.lobbies",
+            "type": "subscribe",
+            "topic": "*.state"
+        }
+        ws.send(json.dumps(paramsSubscribeLobbiesEvents))
+    except Exception as e:
+        ppe('WS-Open-lobbies failed: ', e)
 
 def on_message_autodarts(ws, message):
     def process(*args):
@@ -1346,6 +1561,18 @@ def on_message_autodarts(ws, message):
             elif m['channel'] == 'autodarts.boards':
                 data = m['data']
                 listen_to_newest_match(data, ws)
+            
+            elif m['channel'] == 'autodarts.lobbies':
+                data = m['data']
+                # ppi(json.dumps(data, indent = 4, sort_keys = True))
+
+                players = data['players']
+                if players is not None:
+                    for p in players:
+                        if p['boardId'] == AUTODART_USER_BOARD_ID:
+                            play_sound_effect("lobbychanged")
+                            break
+                
 
         except Exception as e:
             ppe('WS-Message failed: ', e)
@@ -1525,7 +1752,6 @@ def start_flask_app(host, port):
 
 
 if __name__ == "__main__":
-
     ap = argparse.ArgumentParser()
     
     ap.add_argument("-U", "--autodarts_email", required=True, help="Registered email address at " + AUTODART_URL)
@@ -1600,6 +1826,43 @@ if __name__ == "__main__":
     MIXER_BUFFERSIZE = args['mixer_buffersize']
 
 
+    KEYWORD_SINGLES = ["single", "simple"]
+    KEYWORD_DOUBLES = ["double", "great", "big"]
+    KEYWORD_TRIPLES = ["triple", "perfect"]
+    KEYWORDS_FIRST_DART = ["first","prime", "up"]
+    KEYWORDS_SECOND_DART = ["second", "middle"]
+    KEYWORDS_THIRD_DART = ["last", "down"]
+    dart_word_map = {
+        1: KEYWORDS_FIRST_DART,
+        2: KEYWORDS_SECOND_DART,
+        3: KEYWORDS_THIRD_DART
+    }
+    number_word_map = {
+        "zero": "0",
+        "one": "1",
+        "two": "2",
+        "three": "3",
+        "four": "4",
+        "five": "5",
+        "six": "6",
+        "seven": "7",
+        "eight": "8",
+        "nine": "9",
+        "ten": "10",
+        "eleven": "11",
+        "twelve": "12",
+        "thirteen": "13",
+        "fourteen": "14",
+        "fifteen": "15",
+        "sixteen": "16",
+        "seventeen": "17",
+        "eighteen": "18",
+        "nineteen": "19",
+        "twenty": "20",
+    }
+    FIELD_NAME_MAP = {"zero": "0", "twenty five": "25", "fifty": "50"}
+    THROW_NUMBER_MAP = None
+
 
     if DEBUG:
         ppi('Started with following arguments:')
@@ -1633,6 +1896,9 @@ if __name__ == "__main__":
 
     global lastMessage
     lastMessage = None
+
+    global lastUpdateThrow
+    lastUpdateThrow = None
 
     global currentMatch
     currentMatch = None
@@ -1681,6 +1947,7 @@ if __name__ == "__main__":
 
 
     if args_post_check == None: 
+
         if plat == 'Windows' and BACKGROUND_AUDIO_VOLUME > 0.0:
             try:
                 background_audios = AudioUtilities.GetAllSessions()
@@ -1712,6 +1979,17 @@ if __name__ == "__main__":
                     flask_app_thread.start()
 
                 connect_autodarts()
+
+                # def callback(indata, frames, time, status):
+                #     """This is called (from a separate thread) for each audio block."""
+                #     if status:
+                #         print(status, file=sys.stderr)
+                #     q.put(bytes(indata))
+
+                # try:
+                #     start_speech_correction()
+                # except Exception as e:
+                #     ppe("Error initializing STT", e)
 
                 websocket_server_thread.join()
 
