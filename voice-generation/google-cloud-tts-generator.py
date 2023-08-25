@@ -181,6 +181,15 @@ def generate(template_file, generation_path, language_code, language_name):
 
     return generation_path_main
 
+def restructure_dialog():
+    while True:
+        user_input = input("Do you want to generate a caller-voice-pack (Default: yes)?:").lower()
+        if user_input == 'yes' or user_input == '':
+            return True
+        elif user_input == 'no':
+            return False
+        else:
+            print("Invalid input. Please respond with 'yes' or 'no'.")
 def restructure_generated_files(generation_path):
     archive_name = os.path.basename(generation_path)
     archive_dir = os.path.dirname(generation_path)
@@ -227,11 +236,15 @@ if __name__ == "__main__":
     template_file = choose_template_file() 
     language_code = template_file.split("-v")[0]
     generation_path = choose_generation_path()
-    google_voice_name = choose_google_voice_name(language_code)
-    confirm = confirmation_dialog()
-    if confirm:
-        generation_path = generate(template_file, generation_path, language_code, google_voice_name)
-        restructure_generated_files(generation_path)
+    restructure = restructure_dialog()
+
+    while 1:
+        google_voice_name = choose_google_voice_name(language_code)
+        confirm = confirmation_dialog()
+        if confirm:
+            generation_path = generate(template_file, generation_path, language_code, google_voice_name)
+            if restructure:
+                restructure_generated_files(generation_path)
 
 
 
