@@ -48,14 +48,16 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 # sounddevice==0.4.6
 
 
-VERSION = '2.3.6'
+VERSION = '2.3.7'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
 DEFAULT_CALLER = None
-DEFAULT_DOWNLOADS = True
+DEFAULT_RANDOM_CALLER_LANGUAGE = 0
+DEFAULT_RANDOM_CALLER_GENDER = 0
 DEFAULT_WEB_CALLER_PORT = 5000
-
+DEFAULT_DOWNLOADS = True
+DEFAULT_DOWNLOADS_LANGUAGE = 1
 DEFAULT_DOWNLOADS_LIMIT = 0
 DEFAULT_DOWNLOADS_PATH = 'caller-downloads-temp'
 DEFAULT_EMPTY_PATH = ''
@@ -92,9 +94,8 @@ CALLER_GENDERS = {
     2: ['male', 'm'],
 }
 
-# 'TODONAME': 'TODOLINK',
 CALLER_PROFILES = {
-    # C7
+    # murf.ai
     'charles-m-english-us-canada': 'https://drive.google.com/file/d/1-CrWSFHBoT_I9kzDuo7PR7FLCfEO-Qg-/view?usp=sharing',
     'clint-m-english-us-canada': 'https://drive.google.com/file/d/1-IQ9Bvp1i0jG6Bu9fMWhlbyAj9SkoVGb/view?usp=sharing',
     'alicia-f-english-us-canada': 'https://drive.google.com/file/d/1-Cvk-IczRjOphDOCA14NwE1hy4DAB8Tt/view?usp=sharing',
@@ -107,6 +108,7 @@ CALLER_PROFILES = {
     'aiden-m-english-uk': 'https://drive.google.com/file/d/10bYvcqp1nzqJnBDC7B6u7s8aequ5wGat/view?usp=sharing',
     'theo-m-english-uk': 'https://drive.google.com/file/d/10eQaYMZM3tkIA2PIDsb0r-5NhyDU86-C/view?usp=sharing',
     'emily-f-english-scottish': 'https://drive.google.com/file/d/10mOzTjA5tqBZCKI3EqxJ0YvQptqtMNQg/view?usp=sharing',
+    # google
     'en-US-Wavenet-E-FEMALE': 'https://drive.google.com/file/d/1GdhQRbNeHW2vyTmn3g67SiWDDh8_7Erq/view?usp=sharing',
     'en-US-Wavenet-G-FEMALE': 'https://drive.google.com/file/d/1pWVKOgx-4V-1TKOi-g8rJDOlcyWE4zdq/view?usp=sharing',
     'en-US-Wavenet-H-FEMALE': 'https://drive.google.com/file/d/1c2FO385Fb7d4Q8xeVd-f8WnkCVh-KqDs/view?usp=sharing',
@@ -124,6 +126,10 @@ CALLER_PROFILES = {
     'es-ES-Wavenet-B-MALE': 'https://drive.google.com/file/d/1ErnbxFXJa69ccJVfSzAvqmD49QLz3Rez/view?usp=sharing',
     'nl-NL-Wavenet-B-MALE': 'https://drive.google.com/file/d/12mlrKqjEO87W10lmZiDAqcTnwzc8bUCv/view?usp=sharing',  
     'nl-NL-Wavenet-D-FEMALE': 'https://drive.google.com/file/d/1tTe9viNMPXPsQIrZtPRF0KuBXkgeESA3/view?usp=sharing',
+    # amazon
+    'en-US-Stephen-Male': 'https://drive.google.com/file/d/1IkE-y53J_eNLE7l137rH2__qHvByN2Pf/view?usp=sharing',  
+    'en-US-Ivy-Female': 'https://drive.google.com/file/d/1heQP6pWgEhuMGd4f4WpPD3wmXwQQq7J5/view?usp=sharing',
+
     # 'TODONAME': 'TODOLINK',  
     # 'TODONAME': 'TODOLINK',
 }
@@ -219,11 +225,22 @@ def get_local_ip_address(target='8.8.8.8'):
         ip_address = DEFAULT_HOST_IP
     return ip_address
 
+
 def download_callers(): 
     if DOWNLOADS:
         download_list = CALLER_PROFILES
-        if DOWNLOADS_LIMIT > 0:
-            download_list = {k: CALLER_PROFILES[k] for k in list(CALLER_PROFILES.keys())[-DOWNLOADS_LIMIT:]}
+
+        if DOWNLOADS_LANGUAGE > 0:
+            downloads_filtered = {}
+            for speaker_name, speaker_download_url in download_list.items():
+                caller_language_key = grab_caller_language(speaker_name)
+                if caller_language_key != DOWNLOADS_LANGUAGE:
+                    continue
+                downloads_filtered[speaker_name] = speaker_download_url
+            download_list = downloads_filtered
+
+        if DOWNLOADS_LIMIT > 0 and len(download_list) > 0 and DOWNLOADS_LIMIT < len(download_list):
+            download_list = {k: download_list[k] for k in list(download_list.keys())[-DOWNLOADS_LIMIT:]}
 
         if len(download_list) > 0:
             if os.path.exists(AUDIO_MEDIA_PATH) == False: os.mkdir(AUDIO_MEDIA_PATH)
@@ -1570,7 +1587,7 @@ def on_message_autodarts(ws, message):
                 players = data['players']
                 if players is not None:
                     for p in players:
-                        if p['boardId'] == AUTODART_USER_BOARD_ID:
+                        if 'boardId' in p and p['boardId'] == AUTODART_USER_BOARD_ID:
                             play_sound_effect("lobbychanged")
                             mirror_sounds()
                             break
@@ -1765,8 +1782,8 @@ if __name__ == "__main__":
     ap.add_argument("-C", "--caller", default=DEFAULT_CALLER, required=False, help="Sets a particular caller")
     ap.add_argument("-R", "--random_caller", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will randomly choose a caller each game. It only works when your base-media-folder has subfolders with its files")
     ap.add_argument("-L", "--random_caller_each_leg", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will randomly choose a caller each leg instead of each game. It only works when 'random_caller=1'")
-    ap.add_argument("-RL", "--random_caller_language", type=int, choices=range(0, len(CALLER_LANGUAGES) + 1), default=0, required=False, help="If '0', the application will allow every language.., else it will limit caller selection by specific language")
-    ap.add_argument("-RG", "--random_caller_gender", type=int, choices=range(0, len(CALLER_GENDERS) + 1), default=0, required=False, help="If '0', the application will allow every gender.., else it will limit caller selection by specific gender")
+    ap.add_argument("-RL", "--random_caller_language", type=int, choices=range(0, len(CALLER_LANGUAGES) + 1), default=DEFAULT_RANDOM_CALLER_LANGUAGE, required=False, help="If '0', the application will allow every language.., else it will limit caller selection by specific language")
+    ap.add_argument("-RG", "--random_caller_gender", type=int, choices=range(0, len(CALLER_GENDERS) + 1), default=DEFAULT_RANDOM_CALLER_GENDER, required=False, help="If '0', the application will allow every gender.., else it will limit caller selection by specific gender")
     ap.add_argument("-CCP", "--call_current_player", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will call who is the current player to throw")
     ap.add_argument("-E", "--call_every_dart", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will call every thrown dart")
     ap.add_argument("-ESF", "--call_every_dart_single_files", type=int, choices=range(0, 2), default=1, required=False, help="If '1', the application will call a every dart by using single, dou.., else it uses two separated sounds: single + x (score)")
@@ -1776,6 +1793,7 @@ if __name__ == "__main__":
     ap.add_argument("-AAC", "--ambient_sounds_after_calls", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the ambient sounds will appear after calling is finished") 
     ap.add_argument("-DL", "--downloads", type=int, choices=range(0, 2), default=DEFAULT_DOWNLOADS, required=False, help="If '1', the application will try to download a curated list of caller-voices")
     ap.add_argument("-DLL", "--downloads_limit", type=int, default=DEFAULT_DOWNLOADS_LIMIT, required=False, help="If '1', the application will try to download a only the X newest caller-voices. -DLN needs to be activated.")
+    ap.add_argument("-DLLA", "--downloads_language", type=int, choices=range(0, len(CALLER_LANGUAGES) + 1), default=DEFAULT_DOWNLOADS_LANGUAGE, required=False, help="If '0', the application will download speakers of every language.., else it will limit speaker downloads by specific language")
     ap.add_argument("-DLP", "--downloads_path", required=False, default=DEFAULT_DOWNLOADS_PATH, help="Absolute path for temporarly downloads")
     ap.add_argument("-BAV","--background_audio_volume", required=False, type=float, default=0.0, help="Set background-audio-volume between 0.1 (silent) and 1.0 (no mute)")
     ap.add_argument("-WEB", "--web_caller", required=False, type=int, choices=range(0, 3), default=0, help="If '1' the application will host an web-endpoint, '2' it will do '1' and default caller-functionality.")
@@ -1804,7 +1822,9 @@ if __name__ == "__main__":
     RANDOM_CALLER = args['random_caller']   
     RANDOM_CALLER_EACH_LEG = args['random_caller_each_leg']   
     RANDOM_CALLER_LANGUAGE = args['random_caller_language'] 
+    if RANDOM_CALLER_LANGUAGE < 0: RANDOM_CALLER_LANGUAGE = DEFAULT_RANDOM_CALLER_LANGUAGE
     RANDOM_CALLER_GENDER = args['random_caller_gender'] 
+    if RANDOM_CALLER_GENDER < 0: RANDOM_CALLER_GENDER = DEFAULT_RANDOM_CALLER_GENDER
     CALL_CURRENT_PLAYER = args['call_current_player']
     CALL_EVERY_DART = args['call_every_dart']
     CALL_EVERY_DART_SINGLE_FILE = args['call_every_dart_single_files']
@@ -1813,8 +1833,10 @@ if __name__ == "__main__":
     AMBIENT_SOUNDS = args['ambient_sounds']
     AMBIENT_SOUNDS_AFTER_CALLS = args['ambient_sounds_after_calls']
     DOWNLOADS = args['downloads']
+    DOWNLOADS_LANGUAGE = args['downloads_language']
+    if DOWNLOADS_LANGUAGE < 0: DOWNLOADS_LANGUAGE = DEFAULT_DOWNLOADS_LANGUAGE
     DOWNLOADS_LIMIT = args['downloads_limit']
-    if DOWNLOADS_LIMIT < 0: DOWNLOADS_LIMIT = 0
+    if DOWNLOADS_LIMIT < 0: DOWNLOADS_LIMIT = DEFAULT_DOWNLOADS_LIMIT
     DOWNLOADS_PATH = args['downloads_path']
     BACKGROUND_AUDIO_VOLUME = args['background_audio_volume']
     WEB = args['web_caller']

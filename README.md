@@ -198,6 +198,7 @@ Start the script:
 - -AAC / --ambient_sounds_after_calls [Default: 0] [Possible values: 0 | 1]
 - -DL / --downloads [Default: 1] [Possible values: 0 | 1]
 - -DLL / --downloads_limit [Default: 0]
+- -DLLA / --downloads_language [Default: 1] [Possible values: 0 (every language) | 1 (english) | 2 (french) | 3 (russian) | 4 (german) | 5 (spanish) | 6 (dutch)]
 - -DLP / --downloads_path [Default: 'download']
 - -BAV / --background_audio_volume [Default: 0.0] [Possible values: 0.0 .. 1.0]
 - -WEB / --web_caller [Default: 0] [Possible values: 0,1,2]
@@ -285,13 +286,17 @@ If you set this to '1' ambient_*-sounds will wait until main-calls are finished.
 
 If you set this to '1' the application will download all possible caller-voices that are not already installed. By default this is activated.
 
+*`-DLLA / --downloads_language`*
+
+If you wish to stop the application from checking/downloading all speaker languages, you can limit it to a specific language. By default this is '1' (english).
+
 *`-DLL / --downloads_limit`*
 
-If you wish to stop the application from checking/downloading all possible caller-voices, you can limit it to x most recent. By default this is '0' (no limitation).
+If you wish to stop the application from checking/downloading all caller-voices, you can limit it to x most recent. By default this is '0' (no limitation).
 
 *`-DLP / --downloads_path`*
 
-In case you face problems with caller-voices-downloads try to change the download-path. By default this is 'caller-downloads-temp' in the application`s directory. But make sure you choose an non important folder as the content will be cleared by application.
+In case you face problems with downloads try to change the download-path. By default this is 'caller-downloads-temp' in the application`s directory. But make sure you choose an non important folder as the content will be cleared by application.
 
 *`-BAV / --background_audio_volume`*
 

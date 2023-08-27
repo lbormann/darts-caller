@@ -73,6 +73,9 @@ ambient_sounds_after_calls=
 # -DL
 downloads=
 
+# -DLLA
+downloads_language=
+
 # -DLL
 downloads_limit=
 
@@ -172,6 +175,9 @@ if [ -n "$ambient_sounds_after_calls" ]; then
 fi
 if [ -n "$downloads" ]; then
   args="$args -DL $downloads"
+fi
+if [ -n "$downloads_language" ]; then
+  args="$args -DLLA $downloads_language"
 fi
 if [ -n "$downloads_limit" ]; then
   args="$args -DLL $downloads_limit"
