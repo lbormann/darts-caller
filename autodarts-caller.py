@@ -20,9 +20,8 @@ import math
 import ssl
 from urllib.parse import quote, unquote
 from flask import Flask, render_template, send_from_directory
-import queue
-# import sounddevice as sd
-# from vosk import Model, KaldiRecognizer
+
+
 
 plat = platform.system()
 if plat == 'Windows':
@@ -43,12 +42,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 
 
 
-# pyaudio==0.2.12
-# vosk==0.3.45
-# sounddevice==0.4.6
-
-
-VERSION = '2.3.7'
+VERSION = '2.4.0'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -88,12 +82,10 @@ CALLER_LANGUAGES = {
     5: ['spanish', 'es', ],
     6: ['dutch', 'nl', ],
 }
-
 CALLER_GENDERS = {
     1: ['female', 'f'],
     2: ['male', 'm'],
 }
-
 CALLER_PROFILES = {
     # murf.ai
     'charles-m-english-us-canada': 'https://drive.google.com/file/d/1-CrWSFHBoT_I9kzDuo7PR7FLCfEO-Qg-/view?usp=sharing',
@@ -129,12 +121,12 @@ CALLER_PROFILES = {
     # amazon
     'en-US-Stephen-Male': 'https://drive.google.com/file/d/1IkE-y53J_eNLE7l137rH2__qHvByN2Pf/view?usp=sharing',  
     'en-US-Ivy-Female': 'https://drive.google.com/file/d/1heQP6pWgEhuMGd4f4WpPD3wmXwQQq7J5/view?usp=sharing',
+    'de-DE-Vicki-Female': 'https://drive.google.com/file/d/1AZKSHs4XjFicR7FeppBjwJ6u-dDt8h7L/view?usp=sharing',  
+    'de-DE-Daniel-Male': 'https://drive.google.com/file/d/1yRoEknlGOtmDb_rwh0WmDmWFPU3aXhcy/view?usp=sharing',
 
     # 'TODONAME': 'TODOLINK',  
     # 'TODONAME': 'TODOLINK',
 }
-
-
 FIELD_COORDS = {
     "0": {"x": 0.016160134143785285,"y": 1.1049884720184449},
     "S1": {"x": 0.2415216935652902,"y": 0.7347516243974009}, 
@@ -214,7 +206,6 @@ def ppe(message, error_object):
     if DEBUG:
         logger.exception("\r\n" + str(error_object))
 
-
 def get_local_ip_address(target='8.8.8.8'):
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -224,7 +215,6 @@ def get_local_ip_address(target='8.8.8.8'):
     except:
         ip_address = DEFAULT_HOST_IP
     return ip_address
-
 
 def download_callers(): 
     if DOWNLOADS:
@@ -277,7 +267,7 @@ def download_callers():
                 shutil.unpack_archive(dest, DOWNLOADS_PATH)
                 os.remove(dest)
 
-                # Find folder and rename it to properly
+                # Find folder and rename it properly
                 sound_folder = [dirs for root, dirs, files in sorted(os.walk(DOWNLOADS_PATH))][0][0]
                 src = os.path.join(DOWNLOADS_PATH, sound_folder)
                 dest = os.path.splitext(dest)[0]
@@ -583,38 +573,12 @@ def mirror_sounds():
         broadcast(mirror)
         mirror_files = []
 
-def text2dart_score(text):
-    try:
-        throw_number = None
-        field_name = None
+def correct_throw(throw_index, score):
+    cdcs_success = play_sound_effect(f'control_dart_correction_{(int(throw_index) + 1)}', wait_for_last = False, volume_mult = 1.0)
+    if cdcs_success == False:
+        play_sound_effect('control_dart_correction', wait_for_last = False, volume_mult = 1.0)
+    mirror_sounds()
 
-        words = text.split(" ")
-        # Überprüfung und Zuordnung der throw-number
-        if words[0] in THROW_NUMBER_MAP:
-            throw_number = THROW_NUMBER_MAP[words[0]]
-        
-        # Überprüfung und Zuordnung der field-name
-        # Beginnen bei der gesamten Wortliste und sukzessive das erste Wort entfernen
-        for i in range(len(words)):
-            possible_field = " ".join(words[i:])
-            if possible_field in FIELD_NAME_MAP:
-                field_name = FIELD_NAME_MAP[possible_field]
-                break
-
-        return (throw_number, field_name)
-
-    except Exception as e:
-        print(e)
-        return (None, None)
-
-def text2next(text):
-    mapping = ["next"]
-    if text in mapping:
-        next_throw()
-        return True
-    return False
-   
-def update_throw(throw_index, score):
     # patch
     # https://api.autodarts.io/gs/v0/matches/<match-id>/throws
     # {
@@ -629,24 +593,31 @@ def update_throw(throw_index, score):
         global accessToken
         global boardManagerAddress
         global currentMatch
-        global lastUpdateThrow
+        global lastCorrectThrow
 
-        if boardManagerAddress != None and FIELD_COORDS[score] != None:
+        # ppi(f'BoardManagerAddress: {boardManagerAddress} - {score}')
+        # boardManagerAddress != None and 
+        if FIELD_COORDS[score] != None:
             data = {
                 "changes": {
                     throw_index: FIELD_COORDS[score]
                 }
             }
-            if lastUpdateThrow == None or lastUpdateThrow != data:
-                lastUpdateThrow = data
+            # ppi(f'Data: {data}')
+            if lastCorrectThrow == None or lastCorrectThrow != data:
+                lastCorrectThrow = data
                 requests.patch(AUTODART_MATCHES_URL + currentMatch + "/throws", json=data, headers={'Authorization': 'Bearer ' + accessToken})
             else:
-               lastUpdateThrow = None 
+               lastCorrectThrow = None 
     except Exception as e:
-        ppe('Updating throw failed', e)
+        lastCorrectThrow = None 
+        ppe('Correcting throw failed', e)
 
 def next_throw():
-    # poost
+    if play_sound_effect('control_next', wait_for_last = False, volume_mult = 1.0):
+        mirror_sounds()
+
+    # post
     # https://api.autodarts.io/gs/v0/matches/<match-id>/players/next
     try:
         global accessToken
@@ -655,71 +626,19 @@ def next_throw():
     except Exception as e:
         ppe('Next throw failed', e)
 
-def init_voice_patterns():
-    reverse_mapping = {}
-    for k, values in dart_word_map.items():
-        for v in values:
-            reverse_mapping[v] = k
+def undo_throw():
+    if play_sound_effect('control_undo', wait_for_last = False, volume_mult = 1.0):
+        mirror_sounds()
 
-    for word, number in number_word_map.items():
-        for kd in KEYWORD_DOUBLES:
-            FIELD_NAME_MAP[kd + " " + word] = "D" + number
-        for kt in KEYWORD_TRIPLES:
-            FIELD_NAME_MAP[kt + " " + word] = "T" + number
-        for ks in KEYWORD_SINGLES: 
-            FIELD_NAME_MAP[ks + " " + word] = "S" + number
-        FIELD_NAME_MAP[word] = "S" + number
-    return reverse_mapping
+    # post
+    # https://api.autodarts.io/gs/v0/matches/<match-id>/undo
+    try:
+        global accessToken
+        global currentMatch
+        requests.post(AUTODART_MATCHES_URL + currentMatch + "/undo", headers={'Authorization': 'Bearer ' + accessToken})
+    except Exception as e:
+        ppe('Undo throw failed', e)
 
-def start_speech_correction():
-    def process(*args):
-        if WEB == 0 or WEB == 2:
-
-            q = queue.Queue()
-            device_info = sd.query_devices(None, "input")
-            # soundfile expects an int, sounddevice provides a float:
-            samplerate = int(device_info["default_samplerate"])
-            # lang="en-us"
-            # vosk-model-en-us-daanzu-20200905
-            model = Model(model_path="stt-models\\vosk-model-en-us-0.42-gigaspeech")
-            rec = KaldiRecognizer(model, samplerate)
-
-            THROW_NUMBER_MAP = init_voice_patterns()
-
-            with sd.RawInputStream(samplerate = samplerate, 
-                                blocksize = 8000, 
-                                device = None,
-                                dtype = "int16", 
-                                channels = 1, 
-                                callback = callback):
-                while True:
-                    while mixer.get_busy():
-                        time.sleep(0.01)
-
-                    data = q.get()
-                    if rec.AcceptWaveform(data):
-                        stt_result = rec.Result()
-                        stt_result = json.loads(stt_result)
-                        stt_result = stt_result['text']
-                        if stt_result != '':
-                            ppi(f"Voice-Recognition: {stt_result}")
-
-
-
-                            if not text2next(stt_result):
-                                (dart_number, dart_field) = text2dart_score(stt_result)
-                                if dart_number != None and dart_field != None:
-                                    ppi(f"Dart-Number: {dart_number} = {dart_field}")
-                                    update_throw(dart_number - 1, dart_field)
-                    # else:
-                    #     pass
-                        # stt_result = rec.PartialResult()
-                        # stt_result = json.loads(stt_result)
-                        # stt_result = stt_result['transcription']
-                        # ppi(f"Voice-Recognition: (Partial): {stt_result}")
-
-    threading.Thread(target=process).start()
-     
 def listen_to_newest_match(m, ws):
     global currentMatch
 
@@ -825,11 +744,34 @@ def listen_to_newest_match(m, ws):
             play_sound_effect('matchcancel')
             mirror_sounds()
 
+def increase_checkout_counter(player_index, remaining_score):
+    global checkoutsCounter
+
+    if player_index not in checkoutsCounter:
+        checkoutsCounter[player_index] = {'remaining_score': remaining_score, 'checkout_count': 1}
+    else:
+        if checkoutsCounter[player_index]['remaining_score'] == remaining_score:
+            checkoutsCounter[player_index]['checkout_count'] += 1
+        else:
+            checkoutsCounter[player_index]['remaining_score'] = remaining_score
+            checkoutsCounter[player_index]['checkout_count'] = 1
+
+    return checkoutsCounter[player_index]['checkout_count'] <= POSSIBLE_CHECKOUT_CALL
+
+def checkout_only_yourself(currentPlayer):
+    if POSSIBLE_CHECKOUT_CALL_YOURSELF_ONLY:
+        if 'boardId' in currentPlayer and currentPlayer['boardId'] == AUTODART_USER_BOARD_ID:
+            return True
+        else:
+            return False
+    return True
+
 def process_match_x01(m):
     global accessToken
     global currentMatch
     global isGameFinished
     global lastPoints
+    
 
     variant = m['variant']
     currentPlayerIndex = m['player']
@@ -895,20 +837,28 @@ def process_match_x01(m):
         if gameon == False and isGameFinished == False:
 
             # Check for possible checkout
-            if POSSIBLE_CHECKOUT_CALL and m['player'] == currentPlayerIndex and remainingPlayerScore <= 170 and remainingPlayerScore not in BOGEY_NUMBERS:
-                play_sound_effect(currentPlayerName)
-
-                remaining = str(remainingPlayerScore)
-
-                if POSSIBLE_CHECKOUT_CALL_SINGLE_FILE:
-                    pcc_success = play_sound_effect('yr_' + remaining, True)
-                    if pcc_success == False:
-                        pcc_success = play_sound_effect(remaining, True)
-                else:
-                    pcc_success = (play_sound_effect('you_require', True) and play_sound_effect(remaining, True))
-
+            if POSSIBLE_CHECKOUT_CALL and \
+                    m['player'] == currentPlayerIndex and \
+                    remainingPlayerScore <= 170 and \
+                    remainingPlayerScore not in BOGEY_NUMBERS and \
+                    checkout_only_yourself(currentPlayer):
                 
-                ppi('Checkout possible: ' + remaining)
+                if not increase_checkout_counter(currentPlayerIndex, remainingPlayerScore):
+                    if AMBIENT_SOUNDS != 0.0:
+                        play_sound_effect('ambient_checkout_call_limit', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                else:
+                    play_sound_effect(currentPlayerName)
+
+                    remaining = str(remainingPlayerScore)
+
+                    if POSSIBLE_CHECKOUT_CALL_SINGLE_FILE:
+                        pcc_success = play_sound_effect('yr_' + remaining, True)
+                        if pcc_success == False:
+                            pcc_success = play_sound_effect(remaining, True)
+                    else:
+                        pcc_success = (play_sound_effect('you_require', True) and play_sound_effect(remaining, True))
+                    
+                    ppi('Checkout possible: ' + remaining)
 
             # Player`s turn-call
             if CALL_CURRENT_PLAYER and m['player'] == currentPlayerIndex and pcc_success == False:
@@ -1462,6 +1412,7 @@ def process_match_cricket(m):
     if isGameFin == True:
         isGameFinished = True
 
+
 def connect_autodarts():
     def process(*args):
         global accessToken
@@ -1556,10 +1507,11 @@ def on_message_autodarts(ws, message):
             # ppi(json.dumps(m, indent = 4, sort_keys = True))
   
             if m['channel'] == 'autodarts.matches':
-                global currentMatch
                 data = m['data']
-
+                # ppi(json.dumps(data, indent = 4, sort_keys = True))
+                global currentMatch
                 # ppi('Current Match: ' + currentMatch)
+                
                 if('turns' in data and len(data['turns']) >=1):
                     data['turns'][0].pop("id", None)
                     data['turns'][0].pop("createdAt", None)
@@ -1578,12 +1530,14 @@ def on_message_autodarts(ws, message):
 
             elif m['channel'] == 'autodarts.boards':
                 data = m['data']
+                # ppi(json.dumps(data, indent = 4, sort_keys = True))
+
                 listen_to_newest_match(data, ws)
             
             elif m['channel'] == 'autodarts.lobbies':
                 data = m['data']
                 # ppi(json.dumps(data, indent = 4, sort_keys = True))
-
+                
                 players = data['players']
                 if players is not None:
                     for p in players:
@@ -1622,7 +1576,6 @@ def on_message_client(client, server, message):
         try:
             ppi('CLIENT MESSAGE: ' + str(message))
 
-        
             if message.startswith('board'):
                 receive_local_board_address()
 
@@ -1655,6 +1608,17 @@ def on_message_client(client, server, message):
                 else:
                     ppi('Can not change board-state as board-address is unknown!')  
 
+            elif message.startswith('correct'):
+                msg_splitted = message.split(':')
+                throw_index = msg_splitted[1]
+                score = msg_splitted[2]
+                correct_throw(throw_index, score)
+                    
+            elif message.startswith('next'):
+                next_throw()
+
+            elif message.startswith('undo'):
+                undo_throw()
 
             elif message.startswith('call'):
                 msg_splitted = message.split(':')
@@ -1662,6 +1626,7 @@ def on_message_client(client, server, message):
                 call_parts = to_call.split(' ')
                 for cp in call_parts:
                     play_sound_effect(cp, wait_for_last = False, volume_mult = 1.0)
+                mirror_sounds()
         
 
         except Exception as e:
@@ -1766,7 +1731,6 @@ def start_websocket_server(host, port):
     server.run_forever()
 
 def start_flask_app(host, port):
-    # ppi('Visit WEB-CALLER with other devices at "http://' + str(host) + ':' + str(port) + '"')
     app.run(host=host, port=port, debug=False)
 
 
@@ -1787,8 +1751,9 @@ if __name__ == "__main__":
     ap.add_argument("-CCP", "--call_current_player", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will call who is the current player to throw")
     ap.add_argument("-E", "--call_every_dart", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will call every thrown dart")
     ap.add_argument("-ESF", "--call_every_dart_single_files", type=int, choices=range(0, 2), default=1, required=False, help="If '1', the application will call a every dart by using single, dou.., else it uses two separated sounds: single + x (score)")
-    ap.add_argument("-PCC", "--possible_checkout_call", type=int, choices=range(0, 2), default=1, required=False, help="If '1', the application will call a possible checkout starting at 170")
+    ap.add_argument("-PCC", "--possible_checkout_call", type=int, default=1, required=False, help="If '1', the application will call a possible checkout starting at 170")
     ap.add_argument("-PCCSF", "--possible_checkout_call_single_files", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will call a possible checkout by using yr_2-yr_170, else it uses two separated sounds: you_require + x")
+    ap.add_argument("-PCCYO", "--possible_checkout_call_yourself_only", type=int, choices=range(0, 2), default=0, required=False, help="If '1' the caller will only call if there is a checkout possibility if the current player is you")
     ap.add_argument("-A", "--ambient_sounds", type=float, default=0.0, required=False, help="If > '0.0' (volume), the application will call a ambient_*-Sounds")
     ap.add_argument("-AAC", "--ambient_sounds_after_calls", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the ambient sounds will appear after calling is finished") 
     ap.add_argument("-DL", "--downloads", type=int, choices=range(0, 2), default=DEFAULT_DOWNLOADS, required=False, help="If '1', the application will try to download a curated list of caller-voices")
@@ -1830,6 +1795,8 @@ if __name__ == "__main__":
     CALL_EVERY_DART_SINGLE_FILE = args['call_every_dart_single_files']
     POSSIBLE_CHECKOUT_CALL = args['possible_checkout_call']
     POSSIBLE_CHECKOUT_CALL_SINGLE_FILE = args['possible_checkout_call_single_files']
+    POSSIBLE_CHECKOUT_CALL_YOURSELF_ONLY = args['possible_checkout_call_yourself_only']
+    if POSSIBLE_CHECKOUT_CALL_YOURSELF_ONLY < 0: POSSIBLE_CHECKOUT_CALL_YOURSELF_ONLY = 0
     AMBIENT_SOUNDS = args['ambient_sounds']
     AMBIENT_SOUNDS_AFTER_CALLS = args['ambient_sounds_after_calls']
     DOWNLOADS = args['downloads']
@@ -1850,42 +1817,7 @@ if __name__ == "__main__":
     MIXER_BUFFERSIZE = args['mixer_buffersize']
 
 
-    KEYWORD_SINGLES = ["single", "simple"]
-    KEYWORD_DOUBLES = ["double", "great", "big"]
-    KEYWORD_TRIPLES = ["triple", "perfect"]
-    KEYWORDS_FIRST_DART = ["first","prime", "up"]
-    KEYWORDS_SECOND_DART = ["second", "middle"]
-    KEYWORDS_THIRD_DART = ["last", "down"]
-    dart_word_map = {
-        1: KEYWORDS_FIRST_DART,
-        2: KEYWORDS_SECOND_DART,
-        3: KEYWORDS_THIRD_DART
-    }
-    number_word_map = {
-        "zero": "0",
-        "one": "1",
-        "two": "2",
-        "three": "3",
-        "four": "4",
-        "five": "5",
-        "six": "6",
-        "seven": "7",
-        "eight": "8",
-        "nine": "9",
-        "ten": "10",
-        "eleven": "11",
-        "twelve": "12",
-        "thirteen": "13",
-        "fourteen": "14",
-        "fifteen": "15",
-        "sixteen": "16",
-        "seventeen": "17",
-        "eighteen": "18",
-        "nineteen": "19",
-        "twenty": "20",
-    }
-    FIELD_NAME_MAP = {"zero": "0", "twenty five": "25", "fifty": "50"}
-    THROW_NUMBER_MAP = None
+
 
 
     if DEBUG:
@@ -1921,8 +1853,8 @@ if __name__ == "__main__":
     global lastMessage
     lastMessage = None
 
-    global lastUpdateThrow
-    lastUpdateThrow = None
+    global lastCorrectThrow
+    lastCorrectThrow = None
 
     global currentMatch
     currentMatch = None
@@ -1941,6 +1873,9 @@ if __name__ == "__main__":
 
     global mirror_files
     mirror_files = []
+
+    global checkoutsCounter
+    checkoutsCounter = {}
 
 
 
@@ -1969,9 +1904,10 @@ if __name__ == "__main__":
         os.environ['PYTHONHTTPSVERIFY'] = '0'
         
 
-
-    if args_post_check == None: 
-
+    if args_post_check is not None: 
+        ppi('Please check your arguments: ' + args_post_check)
+    
+    else:
         if plat == 'Windows' and BACKGROUND_AUDIO_VOLUME > 0.0:
             try:
                 background_audios = AudioUtilities.GetAllSessions()
@@ -2004,17 +1940,6 @@ if __name__ == "__main__":
 
                 connect_autodarts()
 
-                # def callback(indata, frames, time, status):
-                #     """This is called (from a separate thread) for each audio block."""
-                #     if status:
-                #         print(status, file=sys.stderr)
-                #     q.put(bytes(indata))
-
-                # try:
-                #     start_speech_correction()
-                # except Exception as e:
-                #     ppe("Error initializing STT", e)
-
                 websocket_server_thread.join()
 
                 if WEB > 0:
@@ -2023,8 +1948,7 @@ if __name__ == "__main__":
             except Exception as e:
                 ppe("Connect failed: ", e)
    
-    else:
-        ppi('Please check your arguments: ' + args_post_check)
+
    
 
 time.sleep(30)

@@ -45,7 +45,7 @@ Autodarts-caller plays back sound-files accordingly to the state of a https://au
 
 Go to download-directory and type:
 
-    pip install -r requirements.txt
+    pip3 install -r requirements.txt
 
 Optional for Linux: If you encounter problems with playing sound:
 
@@ -118,10 +118,20 @@ Note: Since version 2.0.0 there is a build-in download-mechanismn that automatic
 - ambient_group_very_nice
 - ambient_group_good
 - ambient_group_normal
+- ambient_checkout_call_limit
 
 **LOBBY-CALLING:**
 
 - lobbychanged
+
+**CONTROL-CALLING**
+
+- control_next
+- control_undo
+- control_dart_correction
+- control_dart_correction_1 [overrides: control_dart_correction]
+- control_dart_correction_2 [overrides: control_dart_correction]
+- control_dart_correction_3 [overrides: control_dart_correction]
 
 
 ______
@@ -192,8 +202,9 @@ Start the script:
 - -CCP / --call_current_player [Default: 0] [Possible values: 0 | 1]
 - -E / --call_every_dart [Default: 0] [Possible values: 0 | 1]
 - -ESF / --call_every_dart_single_files [Default: 1] [Possible values: 0 | 1]
-- -PCC / --possible_checkout_call [Default: 1] [Possible values: 0 | 1]
+- -PCC / --possible_checkout_call [Default: 1]
 - -PCCSF / --possible_checkout_call_single_files [Default: 1] [Possible values: 0 | 1]
+- -PCCYO / --possible_checkout_call_yourself_only [Default: 0] [Possible values: 0 | 1]
 - -A / --ambient_sounds [Default: 0.0] [Possible values: 0.0 .. 1.0]
 - -AAC / --ambient_sounds_after_calls [Default: 0] [Possible values: 0 | 1]
 - -DL / --downloads [Default: 1] [Possible values: 0 | 1]
@@ -267,11 +278,19 @@ the sounds of score-values (0-180). If you set this to '1' (default) it will cal
 
 *`-PCC / --possible_checkout_call`*
 
-If you set this to '1' the caller will call if there is a checkout possibility. Setup sounds {playername}{yr_2-yr_170} or {2-170} as a fallback. By default this is activated.
+If you set this to '1' the caller will call if there is a checkout possibility. Setup sounds {playername}{yr_2-yr_170} or {2-170} as a fallback. 
+If you set this to value above '1' checkout-numbers for each player won't repeat after the count of value is reached.
+By default this is '1'.
 
 *`-PCCSF / --possible_checkout_call_single_file`*
 
-If you set this to '0' (default), the application uses two separated sound-files named: 'you_require' and 'x' (score-value). If you set this to '1' the application will call a possible checkout by using one file 'yr_2-yr_170'.  
+If you set this to '0' (default), the application uses two separated sound-files named: 'you_require' and 'x' (score-value). If you set this to '1' the application will call a possible checkout by using one file 'yr_2-yr_170'.
+
+*`-PCCYO / --possible_checkout_call_yourself_only`*
+
+If you set this to '1' the caller will only call if there is a checkout possibility if the current player is you. 
+Note: this functionality won't work if your board is offline.
+By default this is '0'.
 
 *`-A / --ambient_sounds`*
 
@@ -459,10 +478,6 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - If single-darts is on and last arrow hits; the programm also calls last dart effect / that is ie triple, 
   that coming from curated caller-voices = wrong!
 - Care about blocking python process on shutdown
-- improve and prettify json
-- cert expired error
-- use autodarts-third-party api
-- rework structure to support 'calling-blocks' for web-calling
 
 
 ### Done
@@ -510,6 +525,8 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - configure custom web-caller-port
 - added caller language and gender filter
 - fixed random-caller and random-caller-each-leg
+- adds PCCYO
+- rework PCC
 
 
 ## LAST WORDS
