@@ -71,7 +71,7 @@ def binary_dialog(question, default = 'no'):
         if user_input == '':
             user_input = default
 
-        if user_input == 'yes' or user_input == '':
+        if user_input == 'yes':
             return True
         elif user_input == 'no':
             return False
@@ -199,6 +199,7 @@ def restructure_generated_files(generation_path):
     shutil.rmtree(temp_dir)
     # Löscht den Ursprungsordner
     shutil.rmtree(generation_path)
+
 def generate(provider, template_file, generation_path, language_code, voice_name, raw_mode):
     voice_name_path = voice_name
     if not voice_name.lower().startswith(language_code.lower()):

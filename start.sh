@@ -64,6 +64,9 @@ possible_checkout_call=
 # -PCCSF
 possible_checkout_call_single_files=
 
+# -PCCYO
+possible_checkout_call_yourself_only=
+
 # -A
 ambient_sounds=
 
@@ -166,6 +169,9 @@ if [ -n "$possible_checkout_call" ]; then
 fi
 if [ -n "$possible_checkout_call_single_files" ]; then
   args="$args -PCCSF $possible_checkout_call_single_files"
+fi
+if [ -n "$possible_checkout_call_yourself_only" ]; then
+  args="$args -PCCYO $possible_checkout_call_yourself_only"
 fi
 if [ -n "$ambient_sounds" ]; then
   args="$args -A $ambient_sounds"
