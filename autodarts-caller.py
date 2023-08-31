@@ -42,7 +42,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 
 
 
-VERSION = '2.4.0'
+VERSION = '2.4.1'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -591,13 +591,12 @@ def correct_throw(throw_index, score):
     # }
     try:
         global accessToken
-        global boardManagerAddress
         global currentMatch
         global lastCorrectThrow
 
-        # ppi(f'BoardManagerAddress: {boardManagerAddress} - {score}')
-        # boardManagerAddress != None and 
-        if FIELD_COORDS[score] != None:
+        receive_token_autodarts()
+
+        if currentMatch != None and FIELD_COORDS[score] != None:
             data = {
                 "changes": {
                     throw_index: FIELD_COORDS[score]
@@ -622,7 +621,12 @@ def next_throw():
     try:
         global accessToken
         global currentMatch
-        requests.post(AUTODART_MATCHES_URL + currentMatch + "/players/next", headers={'Authorization': 'Bearer ' + accessToken})
+
+        receive_token_autodarts()
+
+        if currentMatch != None:
+            requests.post(AUTODART_MATCHES_URL + currentMatch + "/players/next", headers={'Authorization': 'Bearer ' + accessToken})
+
     except Exception as e:
         ppe('Next throw failed', e)
 
@@ -635,7 +639,11 @@ def undo_throw():
     try:
         global accessToken
         global currentMatch
-        requests.post(AUTODART_MATCHES_URL + currentMatch + "/undo", headers={'Authorization': 'Bearer ' + accessToken})
+
+        receive_token_autodarts()
+
+        if currentMatch != None:
+            requests.post(AUTODART_MATCHES_URL + currentMatch + "/undo", headers={'Authorization': 'Bearer ' + accessToken})
     except Exception as e:
         ppe('Undo throw failed', e)
 
@@ -1413,8 +1421,8 @@ def process_match_cricket(m):
         isGameFinished = True
 
 
-def connect_autodarts():
-    def process(*args):
+def receive_token_autodarts():
+    try:
         global accessToken
 
         # Configure client
@@ -1422,17 +1430,33 @@ def connect_autodarts():
                                             client_id = AUTODART_CLIENT_ID,
                                             realm_name = AUTODART_REALM_NAME,
                                             verify = True)
-
-        # Get Token
         token = keycloak_openid.token(AUTODART_USER_EMAIL, AUTODART_USER_PASSWORD)
         accessToken = token['access_token']
         # ppi(token)
+    except Exception as e:
+        ppe('Receive token failed', e)    
+
+def connect_autodarts():
+    def process(*args):
+        global accessToken
+
+        # # Configure client
+        # keycloak_openid = KeycloakOpenID(server_url = AUTODART_AUTH_URL,
+        #                                     client_id = AUTODART_CLIENT_ID,
+        #                                     realm_name = AUTODART_REALM_NAME,
+        #                                     verify = True)
+
+        # # Get Token
+        # token = keycloak_openid.token(AUTODART_USER_EMAIL, AUTODART_USER_PASSWORD)
+        # accessToken = token['access_token']
+        # # ppi(token)
+
+        receive_token_autodarts()
 
 
         # Get Ticket
-        ticket = requests.post(AUTODART_AUTH_TICKET_URL, headers={'Authorization': 'Bearer ' + token['access_token']})
+        ticket = requests.post(AUTODART_AUTH_TICKET_URL, headers={'Authorization': 'Bearer ' + accessToken})
         # ppi(ticket.text)
-
 
         websocket.enableTrace(False)
         ws = websocket.WebSocketApp(AUTODART_WEBSOCKET_URL + ticket.text,
