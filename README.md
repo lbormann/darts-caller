@@ -126,12 +126,14 @@ Note: Since version 2.0.0 there is a build-in download-mechanismn that automatic
 
 **CONTROL-CALLING**
 
-- control_next
-- control_undo
-- control_dart_correction
-- control_dart_correction_1 [overrides: control_dart_correction]
-- control_dart_correction_2 [overrides: control_dart_correction]
-- control_dart_correction_3 [overrides: control_dart_correction]
+- control
+- control_next [overrides: control]
+- control_next_game [overrides: control]
+- control_undo [overrides: control]
+- control_dart_correction [overrides: control]
+- control_dart_correction_1 [overrides: control, control_dart_correction]
+- control_dart_correction_2 [overrides: control, control_dart_correction]
+- control_dart_correction_3 [overrides: control, control_dart_correction]
 
 
 ______
@@ -288,7 +290,7 @@ If you set this to '0' (default), the application uses two separated sound-files
 
 *`-PCCYO / --possible_checkout_call_yourself_only`*
 
-If you set this to '1' the caller will only call if there is a checkout possibility if the current player is you. 
+If you set this to '1' the caller will only call if there is a checkout possibility and the current player is you (associated to your board-id). 
 Note: this functionality won't work if your board is offline.
 By default this is '0'.
 

@@ -42,7 +42,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 
 
 
-VERSION = '2.4.1'
+VERSION = '2.4.2'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -573,10 +573,66 @@ def mirror_sounds():
         broadcast(mirror)
         mirror_files = []
 
+def next_game():
+    if play_sound_effect('control_next_game', wait_for_last = False, volume_mult = 1.0) == False:
+        play_sound_effect('control', wait_for_last = False, volume_mult = 1.0)
+    mirror_sounds()
+
+    # post
+    # https://api.autodarts.io/gs/v0/matches/<match-id>/games/next
+    try:
+        global accessToken
+        global currentMatch
+
+        receive_token_autodarts()
+
+        if currentMatch != None:
+            requests.post(AUTODART_MATCHES_URL + currentMatch + "/games/next", headers={'Authorization': 'Bearer ' + accessToken})
+
+    except Exception as e:
+        ppe('Next game failed', e)
+
+def next_throw():
+    if play_sound_effect('control_next', wait_for_last = False, volume_mult = 1.0) == False:
+        play_sound_effect('control', wait_for_last = False, volume_mult = 1.0)
+    mirror_sounds()
+
+    # post
+    # https://api.autodarts.io/gs/v0/matches/<match-id>/players/next
+    try:
+        global accessToken
+        global currentMatch
+
+        receive_token_autodarts()
+
+        if currentMatch != None:
+            requests.post(AUTODART_MATCHES_URL + currentMatch + "/players/next", headers={'Authorization': 'Bearer ' + accessToken})
+
+    except Exception as e:
+        ppe('Next throw failed', e)
+
+def undo_throw():
+    if play_sound_effect('control_undo', wait_for_last = False, volume_mult = 1.0) == False:
+        play_sound_effect('control', wait_for_last = False, volume_mult = 1.0)
+    mirror_sounds()
+
+    # post
+    # https://api.autodarts.io/gs/v0/matches/<match-id>/undo
+    try:
+        global accessToken
+        global currentMatch
+
+        receive_token_autodarts()
+
+        if currentMatch != None:
+            requests.post(AUTODART_MATCHES_URL + currentMatch + "/undo", headers={'Authorization': 'Bearer ' + accessToken})
+    except Exception as e:
+        ppe('Undo throw failed', e)
+
 def correct_throw(throw_index, score):
     cdcs_success = play_sound_effect(f'control_dart_correction_{(int(throw_index) + 1)}', wait_for_last = False, volume_mult = 1.0)
-    if cdcs_success == False:
-        play_sound_effect('control_dart_correction', wait_for_last = False, volume_mult = 1.0)
+    if cdcs_success == False and play_sound_effect('control_dart_correction', wait_for_last = False, volume_mult = 1.0) == False:
+        play_sound_effect('control', wait_for_last = False, volume_mult = 1.0)
     mirror_sounds()
 
     # patch
@@ -612,40 +668,6 @@ def correct_throw(throw_index, score):
         lastCorrectThrow = None 
         ppe('Correcting throw failed', e)
 
-def next_throw():
-    if play_sound_effect('control_next', wait_for_last = False, volume_mult = 1.0):
-        mirror_sounds()
-
-    # post
-    # https://api.autodarts.io/gs/v0/matches/<match-id>/players/next
-    try:
-        global accessToken
-        global currentMatch
-
-        receive_token_autodarts()
-
-        if currentMatch != None:
-            requests.post(AUTODART_MATCHES_URL + currentMatch + "/players/next", headers={'Authorization': 'Bearer ' + accessToken})
-
-    except Exception as e:
-        ppe('Next throw failed', e)
-
-def undo_throw():
-    if play_sound_effect('control_undo', wait_for_last = False, volume_mult = 1.0):
-        mirror_sounds()
-
-    # post
-    # https://api.autodarts.io/gs/v0/matches/<match-id>/undo
-    try:
-        global accessToken
-        global currentMatch
-
-        receive_token_autodarts()
-
-        if currentMatch != None:
-            requests.post(AUTODART_MATCHES_URL + currentMatch + "/undo", headers={'Authorization': 'Bearer ' + accessToken})
-    except Exception as e:
-        ppe('Undo throw failed', e)
 
 def listen_to_newest_match(m, ws):
     global currentMatch
@@ -1440,19 +1462,7 @@ def connect_autodarts():
     def process(*args):
         global accessToken
 
-        # # Configure client
-        # keycloak_openid = KeycloakOpenID(server_url = AUTODART_AUTH_URL,
-        #                                     client_id = AUTODART_CLIENT_ID,
-        #                                     realm_name = AUTODART_REALM_NAME,
-        #                                     verify = True)
-
-        # # Get Token
-        # token = keycloak_openid.token(AUTODART_USER_EMAIL, AUTODART_USER_PASSWORD)
-        # accessToken = token['access_token']
-        # # ppi(token)
-
         receive_token_autodarts()
-
 
         # Get Ticket
         ticket = requests.post(AUTODART_AUTH_TICKET_URL, headers={'Authorization': 'Bearer ' + accessToken})
@@ -1639,7 +1649,10 @@ def on_message_client(client, server, message):
                 correct_throw(throw_index, score)
                     
             elif message.startswith('next'):
-                next_throw()
+                if message.startswith('next-game'):
+                    next_game()
+                else:
+                    next_throw()
 
             elif message.startswith('undo'):
                 undo_throw()
