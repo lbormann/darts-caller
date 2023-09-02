@@ -42,7 +42,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 
 
 
-VERSION = '2.4.2'
+VERSION = '2.4.3'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -87,7 +87,7 @@ CALLER_GENDERS = {
     2: ['male', 'm'],
 }
 CALLER_PROFILES = {
-    # murf.ai
+    # murf
     'charles-m-english-us-canada': 'https://drive.google.com/file/d/1-CrWSFHBoT_I9kzDuo7PR7FLCfEO-Qg-/view?usp=sharing',
     'clint-m-english-us-canada': 'https://drive.google.com/file/d/1-IQ9Bvp1i0jG6Bu9fMWhlbyAj9SkoVGb/view?usp=sharing',
     'alicia-f-english-us-canada': 'https://drive.google.com/file/d/1-Cvk-IczRjOphDOCA14NwE1hy4DAB8Tt/view?usp=sharing',
@@ -123,6 +123,8 @@ CALLER_PROFILES = {
     'en-US-Ivy-Female': 'https://drive.google.com/file/d/1heQP6pWgEhuMGd4f4WpPD3wmXwQQq7J5/view?usp=sharing',
     'de-DE-Vicki-Female': 'https://drive.google.com/file/d/1AZKSHs4XjFicR7FeppBjwJ6u-dDt8h7L/view?usp=sharing',  
     'de-DE-Daniel-Male': 'https://drive.google.com/file/d/1yRoEknlGOtmDb_rwh0WmDmWFPU3aXhcy/view?usp=sharing',
+    'en-US-Kendra-Female': 'https://drive.google.com/file/d/1G6nfnh7srepaVrkey0_C4D5HunfXeRAn/view?usp=sharing',
+    'en-US-Joey-Male': 'https://drive.google.com/file/d/1XS6FcxmpaxzStLcAW8G5l0nQz3f5CrAT/view?usp=sharing'
 
     # 'TODONAME': 'TODOLINK',  
     # 'TODONAME': 'TODOLINK',
@@ -1831,9 +1833,9 @@ if __name__ == "__main__":
     CALL_EVERY_DART = args['call_every_dart']
     CALL_EVERY_DART_SINGLE_FILE = args['call_every_dart_single_files']
     POSSIBLE_CHECKOUT_CALL = args['possible_checkout_call']
+    if POSSIBLE_CHECKOUT_CALL < 0: POSSIBLE_CHECKOUT_CALL = 0
     POSSIBLE_CHECKOUT_CALL_SINGLE_FILE = args['possible_checkout_call_single_files']
     POSSIBLE_CHECKOUT_CALL_YOURSELF_ONLY = args['possible_checkout_call_yourself_only']
-    if POSSIBLE_CHECKOUT_CALL_YOURSELF_ONLY < 0: POSSIBLE_CHECKOUT_CALL_YOURSELF_ONLY = 0
     AMBIENT_SOUNDS = args['ambient_sounds']
     AMBIENT_SOUNDS_AFTER_CALLS = args['ambient_sounds_after_calls']
     DOWNLOADS = args['downloads']

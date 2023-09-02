@@ -354,10 +354,10 @@ if __name__ == "__main__":
 
     # Ablauf:
     # 0) Welchen Cloud-provider möchten Sie benutzen?
-    # 1) Mit welchem template möchten Sie arbeiten? -> Vorschau verfügbarer templates
+    # 1) Mit welchem Template möchten Sie arbeiten?
     # 2) Wo sollen die generierten Sounds gespeichert werden?
     # 3) Soll im 'raw'-Modus generiert werden? (Sollen die Sounds für den Caller strukturiert werden?)
-    # 4) Welche Stimme möchten Sie nutzen? Anzeige gültiger Stimmen für die ausgewählte Sprache (Die Sprache wird aus dem template-namen interpretiert)
+    # 4) Welche Stimme möchten Sie nutzen? -> Anzeige gültiger Stimmen für die ausgewählte Sprache (Die Sprache wird aus dem template-namen interpretiert)
     # 5) Bestätigen Sie und starten Sie die Generierung
     # 6) Wiederholung ab 4)
 
@@ -382,7 +382,7 @@ if __name__ == "__main__":
         voice_name = choose_voice_name(provider, voices)
 
         # 5)
-        confirm = binary_dialog("Are you sure you want to proceed (yes/no)? You may face some bill by provider (Default: no): ")
+        confirm = binary_dialog(f"Are you sure you want to proceed (yes/no)? You may face some bill by {provider} (Default: no): ")
         if confirm:
             generate(provider, template_file, generation_path, language_code, voice_name, raw_mode)
 
