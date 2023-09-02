@@ -204,7 +204,7 @@ Start the script:
 - -CCP / --call_current_player [Default: 0] [Possible values: 0 | 1]
 - -E / --call_every_dart [Default: 0] [Possible values: 0 | 1]
 - -ESF / --call_every_dart_single_files [Default: 1] [Possible values: 0 | 1]
-- -PCC / --possible_checkout_call [Default: 1]
+- -PCC / --possible_checkout_call [Default: 1] [Possible values: 0..Inf]
 - -PCCSF / --possible_checkout_call_single_files [Default: 1] [Possible values: 0 | 1]
 - -PCCYO / --possible_checkout_call_yourself_only [Default: 0] [Possible values: 0 | 1]
 - -A / --ambient_sounds [Default: 0.0] [Possible values: 0.0 .. 1.0]
@@ -305,15 +305,15 @@ If you set this to '1' ambient_*-sounds will wait until main-calls are finished.
 
 *`-DL / --downloads`*
 
-If you set this to '1' the application will download all possible caller-voices that are not already installed. By default this is activated.
+If you set this to '1' the application will download all available voice-packs that are not already installed. By default this is activated.
 
 *`-DLLA / --downloads_language`*
 
-If you wish to stop the application from checking/downloading all speaker languages, you can limit it to a specific language. By default this is '1' (english).
+If you wish to stop the application from checking/downloading all voice-pack languages, you can limit it to a specific language. By default this is '1' (english).
 
 *`-DLL / --downloads_limit`*
 
-If you wish to stop the application from checking/downloading all caller-voices, you can limit it to x most recent. By default this is '0' (no limitation).
+If you wish to stop the application from checking/downloading all voice-packs, you can limit it to x most recent. By default this is '0' (no limitation).
 
 *`-DLP / --downloads_path`*
 
