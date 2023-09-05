@@ -158,7 +158,7 @@ Create a shortcut of the executable; right click on the shortcut -> select prope
 Example: C:\Downloads\autodarts-caller.exe -U "your-autodarts-email" -P "your-autodarts-password" -B "your-autodarts-board-id" -M "absolute-folder-to-your-media-files"
 
 Save changes.
-Click on the shortcut to start the caller.
+Click on the shortcut to start the application.
 
 
 ### Run by source
@@ -440,7 +440,7 @@ Try https://www.audacity.de/ to modify your sound-files.
 
 ## CONTRIBUTE
 
-### Do you want to provide your caller-voice to the community? It`s easy - read on!
+### Do you want to provide your voice-pack to the community? It`s easy - read on!
 
 1) Create a ZIP archive that contains the following contents:
 
@@ -448,7 +448,7 @@ Try https://www.audacity.de/ to modify your sound-files.
     A UTF8-(with a BOM)-encoded CSV file (*.csv) (filename irrelevant), which is structured as follows:
     Column 1 contains a phrase that a sound file is based on. For example: "The game is over."
     All other filled columns (separated by semicolon ';') specify [Sound-file-keys](#Sound-file-keys) that are used by autodarts-caller.
-    You can find ready-to-go template-files in 'voice-generation'-directory.
+    For an example have a look at 'en-US-v1.csv' template.
 
     - **Sounds archive:**
     A ZIP file (*.zip) (filename: "{speaker name}"-"{m|f}"-"{language}".zip - for example: "max-m-german.zip"). This ZIP-file must contain a folder (filename irrelevant). The folder contains the sound-files. It should be noted that the sounds-files MUST be in the same order (when sorted alphabetically) as listed in the template-file; however, the actual filename is completely irrelevant.
