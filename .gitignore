@@ -1,11 +1,6 @@
-caller
+
 *.txt
 *.json
 *-custom.sh
 *-custom.bat
-build
-dist
-downloads
-playerlist.txt
-playerlist_sanitized.txt
 *raw*.csv
