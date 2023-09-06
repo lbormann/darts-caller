@@ -340,7 +340,7 @@ def download_callers():
                 ppi('A new caller was added: ' + cpr_name)
 
             except Exception as e:
-                ppe('Failed to process caller-profile: ' + cpr_name, e)
+                ppe('Failed to process caller: ' + cpr_name, e)
             finally:
                 shutil.rmtree(DOWNLOADS_PATH, ignore_errors=True)
 
@@ -631,9 +631,24 @@ def undo_throw():
     except Exception as e:
         ppe('Undo throw failed', e)
 
-def correct_throw(throw_index, score):
-    cdcs_success = play_sound_effect(f'control_dart_correction_{(int(throw_index) + 1)}', wait_for_last = False, volume_mult = 1.0)
-    if cdcs_success == False and play_sound_effect('control_dart_correction', wait_for_last = False, volume_mult = 1.0) == False:
+def correct_throw(throw_indices, score):
+    global currentMatch
+
+    score = FIELD_COORDS[score]
+    if currentMatch == None or len(throw_indices) > 3 or score == None:
+        return
+
+    cdcs_success = False
+    cdcs_global = False
+    for tii, ti in enumerate(throw_indices):
+        wait = False
+        if tii > 0 and cdcs_global == True:
+            wait = True
+        cdcs_success = play_sound_effect(f'control_dart_correction_{(int(ti) + 1)}', wait_for_last = wait, volume_mult = 1.0)
+        if cdcs_success:
+            cdcs_global = True
+
+    if cdcs_global == False and play_sound_effect('control_dart_correction', wait_for_last = False, volume_mult = 1.0) == False:
         play_sound_effect('control', wait_for_last = False, volume_mult = 1.0)
     mirror_sounds()
 
@@ -641,6 +656,10 @@ def correct_throw(throw_index, score):
     # https://api.autodarts.io/gs/v0/matches/<match-id>/throws
     # {
     #     "changes": {
+    #         "1": {
+    #             "x": x-coord,
+    #             "y": y-coord
+    #         },
     #         "2": {
     #             "x": x-coord,
     #             "y": y-coord
@@ -649,23 +668,21 @@ def correct_throw(throw_index, score):
     # }
     try:
         global accessToken
-        global currentMatch
         global lastCorrectThrow
 
         receive_token_autodarts()
 
-        if currentMatch != None and FIELD_COORDS[score] != None:
-            data = {
-                "changes": {
-                    throw_index: FIELD_COORDS[score]
-                }
-            }
-            # ppi(f'Data: {data}')
-            if lastCorrectThrow == None or lastCorrectThrow != data:
-                lastCorrectThrow = data
-                requests.patch(AUTODART_MATCHES_URL + currentMatch + "/throws", json=data, headers={'Authorization': 'Bearer ' + accessToken})
-            else:
-               lastCorrectThrow = None 
+        data = {"changes": {}}
+        for ti in throw_indices:
+            data["changes"][ti] = score
+
+        # ppi(f'Data: {data}')
+        if lastCorrectThrow == None or lastCorrectThrow != data:
+            requests.patch(AUTODART_MATCHES_URL + currentMatch + "/throws", json=data, headers={'Authorization': 'Bearer ' + accessToken})
+            lastCorrectThrow = data
+        else:
+            lastCorrectThrow = None 
+
     except Exception as e:
         lastCorrectThrow = None 
         ppe('Correcting throw failed', e)
@@ -1646,9 +1663,10 @@ def on_message_client(client, server, message):
 
             elif message.startswith('correct'):
                 msg_splitted = message.split(':')
-                throw_index = msg_splitted[1]
-                score = msg_splitted[2]
-                correct_throw(throw_index, score)
+                msg_splitted.pop(0)
+                throw_indices = msg_splitted[:-1]
+                score = msg_splitted[len(msg_splitted) - 1]
+                correct_throw(throw_indices, score)
                     
             elif message.startswith('next'):
                 if message.startswith('next-game'):
