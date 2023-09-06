@@ -413,25 +413,43 @@ Check log:
 
 ## FAQ
 
-### App starts and stops immediately?!
+### App has strange behaviour / got an error message
 
-- Add '-DEB "1"' to start-arguments to display more information about a problem.
-- Make sure you follow the rules of each argument you are using.
-- Check your autodarts-credentials (use email-adress and password); if you are facing "failed keycloakauthentication Error (401 invalid_grant)", you probably need to disable Two-Factor-Auth (2FA)!
+- Enable debug ('-DEB "1"') to display more information about a problem.
+- If you don't know how to fix an error, have a look below.
 
-### >>> Can not play soundfile for event "{your-soundfile}" -> Ignore this or check existance; otherwise convert your file appropriate
+### Failed to process caller: X
+
+All caller voice-packs are currently hosted on google drive. There is a chance that you encounter this as google only allows certain download count in specific time window.
+Just be patient, wait a few hours and restart the caller. It could be helpful to restart your router or use a vpn to bypass.
+
+### failed keycloakauthentication Error (401 invalid_grant)
+
+- Disable Two-Factor-Auth (2FA).
+- Make sure you use your email-addres for username.
+- Check your password.
+
+### Can not play sound for sound-file-key 'X' -> Ignore this or check existance; otherwise convert your file appropriate
 
 Make sure the displayed exists! If you rename any of your sound-files you NEED to restart the application as it internally creates a list of available sound-files ONLY on application-start AND on a caller-switch (random_caller-functionality)!
 
 ### Sound is not playing?!
 
-- check that the filename is a supported [Sound-file-key](#Sound-file-keys)
+- Check that the filename is a supported [Sound-file-key](#Sound-file-keys)
 - Sometimes there are sounds that are not readable. In this case you can convert sound-file(s) with an additional program (https://www.heise.de/download/product/mp3-quality-modifier-66202) Make sure you configurate 44100HZ, Stereo.
 - Check the console output: in case you do not receive any messages (only 'Receiving live information from ..') -> you should check the given Board-ID (-B) for correctness.
 
-### I don't like sound x of caller-voice y!
+### I don't like sound X of voice-pack Y
 
-EVERY sound is optional! If you don't like a specific sound just delete it! The Application can even function with no sound files at all!
+EVERY sound is optional! If you don't like a specific sound just delete it! The application can even function with no files at all.
+
+### I don't like voice-pack X
+
+Just delete ALL files of disliked voice-pack-folder. After that done, the application either won't download files again nor it will try to use these voice-pack anymore.
+
+### App starts and stops immediately?!
+
+Start application out of terminal to check whats going on.
 
 ### Sound does not match up calls?!
 Try https://www.audacity.de/ to modify your sound-files.
@@ -529,6 +547,8 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - fixed random-caller and random-caller-each-leg
 - adds PCCYO
 - rework PCC
+- add support for game control
+- add support for gc: dart-correction (multiple)
 
 
 ## LAST WORDS
