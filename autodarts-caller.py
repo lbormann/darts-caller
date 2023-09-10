@@ -39,10 +39,10 @@ logger.addHandler(sh)
 
 app = Flask(__name__)
 main_directory = os.path.dirname(os.path.realpath(__file__))
+parent_directory = os.path.dirname(main_directory)
 
 
-
-VERSION = '2.4.3'
+VERSION = '2.4.4'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -54,6 +54,7 @@ DEFAULT_DOWNLOADS = True
 DEFAULT_DOWNLOADS_LANGUAGE = 1
 DEFAULT_DOWNLOADS_LIMIT = 0
 DEFAULT_DOWNLOADS_PATH = 'caller-downloads-temp'
+DEFAULT_CALLERS_BANNED_FILE = 'autodarts-caller-banned.txt'
 DEFAULT_EMPTY_PATH = ''
 DEFAULT_MIXER_FREQUENCY = 44100
 DEFAULT_MIXER_SIZE = 32
@@ -222,6 +223,12 @@ def download_callers():
     if DOWNLOADS:
         download_list = CALLER_PROFILES
 
+        downloads_filtered = {}
+        for speaker_name, speaker_download_url in download_list.items():
+            if speaker_name not in caller_profiles_banned:
+                downloads_filtered[speaker_name] = speaker_download_url
+        download_list = downloads_filtered
+
         if DOWNLOADS_LANGUAGE > 0:
             downloads_filtered = {}
             for speaker_name, speaker_download_url in download_list.items():
@@ -344,6 +351,44 @@ def download_callers():
             finally:
                 shutil.rmtree(DOWNLOADS_PATH, ignore_errors=True)
 
+
+def ban_caller(only_change):
+    global caller_title
+
+    # ban/change not possible as caller is specified by user or current caller is 'None'
+    if (CALLER != DEFAULT_CALLER and CALLER != '' and caller_title != '' and caller_title != None):
+        return
+    
+    if only_change:
+        ccc_success = play_sound_effect('control_change_caller', wait_for_last = False, volume_mult = 1.0)
+        if not ccc_success:
+            play_sound_effect('control', wait_for_last = False, volume_mult = 1.0)
+        
+    else:
+        cbc_success = play_sound_effect('control_ban_caller', wait_for_last = False, volume_mult = 1.0)
+        if not cbc_success:
+            play_sound_effect('control', wait_for_last = False, volume_mult = 1.0)
+
+        
+        global caller_profiles_banned
+        caller_profiles_banned.append(caller_title)
+        path_to_callers_banned_file = os.path.join(parent_directory, DEFAULT_CALLERS_BANNED_FILE)   
+        with open(path_to_callers_banned_file, 'w') as bcf:
+            for cpb in caller_profiles_banned:
+                bcf.write(cpb.lower() + '\n')
+
+    mirror_sounds()
+    setup_caller()
+
+def load_callers_banned():
+    global caller_profiles_banned
+    path_to_callers_banned_file = os.path.join(parent_directory, DEFAULT_CALLERS_BANNED_FILE)
+    if os.path.exists(path_to_callers_banned_file):
+        with open(path_to_callers_banned_file, 'r') as bcf:
+            caller_profiles_banned = list(set(line.strip() for line in bcf))
+    else:
+        caller_profiles_banned = []
+
 def load_callers():
     # load shared-sounds
     shared_sounds = {}
@@ -359,6 +404,8 @@ def load_callers():
                     else:
                         shared_sounds[key] = [full_path]
 
+    load_callers_banned()
+        
     # load callers
     callers = []
     for root, dirs, files in os.walk(AUDIO_MEDIA_PATH):
@@ -447,10 +494,13 @@ def grab_caller_gender(caller_name):
 
 def setup_caller():
     global caller
+    global caller_title
+    global caller_profiles_banned
     caller = None
+    caller_title = ''
 
     callers = load_callers()
-    ppi(str(len(callers)) + ' caller(s) ready to call out your Darts:')
+    ppi(str(len(callers)) + ' caller(s) found.')
 
     if CALLER != DEFAULT_CALLER and CALLER != '':
         wished_caller = CALLER.lower()
@@ -472,6 +522,9 @@ def setup_caller():
             for c in callers:
                 caller_name = grab_caller_name(c)
 
+                if caller_name in caller_profiles_banned:
+                    continue
+
                 if RANDOM_CALLER_LANGUAGE != 0:
                     caller_language_key = grab_caller_language(caller_name)
                     if caller_language_key != RANDOM_CALLER_LANGUAGE:
@@ -483,7 +536,8 @@ def setup_caller():
                         continue
                 callers_filtered.append(c)
 
-            caller = random.choice(callers_filtered)
+            if len(callers_filtered) > 0:
+                caller = random.choice(callers_filtered)
 
     if(caller != None):
         for sound_file_key, sound_file_values in caller[1].items():
@@ -492,7 +546,8 @@ def setup_caller():
                 sound_list.append(sound_file_path)
             caller[1][sound_file_key] = sound_list
 
-        ppi("Your current caller: " + str(os.path.basename(os.path.normpath(caller[0]))) + " knows " + str(len(caller[1].values())) + " Sound-file-key(s)")
+        caller_title = str(os.path.basename(os.path.normpath(caller[0])))
+        ppi("Your current caller: " + caller_title + " knows " + str(len(caller[1].values())) + " Sound-file-key(s)")
         # ppi(caller[1])
         caller = caller[1]
 
@@ -1677,6 +1732,13 @@ def on_message_client(client, server, message):
             elif message.startswith('undo'):
                 undo_throw()
 
+            elif message.startswith('ban'):
+                msg_splitted = message.split(':')
+                if len(msg_splitted) > 1:
+                    ban_caller(True)
+                else:
+                    ban_caller(False)
+
             elif message.startswith('call'):
                 msg_splitted = message.split(':')
                 to_call = msg_splitted[1]
@@ -1687,7 +1749,7 @@ def on_message_client(client, server, message):
         
 
         except Exception as e:
-            ppe('WS-Message failed: ', e)
+            ppe('WS-Client-Message failed: ', e)
 
     t = threading.Thread(target=process).start()
 
@@ -1919,6 +1981,12 @@ if __name__ == "__main__":
     global caller
     caller = None
 
+    global caller_title
+    caller_title = ''
+
+    global caller_profiles_banned
+    caller_profiles_banned = []
+
     global lastPoints
     lastPoints = None
 
@@ -1935,9 +2003,8 @@ if __name__ == "__main__":
     checkoutsCounter = {}
 
 
-
     # Initialize sound-mixer
-    mixer.pre_init(MIXER_FREQUENCY, MIXER_SIZE, MIXER_CHANNELS, MIXER_BUFFERSIZE) 
+    mixer.pre_init(MIXER_FREQUENCY, MIXER_SIZE, MIXER_CHANNELS, MIXER_BUFFERSIZE)
     mixer.init()
 
     osType = plat
@@ -1974,6 +2041,7 @@ if __name__ == "__main__":
                 ppe("Background-muter failed!", e)
 
         try:
+            load_callers_banned()
             download_callers()
         except Exception as e:
             ppe("Caller-profile fetching failed!", e)
@@ -1984,7 +2052,7 @@ if __name__ == "__main__":
             ppe("Setup callers failed!", e)
 
         if caller == None:
-            ppi('A caller with name "' + str(CALLER) + '" does NOT exist! Please compare your input with list of possible callers and update -C')
+            ppi('A caller with name "' + str(CALLER) + '" does NOT exist! Please compare your input with list of available callers.')
         else:
             try:  
                 websocket_server_thread = threading.Thread(target=start_websocket_server, args=(DEFAULT_HOST_IP, HOST_PORT))

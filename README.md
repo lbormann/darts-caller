@@ -130,6 +130,8 @@ Note: Since version 2.0.0 there is a build-in download-mechanismn that automatic
 - control_next [overrides: control]
 - control_next_game [overrides: control]
 - control_undo [overrides: control]
+- control_ban_caller [overrides: control]
+- control_change_caller [overrides: control]
 - control_dart_correction [overrides: control]
 - control_dart_correction_1 [overrides: control, control_dart_correction]
 - control_dart_correction_2 [overrides: control, control_dart_correction]
@@ -445,7 +447,10 @@ EVERY sound is optional! If you don't like a specific sound just delete it! The 
 
 ### I don't like voice-pack X
 
-Just delete ALL files of disliked voice-pack-folder. After that done, the application either won't download files again nor it will try to use these voice-pack anymore.
+There are two ways to ban a voice-pack.
+Option 1) Delete ALL files of voice-pack-folder.
+Option 2) use [autodarts-voice](https://github.com/lbormann/autodarts-voice) to ban the the current caller when active.
+Both options forcing the application to either download files again nor using a voice-pack anymore. 
 
 ### App starts and stops immediately?!
 
@@ -487,32 +492,33 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 
 ## TODOs
 
-- Support other games modes
+- support other games modes
 - cricket 2 players 2x gameon
 - cricket: do not call marked fields, only call number if field is still open
-- Bots no dart-sounds for every turn (at least not for ESF = 0)
+- bots no dart-sounds for every turn (at least not for ESF = 0)
 - add fading option for ambient, *? -> play(loops=0, maxtime=0, fade_ms=0) -> Channel
 - bot your aiming for (your require ...) but already gameshot (stop running sounds)
 - add ambient_x-pendent for every Main/Every-Dart-Sound
 - ambient_25bullbull fail?
-- If single-darts is on and last arrow hits; the programm also calls last dart effect / that is ie triple, 
+- if single-darts is on and last arrow hits; the programm also calls last dart effect / that is ie triple, 
   that coming from curated caller-voices = wrong!
-- Care about blocking python process on shutdown
+- care about blocking python process on shutdown
+- do not load new caller on ad-disconnect
 
 
 ### Done
 
-- Prevent from double calling
+- prevent from double calling
 - only one webhook with all information (to prevent race condition on receiving app): leg_end, turn, throw_number, throw_value, points_left, variant, user
 - let the user configure caller-volume
-- Sounds for every throw (single, double, tripple, missed)
+- sounds for every throw (single, double, tripple, missed)
 - add start argument for surpressing checkout calls
 - add sites for free sound-file downloads
-- Cricket: Change call behaviour to default
+- cricket: Change call behaviour to default
 - improved possible checkout call for bogey numbers
 - yr_2-yr_170.{wav | mp3} different sounds-files for possible checkout calls
-- Fix sound-play repetition
-- Improved error logging
+- fix sound-play repetition
+- improved error logging
 - dont care about last slash in webhook
 - fix webhook for apps that need info of every throw
 - offer multiple WTT`s
@@ -536,7 +542,7 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - keys for dart-number-combinations ie ambient_t1d1s1 -> sound
 - add linux start-script
 - start board on app-start if board-address is available!
-- DL limit remove 1000 cap
+- dl limit remove 1000 cap
 - consider x.leg/set -> Gameshot / !x_leg! / player
 - add ambient_group_level
 - prohibit -M and -MS in main-directory; prohibit -MS in -M
@@ -549,6 +555,7 @@ It may be buggy. I've just coded it for fast fun with https://autodarts.io. You 
 - rework PCC
 - add support for game control
 - add support for gc: dart-correction (multiple)
+- add ban/change caller
 
 
 ## LAST WORDS
