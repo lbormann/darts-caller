@@ -225,7 +225,7 @@ def download_callers():
 
         downloads_filtered = {}
         for speaker_name, speaker_download_url in download_list.items():
-            if speaker_name not in caller_profiles_banned:
+            if speaker_name.lower() not in caller_profiles_banned:
                 downloads_filtered[speaker_name] = speaker_download_url
         download_list = downloads_filtered
 
