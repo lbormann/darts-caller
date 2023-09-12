@@ -4,3 +4,5 @@
 *-custom.sh
 *-custom.bat
 *raw*.csv
+test.py
+__pycache__
