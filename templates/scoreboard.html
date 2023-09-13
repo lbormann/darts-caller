@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Patua+One&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="/static/css/style.css?v=1.0.0">
+    <title>Scoreboard</title>
+</head>
+
+<body>
+    <h1 id="status">Disconnected!</h1>
+    <div id="scoreboard" class="container">
+
+    <script>
+        let socket;
+        let reconnectInterval = 1000; 
+        let currentMatch;
+
+        const state = document.getElementById('status');
+        const scoreboard = document.getElementById('scoreboard');
+        
+
+
+        function buildScoreboard(message){
+            var headers = [];
+            var widths = [];
+
+            if ('sets' in message && message.sets > 0) {
+                headers.push('First to ' + message.sets);
+                widths.push('width:47%;text-align: left;');
+
+                headers.push('Sets');
+                widths.push('width:14%;text-align: center;');
+            } else {
+                headers.push('First to ' + message.legs);
+                widths.push('width:61%;text-align: left;');
+            }
+
+            headers.push('Legs');
+            widths.push('width:14%;text-align: center;');
+
+            headers.push('');
+            widths.push('width:14%;');
+
+            const headerHtml = headers.map((header, index) => `<th style="${widths[index]}">${header}</th>`).join('');
+
+
+            
+            const playerHtml = message.players.map((player, index) => `
+                <tr class="players">
+                    <td class="player" data-label="Player">${player.name}</td>
+                    <td class="sets" data-label="Sets">${message.scores[index].sets}</td>
+                    <td class="legs" data-label="Legs">${message.scores[index].legs}</td>
+                    <td class="pointsLeft" data-label="Points Left">${message.gameScores[index]}</td>
+                    <td class="arrow" id="arrow${index + 1}" style="visibility: ${index === message.player ? 'visible' : 'hidden'};">&#x25c4;</td>
+                </tr>
+                `).join('');
+                        
+            
+            scoreboard.innerHTML = 
+            `
+            <table class="basicTable">
+                <thead>
+                    <tr class="header">
+                        ${headerHtml}
+                    </tr>
+                </thead>
+                <tbody>
+                    ${playerHtml}
+                </tbody>
+                <tfoot>
+                    <tr class="footer">
+                        <td class="game" colspan="2">2023 World Championship Final</td>
+                        <td class="ad" colspan="2">Sky Sports</td>
+                    </tr>
+                </tfoot>
+            </table>
+            `;
+        }
+
+        function handleMessage(message) {
+            console.log(message);
+            if(currentMatch != message['id']){
+                buildScoreboard(message);
+            }      
+        }
+
+        function setupWebSocketConnection() {
+            socket = new WebSocket("ws://{{ host }}:{{ ws_port }}");
+            socket.onopen = function() {
+                console.log("Socket: connected!");
+                state.innerText = "CONNECTED!";
+                state.classList = "success";
+            };
+            socket.onclose = function() {
+                console.log("Socket: disconnected!");
+                state.innerText = "DISCONNECTED!";
+                state.classList = "failure";
+                setTimeout(setupWebSocketConnection, reconnectInterval);
+            };
+            socket.onmessage = function(event) {
+                let data = JSON.parse(event.data);
+                handleMessage(data);
+            };
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            setupWebSocketConnection();  
+        });
+    </script>
+
+    <script type="text/javascript" src="/static/js/animation.js?v=1.0.0"></script>
+</body>
+</html>

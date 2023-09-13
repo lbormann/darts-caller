@@ -1,0 +1,111 @@
+body {
+    font-family: 'Patua One', cursive;
+    font-size: 35px;
+    background-color: #00ff00;
+}
+
+th, td {
+    padding: 10px;
+}
+
+.basicTable {
+    position: fixed;
+    bottom: 50px;
+    right: 50px;
+    width: 50%;
+    border-collapse: collapse;
+    z-index: 0;
+}
+
+.statsTable {
+    position: fixed;
+    bottom: 100px;
+    right: calc(50% + 50px);
+    width: 30%;
+    border-collapse: collapse;
+    text-align: center;
+    z-index: -1;
+}
+
+.averageTable {
+    position: fixed;
+    bottom: 50px;
+    right: calc(50% + 50px);
+    width: 20%;
+    border-collapse: collapse;
+    text-align: center;
+    z-index: -1;
+}
+
+.checkout1 {
+    position: fixed;
+    bottom: 180px;
+    right: calc(50% + 50px);
+    width: 10%;
+    border-collapse: collapse;
+    text-align: center;
+    z-index: -1;
+    background: darkred;
+    font-size: 12px;
+    color: white;
+}
+
+.checkout2 {
+    position: fixed;
+    bottom: 110px;
+    right: calc(50% + 50px);
+    width: 10%;
+    border-collapse: collapse;
+    text-align: center;
+    z-index: -1;
+    background: darkred;
+    font-size: 12px;
+    color: white;
+}
+
+.darter {
+    background: yellow;
+    color: black;
+}
+
+.header {
+    background-color: black;
+    color: white;
+    font-size: 25px;
+}
+
+.player {
+    background-color: white;
+    color: black;
+    font-weight: bold;
+}
+
+.arrow {
+    color: red;
+    text-align: center;
+}
+
+.sets, .legs, .pointsLeft {
+    background-color: green;
+    color: white;
+    text-align: center;
+}
+
+.backWhite {
+    background-color: white;
+    color: black;
+}
+
+.text-middle {
+    text-align: center;
+}
+
+.footer {
+    background-color: black;
+    color: white;
+    font-size: 25px;
+}
+
+.ad {
+    text-align: right;
+}

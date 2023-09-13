@@ -1516,6 +1516,8 @@ def process_match_cricket(m):
     if isGameFin == True:
         isGameFinished = True
 
+def process_common(m):
+    broadcast(m)
 
 def receive_token_autodarts():
     try:
@@ -1635,6 +1637,8 @@ def on_message_autodarts(ws, message):
                         
                     elif variant == 'Cricket':
                         process_match_cricket(data)
+
+                    process_common(data)
 
             elif m['channel'] == 'autodarts.boards':
                 data = m['data']
@@ -1840,6 +1844,11 @@ def sound(file_id):
     file_name = os.path.basename(file_path)
     return send_from_directory(directory, file_name)
 
+@app.route('/scoreboard')
+def scoreboard():
+    return render_template('scoreboard.html', host=WEB_HOST, ws_port=HOST_PORT)
+
+
 
 def start_websocket_server(host, port):
     global server
@@ -2004,8 +2013,8 @@ if __name__ == "__main__":
 
 
     # Initialize sound-mixer
-    # mixer.pre_init(MIXER_FREQUENCY, MIXER_SIZE, MIXER_CHANNELS, MIXER_BUFFERSIZE)
-    mixer.init(MIXER_FREQUENCY, MIXER_SIZE, MIXER_CHANNELS, MIXER_BUFFERSIZE, allowedchanges=0)
+    mixer.pre_init(MIXER_FREQUENCY, MIXER_SIZE, MIXER_CHANNELS, MIXER_BUFFERSIZE)
+    mixer.init()
 
     osType = plat
     osName = os.name
@@ -2058,17 +2067,14 @@ if __name__ == "__main__":
                 websocket_server_thread = threading.Thread(target=start_websocket_server, args=(DEFAULT_HOST_IP, HOST_PORT))
                 websocket_server_thread.start()
 
-                if WEB > 0:
-                    WEB_HOST = get_local_ip_address()
-                    flask_app_thread = threading.Thread(target=start_flask_app, args=(DEFAULT_HOST_IP, WEB_PORT))
-                    flask_app_thread.start()
+                WEB_HOST = get_local_ip_address()
+                flask_app_thread = threading.Thread(target=start_flask_app, args=(DEFAULT_HOST_IP, WEB_PORT))
+                flask_app_thread.start()
 
                 connect_autodarts()
 
                 websocket_server_thread.join()
-
-                if WEB > 0:
-                    flask_app_thread.join() 
+                flask_app_thread.join() 
 
             except Exception as e:
                 ppe("Connect failed: ", e)
