@@ -42,7 +42,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.4.5'
+VERSION = '2.4.6'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -848,6 +848,10 @@ def listen_to_newest_match(m, ws):
             play_sound_effect('matchcancel')
             mirror_sounds()
 
+def reset_checkouts_counter():
+    global checkoutsCounter
+    checkoutsCounter = {}
+
 def increase_checkout_counter(player_index, remaining_score):
     global checkoutsCounter
 
@@ -1086,6 +1090,8 @@ def process_match_x01(m):
     elif matchon == True:
         isGameFinished = False
 
+        reset_checkouts_counter()
+
         matchStarted = {
             "event": "match-started",
             "player": currentPlayerName,
@@ -1111,6 +1117,8 @@ def process_match_x01(m):
     # Check for gameon
     elif gameon == True:
         isGameFinished = False
+
+        reset_checkouts_counter()
 
         gameStarted = {
             "event": "game-started",
@@ -1631,6 +1639,8 @@ def on_message_autodarts(ws, message):
 
                     # ppi(json.dumps(data, indent = 4, sort_keys = True))
 
+                    process_common(data)
+
                     variant = data['variant']
                     if variant == 'X01' or variant == 'Random Checkout':
                         process_match_x01(data)
@@ -1638,7 +1648,7 @@ def on_message_autodarts(ws, message):
                     elif variant == 'Cricket':
                         process_match_cricket(data)
 
-                    process_common(data)
+                    
 
             elif m['channel'] == 'autodarts.boards':
                 data = m['data']

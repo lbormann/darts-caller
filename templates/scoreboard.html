@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Patua+One&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patua+One&display=swap">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <link rel="stylesheet" href="/static/css/style.css?v=1.0.0">
     <title>Scoreboard</title>
@@ -13,6 +13,14 @@
 
 <body>
     <h1 id="status">Disconnected!</h1>
+
+    <button onclick="toggleStatsTable()">Toggle Stats Table</button>
+	<button onclick="toggleAverageTable()">Toggle Average Table</button>
+	<!-- <button onclick="toggleArrow()">Toggle Arrow Position</button> -->
+	<button onclick="toggleArrowText()">180</button>
+	<button onclick="toggleCheckout1()">Checkout 1</button>
+	<button onclick="toggleCheckout2()">Checkout 2</button>
+
     <div id="scoreboard" class="container">
 
     <script>
@@ -22,65 +30,102 @@
 
         const state = document.getElementById('status');
         const scoreboard = document.getElementById('scoreboard');
-        
 
 
-        function buildScoreboard(message){
-            var headers = [];
-            var widths = [];
+        function buildScoreboard(message) {
 
-            if ('sets' in message && message.sets > 0) {
-                headers.push('First to ' + message.sets);
-                widths.push('width:47%;text-align: left;');
+            const hasSets = message.hasOwnProperty('sets');
+            const headerHtml = `
+                <th style="width:47%;text-align: left;">First to ${hasSets ? message.sets : message.legs} </th>
+                ${hasSets ? '<th style="width:14%">Sets</th>' : ''}
+                <th style="width:14%">Legs</th>
+                <th style="width:14%"></th>
+            `;
 
-                headers.push('Sets');
-                widths.push('width:14%;text-align: center;');
-            } else {
-                headers.push('First to ' + message.legs);
-                widths.push('width:61%;text-align: left;');
-            }
-
-            headers.push('Legs');
-            widths.push('width:14%;text-align: center;');
-
-            headers.push('');
-            widths.push('width:14%;');
-
-            const headerHtml = headers.map((header, index) => `<th style="${widths[index]}">${header}</th>`).join('');
-
-
-            
             const playerHtml = message.players.map((player, index) => `
                 <tr class="players">
                     <td class="player" data-label="Player">${player.name}</td>
-                    <td class="sets" data-label="Sets">${message.scores[index].sets}</td>
+                    ${hasSets ? `<td class="sets" data-label="Sets">${message.scores[index].sets}</td>` : ''}
                     <td class="legs" data-label="Legs">${message.scores[index].legs}</td>
                     <td class="pointsLeft" data-label="Points Left">${message.gameScores[index]}</td>
                     <td class="arrow" id="arrow${index + 1}" style="visibility: ${index === message.player ? 'visible' : 'hidden'};">&#x25c4;</td>
                 </tr>
-                `).join('');
-                        
-            
-            scoreboard.innerHTML = 
-            `
-            <table class="basicTable">
-                <thead>
-                    <tr class="header">
-                        ${headerHtml}
+            `).join('');
+
+            const statsHtml = message.players.map((player, index) => `
+                <tr class="backWhite">
+                    <td>${message.stats[index].plus100}</td>
+                    <td>${message.stats[index].plus140}</td>
+                    <td>${message.stats[index].total180}</td>
+                </tr>
+            `).join('');
+
+            const maxDarts = 9;
+            const totalScore = 501;
+            const currentPlayer = message.players[message.player];
+            const dartsThrown = message.stats[currentPlayer.index].dartsThrown;
+            const remainingScore = message.gameScores[currentPlayer.index];
+            const gameType = message.settings.baseScore;
+            const isNineDartPossible = gameType === totalScore && dartsThrown < maxDarts && remainingScore <= (maxDarts - dartsThrown) * 60;
+
+            const checkoutHtml = `
+                <table class="checkout${message.player + 1} animate__animated animate__fadeOutRight" id="checkout${message.player + 1}" style="display: none;">
+                    <tr>
+                        ${isNineDartPossible ? '<th class="darter">9</th>' : ''}
+                        ${message.state.checkoutGuide ? message.state.checkoutGuide.map(field => `<th>${field.name}</th>`).join('') : ''}
                     </tr>
-                </thead>
-                <tbody>
-                    ${playerHtml}
-                </tbody>
-                <tfoot>
-                    <tr class="footer">
-                        <td class="game" colspan="2">2023 World Championship Final</td>
-                        <td class="ad" colspan="2">Sky Sports</td>
-                    </tr>
-                </tfoot>
-            </table>
+                </table>
             `;
+
+            const averagesHtml = message.players.map((player, index) => `
+                <tr class="backWhite">
+                    <td id="player${index + 1}average">${message.stats[index].average.toFixed(2)}</td>
+                </tr>
+            `).join('');
+
+
+            scoreboard.innerHTML =
+                `
+                <table class="basicTable">
+                    <thead>
+                        <tr class="header">
+                            ${headerHtml}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${playerHtml}
+                    </tbody>
+                    <tfoot>
+                        <tr class="footer">
+                            <td class="game" colspan="${hasSets ? '2' : '1'}">2023 World Championship Final</td>
+                            <td class="ad" colspan="2">Sky Sports</td>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                <table class="statsTable animate__animated animate__fadeOutRight" id="statsTable" style="display: none;">
+                    <tr class="header">
+                        <th style="width:33%">100+</th>
+                        <th style="width:33%">140+</th>
+                        <th style="width:33%">180</th>
+                    </tr>
+                    ${statsHtml}
+                </table>
+
+                <table class="averageTable animate__animated animate__fadeOutRight" id="averageTable" style="display: none;">
+                    <tr class="header">
+                        <th>Averages</th>
+                    </tr>
+                    ${averagesHtml}
+                    <tr class="footer">
+                        <td style="color:black">Leg</td>
+                    </tr>
+                </table>
+
+                ${checkoutHtml}
+                `;
         }
+
 
         function handleMessage(message) {
             console.log(message);
