@@ -37,9 +37,22 @@ th, td {
     z-index: -1;
 }
 
+.checkout{
+    position: fixed;
+    bottom: 100px;
+    right: calc(50% + 50px);
+    width: 10%;
+    border-collapse: collapse;
+    text-align: center;
+    z-index: -1;
+    background: darkred;
+    font-size: 12px;
+    color: white;
+}
+
 .checkout1 {
     position: fixed;
-    bottom: 180px;
+    top: calc(50% + 50px);
     right: calc(50% + 50px);
     width: 10%;
     border-collapse: collapse;

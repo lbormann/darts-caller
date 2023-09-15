@@ -451,6 +451,7 @@ There are two ways to ban a voice-pack.
 Option 1) Delete ALL files of voice-pack-folder.
 Option 2) use [autodarts-voice](https://github.com/lbormann/autodarts-voice) to ban the the current caller when active.
 Both options forcing the application to either download files again nor using a voice-pack anymore. 
+If you wish to remove a ban, open 'autodarts-caller-banned.txt' and delete particular entry from the list.
 
 ### App starts and stops immediately?!
 

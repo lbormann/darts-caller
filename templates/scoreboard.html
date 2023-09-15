@@ -67,9 +67,15 @@
             const remainingScore = message.gameScores[currentPlayer.index];
             const gameType = message.settings.baseScore;
             const isNineDartPossible = gameType === totalScore && dartsThrown < maxDarts && remainingScore <= (maxDarts - dartsThrown) * 60;
+            // let checkoutType = 0;
+            // if(message.state.checkoutGuide && message.turns[0].hasOwnProperty('throws') && message.turns[0].throws != null && message.turns[0].throws.length > 0){
+            //     checkoutType = 1; // es gab einen 
+            // }
+            // console.log(checkoutStyle);
 
+  
             const checkoutHtml = `
-                <table class="checkout${message.player + 1} animate__animated animate__fadeOutRight" id="checkout${message.player + 1}" style="display: none;">
+                <table class="checkout animate__animated animate__fadeOutRight" id="checkout${message.player + 1}" style="display:none;bottom:${40 + (message.players.length - message.player) * 50}px">
                     <tr>
                         ${isNineDartPossible ? '<th class="darter">9</th>' : ''}
                         ${message.state.checkoutGuide ? message.state.checkoutGuide.map(field => `<th>${field.name}</th>`).join('') : ''}
@@ -124,6 +130,27 @@
 
                 ${checkoutHtml}
                 `;
+
+                // && checkoutStyle === 'none'
+                if(message.state.checkoutGuide){
+                    toggleCheckout(message.player + 1)
+                }
+        }
+
+        function toggleCheckout(playerId) {
+            var checkout = document.getElementById("checkout" + playerId);
+            if (checkout.style.display === "none" || checkout.style.display === "") {
+                checkout.classList.remove("animate__fadeOutRight");
+                checkout.classList.add("animate__fadeInRight");
+                checkout.style.display = "table";
+            } else {
+                checkout.classList.remove("animate__fadeInRight");
+                checkout.classList.add("animate__fadeOutRight");
+
+                checkout.addEventListener("animationend", function () {
+                    checkout.style.display = "none";
+                }, { once: true });
+            }
         }
 
 
