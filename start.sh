@@ -88,6 +88,9 @@ downloads_path=
 # -WEB
 web_caller=
 
+# -WEBSB
+web_caller_scoreboard=
+
 # -WEBP
 web_caller_port=
 
@@ -196,6 +199,9 @@ fi
 #fi
 if [ -n "$web_caller" ]; then
   args="$args -WEB $web_caller"
+fi
+if [ -n "$web_caller_scoreboard" ]; then
+  args="$args -WEBSB $web_caller_scoreboard"
 fi
 if [ -n "$web_caller_port" ]; then
   args="$args -WEBP $web_caller_port"

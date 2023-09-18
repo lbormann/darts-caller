@@ -217,6 +217,7 @@ Start the script:
 - -DLP / --downloads_path [Default: 'download']
 - -BAV / --background_audio_volume [Default: 0.0] [Possible values: 0.0 .. 1.0]
 - -WEB / --web_caller [Default: 0] [Possible values: 0,1,2]
+- -WEBSB / --web_caller_scoreboard [Default: 0] [Possible values: 0 | 1]
 - -WEBP / --web_caller_port [Default: 5000]
 - -HP / --host_port [Default: 8079]
 
@@ -327,7 +328,11 @@ You can not hear any calls as your music is way too loud? Try to set this to '0.
 
 *`-WEB / --web_caller`*
 
-If you set this to a '1' or '2' the app will host a web-endpoint to transfer every calling-action to connected devices. A value '1' will play sounds only on connected devices. Value '2' will play locally and on connected devices. You start web-calling by typing http://{machine-ip-address}:{web-caller-port / see below} in browser on your desired device. 
+If you set this to a '1' or '2' the app will host a web-endpoint to transfer call-events to connected devices. A value '1' will play sounds only on web. Value '2' will play sounds locally and on web. To use web-calling visit http://{machine-ip-address}:{web-caller-port} in browser.
+
+*`-WEBSB / --web_caller_scoreboard`*
+
+If you set this to a '1' the app will host a web-endpoint to display an alternative scoreboard. Visit http://{machine-ip-address}:{web-caller-port}/scoreboard in browser.
 
 *`-WEBP / --web_caller_port`*
 
@@ -451,6 +456,7 @@ There are two ways to ban a voice-pack.
 Option 1) Delete ALL files of voice-pack-folder.
 Option 2) use [autodarts-voice](https://github.com/lbormann/autodarts-voice) to ban the the current caller when active.
 Both options forcing the application to either download files again nor using a voice-pack anymore. 
+If you wish to revoke a ban, open 'autodarts-caller-banned.txt' and remove the line from the list. You find the file (Windows) in C:\Users\YOUR-USER\AppData\Local\Temp\autodarts-caller-banned.txt
 
 ### App starts and stops immediately?!
 

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patua+One&display=swap">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="/static/css/common.css?v=1.0.0">
+    <link rel="stylesheet" href="/static/css/scoreboard.css?v=1.0.0">
+    <title>autodarts-caller-scoreboard</title>
+</head>
+
+<body>
+    <h1 id="status">Disconnected!</h1>
+
+    <!-- <button onclick="toggleStatsTable()">Toggle Stats</button>
+	<button onclick="toggleAverageTable()">Toggle Average</button> -->
+
+    <div id="scoreboard" class="container">
+
+    <script>
+        const state = document.getElementById('status');
+        const scoreboard = document.getElementById('scoreboard');
+        
+        let timeoutId = null;
+        let intervalId = null;
+        let infoState = "";
+
+        function triggerInfos() {
+            if (infoState != "") {
+                if(infoState == "stats"){
+                    toggleStats();
+                }else{
+                    toggleAverage();
+                }
+                infoState = "";
+            } else {
+                if (Math.random() > 0.5) {
+                    infoState = "stats";
+                    toggleStats();
+                } else {
+                    infoState = "average";
+                    toggleAverage();
+                }
+            }
+        }
+
+        function renderScoreboard(message) {
+            const hasSets = message.hasOwnProperty('sets');
+            const headerHtml = `
+                <th style="width:47%;text-align: left;">First to ${hasSets ? message.sets : message.legs} </th>
+                ${hasSets ? '<th style="width:14%">Sets</th>' : ''}
+                <th style="width:14%">Legs</th>
+                <th style="width:14%"></th>
+            `;
+
+            const playerHtml = message.players.map((player, index) => `
+                <tr class="players">
+                    <td class="player" data-label="Player">${player.name}</td>
+                    ${hasSets ? `<td class="sets" data-label="Sets">${message.scores[index].sets}</td>` : ''}
+                    <td class="legs" data-label="Legs">${message.scores[index].legs}</td>
+                    <td class="pointsLeft" data-label="Points Left">${message.gameScores[index]}</td>
+                    <td class="arrow" id="arrow${index + 1}" style="visibility: ${index === message.player ? 'visible' : 'hidden'};">&#x25c4;</td>
+                </tr>
+            `).join('');
+
+            const statsHtml = message.players.map((player, index) => `
+                <tr class="backWhite">
+                    <td>${message.stats[index].plus100}</td>
+                    <td>${message.stats[index].plus140}</td>
+                    <td>${message.stats[index].total180}</td>
+                </tr>
+            `).join('');
+
+            const maxDarts = 9;
+            const totalScore = 501;
+            const currentPlayer = message.players[message.player];
+            const dartsThrown = message.stats[currentPlayer.index].dartsThrown;
+            const remainingScore = message.gameScores[currentPlayer.index];
+            const gameType = message.settings.baseScore;
+            const isNineDartPossible = gameType === totalScore && dartsThrown < maxDarts && remainingScore <= (maxDarts - dartsThrown) * 60;
+
+  
+            const checkoutHtml = `
+                <table class="checkout animate__animated animate__fadeOutRight" id="checkout${message.player + 1}" style="display:none;bottom:${40 + (message.players.length - message.player) * 65}px">
+                    <tr>
+                        ${isNineDartPossible ? '<th class="darter">9</th>' : ''}
+                        ${message.state.checkoutGuide ? message.state.checkoutGuide.map(field => `<th>${field.name}</th>`).join('') : ''}
+                    </tr>
+                </table>
+            `;
+
+            const averagesHtml = message.players.map((player, index) => `
+                <tr class="backWhite">
+                    <td id="player${index + 1}average">${message.stats[index].average.toFixed(2)}</td>
+                </tr>
+            `).join('');
+
+
+            scoreboard.innerHTML =
+                `
+                <table class="basicTable">
+                    <thead>
+                        <tr class="header">
+                            ${headerHtml}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${playerHtml}
+                    </tbody>
+                    <tfoot>
+                        <tr class="footer">
+                            <td class="game" colspan="${hasSets ? '2' : '1'}">2023 World Championship Final</td>
+                            <td class="ad" colspan="2">Sky Sports</td>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                <table class="statsTable animate__animated animate__fadeOutRight" id="statsTable" style="display: none;">
+                    <tr class="header">
+                        <th style="width:33%">100+</th>
+                        <th style="width:33%">140+</th>
+                        <th style="width:33%">180</th>
+                    </tr>
+                    ${statsHtml}
+                </table>
+
+                <table class="averageTable animate__animated animate__fadeOutRight" id="averageTable" style="display: none;">
+                    <tr class="header">
+                        <th>Averages</th>
+                    </tr>
+                    ${averagesHtml}
+                    <tr class="footer">
+                        <td style="color:black">Leg</td>
+                    </tr>
+                </table>
+
+                ${checkoutHtml}
+                `;
+
+
+                clearTimeout(timeoutId);
+                clearInterval(intervalId);
+                timeoutId = null;
+                intervalId = null;
+
+                if(message.state.checkoutGuide){
+                    if(infoState != ""){  
+                        triggerInfos();
+                    }
+                    toggleCheckout(message.player + 1)
+                }else{
+                    if(infoState == ""){
+                        intervalId = setInterval(() => {
+                            triggerInfos();
+                        }, getRandomInterval(50000, 120000));
+                    }
+                }
+        }   
+
+
+
+        function onWsOpen(){
+            state.innerText = "CONNECTED!";
+            state.classList = "success";
+        }
+
+        function onWsClose(){
+            state.innerText = "DISCONNECTED!";
+            state.classList = "failure";
+        }
+        
+        function onWsData(data) {
+            renderScoreboard(data);   
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            if("{{ state }}" == "0"){
+                showFullscreenOverlay("To use web-scoreboard set -WEBSB (--web_caller_scoreboard) to 1");
+                return;
+            }
+            setupWebSocketConnection("{{ host }}", "{{ ws_port }}", onWsOpen, onWsClose, onWsData);   
+        });
+    </script>
+
+    <script type="text/javascript" src="/static/js/common.js?v=1.0.0"></script>
+    <script type="text/javascript" src="/static/js/scoreboard.js?v=1.0.0"></script>
+</body>
+</html>
