@@ -18,10 +18,12 @@ import shutil
 import csv
 import math
 import ssl
+import certifi
+from mask import mask
 from urllib.parse import quote, unquote
 from flask import Flask, render_template, send_from_directory
 
-
+os.environ['SSL_CERT_FILE'] = certifi.where()
 
 plat = platform.system()
 if plat == 'Windows':
@@ -1841,7 +1843,7 @@ def mute_background(mute_vol):
 
 @app.route('/')
 def index():
-    return render_template('index.html', host=WEB_HOST, ws_port=HOST_PORT)
+    return render_template('index.html', host=WEB_HOST, ws_port=HOST_PORT, state=WEB)
 
 @app.route('/sounds/<path:file_id>', methods=['GET'])
 def sound(file_id):
@@ -1856,7 +1858,7 @@ def sound(file_id):
 
 @app.route('/scoreboard')
 def scoreboard():
-    return render_template('scoreboard.html', host=WEB_HOST, ws_port=HOST_PORT)
+    return render_template('scoreboard.html', host=WEB_HOST, ws_port=HOST_PORT, state=WEB_SCOREBOARD)
 
 
 
@@ -1900,6 +1902,7 @@ if __name__ == "__main__":
     ap.add_argument("-DLP", "--downloads_path", required=False, default=DEFAULT_DOWNLOADS_PATH, help="Absolute path for temporarly downloads")
     ap.add_argument("-BAV","--background_audio_volume", required=False, type=float, default=0.0, help="Set background-audio-volume between 0.1 (silent) and 1.0 (no mute)")
     ap.add_argument("-WEB", "--web_caller", required=False, type=int, choices=range(0, 3), default=0, help="If '1' the application will host an web-endpoint, '2' it will do '1' and default caller-functionality.")
+    ap.add_argument("-WEBSB", "--web_caller_scoreboard", required=False, type=int, choices=range(0, 2), default=0, help="If '1' the application will host an web-endpoint, right to web-caller-functionality.")
     ap.add_argument("-WEBP", "--web_caller_port", required=False, type=int, default=DEFAULT_WEB_CALLER_PORT, help="Web-Caller-Port")
     ap.add_argument("-HP", "--host_port", required=False, type=int, default=DEFAULT_HOST_PORT, help="Host-Port")
     ap.add_argument("-DEB", "--debug", type=int, choices=range(0, 2), default=False, required=False, help="If '1', the application will output additional information")
@@ -1945,6 +1948,7 @@ if __name__ == "__main__":
     DOWNLOADS_PATH = args['downloads_path']
     BACKGROUND_AUDIO_VOLUME = args['background_audio_volume']
     WEB = args['web_caller']
+    WEB_SCOREBOARD = args['web_caller_scoreboard']
     WEB_PORT = args['web_caller_port']
     HOST_PORT = args['host_port']
     DEBUG = args['debug']
@@ -1960,7 +1964,13 @@ if __name__ == "__main__":
 
     if DEBUG:
         ppi('Started with following arguments:')
-        ppi(json.dumps(args, indent=4))
+        data_to_mask = {
+            "autodarts_email": "email", 
+            "autodarts_password": "str",
+            "autodarts_board_id": "str"
+        }
+        masked_args = mask(args, data_to_mask)
+        ppi(json.dumps(masked_args, indent=4))
     
     args_post_check = None
     try:
@@ -2077,14 +2087,17 @@ if __name__ == "__main__":
                 websocket_server_thread = threading.Thread(target=start_websocket_server, args=(DEFAULT_HOST_IP, HOST_PORT))
                 websocket_server_thread.start()
 
-                WEB_HOST = get_local_ip_address()
-                flask_app_thread = threading.Thread(target=start_flask_app, args=(DEFAULT_HOST_IP, WEB_PORT))
-                flask_app_thread.start()
+                if WEB > 0 or WEB_SCOREBOARD:
+                    WEB_HOST = get_local_ip_address()
+                    flask_app_thread = threading.Thread(target=start_flask_app, args=(DEFAULT_HOST_IP, WEB_PORT))
+                    flask_app_thread.start()
 
                 connect_autodarts()
 
                 websocket_server_thread.join()
-                flask_app_thread.join() 
+
+                if WEB > 0 or WEB_SCOREBOARD:
+                    flask_app_thread.join() 
 
             except Exception as e:
                 ppe("Connect failed: ", e)

@@ -1,4 +1,19 @@
-function toggleStatsTable() {
+function toggleCheckout(playerId) {
+    var checkout = document.getElementById("checkout" + playerId);
+    if (checkout.style.display === "none" || checkout.style.display === "") {
+        checkout.classList.remove("animate__fadeOutRight");
+        checkout.classList.add("animate__fadeInRight");
+        checkout.style.display = "table";
+    } else {
+        checkout.classList.remove("animate__fadeInRight");
+        checkout.classList.add("animate__fadeOutRight");
+        checkout.addEventListener("animationend", function () {
+            checkout.style.display = "none";
+        }, { once: true });
+    }
+}
+
+function toggleStats() {
     var statsTable = document.getElementById("statsTable");
     if (statsTable.style.display === "none" || statsTable.style.display === "") {
         statsTable.classList.remove("animate__fadeOutRight");
@@ -13,7 +28,7 @@ function toggleStatsTable() {
         }, { once: true });
     }
 }
-function toggleAverageTable() {
+function toggleAverage() {
     var averageTable = document.getElementById("averageTable");
     if (averageTable.style.display === "none" || averageTable.style.display === "") {
         averageTable.classList.remove("animate__fadeOutRight");
@@ -28,6 +43,13 @@ function toggleAverageTable() {
         }, { once: true });
     }
 }
+
+
+
+
+
+
+
 function toggleCheckout1() {
     var checkout1 = document.getElementById("checkout1");
     if (checkout1.style.display === "none" || checkout1.style.display === "") {

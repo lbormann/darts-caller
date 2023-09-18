@@ -7,33 +7,47 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patua+One&display=swap">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
-    <link rel="stylesheet" href="/static/css/style.css?v=1.0.0">
-    <title>Scoreboard</title>
+    <link rel="stylesheet" href="/static/css/common.css?v=1.0.0">
+    <link rel="stylesheet" href="/static/css/scoreboard.css?v=1.0.0">
+    <title>autodarts-caller-scoreboard</title>
 </head>
 
 <body>
     <h1 id="status">Disconnected!</h1>
 
-    <button onclick="toggleStatsTable()">Toggle Stats Table</button>
-	<button onclick="toggleAverageTable()">Toggle Average Table</button>
-	<!-- <button onclick="toggleArrow()">Toggle Arrow Position</button> -->
-	<button onclick="toggleArrowText()">180</button>
-	<button onclick="toggleCheckout1()">Checkout 1</button>
-	<button onclick="toggleCheckout2()">Checkout 2</button>
+    <!-- <button onclick="toggleStatsTable()">Toggle Stats</button>
+	<button onclick="toggleAverageTable()">Toggle Average</button> -->
 
     <div id="scoreboard" class="container">
 
     <script>
-        let socket;
-        let reconnectInterval = 1000; 
-        let currentMatch;
-
         const state = document.getElementById('status');
         const scoreboard = document.getElementById('scoreboard');
+        
+        let timeoutId = null;
+        let intervalId = null;
+        let infoState = "";
 
+        function triggerInfos() {
+            if (infoState != "") {
+                if(infoState == "stats"){
+                    toggleStats();
+                }else{
+                    toggleAverage();
+                }
+                infoState = "";
+            } else {
+                if (Math.random() > 0.5) {
+                    infoState = "stats";
+                    toggleStats();
+                } else {
+                    infoState = "average";
+                    toggleAverage();
+                }
+            }
+        }
 
-        function buildScoreboard(message) {
-
+        function renderScoreboard(message) {
             const hasSets = message.hasOwnProperty('sets');
             const headerHtml = `
                 <th style="width:47%;text-align: left;">First to ${hasSets ? message.sets : message.legs} </th>
@@ -67,15 +81,10 @@
             const remainingScore = message.gameScores[currentPlayer.index];
             const gameType = message.settings.baseScore;
             const isNineDartPossible = gameType === totalScore && dartsThrown < maxDarts && remainingScore <= (maxDarts - dartsThrown) * 60;
-            // let checkoutType = 0;
-            // if(message.state.checkoutGuide && message.turns[0].hasOwnProperty('throws') && message.turns[0].throws != null && message.turns[0].throws.length > 0){
-            //     checkoutType = 1; // es gab einen 
-            // }
-            // console.log(checkoutStyle);
 
   
             const checkoutHtml = `
-                <table class="checkout animate__animated animate__fadeOutRight" id="checkout${message.player + 1}" style="display:none;bottom:${40 + (message.players.length - message.player) * 50}px">
+                <table class="checkout animate__animated animate__fadeOutRight" id="checkout${message.player + 1}" style="display:none;bottom:${40 + (message.players.length - message.player) * 65}px">
                     <tr>
                         ${isNineDartPossible ? '<th class="darter">9</th>' : ''}
                         ${message.state.checkoutGuide ? message.state.checkoutGuide.map(field => `<th>${field.name}</th>`).join('') : ''}
@@ -131,60 +140,52 @@
                 ${checkoutHtml}
                 `;
 
-                // && checkoutStyle === 'none'
+
+                clearTimeout(timeoutId);
+                clearInterval(intervalId);
+                timeoutId = null;
+                intervalId = null;
+
                 if(message.state.checkoutGuide){
+                    if(infoState != ""){  
+                        triggerInfos();
+                    }
                     toggleCheckout(message.player + 1)
+                }else{
+                    if(infoState == ""){
+                        intervalId = setInterval(() => {
+                            triggerInfos();
+                        }, getRandomInterval(50000, 120000));
+                    }
                 }
+        }   
+
+
+
+        function onWsOpen(){
+            state.innerText = "CONNECTED!";
+            state.classList = "success";
         }
 
-        function toggleCheckout(playerId) {
-            var checkout = document.getElementById("checkout" + playerId);
-            if (checkout.style.display === "none" || checkout.style.display === "") {
-                checkout.classList.remove("animate__fadeOutRight");
-                checkout.classList.add("animate__fadeInRight");
-                checkout.style.display = "table";
-            } else {
-                checkout.classList.remove("animate__fadeInRight");
-                checkout.classList.add("animate__fadeOutRight");
-
-                checkout.addEventListener("animationend", function () {
-                    checkout.style.display = "none";
-                }, { once: true });
-            }
+        function onWsClose(){
+            state.innerText = "DISCONNECTED!";
+            state.classList = "failure";
         }
-
-
-        function handleMessage(message) {
-            console.log(message);
-            if(currentMatch != message['id']){
-                buildScoreboard(message);
-            }      
-        }
-
-        function setupWebSocketConnection() {
-            socket = new WebSocket("ws://{{ host }}:{{ ws_port }}");
-            socket.onopen = function() {
-                console.log("Socket: connected!");
-                state.innerText = "CONNECTED!";
-                state.classList = "success";
-            };
-            socket.onclose = function() {
-                console.log("Socket: disconnected!");
-                state.innerText = "DISCONNECTED!";
-                state.classList = "failure";
-                setTimeout(setupWebSocketConnection, reconnectInterval);
-            };
-            socket.onmessage = function(event) {
-                let data = JSON.parse(event.data);
-                handleMessage(data);
-            };
+        
+        function onWsData(data) {
+            renderScoreboard(data);   
         }
 
         document.addEventListener("DOMContentLoaded", function() {
-            setupWebSocketConnection();  
+            if("{{ state }}" == "0"){
+                showFullscreenOverlay("To use web-scoreboard set -WEBSB (--web_caller_scoreboard) to 1");
+                return;
+            }
+            setupWebSocketConnection("{{ host }}", "{{ ws_port }}", onWsOpen, onWsClose, onWsData);   
         });
     </script>
 
-    <script type="text/javascript" src="/static/js/animation.js?v=1.0.0"></script>
+    <script type="text/javascript" src="/static/js/common.js?v=1.0.0"></script>
+    <script type="text/javascript" src="/static/js/scoreboard.js?v=1.0.0"></script>
 </body>
 </html>

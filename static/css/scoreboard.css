@@ -50,32 +50,6 @@ th, td {
     color: white;
 }
 
-.checkout1 {
-    position: fixed;
-    top: calc(50% + 50px);
-    right: calc(50% + 50px);
-    width: 10%;
-    border-collapse: collapse;
-    text-align: center;
-    z-index: -1;
-    background: darkred;
-    font-size: 12px;
-    color: white;
-}
-
-.checkout2 {
-    position: fixed;
-    bottom: 110px;
-    right: calc(50% + 50px);
-    width: 10%;
-    border-collapse: collapse;
-    text-align: center;
-    z-index: -1;
-    background: darkred;
-    font-size: 12px;
-    color: white;
-}
-
 .darter {
     background: yellow;
     color: black;
@@ -122,3 +96,5 @@ th, td {
 .ad {
     text-align: right;
 }
+
+
