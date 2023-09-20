@@ -44,7 +44,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.4.6'
+VERSION = '2.4.7'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -480,20 +480,6 @@ def grab_caller_gender(caller_name):
     first_occurrences.sort(key=lambda x: x[0])
     return first_occurrences[0][1]
 
-    first_occurrences = []
-    for key in CALLER_GENDERS:
-        for tag in CALLER_GENDERS[key]:
-            index = caller_name.find(tag)
-            if index != -1:  # find returns -1 if the tag is not found
-                first_occurrences.append((index, key))
-
-    if not first_occurrences:  # if the list is empty
-        return None
-
-    # Sort the list of first occurrences and get the gender of the tag that appears first
-    first_occurrences.sort(key=lambda x: x[0])
-    return first_occurrences[0][1]
-
 def setup_caller():
     global caller
     global caller_title
@@ -606,7 +592,7 @@ def play_sound_effect(sound_file_key, wait_for_last = False, volume_mult = 1.0):
     
 def mirror_sounds():
     global mirror_files
-    if WEB > 0 and len(mirror_files) != 0: 
+    if len(mirror_files) != 0: 
         # Example
         # {
         #     "event": "mirror",
