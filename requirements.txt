@@ -2,9 +2,9 @@ pyinstaller==5.9.0
 python-keycloak==2.13.2
 websocket-client==1.5.1
 websocket-server==0.6.4
-pygame==2.5.1
+pygame==2.3.0
 download==0.3.5
 certifi==2023.7.22
 the-mask==0.0.1
-pycaw; platform_system == "Windows"
 Flask==2.1.0
+pycaw; platform_system == "Windows"
