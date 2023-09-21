@@ -62,7 +62,7 @@ Optional for Linux: If you encounter problems with playing sound:
 You need to have sounds-files as mp3 or wav. This files have to be named by 1 to 180, gameshot, busted etc. You don't need all files. For instance just go for 40, 60, 180. There are a bunch of [supported Sound-file-keys](#Sound-file-keys). 
 You could record your voice or download some files in the internet, ie. https://freesound.org, https://www.zapsplat.com, https://mixkit.co/free-sound-effects/hit/ or watchout for pinned messages in Discord. Put all sound files in one folder and if you like create subfolders in this folder for random caller functionality.
 
-Note: Since version 2.0.0 there is a build-in download-mechanismn that automatically downloads a bunch of curated caller-voices in different languages.
+Note: Since version 2.0.0 there is a build-in download-mechanismn that automatically downloads a bunch of voice-packs in different languages.
 
 
 ### Sound-file-keys
@@ -254,7 +254,9 @@ Sets a specific caller. On start the application displays a list of installed ca
 
 *`-R / --random_caller`*
 
-If you set this to '1' you will get a random caller every match. For this to work you need to setup subfolders in your media_path. Each subfolder represents an individual caller. By default this is not activated.
+If you set this to '1' you will get a random caller every match. For this to work the application expect subfolders in your media_path. Each subfolder represents an individual caller. 
+If you use random-caller-functionality, the application considers only most recent version of a caller by finding highest version number (e.g: a-caller-v3).
+By default this is not activated.
 
 *`-L / --random_caller_each_leg`*
 
@@ -308,15 +310,15 @@ If you set this to '1' ambient_*-sounds will wait until main-calls are finished.
 
 *`-DL / --downloads`*
 
-If you set this to '1' the application will download all available voice-packs that are not already installed. By default this is activated.
+If you set this to '1' the application will download available voice-packs that are not already installed. By default this is activated.
 
 *`-DLLA / --downloads_language`*
 
-If you wish to stop the application from checking/downloading all voice-pack languages, you can limit it to a specific language. By default this is '1' (english).
+If you want to filter downloads to a specific language. '0' means no filtering. By default this is '1' (english).
 
 *`-DLL / --downloads_limit`*
 
-If you wish to stop the application from checking/downloading all voice-packs, you can limit it to x most recent. By default this is '0' (no limitation).
+If you want to limit downloads-count, you can set it to x most recent. By default this is '0' (no limitation).
 
 *`-DLP / --downloads_path`*
 
@@ -328,7 +330,7 @@ You can not hear any calls as your music is way too loud? Try to set this to '0.
 
 *`-WEB / --web_caller`*
 
-If you set this to a '1' or '2' the app will host a web-endpoint to transfer call-events to connected devices. A value '1' will play sounds only on web. Value '2' will play sounds locally and on web. To use web-calling visit http://{machine-ip-address}:{web-caller-port} in browser.
+If you set this to a '1' or '2' the app will host a web-endpoint to mirror call-events. A value '1' will play sounds only on the web-endpoint. Value '2' will play sounds locally and on the web-endpoint. To use web-calling visit http://{machine-ip-address}:{web-caller-port} in browser.
 
 *`-WEBSB / --web_caller_scoreboard`*
 

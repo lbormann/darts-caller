@@ -20,6 +20,7 @@ import math
 import ssl
 import certifi
 from mask import mask
+import re
 from urllib.parse import quote, unquote
 from flask import Flask, render_template, send_from_directory
 
@@ -44,7 +45,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.4.7'
+VERSION = '2.5.0'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -76,6 +77,7 @@ SUPPORTED_SOUND_FORMATS = ['.mp3', '.wav']
 SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket', 'Random Checkout']
 SUPPORTED_CRICKET_FIELDS = [15, 16, 17, 18, 19, 20, 25]
 BOGEY_NUMBERS = [169, 168, 166, 165, 163, 162, 159]
+TEMPLATE_FILE_ENCODING = 'utf-8-sig'
 
 CALLER_LANGUAGES = {
     1: ['english', 'en', ],
@@ -91,46 +93,46 @@ CALLER_GENDERS = {
 }
 CALLER_PROFILES = {
     # murf
-    'charles-m-english-us-canada': 'https://drive.google.com/file/d/1-CrWSFHBoT_I9kzDuo7PR7FLCfEO-Qg-/view?usp=sharing',
-    'clint-m-english-us-canada': 'https://drive.google.com/file/d/1-IQ9Bvp1i0jG6Bu9fMWhlbyAj9SkoVGb/view?usp=sharing',
-    'alicia-f-english-us-canada': 'https://drive.google.com/file/d/1-Cvk-IczRjOphDOCA14NwE1hy4DAB8Tt/view?usp=sharing',
-    'kushal-m-english-india': 'https://drive.google.com/file/d/1-GavAG_oa3MrrremanvfYSfMI0U784EN/view?usp=sharing',
-    'kylie-f-english-australia': 'https://drive.google.com/file/d/1-Y6XpdFjOotSLBi0sInf5CGpAAV3mv0b/view?usp=sharing',
-    'ruby-f-english-uk': 'https://drive.google.com/file/d/1-kqVwCd4HJes0EVNda5EOF6tTwUxql3z/view?usp=sharing',
-    'ethan-m-english-us-canada': 'https://drive.google.com/file/d/106PG96DLzcHHusbQ2zRfub2ZVXbz5TPs/view?usp=sharing',
-    'mitch-m-english-australia': 'https://drive.google.com/file/d/10XEf0okustuoHnu2h_4eqRA6G-2d2mH1/view?usp=sharing',
-    'ava-f-english-us-canada': 'https://drive.google.com/file/d/10XtdjfORUreALkcUxbDhjb0Bo6ym7IDK/view?usp=sharing',
-    'aiden-m-english-uk': 'https://drive.google.com/file/d/10bYvcqp1nzqJnBDC7B6u7s8aequ5wGat/view?usp=sharing',
-    'theo-m-english-uk': 'https://drive.google.com/file/d/10eQaYMZM3tkIA2PIDsb0r-5NhyDU86-C/view?usp=sharing',
-    'emily-f-english-scottish': 'https://drive.google.com/file/d/10mOzTjA5tqBZCKI3EqxJ0YvQptqtMNQg/view?usp=sharing',
+    'charles-m-english-us-canada': ('https://drive.google.com/file/d/1-CrWSFHBoT_I9kzDuo7PR7FLCfEO-Qg-/view?usp=sharing', 1),
+    'clint-m-english-us-canada': ('https://drive.google.com/file/d/1-IQ9Bvp1i0jG6Bu9fMWhlbyAj9SkoVGb/view?usp=sharing', 1),
+    'alicia-f-english-us-canada': ('https://drive.google.com/file/d/1-Cvk-IczRjOphDOCA14NwE1hy4DAB8Tt/view?usp=sharing', 1),
+    'kushal-m-english-india': ('https://drive.google.com/file/d/1-GavAG_oa3MrrremanvfYSfMI0U784EN/view?usp=sharing', 1),
+    'kylie-f-english-australia': ('https://drive.google.com/file/d/1-Y6XpdFjOotSLBi0sInf5CGpAAV3mv0b/view?usp=sharing', 1),
+    'ruby-f-english-uk': ('https://drive.google.com/file/d/1-kqVwCd4HJes0EVNda5EOF6tTwUxql3z/view?usp=sharing', 1),
+    'ethan-m-english-us-canada': ('https://drive.google.com/file/d/106PG96DLzcHHusbQ2zRfub2ZVXbz5TPs/view?usp=sharing', 1),
+    'mitch-m-english-australia': ('https://drive.google.com/file/d/10XEf0okustuoHnu2h_4eqRA6G-2d2mH1/view?usp=sharing', 1),
+    'ava-f-english-us-canada': ('https://drive.google.com/file/d/10XtdjfORUreALkcUxbDhjb0Bo6ym7IDK/view?usp=sharing', 1),
+    'aiden-m-english-uk': ('https://drive.google.com/file/d/10bYvcqp1nzqJnBDC7B6u7s8aequ5wGat/view?usp=sharing', 1),
+    'theo-m-english-uk': ('https://drive.google.com/file/d/10eQaYMZM3tkIA2PIDsb0r-5NhyDU86-C/view?usp=sharing', 1),
+    'emily-f-english-scottish': ('https://drive.google.com/file/d/10mOzTjA5tqBZCKI3EqxJ0YvQptqtMNQg/view?usp=sharing', 1),
     # google
-    'en-US-Wavenet-E-FEMALE': 'https://drive.google.com/file/d/1GdhQRbNeHW2vyTmn3g67SiWDDh8_7Erq/view?usp=sharing',
-    'en-US-Wavenet-G-FEMALE': 'https://drive.google.com/file/d/1pWVKOgx-4V-1TKOi-g8rJDOlcyWE4zdq/view?usp=sharing',
-    'en-US-Wavenet-H-FEMALE': 'https://drive.google.com/file/d/1c2FO385Fb7d4Q8xeVd-f8WnkCVh-KqDs/view?usp=sharing',
-    'en-US-Wavenet-I-MALE': 'https://drive.google.com/file/d/1UZqw_KIGBqCJynftLuWi-b2p5ONOS6ue/view?usp=sharing',
-    'en-US-Wavenet-J-MALE': 'https://drive.google.com/file/d/16wiopEwx56NrBcnMt0LSZqsgemHkJhvR/view?usp=sharing',
-    'en-US-Wavenet-A-MALE': 'https://drive.google.com/file/d/1v1EfisMblN68GDbdHa-9Qg9xryGFM7mD/view?usp=sharing',
-    'en-US-Wavenet-F-FEMALE': 'https://drive.google.com/file/d/1iJ1duwQVFBCMGhqHdLmoz20s7uFfLhoA/view?usp=sharing',
-    'fr-FR-Wavenet-E-FEMALE': 'https://drive.google.com/file/d/1G39Cet8MrY_KqXUHS8q8cDRYJ9lPHxpj/view?usp=sharing',
-    'fr-FR-Wavenet-B-MALE': 'https://drive.google.com/file/d/1feFvXtrB5EKD72g3qc1DPrLTUUW7yHK0/view?usp=sharing',
-    'ru-RU-Wavenet-E-FEMALE': 'https://drive.google.com/file/d/1A_4iAsmPkmC2BBWaUGQ7xwFeueAMszhj/view?usp=sharing',  
-    'ru-RU-Wavenet-B-MALE': 'https://drive.google.com/file/d/1-3SNrGeDwyTuGgt0hEKFpMpJyT_idF_0/view?usp=sharing',
-    'de-DE-Wavenet-F-FEMALE': 'https://drive.google.com/file/d/1o_l--T7YEvGWcRlUvhwPWxWqNFN3LGMz/view?usp=sharing',  
-    'de-DE-Wavenet-B-MALE': 'https://drive.google.com/file/d/1IhPiCyZoRP1jLZGEvBe1N4HAV1vQhD1t/view?usp=sharing',
-    'es-ES-Wavenet-C-FEMALE': 'https://drive.google.com/file/d/1h6RrJxTT1vZfecOG84UOpLP_2FYsDtES/view?usp=sharing',  
-    'es-ES-Wavenet-B-MALE': 'https://drive.google.com/file/d/1ErnbxFXJa69ccJVfSzAvqmD49QLz3Rez/view?usp=sharing',
-    'nl-NL-Wavenet-B-MALE': 'https://drive.google.com/file/d/12mlrKqjEO87W10lmZiDAqcTnwzc8bUCv/view?usp=sharing',  
-    'nl-NL-Wavenet-D-FEMALE': 'https://drive.google.com/file/d/1tTe9viNMPXPsQIrZtPRF0KuBXkgeESA3/view?usp=sharing',
+    'en-US-Wavenet-E-FEMALE': ('TODO', 2),
+    'en-US-Wavenet-G-FEMALE': ('TODO', 2),
+    'en-US-Wavenet-H-FEMALE': ('TODO', 2),
+    'en-US-Wavenet-I-MALE': ('TODO', 2),
+    'en-US-Wavenet-J-MALE': ('TODO', 2),
+    'en-US-Wavenet-A-MALE': ('TODO', 2),
+    'en-US-Wavenet-F-FEMALE': ('TODO', 2),
+    'fr-FR-Wavenet-E-FEMALE': ('https://drive.google.com/file/d/1G39Cet8MrY_KqXUHS8q8cDRYJ9lPHxpj/view?usp=sharing', 1),
+    'fr-FR-Wavenet-B-MALE': ('https://drive.google.com/file/d/1feFvXtrB5EKD72g3qc1DPrLTUUW7yHK0/view?usp=sharing', 1),
+    'ru-RU-Wavenet-E-FEMALE': ('https://drive.google.com/file/d/1A_4iAsmPkmC2BBWaUGQ7xwFeueAMszhj/view?usp=sharing', 1),
+    'ru-RU-Wavenet-B-MALE': ('https://drive.google.com/file/d/1-3SNrGeDwyTuGgt0hEKFpMpJyT_idF_0/view?usp=sharing', 1),
+    'de-DE-Wavenet-F-FEMALE': ('https://drive.google.com/file/d/1o_l--T7YEvGWcRlUvhwPWxWqNFN3LGMz/view?usp=sharing', 1),  
+    'de-DE-Wavenet-B-MALE': ('https://drive.google.com/file/d/1IhPiCyZoRP1jLZGEvBe1N4HAV1vQhD1t/view?usp=sharing', 1),
+    'es-ES-Wavenet-C-FEMALE': ('https://drive.google.com/file/d/1h6RrJxTT1vZfecOG84UOpLP_2FYsDtES/view?usp=sharing', 1),  
+    'es-ES-Wavenet-B-MALE': ('https://drive.google.com/file/d/1ErnbxFXJa69ccJVfSzAvqmD49QLz3Rez/view?usp=sharing', 1),
+    'nl-NL-Wavenet-B-MALE': ('https://drive.google.com/file/d/12mlrKqjEO87W10lmZiDAqcTnwzc8bUCv/view?usp=sharing', 1),  
+    'nl-NL-Wavenet-D-FEMALE': ('https://drive.google.com/file/d/1tTe9viNMPXPsQIrZtPRF0KuBXkgeESA3/view?usp=sharing', 1),
     # amazon
-    'en-US-Stephen-Male': 'https://drive.google.com/file/d/1IkE-y53J_eNLE7l137rH2__qHvByN2Pf/view?usp=sharing',  
-    'en-US-Ivy-Female': 'https://drive.google.com/file/d/1heQP6pWgEhuMGd4f4WpPD3wmXwQQq7J5/view?usp=sharing',
-    'de-DE-Vicki-Female': 'https://drive.google.com/file/d/1AZKSHs4XjFicR7FeppBjwJ6u-dDt8h7L/view?usp=sharing',  
-    'de-DE-Daniel-Male': 'https://drive.google.com/file/d/1yRoEknlGOtmDb_rwh0WmDmWFPU3aXhcy/view?usp=sharing',
-    'en-US-Kendra-Female': 'https://drive.google.com/file/d/1G6nfnh7srepaVrkey0_C4D5HunfXeRAn/view?usp=sharing',
-    'en-US-Joey-Male': 'https://drive.google.com/file/d/1XS6FcxmpaxzStLcAW8G5l0nQz3f5CrAT/view?usp=sharing'
+    'en-US-Stephen-Male': ('https://drive.google.com/file/d/18gWVUWrGnlMuXgT91vy9DmppxOAdrBvI/view?usp=sharing', 2),  
+    'en-US-Ivy-Female': ('TODO', 2),
+    'de-DE-Vicki-Female': ('https://drive.google.com/file/d/1AZKSHs4XjFicR7FeppBjwJ6u-dDt8h7L/view?usp=sharing', 1),  
+    'de-DE-Daniel-Male': ('https://drive.google.com/file/d/1yRoEknlGOtmDb_rwh0WmDmWFPU3aXhcy/view?usp=sharing', 1),
+    'en-US-Kendra-Female': ('TODO', 2),
+    'en-US-Joey-Male': ('TODO', 2),
 
-    # 'TODONAME': 'TODOLINK',  
-    # 'TODONAME': 'TODOLINK',
+    # 'TODONAME': ('TODOLINK', TODOVERSION),  
+    # 'TODONAME': ('TODOLINK', TODOVERSION), 
 }
 FIELD_COORDS = {
     "0": {"x": 0.016160134143785285,"y": 1.1049884720184449},
@@ -221,14 +223,21 @@ def get_local_ip_address(target='8.8.8.8'):
         ip_address = DEFAULT_HOST_IP
     return ip_address
 
+def versionize_speaker(speaker_name, speaker_version):
+    speaker_versionized = speaker_name
+    if speaker_version > 1:
+        speaker_versionized = f"{speaker_versionized}-v{speaker_version}"
+    return speaker_versionized
+
 def download_callers(): 
     if DOWNLOADS:
         download_list = CALLER_PROFILES
 
         downloads_filtered = {}
-        for speaker_name, speaker_download_url in download_list.items():
-            if speaker_name.lower() not in caller_profiles_banned:
-                downloads_filtered[speaker_name] = speaker_download_url
+        for speaker_name, (speaker_download_url, speaker_version) in download_list.items():
+            speaker_versionized = versionize_speaker(speaker_name, speaker_version)
+            if speaker_versionized.lower() not in caller_profiles_banned:
+                downloads_filtered[speaker_versionized] = speaker_download_url
         download_list = downloads_filtered
 
         if DOWNLOADS_LANGUAGE > 0:
@@ -266,8 +275,8 @@ def download_callers():
                 # kind="zip", 
                 path = download(cpr_download_url, dest, progressbar=True, replace=False, verbose=DEBUG)
  
-                # TEMP Test!!
-                # shutil.copyfile('C:\\Users\\Luca\\Desktop\\WORK\\charles-m-english-us-canada\\download.zip', os.path.join(DOWNLOADS_PATH, 'download.zip'))
+                # LOCAL-Download
+                # shutil.copyfile('C:\\Users\\Luca\\Desktop\\download.zip', os.path.join(DOWNLOADS_PATH, 'download.zip'))
 
                 shutil.unpack_archive(dest, DOWNLOADS_PATH)
                 os.remove(dest)
@@ -288,7 +297,7 @@ def download_callers():
                 template_file = [f for f in os.listdir(DOWNLOADS_PATH) if f.endswith('.csv')][0]
                 template_file = os.path.join(DOWNLOADS_PATH, template_file)
                 san_list = list()
-                with open(template_file, 'r', encoding='utf-8') as f:
+                with open(template_file, 'r', encoding=TEMPLATE_FILE_ENCODING) as f:
                     tts = list(csv.reader(f, delimiter=';'))
                     for event in tts:
                         sanitized = list(filter(None, event))
@@ -317,7 +326,7 @@ def download_callers():
                 # ppi(sounds)
 
                 # Rename sound-files and copy files according the defined caller-keys
-                for i in range(len(san_list) - 1):
+                for i in range(len(san_list)):
                     current_sound = sounds[i]
                     current_sound_splitted = os.path.splitext(current_sound)
                     current_sound_extension = current_sound_splitted[1]
@@ -371,7 +380,6 @@ def ban_caller(only_change):
         if not cbc_success:
             play_sound_effect('control', wait_for_last = False, volume_mult = 1.0)
 
-        
         global caller_profiles_banned
         caller_profiles_banned.append(caller_title)
         path_to_callers_banned_file = os.path.join(parent_directory, DEFAULT_CALLERS_BANNED_FILE)   
@@ -480,6 +488,35 @@ def grab_caller_gender(caller_name):
     first_occurrences.sort(key=lambda x: x[0])
     return first_occurrences[0][1]
 
+def filter_most_recent_version(path_list):
+    def get_last_component(path):
+        return os.path.basename(os.path.normpath(path))
+
+    def is_versioned(entry):
+        return bool(re.search(r'-v\d+$', entry))
+
+    def highest_version(base_entry):
+        versions = [int(re.search(r'-v(\d+)$', x[0]).group(1)) for x in path_list if base_entry + "-v" in x[0]]
+        return max(versions, default=None)
+
+    base_entries = set()
+    for item in path_list:
+        entry = get_last_component(item[0])
+        if not is_versioned(entry):
+            base_entries.add(entry)
+
+    filtered_list = []
+    for item in path_list:
+        entry = get_last_component(item[0])
+        base_entry = re.sub(r'-v\d+$', '', entry)
+        highest_ver = highest_version(base_entry)
+        if highest_ver is not None and entry == base_entry + "-v" + str(highest_ver):
+            filtered_list.append(item)
+        elif highest_ver is None:
+            filtered_list.append(item)
+    
+    return filtered_list
+
 def setup_caller():
     global caller
     global caller_title
@@ -525,6 +562,8 @@ def setup_caller():
                 callers_filtered.append(c)
 
             if len(callers_filtered) > 0:
+                # reduce to most recent version
+                callers_filtered = filter_most_recent_version(callers_filtered)
                 caller = random.choice(callers_filtered)
 
     if(caller != None):
@@ -538,6 +577,7 @@ def setup_caller():
         ppi("Your current caller: " + caller_title + " knows " + str(len(caller[1].values())) + " Sound-file-key(s)")
         # ppi(caller[1])
         caller = caller[1]
+
 
 def receive_local_board_address():
     try:
