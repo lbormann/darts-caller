@@ -1,19 +1,4 @@
-function toggleCheckout(playerId) {
-    var checkout = document.getElementById("checkout" + playerId);
-    if (checkout.style.display === "none" || checkout.style.display === "") {
-        checkout.classList.remove("animate__fadeOutRight");
-        checkout.classList.add("animate__fadeInRight");
-        checkout.style.display = "table";
-    } else {
-        checkout.classList.remove("animate__fadeInRight");
-        checkout.classList.add("animate__fadeOutRight");
-        checkout.addEventListener("animationend", function () {
-            checkout.style.display = "none";
-        }, { once: true });
-    }
-}
-
-function toggleStats() {
+function toggleStatsTable() {
     var statsTable = document.getElementById("statsTable");
     if (statsTable.style.display === "none" || statsTable.style.display === "") {
         statsTable.classList.remove("animate__fadeOutRight");
@@ -28,7 +13,7 @@ function toggleStats() {
         }, { once: true });
     }
 }
-function toggleAverage() {
+function toggleAverageTable() {
     var averageTable = document.getElementById("averageTable");
     if (averageTable.style.display === "none" || averageTable.style.display === "") {
         averageTable.classList.remove("animate__fadeOutRight");
@@ -43,13 +28,6 @@ function toggleAverage() {
         }, { once: true });
     }
 }
-
-
-
-
-
-
-
 function toggleCheckout1() {
     var checkout1 = document.getElementById("checkout1");
     if (checkout1.style.display === "none" || checkout1.style.display === "") {
@@ -65,6 +43,43 @@ function toggleCheckout1() {
         }, { once: true });
     }
 }
+
+function toggleCheckout1_darter() {
+	var darter = document.getElementById("player1checkout_darter");
+	if (darter.style.display === "none") {
+		darter.style.display = "";
+	} else {
+		darter.style.display = "none";
+	}
+}
+
+function toggleCheckout1_possible1() {
+	var tog = document.getElementById("player1checkout_possible1");
+	if (tog.style.display === "none") {
+		tog.style.display = "";
+	} else {
+		tog.style.display = "none";
+	}
+}
+
+function toggleCheckout1_possible2() {
+	var tog = document.getElementById("player1checkout_possible2");
+	if (tog.style.display === "none") {
+		tog.style.display = "";
+	} else {
+		tog.style.display = "none";
+	}
+}
+
+function toggleCheckout1_possible3() {
+	var tog = document.getElementById("player1checkout_possible3");
+	if (tog.style.display === "none") {
+		tog.style.display = "";
+	} else {
+		tog.style.display = "none";
+	}
+}
+
 function toggleArrow() {
 	var arrow1 = document.getElementById("arrow1");
 	var arrow2 = document.getElementById("arrow2");
@@ -76,6 +91,7 @@ function toggleArrow() {
 		arrow2.style.visibility = "hidden";
 	}
 }
+
 function toggleCheckout2() {
     var checkout2 = document.getElementById("checkout2");
     if (checkout2.style.display === "none" || checkout2.style.display === "") {
@@ -91,6 +107,43 @@ function toggleCheckout2() {
         }, { once: true });
     }
 }
+
+function toggleCheckout2_darter() {
+	var darter = document.getElementById("player2checkout_darter");
+	if (darter.style.display === "none") {
+		darter.style.display = "";
+	} else {
+		darter.style.display = "none";
+	}
+}
+
+function toggleCheckout2_possible1() {
+	var tog = document.getElementById("player2checkout_possible1");
+	if (tog.style.display === "none") {
+		tog.style.display = "";
+	} else {
+		tog.style.display = "none";
+	}
+}
+
+function toggleCheckout2_possible2() {
+	var tog = document.getElementById("player2checkout_possible2");
+	if (tog.style.display === "none") {
+		tog.style.display = "";
+	} else {
+		tog.style.display = "none";
+	}
+}
+
+function toggleCheckout2_possible3() {
+	var tog = document.getElementById("player2checkout_possible3");
+	if (tog.style.display === "none") {
+		tog.style.display = "";
+	} else {
+		tog.style.display = "none";
+	}
+}
+
 function toggleArrowText() {
     var arrow1 = document.getElementById("arrow1");
     var arrow2 = document.getElementById("arrow2");
