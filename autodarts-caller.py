@@ -45,7 +45,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.5.0'
+VERSION = '2.5.1'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -106,7 +106,7 @@ CALLER_PROFILES = {
     'theo-m-english-uk': ('https://drive.google.com/file/d/10eQaYMZM3tkIA2PIDsb0r-5NhyDU86-C/view?usp=sharing', 1),
     'emily-f-english-scottish': ('https://drive.google.com/file/d/10mOzTjA5tqBZCKI3EqxJ0YvQptqtMNQg/view?usp=sharing', 1),
     # google
-    'en-US-Wavenet-E-FEMALE': ('https://drive.google.com/file/d/1DmJLQ9rXRisLrP1Pn_G4PPPjYs1NDX28/view?usp=sharing', 2),
+    'en-US-Wavenet-E-FEMALE': ('https://drive.google.com/file/d/1GaISZxu8kCsGyNurqrUMcbr4RZZmDKyI/view?usp=sharing', 2),
     'en-US-Wavenet-G-FEMALE': ('https://drive.google.com/file/d/1gbM6uiCP1EQ7uGy2lAY218Xz2DxLwR33/view?usp=sharing', 2),
     'en-US-Wavenet-H-FEMALE': ('https://drive.google.com/file/d/1SGVKnexUXWdjKmPqkjU8k8xz4-dUoLv4/view?usp=sharing', 2),
     'en-US-Wavenet-I-MALE': ('https://drive.google.com/file/d/1shnyA5gftzCCfpTOBzoKzmbIrQsbtCWB/view?usp=sharing', 2),
@@ -1676,8 +1676,6 @@ def on_message_autodarts(ws, message):
                     elif variant == 'Cricket':
                         process_match_cricket(data)
 
-                    
-
             elif m['channel'] == 'autodarts.boards':
                 data = m['data']
                 # ppi(json.dumps(data, indent = 4, sort_keys = True))
@@ -1751,6 +1749,11 @@ def on_message_client(client, server, message):
 
                     elif message == 'board-reset':
                         res = requests.post(boardManagerAddress + '/api/reset')
+                        # ppi(res)
+
+                    elif message == 'board-calibrate':
+                        res = requests.post(boardManagerAddress + '/api/config/calibration/auto')
+                        # res = requests.put(boardManagerAddress + '/api/stop')
                         # ppi(res)
 
                     else:
