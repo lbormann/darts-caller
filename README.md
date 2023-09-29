@@ -120,10 +120,6 @@ Note: Since version 2.0.0 there is a build-in download-mechanismn that automatic
 - ambient_group_normal
 - ambient_checkout_call_limit
 
-**LOBBY-CALLING:**
-
-- lobbychanged
-
 **CONTROL-CALLING**
 
 - control
