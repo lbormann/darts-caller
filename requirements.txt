@@ -7,4 +7,5 @@ download==0.3.5
 certifi==2023.7.22
 the-mask==0.0.1
 Flask==2.1.0
+Werkzeug==2.3.7
 pycaw; platform_system == "Windows"

@@ -45,7 +45,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.5.1'
+VERSION = '2.5.2'
 
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_HOST_PORT = 8079
@@ -130,7 +130,8 @@ CALLER_PROFILES = {
     'de-DE-Daniel-Male': ('https://drive.google.com/file/d/1yRoEknlGOtmDb_rwh0WmDmWFPU3aXhcy/view?usp=sharing', 1),
     'en-US-Kendra-Female': ('https://drive.google.com/file/d/12CbizYdgbRR24RzBjWEjEYTV8ZQ_lupz/view?usp=sharing', 2),
     'en-US-Joey-Male': ('https://drive.google.com/file/d/1bXCNygCbK0na4J_d66NNFKViJuAn7IMw/view?usp=sharing', 2),
-
+    'en-US-Joanna-Female': ('https://drive.google.com/file/d/1bwl1FadAj3SgwNL5CCwaInzjHfruyHP5/view?usp=sharing', 1),
+    
     # 'TODONAME': ('TODOLINK', TODOVERSION),  
     # 'TODONAME': ('TODOLINK', TODOVERSION), 
 }
@@ -355,10 +356,10 @@ def download_callers():
                         os.remove(current_sound)
 
                 shutil.move(dest, AUDIO_MEDIA_PATH)
-                ppi('A new caller was added: ' + cpr_name)
+                ppi('A new voice-pack was added: ' + cpr_name)
 
             except Exception as e:
-                ppe('Failed to process caller: ' + cpr_name, e)
+                ppe('Failed to process voice-pack: ' + cpr_name, e)
             finally:
                 shutil.rmtree(DOWNLOADS_PATH, ignore_errors=True)
 
@@ -447,8 +448,6 @@ def load_callers():
                 c_keys[ss_k] = ss_v
 
 
-    
-
     return callers
 
 def grab_caller_name(caller_root):
@@ -525,7 +524,7 @@ def setup_caller():
     caller_title = ''
 
     callers = load_callers()
-    ppi(str(len(callers)) + ' caller(s) found.')
+    ppi(str(len(callers)) + ' voice-pack(s) found.')
 
     if CALLER != DEFAULT_CALLER and CALLER != '':
         wished_caller = CALLER.lower()
@@ -578,25 +577,6 @@ def setup_caller():
         # ppi(caller[1])
         caller = caller[1]
 
-
-def receive_local_board_address():
-    try:
-        global accessToken
-        global boardManagerAddress
-
-        if boardManagerAddress == None:
-            res = requests.get(AUTODART_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + accessToken})
-            board_ip = res.json()['ip']
-            if board_ip != None and board_ip != '':  
-                boardManagerAddress = 'http://' + board_ip
-                ppi('Board-address: ' + boardManagerAddress) 
-            else:
-                boardManagerAddress = None
-                ppi('Board-address: UNKNOWN') 
-            
-    except Exception as e:
-        boardManagerAddress = None
-        ppe('Fetching local-board-address failed', e)
 
 def play_sound(sound, wait_for_last, volume_mult):
     if WEB > 0:
@@ -657,6 +637,25 @@ def mirror_sounds():
         }
         broadcast(mirror)
         mirror_files = []
+
+def receive_local_board_address():
+    try:
+        global accessToken
+        global boardManagerAddress
+
+        if boardManagerAddress == None:
+            res = requests.get(AUTODART_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + accessToken})
+            board_ip = res.json()['ip']
+            if board_ip != None and board_ip != '':  
+                boardManagerAddress = 'http://' + board_ip
+                ppi('Board-address: ' + boardManagerAddress) 
+            else:
+                boardManagerAddress = None
+                ppi('Board-address: UNKNOWN') 
+            
+    except Exception as e:
+        boardManagerAddress = None
+        ppe('Fetching local-board-address failed', e)
 
 def next_game():
     if play_sound_effect('control_next_game', wait_for_last = False, volume_mult = 1.0) == False:
@@ -769,6 +768,40 @@ def correct_throw(throw_indices, score):
     except Exception as e:
         lastCorrectThrow = None 
         ppe('Correcting throw failed', e)
+
+def start_board():
+    try:
+        res = requests.put(boardManagerAddress + '/api/detection/start')
+        # res = requests.put(boardManagerAddress + '/api/start')
+        # ppi(res)
+    except Exception as e:
+        ppe('Start board failed', e)
+
+def stop_board():
+    try:    
+        res = requests.put(boardManagerAddress + '/api/detection/stop')
+        # res = requests.put(boardManagerAddress + '/api/stop')
+        # ppi(res)
+    except Exception as e:
+        ppe('stop board failed', e)
+
+def reset_board():
+    try:
+        res = requests.post(boardManagerAddress + '/api/reset')
+        # ppi(res)
+    except Exception as e:
+        ppe('Reset board failed', e)
+
+def calibrate_board():
+    if play_sound_effect('control_calibrate', wait_for_last = False, volume_mult = 1.0) == False:
+        play_sound_effect('control', wait_for_last = False, volume_mult = 1.0)
+    mirror_sounds()
+
+    try:
+        res = requests.post(boardManagerAddress + '/api/config/calibration/auto')
+        # ppi(res)
+    except Exception as e:
+        ppe('Calibrate board failed', e)
 
 
 def listen_to_newest_match(m, ws):
@@ -1738,23 +1771,16 @@ def on_message_client(client, server, message):
                             wait = 0.5
                         time.sleep(wait)
                         
-                        res = requests.put(boardManagerAddress + '/api/detection/start')
-                        # res = requests.put(boardManagerAddress + '/api/start')
-                        # ppi(res)
+                        start_board()
                         
                     elif message == 'board-stop':
-                        res = requests.put(boardManagerAddress + '/api/detection/stop')
-                        # res = requests.put(boardManagerAddress + '/api/stop')
-                        # ppi(res)
+                        stop_board()
 
                     elif message == 'board-reset':
-                        res = requests.post(boardManagerAddress + '/api/reset')
-                        # ppi(res)
+                        reset_board()
 
                     elif message == 'board-calibrate':
-                        res = requests.post(boardManagerAddress + '/api/config/calibration/auto')
-                        # res = requests.put(boardManagerAddress + '/api/stop')
-                        # ppi(res)
+                        calibrate_board()
 
                     else:
                         ppi('This message is not supported')  
@@ -1928,7 +1954,6 @@ if __name__ == "__main__":
     ap.add_argument("-DL", "--downloads", type=int, choices=range(0, 2), default=DEFAULT_DOWNLOADS, required=False, help="If '1', the application will try to download a curated list of caller-voices")
     ap.add_argument("-DLL", "--downloads_limit", type=int, default=DEFAULT_DOWNLOADS_LIMIT, required=False, help="If '1', the application will try to download a only the X newest caller-voices. -DLN needs to be activated.")
     ap.add_argument("-DLLA", "--downloads_language", type=int, choices=range(0, len(CALLER_LANGUAGES) + 1), default=DEFAULT_DOWNLOADS_LANGUAGE, required=False, help="If '0', the application will download speakers of every language.., else it will limit speaker downloads by specific language")
-    ap.add_argument("-DLP", "--downloads_path", required=False, default=DEFAULT_DOWNLOADS_PATH, help="Absolute path for temporarly downloads")
     ap.add_argument("-BAV","--background_audio_volume", required=False, type=float, default=0.0, help="Set background-audio-volume between 0.1 (silent) and 1.0 (no mute)")
     ap.add_argument("-WEB", "--web_caller", required=False, type=int, choices=range(0, 3), default=0, help="If '1' the application will host an web-endpoint, '2' it will do '1' and default caller-functionality.")
     ap.add_argument("-WEBSB", "--web_caller_scoreboard", required=False, type=int, choices=range(0, 2), default=0, help="If '1' the application will host an web-endpoint, right to web-caller-functionality.")
@@ -1974,7 +1999,7 @@ if __name__ == "__main__":
     if DOWNLOADS_LANGUAGE < 0: DOWNLOADS_LANGUAGE = DEFAULT_DOWNLOADS_LANGUAGE
     DOWNLOADS_LIMIT = args['downloads_limit']
     if DOWNLOADS_LIMIT < 0: DOWNLOADS_LIMIT = DEFAULT_DOWNLOADS_LIMIT
-    DOWNLOADS_PATH = args['downloads_path']
+    DOWNLOADS_PATH = DEFAULT_DOWNLOADS_PATH
     BACKGROUND_AUDIO_VOLUME = args['background_audio_volume']
     WEB = args['web_caller']
     WEB_SCOREBOARD = args['web_caller_scoreboard']

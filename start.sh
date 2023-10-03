@@ -82,9 +82,6 @@ downloads_language=
 # -DLL
 downloads_limit=
 
-# -DLP
-downloads_path=
-
 # -WEB
 web_caller=
 
@@ -190,9 +187,6 @@ if [ -n "$downloads_language" ]; then
 fi
 if [ -n "$downloads_limit" ]; then
   args="$args -DLL $downloads_limit"
-fi
-if [ -n "$downloads_path" ]; then
-  args="$args -DLP $downloads_path"
 fi
 #if [ -n "$background_audio_volume" ]; then
 #  args="$args -BAV $background_audio_volume"

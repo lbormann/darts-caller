@@ -128,6 +128,7 @@ Note: Since version 2.0.0 there is a build-in download-mechanismn that automatic
 - control_undo [overrides: control]
 - control_ban_caller [overrides: control]
 - control_change_caller [overrides: control]
+- control_calibrate [overrides: control]
 - control_dart_correction [overrides: control]
 - control_dart_correction_1 [overrides: control, control_dart_correction]
 - control_dart_correction_2 [overrides: control, control_dart_correction]
@@ -210,7 +211,6 @@ Start the script:
 - -DL / --downloads [Default: 1] [Possible values: 0 | 1]
 - -DLL / --downloads_limit [Default: 0]
 - -DLLA / --downloads_language [Default: 1] [Possible values: 0 (every language) | 1 (english) | 2 (french) | 3 (russian) | 4 (german) | 5 (spanish) | 6 (dutch)]
-- -DLP / --downloads_path [Default: 'download']
 - -BAV / --background_audio_volume [Default: 0.0] [Possible values: 0.0 .. 1.0]
 - -WEB / --web_caller [Default: 0] [Possible values: 0,1,2]
 - -WEBSB / --web_caller_scoreboard [Default: 0] [Possible values: 0 | 1]
@@ -316,10 +316,6 @@ If you want to filter downloads to a specific language. '0' means no filtering. 
 
 If you want to limit downloads-count, you can set it to x most recent. By default this is '0' (no limitation).
 
-*`-DLP / --downloads_path`*
-
-In case you face problems with downloads try to change the download-path. By default this is 'caller-downloads-temp' in the application`s directory. But make sure you choose an non important folder as the content will be cleared by application.
-
 *`-BAV / --background_audio_volume`*
 
 You can not hear any calls as your music is way too loud? Try to set this to '0.03' and let the calls begin :) Default is '0.0' (no background-audio-muting). Note: Only availble on windows-os.
@@ -335,7 +331,6 @@ If you set this to a '1' the app will host a web-endpoint to display an alternat
 *`-WEBP / --web_caller_port`*
 
 If you setup web-calling (-WEB = 1 / 2) you can configure a custom port. By default this is '5000'.
-
 
 *`-HP / --host_port`*
 
