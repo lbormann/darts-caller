@@ -36,7 +36,6 @@ Autodarts-caller plays back sound-files accordingly to the state of a https://au
 #### Setup python3
 
 - Download and install python 3.x.x for your specific os.
-- Download and install pip.
 
 
 #### Get the project
@@ -56,18 +55,24 @@ Optional for Linux: If you encounter problems with playing sound:
 
 
 
-## SETUP SOUNDS
+## SETUP
 
+Since version 2.0.0 there is a build-in download-mechanismn that automatically downloads multiple voice-packs in different languages and genders on application start - you don't need to setup manually. Every voice-pack contain all sound-files of category [MAIN-CALLING](#Sound-file-keys). If you would like to extend a voice-pack, e.g. to add other sound-files-keys like "ambient_gameshot" or "ambient_playerchange", copy them into specific voice-pack directory to use them only for specific voice-pack or copy them into --media_path_shared (-MS) to use them for every voice-pack. You can find a specific voice-pack in --media_path (-M).
 
-You need to have sounds-files as mp3 or wav. This files have to be named by 1 to 180, gameshot, busted etc. You don't need all files. For instance just go for 40, 60, 180. There are a bunch of [supported Sound-file-keys](#Sound-file-keys). 
-You could record your voice or download some files in the internet, ie. https://freesound.org, https://www.zapsplat.com, https://mixkit.co/free-sound-effects/hit/ or watchout for pinned messages in Discord. Put all sound files in one folder and if you like create subfolders in this folder for random caller functionality.
+### Use my own voice-pack / sounds
 
-Note: Since version 2.0.0 there is a build-in download-mechanismn that automatically downloads a bunch of voice-packs in different languages.
+Copy your sound-files to --media_path (-M). Make sure your sound-files are named according to the rules: [supported sound-file-keys](#Sound-file-keys). You don't need to have all listed sound-file-keys - just add the ones you want to use.
+You can find sounds at https://freesound.org, https://www.zapsplat.com, https://mixkit.co/free-sound-effects/hit/. 
+
+______
+
+Since Version 1.6.0 you can deposit multiple sounds for every ([sound-file-key](#Sound-file-keys)). Therefor you have to add a "+" to the filename. After the "+" you can add whatever text you prefer; as an example: let`s say we want multiple sounds for the 'gameon'-event. Our default file is 'gameon.mp3'. Now we add some more: 'gameon+1.mp3', 'gameon+2.mp3', 'gameon+BEST.mp3'. You are not limited to the gameon-event, even score-sounds can have multiple soundfiles.
+
 
 
 ### Sound-file-keys
 
-***EVERY SOUND FILE NEEDS TO BE .mp3 or .wav***
+***EVERY SOUND-FILE NEEDS TO BE .mp3 or .wav***
 
 **MAIN-CALLING:**
 
@@ -135,17 +140,12 @@ Note: Since version 2.0.0 there is a build-in download-mechanismn that automatic
 - control_dart_correction_3 [overrides: control, control_dart_correction]
 
 
-______
-
-Since Version 1.6.0 you can deposit multiple sounds for EVERY game-event. Therefor you have to add a "+" to the filename. After the "+" you can add whatever text you prefer; as an example: let`s say we want multiple sounds for the 'gameon'-event. Our default file is 'gameon.mp3/gameon.wav'. Now we add some more: 'gameon+1.mp3', 'gameon+2.mp3', 'gameon+BEST.mp3'. You are not limited to gameon, even score-sounds can have multiple soundfiles.
-
-
 
 
 
 ## RUN IT
 
-You can run by source or run an os specific executable.
+You can run by source or run an os-specific executable (recommended).
 
 
 ### Run by executable
@@ -196,11 +196,11 @@ Start the script:
 - -MS / --media_path_shared [Default: '']
 - -V / --caller_volume [Default: 1.0] [Possible values: 0.0 .. 1.0]
 - -C / --caller [Default: None] [Possible values: look at description below]
-- -R / --random_caller [Default: 0] [Possible values: 0 | 1]
+- -R / --random_caller [Default: 1] [Possible values: 0 | 1]
 - -L / --random_caller_each_leg [Default: 0] [Possible values: 0 | 1]
-- -RL / --random_caller_language [Default: 0] [Possible values: 0 (every language) | 1 (english) | 2 (french) | 3 (russian) | 4 (german) | 5 (spanish) | 6 (dutch)]
+- -RL / --random_caller_language [Default: 1] [Possible values: 0 (every language) | 1 (english) | 2 (french) | 3 (russian) | 4 (german) | 5 (spanish) | 6 (dutch)]
 - -RG / --random_caller_gender [Default: 0] [Possible values: 0 (every gender) | 1 (female) | 2 (male) ]
-- -CCP / --call_current_player [Default: 0] [Possible values: 0 | 1]
+- -CCP / --call_current_player [Default: 1] [Possible values: 0 | 1]
 - -E / --call_every_dart [Default: 0] [Possible values: 0 | 1]
 - -ESF / --call_every_dart_single_files [Default: 1] [Possible values: 0 | 1]
 - -PCC / --possible_checkout_call [Default: 1] [Possible values: 0..Inf]
@@ -234,64 +234,63 @@ You can find your Board-ID in Board-Manager.
 
 *`-M / --media_path`*
 
-You need to set an absolute path to your media-file-directory, otherwise you won`t notice any calls. Make sure your sound-files are in a supported file-format (mp3,wav). Moreover make sure the given path doesn't reside inside main-directory (autodarts-caller).
+Setup an absolute path where sounds are located on drive. Make sure the given path doesn't reside inside main-directory (autodarts-caller).
 
 *`-MS / --media_path_shared`*
 
-If you do not want to configure particular sounds for every individual caller, you can specify an absolute path to a shared directory. Every caller will get the sounds of that directory. Have a look at [supported Sound-file-keys](#Sound-file-keys). Moreover make sure the given path neither resides inside main-directory (autodarts-caller) nor inside media-path (-M).
+If you do not want to configure same sounds again for every individual voice-pack, you can specify an absolute path to a shared directory. Every voice-pack will use the sounds of that directory. Have a look at [supported Sound-file-keys](#Sound-file-keys). Moreover make sure the given path neither resides inside main-directory (autodarts-caller) nor inside media-path (-M).
 
 *`-V / --caller_volume`*
 
-You can lower the call-volume in relation to current system-volume. '1.0' is system-volume. '0.5' is "half" volume. By default this is '1.0'
+You can lower the call-volume in relation to current system-volume. '1.0' is system-volume. '0.5' is "half" volume. By default this is '1.0'.
 
 *`-C / --caller`*
 
-Sets a specific caller. On start the application displays a list of installed callers; copy the name of chosen one and paste it here. By default this is 'None' meaning the application uses sound-files of argument '-M' or a random caller if this is configurated (see next). Note: if you set this to '1' the arguments '-R' and '-L' are no more relevant.
+Sets a specific voice-pack as caller. On start the application displays a list of installed voice-packs; copy the name of chosen one and paste it here. By default this is 'None' meaning the application uses sound-files of argument '-M' or a random voice-pack if this is configurated (see next). Note: if you set this to a value unequal to 'None' the arguments '-R' and '-L' are no more relevant.
 
 *`-R / --random_caller`*
 
-If you set this to '1' you will get a random caller every match. For this to work the application expect subfolders in your media_path. Each subfolder represents an individual caller. 
-If you use random-caller-functionality, the application considers only most recent version of a caller by finding highest version number (e.g: a-caller-v3).
-By default this is not activated.
+The application will randomly choose a voice-pack on every match-start. If you use this functionality, the application considers only most recent version of a voice-pack by finding highest version number (e.g: a-caller-v3).
+By default this is activated.
 
 *`-L / --random_caller_each_leg`*
 
-If you set this to 1' you will get a random caller each time a new leg starts. By default this is not activated.
+If you set this to '1' the application will randomly choose a voice-pack each time a new leg starts. By default this is not activated.
 
 *`-RL / --random_caller_language`*
 
-If you set this to '0' randomly chosen caller is not limited to specific language. By default this is '0'.
+Filters randomly chosen voice-pack by its language. '0' means no filtering. By default this is '1' (english).
 
 *`-RG / --random_caller_gender`*
 
-If you set this to '0' randomly chosen caller is not limited to specific gender. By default this is '0'.
+Filters randomly chosen voice-pack by its gender. '0' means no filtering. By default this is '0'.
 
 *`-CCP / --call_current_player`*
 
-If you set this to 1' the application will call the playername at the start of his turn. By default this is not activated.
+If you set this to 1' the application will call playernames. By default this is activated.
 
 *`-E / --call_every_dart`*
 
-If you set this to '1' the caller calls every dart. Setup sounds 's1'-'t20', single, double and others. This is pretty handy if you want to play sound-effects. Note: the third dart will only considered if argument '-ESF' is set to '1'.
+If you set this to '1' the application calls every thrown dart. Setup sounds 's1'-'t20', single, double and others. This is pretty handy if you want to play sound-effects. Note: the third dart will only considered if argument '-ESF' is set to '1'.
 
 *`-ESF / --call_every_dart_single_files`*
 
-If you set this to '0' the application calls every dart by combining the type of hit (single, double ..) with hit-number (20, 30, ..) so that it reuses
+If you set this to '0' the application calls every thrown dart by combining the type of hit (single, double ..) with hit-number (20, 30, ..) so that it reuses
 the sounds of score-values (0-180). If you set this to '1' (default) it will call by using only one file (ie. single, double, t19, ..).
 
 *`-PCC / --possible_checkout_call`*
 
-If you set this to '1' the caller will call if there is a checkout possibility. Setup sounds {playername}{yr_2-yr_170} or {2-170} as a fallback. 
-If you set this to value above '1' checkout-numbers for each player won't repeat after the count of value is reached.
+If you set this to '1' the application will call possible checkouts. Setup sounds {playername}{yr_2-yr_170} or {2-170} as a fallback. 
+If you set this to value above '1' calls won't be repeat when the count of value is reached.
 By default this is '1'.
 
 *`-PCCSF / --possible_checkout_call_single_file`*
 
-If you set this to '0' (default), the application uses two separated sound-files named: 'you_require' and 'x' (score-value). If you set this to '1' the application will call a possible checkout by using one file 'yr_2-yr_170'.
+If you set this to '0' (default) the application uses two separated sound-files named: 'you_require' and 'x' (score-value). If you set this to '1' the application will call a possible checkout by using one file 'yr_2-yr_170'.
 
 *`-PCCYO / --possible_checkout_call_yourself_only`*
 
-If you set this to '1' the caller will only call if there is a checkout possibility and the current player is you (associated to your board-id). 
+If you set this to '1' the application will only call if there is a checkout possibility and the current player is you (associated to your board-id). 
 Note: this functionality won't work if your board is offline.
 By default this is '0'.
 
@@ -322,19 +321,19 @@ You can not hear any calls as your music is way too loud? Try to set this to '0.
 
 *`-WEB / --web_caller`*
 
-If you set this to a '1' or '2' the app will host a web-endpoint to mirror call-events. A value '1' will play sounds only on the web-endpoint. Value '2' will play sounds locally and on the web-endpoint. To use web-calling visit http://{machine-ip-address}:{web-caller-port} in browser.
+If you set this to a '1' or '2' the application will host a web-endpoint to mirror all call-events. A value '1' will play sounds only on the web-endpoint. Value '2' will play sounds on the application and on the web-endpoint. To use web-calling visit http://{machine-ip-address}:{web-caller-port} in browser.
 
 *`-WEBSB / --web_caller_scoreboard`*
 
-If you set this to a '1' the app will host a web-endpoint to display an alternative scoreboard. Visit http://{machine-ip-address}:{web-caller-port}/scoreboard in browser.
+If you set this to a '1' the application will host a web-endpoint to display an alternative scoreboard. Visit http://{machine-ip-address}:{web-caller-port}/scoreboard in browser.
 
 *`-WEBP / --web_caller_port`*
 
-If you setup web-calling (-WEB = 1 / 2) you can configure a custom port. By default this is '5000'.
+If web-calling or web-scoreboard is enabled, you can configure a custom port. By default this is '5000'.
 
 *`-HP / --host_port`*
 
-The app provides a websocket-service. Other extensions like autodarts-extern or autodarts-wled can connect to this service (ws://ip:port).
+The application provides a websocket-service. Other extensions like autodarts-extern or autodarts-wled can connect to this service (ws://ip:port).
 For a list of json-examples look at 'broadcast-examples.dat' - who knows maybe you build your own extension upon this?!
 
 
@@ -418,15 +417,15 @@ Check log:
 - Enable debug ('-DEB "1"') to display more information about a problem.
 - If you don't know how to fix an error, have a look below.
 
-### Failed to process caller: X
+### Failed to process voice-pack 'X'
 
-All caller voice-packs are currently hosted on google drive. There is a chance that you encounter this as google only allows certain download count in specific time window.
-Just be patient, wait a few hours and restart the caller. It could be helpful to restart your router or use a vpn to bypass.
+All voice-packs are hosted on google. There is a chance that you encounter this error as google allows only a certain download count in unknown time window.
+Just be patient, wait a few hours and restart the application. It could be helpful to restart your router or use a vpn to bypass.
 
 ### failed keycloakauthentication Error (401 invalid_grant)
 
 - Disable Two-Factor-Auth (2FA).
-- Make sure you use your email-addres for username.
+- Make sure you use your email-addres - NOT your username.
 - Check your password.
 
 ### Can not play sound for sound-file-key 'X' -> Ignore this or check existance; otherwise convert your file appropriate
