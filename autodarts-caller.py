@@ -1,4 +1,5 @@
 import os
+import sys
 from pathlib import Path
 import time
 import json
@@ -45,24 +46,42 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.5.2'
+VERSION = '2.5.3'
 
-DEFAULT_HOST_IP = '0.0.0.0'
-DEFAULT_HOST_PORT = 8079
+
+DEFAULT_EMPTY_PATH = ''
+DEFAULT_CALLER_VOLUME = 1.0
 DEFAULT_CALLER = None
+DEFAULT_RANDOM_CALLER = 1
+DEFAULT_RANDOM_CALLER_EACH_LEG = 0
 DEFAULT_RANDOM_CALLER_LANGUAGE = 0
 DEFAULT_RANDOM_CALLER_GENDER = 0
-DEFAULT_WEB_CALLER_PORT = 5000
+DEFAULT_CALL_CURRENT_PLAYER = 1
+DEFAULT_CALL_EVERY_DART = 0
+DEFAULT_CALL_EVERY_DART_SINGLE_FILES = 1
+DEFAULT_POSSIBLE_CHECKOUT_CALL = 1
+DEFAULT_POSSIBLE_CHECKOUT_CALL_SINGLE_FILES = 0
+DEFAULT_POSSIBLE_CHECKOUT_CALL_YOURSELF_ONLY = 0
+DEFAULT_AMBIENT_SOUNDS = 0.0
+DEFAULT_AMBIENT_SOUNDS_AFTER_CALLS = 0
 DEFAULT_DOWNLOADS = True
-DEFAULT_DOWNLOADS_LANGUAGE = 1
 DEFAULT_DOWNLOADS_LIMIT = 0
-DEFAULT_DOWNLOADS_PATH = 'caller-downloads-temp'
-DEFAULT_CALLERS_BANNED_FILE = 'autodarts-caller-banned.txt'
-DEFAULT_EMPTY_PATH = ''
+DEFAULT_DOWNLOADS_LANGUAGE = 1
+DEFAULT_BACKGROUND_AUDIO_VOLUME = 0.0
+DEFAULT_WEB_CALLER = 0
+DEFAULT_WEB_CALLER_SCOREBOARD = 0
+DEFAULT_WEB_CALLER_PORT = 5000
+DEFAULT_HOST_PORT = 8079
+DEFAULT_DEBUG = False
+DEFAULT_CERT_CHECK = True
 DEFAULT_MIXER_FREQUENCY = 44100
 DEFAULT_MIXER_SIZE = 32
 DEFAULT_MIXER_CHANNELS = 2
 DEFAULT_MIXER_BUFFERSIZE = 4096
+DEFAULT_DOWNLOADS_PATH = 'caller-downloads-temp'
+DEFAULT_CALLERS_BANNED_FILE = 'autodarts-caller-banned.txt'
+DEFAULT_HOST_IP = '0.0.0.0'
+
 
 AUTODART_URL = 'https://autodarts.io'
 AUTODART_AUTH_URL = 'https://login.autodarts.io/'
@@ -224,6 +243,7 @@ def get_local_ip_address(target='8.8.8.8'):
         ip_address = DEFAULT_HOST_IP
     return ip_address
 
+
 def versionize_speaker(speaker_name, speaker_version):
     speaker_versionized = speaker_name
     if speaker_version > 1:
@@ -363,7 +383,6 @@ def download_callers():
             finally:
                 shutil.rmtree(DOWNLOADS_PATH, ignore_errors=True)
 
-
 def ban_caller(only_change):
     global caller_title
 
@@ -390,6 +409,11 @@ def ban_caller(only_change):
 
     mirror_sounds()
     setup_caller()
+
+    if play_sound_effect('hi', wait_for_last = False):
+        mirror_sounds()
+    
+
 
 def load_callers_banned():
     global caller_profiles_banned
@@ -638,6 +662,7 @@ def mirror_sounds():
         broadcast(mirror)
         mirror_files = []
 
+
 def receive_local_board_address():
     try:
         global accessToken
@@ -830,6 +855,12 @@ def listen_to_newest_match(m, ws):
             global accessToken
             res = requests.get(AUTODART_MATCHES_URL + currentMatch, headers={'Authorization': 'Bearer ' + accessToken})
             m = res.json()
+
+            currentPlayerIndex = 0
+            if 'player' in m:
+                currentPlayerIndex = m['player']
+            currentPlayer = m['players'][currentPlayerIndex]
+            currentPlayerName = str(currentPlayer['name']).lower()
             mode = m['variant']
 
             # ppi(json.dumps(m, indent = 4, sort_keys = True))
@@ -842,7 +873,7 @@ def listen_to_newest_match(m, ws):
 
                 matchStarted = {
                     "event": "match-started",
-                    "player": m['players'][0]['name'],
+                    "player": currentPlayerName,
                     "game": {
                         "mode": mode,
                         "pointsStart": str(m['settings'][base]),
@@ -855,7 +886,7 @@ def listen_to_newest_match(m, ws):
             elif mode == 'Cricket':
                 matchStarted = {
                     "event": "match-started",
-                    "player": m['players'][0]['name'],
+                    "player": currentPlayerName,
                     "game": {
                         "mode": mode,
                         # TODO: fix
@@ -864,8 +895,10 @@ def listen_to_newest_match(m, ws):
                     }
                 broadcast(matchStarted)
 
+            callPlayerNameState = False
+            if CALL_CURRENT_PLAYER:
+                callPlayerNameState = play_sound_effect(currentPlayerName)
 
-            callPlayerNameState = play_sound_effect(m['players'][0]['name'])
             if play_sound_effect('matchon', callPlayerNameState) == False:
                 play_sound_effect('gameon', callPlayerNameState)
 
@@ -882,10 +915,6 @@ def listen_to_newest_match(m, ws):
         isGameFinished = False
 
         receive_local_board_address()
-        # if boardManagerAddress != None:
-        #     res = requests.post(boardManagerAddress + '/api/reset')
-        #     time.sleep(0.25)
-        #     res = requests.put(boardManagerAddress + '/api/start')
 
         paramsSubscribeMatchesEvents = {
             "channel": "autodarts.matches",
@@ -941,7 +970,6 @@ def process_match_x01(m):
     global isGameFinished
     global lastPoints
     
-
     variant = m['variant']
     currentPlayerIndex = m['player']
     currentPlayer = m['players'][currentPlayerIndex]
@@ -1016,7 +1044,8 @@ def process_match_x01(m):
                     if AMBIENT_SOUNDS != 0.0:
                         play_sound_effect('ambient_checkout_call_limit', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
                 else:
-                    play_sound_effect(currentPlayerName)
+                    if CALL_CURRENT_PLAYER:
+                        play_sound_effect(currentPlayerName)
 
                     remaining = str(remainingPlayerScore)
 
@@ -1028,10 +1057,6 @@ def process_match_x01(m):
                         pcc_success = (play_sound_effect('you_require', True) and play_sound_effect(remaining, True))
                     
                     ppi('Checkout possible: ' + remaining)
-
-            # Player`s turn-call
-            if CALL_CURRENT_PLAYER and m['player'] == currentPlayerIndex and pcc_success == False:
-                pcc_success = play_sound_effect(currentPlayerName)
 
             # Player-change
             if pcc_success == False and AMBIENT_SOUNDS != 0.0:
@@ -1090,8 +1115,9 @@ def process_match_x01(m):
 
         if play_sound_effect('matchshot') == False:
             play_sound_effect('gameshot')
-    
-        play_sound_effect(currentPlayerName, True)
+
+        if CALL_CURRENT_PLAYER:
+            play_sound_effect(currentPlayerName, True)
 
         if play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
             play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
@@ -1136,7 +1162,8 @@ def process_match_x01(m):
             else:
                 play_sound_effect('leg_' + str(currentLeg), gameshotState)    
 
-        play_sound_effect(currentPlayerName, True)
+        if CALL_CURRENT_PLAYER:
+            play_sound_effect(currentPlayerName, True)
 
         if AMBIENT_SOUNDS != 0.0:
             play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
@@ -1165,14 +1192,16 @@ def process_match_x01(m):
             }
         broadcast(matchStarted)
 
-        callPlayerNameState = play_sound_effect(currentPlayerName)
+        callPlayerNameState = False
+        if CALL_CURRENT_PLAYER:
+            callPlayerNameState = play_sound_effect(currentPlayerName)
+
         if play_sound_effect('matchon', callPlayerNameState) == False:
             play_sound_effect('gameon', callPlayerNameState)
 
         if AMBIENT_SOUNDS != 0.0 and play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
             play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
 
-        
         ppi('Matchon')
 
     # Check for gameon
@@ -1193,13 +1222,15 @@ def process_match_x01(m):
             }
         broadcast(gameStarted)
 
-        callPlayerNameState = play_sound_effect(currentPlayerName)
+        callPlayerNameState = False
+        if CALL_CURRENT_PLAYER:
+            callPlayerNameState = play_sound_effect(currentPlayerName)
+
         play_sound_effect('gameon', callPlayerNameState)
 
         if AMBIENT_SOUNDS != 0.0:
             play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
 
-        
         ppi('Gameon')
           
     # Check for busted turn
@@ -1221,7 +1252,6 @@ def process_match_x01(m):
         if AMBIENT_SOUNDS != 0.0:
             play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
 
-        
         ppi('Busted')
     
     # Check for 1. Dart
@@ -1338,6 +1368,7 @@ def process_match_x01(m):
         ppi("Turn ended")
 
     mirror_sounds()
+
     if isGameFin == True:
         isGameFinished = True
 
@@ -1587,6 +1618,7 @@ def process_match_cricket(m):
 
 def process_common(m):
     broadcast(m)
+
 
 def receive_token_autodarts():
     try:
@@ -1937,30 +1969,30 @@ if __name__ == "__main__":
     ap.add_argument("-B", "--autodarts_board_id", required=True, help="Registered board-id at " + AUTODART_URL)
     ap.add_argument("-M", "--media_path", required=True, help="Absolute path to your media folder. You can download free sounds at https://freesound.org/")
     ap.add_argument("-MS", "--media_path_shared", required=False, default=DEFAULT_EMPTY_PATH, help="Absolute path to shared media folder (every caller get sounds)")
-    ap.add_argument("-V", "--caller_volume", type=float, default=1.0, required=False, help="Set the caller volume between 0.0 (silent) and 1.0 (max)")
+    ap.add_argument("-V", "--caller_volume", type=float, default=DEFAULT_CALLER_VOLUME, required=False, help="Set the caller volume between 0.0 (silent) and 1.0 (max)")
     ap.add_argument("-C", "--caller", default=DEFAULT_CALLER, required=False, help="Sets a particular caller")
-    ap.add_argument("-R", "--random_caller", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will randomly choose a caller each game. It only works when your base-media-folder has subfolders with its files")
-    ap.add_argument("-L", "--random_caller_each_leg", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will randomly choose a caller each leg instead of each game. It only works when 'random_caller=1'")
+    ap.add_argument("-R", "--random_caller", type=int, choices=range(0, 2), default=DEFAULT_RANDOM_CALLER, required=False, help="If '1', the application will randomly choose a caller each game. It only works when your base-media-folder has subfolders with its files")
+    ap.add_argument("-L", "--random_caller_each_leg", type=int, choices=range(0, 2), default=DEFAULT_RANDOM_CALLER_EACH_LEG, required=False, help="If '1', the application will randomly choose a caller each leg instead of each game. It only works when 'random_caller=1'")
     ap.add_argument("-RL", "--random_caller_language", type=int, choices=range(0, len(CALLER_LANGUAGES) + 1), default=DEFAULT_RANDOM_CALLER_LANGUAGE, required=False, help="If '0', the application will allow every language.., else it will limit caller selection by specific language")
     ap.add_argument("-RG", "--random_caller_gender", type=int, choices=range(0, len(CALLER_GENDERS) + 1), default=DEFAULT_RANDOM_CALLER_GENDER, required=False, help="If '0', the application will allow every gender.., else it will limit caller selection by specific gender")
-    ap.add_argument("-CCP", "--call_current_player", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will call who is the current player to throw")
-    ap.add_argument("-E", "--call_every_dart", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will call every thrown dart")
-    ap.add_argument("-ESF", "--call_every_dart_single_files", type=int, choices=range(0, 2), default=1, required=False, help="If '1', the application will call a every dart by using single, dou.., else it uses two separated sounds: single + x (score)")
-    ap.add_argument("-PCC", "--possible_checkout_call", type=int, default=1, required=False, help="If '1', the application will call a possible checkout starting at 170")
-    ap.add_argument("-PCCSF", "--possible_checkout_call_single_files", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the application will call a possible checkout by using yr_2-yr_170, else it uses two separated sounds: you_require + x")
-    ap.add_argument("-PCCYO", "--possible_checkout_call_yourself_only", type=int, choices=range(0, 2), default=0, required=False, help="If '1' the caller will only call if there is a checkout possibility if the current player is you")
-    ap.add_argument("-A", "--ambient_sounds", type=float, default=0.0, required=False, help="If > '0.0' (volume), the application will call a ambient_*-Sounds")
-    ap.add_argument("-AAC", "--ambient_sounds_after_calls", type=int, choices=range(0, 2), default=0, required=False, help="If '1', the ambient sounds will appear after calling is finished") 
+    ap.add_argument("-CCP", "--call_current_player", type=int, choices=range(0, 2), default=DEFAULT_CALL_CURRENT_PLAYER, required=False, help="If '1', the application will call who is the current player to throw")
+    ap.add_argument("-E", "--call_every_dart", type=int, choices=range(0, 2), default=DEFAULT_CALL_EVERY_DART, required=False, help="If '1', the application will call every thrown dart")
+    ap.add_argument("-ESF", "--call_every_dart_single_files", type=int, choices=range(0, 2), default=DEFAULT_CALL_EVERY_DART_SINGLE_FILES, required=False, help="If '1', the application will call a every dart by using single, dou.., else it uses two separated sounds: single + x (score)")
+    ap.add_argument("-PCC", "--possible_checkout_call", type=int, default=DEFAULT_POSSIBLE_CHECKOUT_CALL, required=False, help="If '1', the application will call a possible checkout starting at 170")
+    ap.add_argument("-PCCSF", "--possible_checkout_call_single_files", type=int, choices=range(0, 2), default=DEFAULT_POSSIBLE_CHECKOUT_CALL_SINGLE_FILES, required=False, help="If '1', the application will call a possible checkout by using yr_2-yr_170, else it uses two separated sounds: you_require + x")
+    ap.add_argument("-PCCYO", "--possible_checkout_call_yourself_only", type=int, choices=range(0, 2), default=DEFAULT_POSSIBLE_CHECKOUT_CALL_YOURSELF_ONLY, required=False, help="If '1' the caller will only call if there is a checkout possibility if the current player is you")
+    ap.add_argument("-A", "--ambient_sounds", type=float, default=DEFAULT_AMBIENT_SOUNDS, required=False, help="If > '0.0' (volume), the application will call a ambient_*-Sounds")
+    ap.add_argument("-AAC", "--ambient_sounds_after_calls", type=int, choices=range(0, 2), default=DEFAULT_AMBIENT_SOUNDS_AFTER_CALLS, required=False, help="If '1', the ambient sounds will appear after calling is finished") 
     ap.add_argument("-DL", "--downloads", type=int, choices=range(0, 2), default=DEFAULT_DOWNLOADS, required=False, help="If '1', the application will try to download a curated list of caller-voices")
     ap.add_argument("-DLL", "--downloads_limit", type=int, default=DEFAULT_DOWNLOADS_LIMIT, required=False, help="If '1', the application will try to download a only the X newest caller-voices. -DLN needs to be activated.")
     ap.add_argument("-DLLA", "--downloads_language", type=int, choices=range(0, len(CALLER_LANGUAGES) + 1), default=DEFAULT_DOWNLOADS_LANGUAGE, required=False, help="If '0', the application will download speakers of every language.., else it will limit speaker downloads by specific language")
-    ap.add_argument("-BAV","--background_audio_volume", required=False, type=float, default=0.0, help="Set background-audio-volume between 0.1 (silent) and 1.0 (no mute)")
-    ap.add_argument("-WEB", "--web_caller", required=False, type=int, choices=range(0, 3), default=0, help="If '1' the application will host an web-endpoint, '2' it will do '1' and default caller-functionality.")
-    ap.add_argument("-WEBSB", "--web_caller_scoreboard", required=False, type=int, choices=range(0, 2), default=0, help="If '1' the application will host an web-endpoint, right to web-caller-functionality.")
+    ap.add_argument("-BAV","--background_audio_volume", required=False, type=float, default=DEFAULT_BACKGROUND_AUDIO_VOLUME, help="Set background-audio-volume between 0.1 (silent) and 1.0 (no mute)")
+    ap.add_argument("-WEB", "--web_caller", required=False, type=int, choices=range(0, 3), default=DEFAULT_WEB_CALLER, help="If '1' the application will host an web-endpoint, '2' it will do '1' and default caller-functionality.")
+    ap.add_argument("-WEBSB", "--web_caller_scoreboard", required=False, type=int, choices=range(0, 2), default=DEFAULT_WEB_CALLER_SCOREBOARD, help="If '1' the application will host an web-endpoint, right to web-caller-functionality.")
     ap.add_argument("-WEBP", "--web_caller_port", required=False, type=int, default=DEFAULT_WEB_CALLER_PORT, help="Web-Caller-Port")
     ap.add_argument("-HP", "--host_port", required=False, type=int, default=DEFAULT_HOST_PORT, help="Host-Port")
-    ap.add_argument("-DEB", "--debug", type=int, choices=range(0, 2), default=False, required=False, help="If '1', the application will output additional information")
-    ap.add_argument("-CC", "--cert_check", type=int, choices=range(0, 2), default=True, required=False, help="If '0', the application won't check any ssl certification")
+    ap.add_argument("-DEB", "--debug", type=int, choices=range(0, 2), default=DEFAULT_DEBUG, required=False, help="If '1', the application will output additional information")
+    ap.add_argument("-CC", "--cert_check", type=int, choices=range(0, 2), default=DEFAULT_CERT_CHECK, required=False, help="If '0', the application won't check any ssl certification")
     ap.add_argument("-MIF", "--mixer_frequency", type=int, required=False, default=DEFAULT_MIXER_FREQUENCY, help="Pygame mixer frequency")
     ap.add_argument("-MIS", "--mixer_size", type=int, required=False, default=DEFAULT_MIXER_SIZE, help="Pygame mixer size")
     ap.add_argument("-MIC", "--mixer_channels", type=int, required=False, default=DEFAULT_MIXER_CHANNELS, help="Pygame mixer channels")
@@ -2086,9 +2118,6 @@ if __name__ == "__main__":
     checkoutsCounter = {}
 
 
-    # Initialize sound-mixer
-    mixer.pre_init(MIXER_FREQUENCY, MIXER_SIZE, MIXER_CHANNELS, MIXER_BUFFERSIZE)
-    mixer.init()
 
     osType = plat
     osName = os.name
@@ -2102,61 +2131,66 @@ if __name__ == "__main__":
     ppi('SUPPORTED GAME-VARIANTS: ' + " ".join(str(x) for x in SUPPORTED_GAME_VARIANTS), None, '')
     ppi('\r\n', None, '')
 
-
     if CERT_CHECK:
         ssl._create_default_https_context = ssl.create_default_context
     else:
         ppi("WARNING: SSL-cert-verification disabled!")
         ssl._create_default_https_context = ssl._create_unverified_context
         os.environ['PYTHONHTTPSVERIFY'] = '0'
-        
+
+    if WEB == 0 or WEB == 2:
+        try:
+            mixer.pre_init(MIXER_FREQUENCY, MIXER_SIZE, MIXER_CHANNELS, MIXER_BUFFERSIZE)
+            mixer.init()
+        except Exception as e:
+            ppe("Setup mixer failed!", e)
+            sys.exit()  
 
     if args_post_check is not None: 
         ppi('Please check your arguments: ' + args_post_check)
+        sys.exit()  
     
-    else:
-        if plat == 'Windows' and BACKGROUND_AUDIO_VOLUME > 0.0:
-            try:
-                background_audios = AudioUtilities.GetAllSessions()
-                audio_muter = threading.Thread(target=mute_background, args=[BACKGROUND_AUDIO_VOLUME])
-                audio_muter.start()
-            except Exception as e:
-                ppe("Background-muter failed!", e)
 
+    if plat == 'Windows' and BACKGROUND_AUDIO_VOLUME > 0.0:
         try:
-            load_callers_banned()
-            download_callers()
+            background_audios = AudioUtilities.GetAllSessions()
+            audio_muter = threading.Thread(target=mute_background, args=[BACKGROUND_AUDIO_VOLUME])
+            audio_muter.start()
         except Exception as e:
-            ppe("Caller-profile fetching failed!", e)
+            ppe("Background-Muter failed!", e)
 
-        try:
-            setup_caller()
-        except Exception as e:
-            ppe("Setup callers failed!", e)
+    try:
+        load_callers_banned()
+        download_callers()
+    except Exception as e:
+        ppe("Voice-pack fetching failed!", e)
 
+    try:
+        setup_caller()
         if caller == None:
-            ppi('A caller with name "' + str(CALLER) + '" does NOT exist! Please compare your input with list of available callers.')
-        else:
-            try:  
-                websocket_server_thread = threading.Thread(target=start_websocket_server, args=(DEFAULT_HOST_IP, HOST_PORT))
-                websocket_server_thread.start()
+            ppi('A caller with name "' + str(CALLER) + '" does NOT exist! Please compare your input with list of available voice-packs.')
+            sys.exit()  
+    except Exception as e:
+        ppe("Setup caller failed!", e)
+        sys.exit()  
 
-                if WEB > 0 or WEB_SCOREBOARD:
-                    WEB_HOST = get_local_ip_address()
-                    flask_app_thread = threading.Thread(target=start_flask_app, args=(DEFAULT_HOST_IP, WEB_PORT))
-                    flask_app_thread.start()
 
-                connect_autodarts()
+    try:  
+        websocket_server_thread = threading.Thread(target=start_websocket_server, args=(DEFAULT_HOST_IP, HOST_PORT))
+        websocket_server_thread.start()
 
-                websocket_server_thread.join()
+        if WEB > 0 or WEB_SCOREBOARD:
+            WEB_HOST = get_local_ip_address()
+            flask_app_thread = threading.Thread(target=start_flask_app, args=(DEFAULT_HOST_IP, WEB_PORT))
+            flask_app_thread.start()
 
-                if WEB > 0 or WEB_SCOREBOARD:
-                    flask_app_thread.join() 
+        connect_autodarts()
 
-            except Exception as e:
-                ppe("Connect failed: ", e)
+        websocket_server_thread.join()
+
+        if WEB > 0 or WEB_SCOREBOARD:
+            flask_app_thread.join() 
+
+    except Exception as e:
+        ppe("Connect failed: ", e)
    
-
-   
-
-time.sleep(30)
