@@ -149,7 +149,7 @@ CALLER_PROFILES = {
     'de-DE-Daniel-Male': ('https://drive.google.com/file/d/1yRoEknlGOtmDb_rwh0WmDmWFPU3aXhcy/view?usp=sharing', 1),
     'en-US-Kendra-Female': ('https://drive.google.com/file/d/12CbizYdgbRR24RzBjWEjEYTV8ZQ_lupz/view?usp=sharing', 2),
     'en-US-Joey-Male': ('https://drive.google.com/file/d/1bXCNygCbK0na4J_d66NNFKViJuAn7IMw/view?usp=sharing', 2),
-    'en-US-Joanna-Female': ('https://drive.google.com/file/d/1bwl1FadAj3SgwNL5CCwaInzjHfruyHP5/view?usp=sharing', 1),
+    'en-US-Joanna-Female': ('https://drive.google.com/file/d/19Q7VO4NVH7YuXgeLat_7J8UYy5Cp6R36/view?usp=sharing', 2),
     
     # 'TODONAME': ('TODOLINK', TODOVERSION),  
     # 'TODONAME': ('TODOLINK', TODOVERSION), 
@@ -1967,7 +1967,7 @@ if __name__ == "__main__":
     ap.add_argument("-U", "--autodarts_email", required=True, help="Registered email address at " + AUTODART_URL)
     ap.add_argument("-P", "--autodarts_password", required=True, help="Registered password address at " + AUTODART_URL)
     ap.add_argument("-B", "--autodarts_board_id", required=True, help="Registered board-id at " + AUTODART_URL)
-    ap.add_argument("-M", "--media_path", required=True, help="Absolute path to your media folder. You can download free sounds at https://freesound.org/")
+    ap.add_argument("-M", "--media_path", required=True, help="Absolute path to your media")
     ap.add_argument("-MS", "--media_path_shared", required=False, default=DEFAULT_EMPTY_PATH, help="Absolute path to shared media folder (every caller get sounds)")
     ap.add_argument("-V", "--caller_volume", type=float, default=DEFAULT_CALLER_VOLUME, required=False, help="Set the caller volume between 0.0 (silent) and 1.0 (max)")
     ap.add_argument("-C", "--caller", default=DEFAULT_CALLER, required=False, help="Sets a particular caller")
@@ -2174,7 +2174,6 @@ if __name__ == "__main__":
         ppe("Setup caller failed!", e)
         sys.exit()  
 
-
     try:  
         websocket_server_thread = threading.Thread(target=start_websocket_server, args=(DEFAULT_HOST_IP, HOST_PORT))
         websocket_server_thread.start()
@@ -2190,7 +2189,6 @@ if __name__ == "__main__":
 
         if WEB > 0 or WEB_SCOREBOARD:
             flask_app_thread.join() 
-
     except Exception as e:
         ppe("Connect failed: ", e)
    
