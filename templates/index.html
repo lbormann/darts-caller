@@ -40,8 +40,8 @@
 
         function fetchAndPlay(file) {
             return new Promise((resolve, reject) => {
-                let file_url = `/sounds/${file.path}`;
-                fetch(file_url, {
+                let url = `/sounds?path=${decodeURIComponent(file.path)}`;
+                fetch(url, {
                     method: "GET",
                     headers: {
                         "Content-Type": "audio/mpeg"
@@ -64,6 +64,33 @@
                 });
             });
         }
+
+        // function fetchAndPlay(file) {
+        //     return new Promise((resolve, reject) => {
+        //         let file_url = `/sounds/${file.path}`;
+        //         fetch(file_url, {
+        //             method: "GET",
+        //             headers: {
+        //                 "Content-Type": "audio/mpeg"
+        //             },
+        //         })
+        //         .then(response => response.arrayBuffer())
+        //         .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
+        //         .then(audioBuffer => {
+        //             console.log("Play sound: ", file.path);
+        //             lastCall.innerText = getFilename(unescape(file.path));
+        //             let source = audioContext.createBufferSource();
+        //             source.buffer = audioBuffer;
+        //             source.connect(audioContext.destination);
+        //             source.start();
+        //             source.onended = resolve;
+        //         })
+        //         .catch(err => {
+        //             console.error(err);
+        //             reject(err);
+        //         });
+        //     });
+        // }
 
         function onWsOpen(){
             state.innerText = "CONNECTED!";
