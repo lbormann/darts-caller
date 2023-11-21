@@ -46,7 +46,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.5.3'
+VERSION = '2.5.4'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -764,12 +764,14 @@ def correct_throw(throw_indices, score):
     # {
     #     "changes": {
     #         "1": {
-    #             "x": x-coord,
-    #             "y": y-coord
+    #              "point": {
+    #                  "x": x-coord,
+    #                  "y": y-coord
+    #               },
+    #               "type": "normal | bouncer"    
     #         },
     #         "2": {
-    #             "x": x-coord,
-    #             "y": y-coord
+    #             ...
     #         }
     #     }
     # }
@@ -781,7 +783,7 @@ def correct_throw(throw_indices, score):
 
         data = {"changes": {}}
         for ti in throw_indices:
-            data["changes"][ti] = score
+            data["changes"][ti] = {"point": score, "type": "normal"}
 
         # ppi(f'Data: {data}')
         if lastCorrectThrow == None or lastCorrectThrow != data:
@@ -1316,8 +1318,7 @@ def process_match_x01(m):
             # ppi(str(coords))
 
             # Suche das Koordinatenpaar, das am weitesten von den beiden Anderen entfernt ist
-
-            if len(coords) > 0:
+            if len(coords) == 3:
                 # Liste mit allen möglichen Kombinationen von Koordinatenpaaren erstellen
                 combinations = [(coords[0], coords[1]), (coords[0], coords[2]), (coords[1], coords[2])]
 
