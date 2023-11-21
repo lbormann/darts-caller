@@ -23,7 +23,7 @@ import certifi
 from mask import mask
 import re
 from urllib.parse import quote, unquote
-from flask import Flask, request, render_template, send_from_directory
+from flask import Flask, render_template, send_from_directory
 
 os.environ['SSL_CERT_FILE'] = certifi.where()
 
@@ -1931,14 +1931,6 @@ def mute_background(mute_vol):
 @app.route('/')
 def index():
     return render_template('index.html', host=WEB_HOST, ws_port=HOST_PORT, state=WEB)
-
-# @app.route('/sounds', methods=['GET'])
-# def sound():
-#     args = request.args
-#     file_path = args['path']
-#     directory = os.path.dirname(file_path)
-#     file_name = os.path.basename(file_path)
-#     return send_from_directory(directory, file_name)
 
 @app.route('/sounds/<path:file_id>', methods=['GET'])
 def sound(file_id):
