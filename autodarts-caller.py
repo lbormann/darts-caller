@@ -1932,24 +1932,24 @@ def mute_background(mute_vol):
 def index():
     return render_template('index.html', host=WEB_HOST, ws_port=HOST_PORT, state=WEB)
 
-@app.route('/sounds', methods=['GET'])
-def sound():
-    args = request.args
-    file_path = args['path']
-    directory = os.path.dirname(file_path)
-    file_name = os.path.basename(file_path)
-    return send_from_directory(directory, file_name)
-
-# @app.route('/sounds/<path:file_id>', methods=['GET'])
-# def sound(file_id):
-#     file_id = unquote(file_id)
-#     file_path = file_id
-#     if os.name == 'posix':  # Unix/Linux/MacOS
-#         directory = '/' + os.path.dirname(file_path)
-#     else:  # Windows
-#         directory = os.path.dirname(file_path)
+# @app.route('/sounds', methods=['GET'])
+# def sound():
+#     args = request.args
+#     file_path = args['path']
+#     directory = os.path.dirname(file_path)
 #     file_name = os.path.basename(file_path)
 #     return send_from_directory(directory, file_name)
+
+@app.route('/sounds/<path:file_id>', methods=['GET'])
+def sound(file_id):
+    file_id = unquote(file_id)
+    file_path = file_id
+    if os.name == 'posix':  # Unix/Linux/MacOS
+        directory = '/' + os.path.dirname(file_path)
+    else:  # Windows
+        directory = os.path.dirname(file_path)
+    file_name = os.path.basename(file_path)
+    return send_from_directory(directory, file_name)
 
 @app.route('/scoreboard')
 def scoreboard():
