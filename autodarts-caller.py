@@ -46,7 +46,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.5.4'
+VERSION = '2.5.5'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -989,8 +989,8 @@ def process_match_x01(m):
     if 'target' in m['settings']:
         base = 'target'
     
-    matchon = (m['settings'][base] == m['gameScores'][0] and turns['throws'] == None and m['leg'] == 1 and m['set'] == 1)
-    gameon = (m['settings'][base] == m['gameScores'][0] and turns['throws'] == None)
+    matchon = (m['settings'][base] == m['gameScores'][0] and turns['throws'] == [] and m['leg'] == 1 and m['set'] == 1)
+    gameon = (m['settings'][base] == m['gameScores'][0] and turns['throws'] == [])
 
     # ppi('matchon: '+ str(matchon) )
     # ppi('gameon: '+ str(gameon) )
@@ -999,12 +999,11 @@ def process_match_x01(m):
     pcc_success = False
     isGameFin = False
 
-    if turns != None and turns['throws'] != None:
+    if turns != None and turns['throws'] != []:
         lastPoints = points
 
-
     # Darts pulled (Playerchange and Possible-checkout)
-    if gameon == False and turns != None and turns['throws'] == None or isGameFinished == True:
+    if gameon == False and turns != None and turns['throws'] == [] or isGameFinished == True:
         busted = "False"
         if lastPoints == "B":
             lastPoints = "0"
@@ -1032,6 +1031,8 @@ def process_match_x01(m):
         }
         # ppi(dartsPulled)
         broadcast(dartsPulled)
+
+        
 
         if gameon == False and isGameFinished == False:
 
@@ -1068,7 +1069,7 @@ def process_match_x01(m):
             ppi("Next player")
 
     # Call every thrown dart
-    elif CALL_EVERY_DART == True and turns != None and turns['throws'] != None and len(turns['throws']) >= 1 and busted == False and matchshot == False and gameshot == False: 
+    elif CALL_EVERY_DART == True and turns != None and turns['throws'] != [] and len(turns['throws']) >= 1 and busted == False and matchshot == False and gameshot == False: 
 
         throwAmount = len(turns['throws'])
         type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
@@ -1257,15 +1258,15 @@ def process_match_x01(m):
         ppi('Busted')
     
     # Check for 1. Dart
-    elif turns != None and turns['throws'] != None and len(turns['throws']) == 1:
+    elif turns != None and turns['throws'] != [] and len(turns['throws']) == 1:
         isGameFinished = False
 
     # Check for 2. Dart
-    elif turns != None and turns['throws'] != None and len(turns['throws']) == 2:
+    elif turns != None and turns['throws'] != [] and len(turns['throws']) == 2:
         isGameFinished = False
 
     # Check for 3. Dart - Score-call
-    elif turns != None and turns['throws'] != None and len(turns['throws']) == 3:
+    elif turns != None and turns['throws'] != [] and len(turns['throws']) == 3:
         isGameFinished = False
 
         dartsThrown = {
@@ -1386,7 +1387,7 @@ def process_match_cricket(m):
     global lastPoints
 
     # Call every thrown dart
-    if CALL_EVERY_DART and turns != None and turns['throws'] != None and len(turns['throws']) >= 1: 
+    if CALL_EVERY_DART and turns != None and turns['throws'] != [] and len(turns['throws']) >= 1: 
         throwAmount = len(turns['throws'])
         type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
         field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
@@ -1471,7 +1472,7 @@ def process_match_cricket(m):
         ppi('Gameshot')
     
     # Check for matchon
-    elif m['gameScores'][0] == 0 and m['scores'] == None and turns['throws'] == None and m['round'] == 1 and m['leg'] == 1 and m['set'] == 1:
+    elif m['gameScores'][0] == 0 and m['scores'] == None and turns['throws'] == [] and m['round'] == 1 and m['leg'] == 1 and m['set'] == 1:
         isGameOn = True
         isGameFinished = False
         
@@ -1496,7 +1497,7 @@ def process_match_cricket(m):
         ppi('Matchon')
 
     # Check for gameon
-    elif m['gameScores'][0] == 0 and m['scores'] == None and turns['throws'] == None and m['round'] == 1:
+    elif m['gameScores'][0] == 0 and m['scores'] == None and turns['throws'] == [] and m['round'] == 1:
         isGameOn = True
         isGameFinished = False
         
@@ -1536,15 +1537,15 @@ def process_match_cricket(m):
         ppi('Busted')
 
     # Check for 1. Dart
-    elif turns != None and turns['throws'] != None and len(turns['throws']) == 1:
+    elif turns != None and turns['throws'] != [] and len(turns['throws']) == 1:
         isGameFinished = False
 
     # Check for 2. Dart
-    elif turns != None and turns['throws'] != None and len(turns['throws']) == 2:
+    elif turns != None and turns['throws'] != [] and len(turns['throws']) == 2:
         isGameFinished = False
 
     # Check for 3. Dart - points call
-    elif turns != None and turns['throws'] != None and len(turns['throws']) == 3:
+    elif turns != None and turns['throws'] != [] and len(turns['throws']) == 3:
         isGameFinished = False
 
         throwPoints = 0
@@ -1586,7 +1587,7 @@ def process_match_cricket(m):
         ppi("Turn ended")
     
     # Playerchange
-    if isGameOn == False and turns != None and turns['throws'] == None or isGameFinished == True:
+    if isGameOn == False and turns != None and turns['throws'] == [] or isGameFinished == True:
         dartsPulled = {
             "event": "darts-pulled",
             "player": str(currentPlayer['name']),
