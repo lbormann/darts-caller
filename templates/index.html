@@ -51,10 +51,13 @@
                 .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
                 .then(audioBuffer => {
                     console.log("Play sound: ", file.path);
-                    lastCall.innerText = getFilename(unescape(file.path));
+                    lastCall.innerText = getFilename(unescape(file.path)); 
                     let source = audioContext.createBufferSource();
                     source.buffer = audioBuffer;
-                    source.connect(audioContext.destination);
+                    let gainNode = audioContext.createGain();
+                    gainNode.gain.value = file.volume;
+                    source.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
                     source.start();
                     source.onended = resolve;
                 })
