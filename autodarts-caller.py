@@ -46,7 +46,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.5.5'
+VERSION = '2.5.6'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -85,12 +85,11 @@ DEFAULT_HOST_IP = '0.0.0.0'
 
 AUTODART_URL = 'https://autodarts.io'
 AUTODART_AUTH_URL = 'https://login.autodarts.io/'
-AUTODART_AUTH_TICKET_URL = 'https://api.autodarts.io/ms/v0/ticket'
 AUTODART_CLIENT_ID = 'autodarts-app'
 AUTODART_REALM_NAME = 'autodarts'
 AUTODART_MATCHES_URL = 'https://api.autodarts.io/gs/v0/matches/'
 AUTODART_BOARDS_URL = 'https://api.autodarts.io/bs/v0/boards/'
-AUTODART_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe?ticket='
+AUTODART_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe'
 
 SUPPORTED_SOUND_FORMATS = ['.mp3', '.wav']
 SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket', 'Random Checkout']
@@ -603,12 +602,17 @@ def setup_caller():
 
 
 def play_sound(sound, wait_for_last, volume_mult):
+    volume = 1.0
+    if AUDIO_CALLER_VOLUME is not None:
+        volume = AUDIO_CALLER_VOLUME * volume_mult
+
     if WEB > 0:
         global mirror_files
         
         mirror_file = {
                     "path": quote(sound, safe=""),
                     "wait": wait_for_last,
+                    "volume": volume
                 }
         mirror_files.append(mirror_file)
 
@@ -618,9 +622,7 @@ def play_sound(sound, wait_for_last, volume_mult):
                 time.sleep(0.01)
 
         s = mixer.Sound(sound)
-
-        if AUDIO_CALLER_VOLUME is not None:
-            s.set_volume(AUDIO_CALLER_VOLUME * volume_mult)
+        s.set_volume(volume)
         s.play()
 
     ppi('Playing: "' + sound + '"')
@@ -843,6 +845,9 @@ def listen_to_newest_match(m, ws):
     #     },
     #     "topic": "1ba2df53-9a04-51bc-9a5f-667b2c5f315f.matches"  
     # }
+
+    if 'event' not in m:
+        return
 
     if m['event'] == 'start':
         currentMatch = m['id']
@@ -1618,6 +1623,35 @@ def process_match_cricket(m):
     if isGameFin == True:
         isGameFinished = True
 
+# def process_match_atc(m):
+#     global isGameFinished
+
+#     currentPlayerIndex = m['player']
+#     # currentPlayer = m['players'][currentPlayerIndex]
+#     # currentPlayerName = str(currentPlayer['name']).lower()
+
+#     turns = m['turns'][0]
+#     matchshot = (m['winner'] != -1 and isGameFinished == False)
+
+#     currentTarget = m['state']['currentTargets'][currentPlayerIndex]
+
+
+#     if turns is not None and turns['throws']:
+#         lastThrow = turns['throws'][-1]
+#         targetHit = lastThrow['segment']['number']
+
+#         if targetHit == currentTarget:
+#             play_sound_effect('atc_target_hit')
+#         else:
+#             play_sound_effect('atc_target_missed')
+
+#     if matchshot:
+#         isGameFinished = True
+#         play_sound_effect('matchshot')
+
+#     if turns['throws'] == []:
+#         play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+
 def process_common(m):
     broadcast(m)
 
@@ -1630,10 +1664,12 @@ def receive_token_autodarts():
         keycloak_openid = KeycloakOpenID(server_url = AUTODART_AUTH_URL,
                                             client_id = AUTODART_CLIENT_ID,
                                             realm_name = AUTODART_REALM_NAME,
-                                            verify = True)
+                                            verify = bool(CERT_CHECK))
         token = keycloak_openid.token(AUTODART_USER_EMAIL, AUTODART_USER_PASSWORD)
-        accessToken = token['access_token']
         # ppi(token)
+
+        accessToken = token['access_token']
+        
     except Exception as e:
         ppe('Receive token failed', e)    
 
@@ -1643,16 +1679,13 @@ def connect_autodarts():
 
         receive_token_autodarts()
 
-        # Get Ticket
-        ticket = requests.post(AUTODART_AUTH_TICKET_URL, headers={'Authorization': 'Bearer ' + accessToken})
-        # ppi(ticket.text)
-
         websocket.enableTrace(False)
-        ws = websocket.WebSocketApp(AUTODART_WEBSOCKET_URL + ticket.text,
-                                on_open = on_open_autodarts,
-                                on_message = on_message_autodarts,
-                                on_error = on_error_autodarts,
-                                on_close = on_close_autodarts)
+        ws = websocket.WebSocketApp(AUTODART_WEBSOCKET_URL,
+                                    header={'Authorization': 'Bearer ' + accessToken},
+                                    on_open = on_open_autodarts,
+                                    on_message = on_message_autodarts,
+                                    on_error = on_error_autodarts,
+                                    on_close = on_close_autodarts)
 
         ws.run_forever()
     threading.Thread(target=process).start()
@@ -1661,15 +1694,17 @@ def on_open_autodarts(ws):
     try:
         global accessToken
         res = requests.get(AUTODART_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + accessToken})
-        # ppi(json.dumps(res.json(), indent = 4, sort_keys = True))
+        res = res.json()
+        # ppi(json.dumps(res, indent = 4, sort_keys = True))
 
-        match_id = res.json()['matchId']
-        if match_id != None and match_id != '':  
-            m = {
-                    "event": "start",
-                    "id": match_id
-                }
-            listen_to_newest_match(m, ws)
+        if 'matchId' in res:
+            match_id = res['matchId']
+            if match_id != None and match_id != '':  
+                m = {
+                        "event": "start",
+                        "id": match_id
+                    }
+                listen_to_newest_match(m, ws)
             
     except Exception as e:
         ppe('Fetching matches failed', e)
@@ -1701,15 +1736,16 @@ def on_open_autodarts(ws):
     except Exception as e:
         ppe('WS-Open-boards failed: ', e)
 
-    try:
-        paramsSubscribeLobbiesEvents = {
-            "channel": "autodarts.lobbies",
-            "type": "subscribe",
-            "topic": "*.state"
-        }
-        ws.send(json.dumps(paramsSubscribeLobbiesEvents))
-    except Exception as e:
-        ppe('WS-Open-lobbies failed: ', e)
+    # DEPRECATED
+    # try:
+    #     paramsSubscribeLobbiesEvents = {
+    #         "channel": "autodarts.lobbies",
+    #         "type": "subscribe",
+    #         "topic": "*.state"
+    #     }
+    #     ws.send(json.dumps(paramsSubscribeLobbiesEvents))
+    # except Exception as e:
+    #     ppe('WS-Open-lobbies failed: ', e)
 
 def on_message_autodarts(ws, message):
     def process(*args):
@@ -1722,6 +1758,7 @@ def on_message_autodarts(ws, message):
             if m['channel'] == 'autodarts.matches':
                 data = m['data']
                 # ppi(json.dumps(data, indent = 4, sort_keys = True))
+
                 global currentMatch
                 # ppi('Current Match: ' + currentMatch)
                 
@@ -1729,7 +1766,7 @@ def on_message_autodarts(ws, message):
                     data['turns'][0].pop("id", None)
                     data['turns'][0].pop("createdAt", None)
 
-                if lastMessage != data and currentMatch != None and data['id'] == currentMatch:
+                if lastMessage != data and currentMatch != None and 'id' in data and data['id'] == currentMatch:
                     lastMessage = data
 
                     # ppi(json.dumps(data, indent = 4, sort_keys = True))
@@ -1742,6 +1779,9 @@ def on_message_autodarts(ws, message):
                         
                     elif variant == 'Cricket':
                         process_match_cricket(data)
+                    
+                    # elif variant == 'ATC':
+                    #     process_match_atc(data)
 
             elif m['channel'] == 'autodarts.boards':
                 data = m['data']
@@ -1753,9 +1793,8 @@ def on_message_autodarts(ws, message):
                 data = m['data']
                 # ppi(json.dumps(data, indent = 4, sort_keys = True))
                 
-                players = data['players']
-                if players is not None:
-                    for p in players:
+                if 'players' in data:
+                    for p in data['players']:
                         if 'boardId' in p and p['boardId'] == AUTODART_USER_BOARD_ID:
                             play_sound_effect("lobbychanged")
                             mirror_sounds()

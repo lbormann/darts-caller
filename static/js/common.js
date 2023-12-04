@@ -17,7 +17,7 @@ function setupWebSocketConnection(host, port, onOpenHandle, onCloseHandle, onMes
     socket.onclose = function() {
         console.log("Socket: disconnected!");
         onCloseHandle();
-        setTimeout(() => setupWebSocketConnection(host, port, onmessagehandle), 1000);
+        setTimeout(() => setupWebSocketConnection(host, port, onOpenHandle, onCloseHandle, onMessageHandle), 1000);
     };
 
     socket.onmessage = function(event) {
