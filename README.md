@@ -198,7 +198,6 @@ Start the script:
 - -RL / --random_caller_language [Default: 1] [Possible values: 0 (every language) | 1 (english) | 2 (french) | 3 (russian) | 4 (german) | 5 (spanish) | 6 (dutch)]
 - -RG / --random_caller_gender [Default: 0] [Possible values: 0 (every gender) | 1 (female) | 2 (male) ]
 - -CCP / --call_current_player [Default: 1] [Possible values: 0 | 1]
-- -CCPYO / --call_current_player_yourself_only [Default: 0] [Possible values: 0 | 1]
 - -E / --call_every_dart [Default: 0] [Possible values: 0 | 1]
 - -ESF / --call_every_dart_single_files [Default: 1] [Possible values: 0 | 1]
 - -PCC / --possible_checkout_call [Default: 1] [Possible values: 0..Inf]
