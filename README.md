@@ -17,6 +17,7 @@ Autodarts-caller plays back sound-files accordingly to the state of a https://au
 | Round the World | |
 | Random Checkout | :heavy_check_mark: |
 | Count Up | |
+| Segment Training | |
 
 
 ## INSTALL INSTRUCTION

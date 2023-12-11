@@ -94,7 +94,7 @@
 
             const averagesHtml = message.players.map((player, index) => `
                 <tr class="backWhite">
-                    <td id="player${index + 1}average">${message.stats[index].average.toFixed(2)}</td>
+                    <td id="player${index + 1}average">${message.stats[index].average}</td>
                 </tr>
             `).join('');
 
