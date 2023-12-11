@@ -46,7 +46,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.5.6'
+VERSION = '2.6.0'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -124,31 +124,31 @@ CALLER_PROFILES = {
     'theo-m-english-uk': ('https://drive.google.com/file/d/10eQaYMZM3tkIA2PIDsb0r-5NhyDU86-C/view?usp=sharing', 1),
     'emily-f-english-scottish': ('https://drive.google.com/file/d/10mOzTjA5tqBZCKI3EqxJ0YvQptqtMNQg/view?usp=sharing', 1),
     # google
-    'en-US-Wavenet-E-FEMALE': ('https://drive.google.com/file/d/1GaISZxu8kCsGyNurqrUMcbr4RZZmDKyI/view?usp=sharing', 2),
-    'en-US-Wavenet-G-FEMALE': ('https://drive.google.com/file/d/1gbM6uiCP1EQ7uGy2lAY218Xz2DxLwR33/view?usp=sharing', 2),
-    'en-US-Wavenet-H-FEMALE': ('https://drive.google.com/file/d/1SGVKnexUXWdjKmPqkjU8k8xz4-dUoLv4/view?usp=sharing', 2),
-    'en-US-Wavenet-I-MALE': ('https://drive.google.com/file/d/1shnyA5gftzCCfpTOBzoKzmbIrQsbtCWB/view?usp=sharing', 2),
-    'en-US-Wavenet-J-MALE': ('https://drive.google.com/file/d/1eGMOPrXuzYfh9KVPptb9wyBx8_u0x_1X/view?usp=sharing', 2),
-    'en-US-Wavenet-A-MALE': ('https://drive.google.com/file/d/1lzzUxsSsCAuu0EUpoM1I9Zd8r0sCxse3/view?usp=sharing', 2),
-    'en-US-Wavenet-F-FEMALE': ('https://drive.google.com/file/d/1Di6YmejZ_PHMAMc3F33VHXHo29vGRcKg/view?usp=sharing', 2),
-    'fr-FR-Wavenet-E-FEMALE': ('https://drive.google.com/file/d/1G39Cet8MrY_KqXUHS8q8cDRYJ9lPHxpj/view?usp=sharing', 1),
-    'fr-FR-Wavenet-B-MALE': ('https://drive.google.com/file/d/1feFvXtrB5EKD72g3qc1DPrLTUUW7yHK0/view?usp=sharing', 1),
-    'ru-RU-Wavenet-E-FEMALE': ('https://drive.google.com/file/d/1A_4iAsmPkmC2BBWaUGQ7xwFeueAMszhj/view?usp=sharing', 1),
-    'ru-RU-Wavenet-B-MALE': ('https://drive.google.com/file/d/1-3SNrGeDwyTuGgt0hEKFpMpJyT_idF_0/view?usp=sharing', 1),
-    'de-DE-Wavenet-F-FEMALE': ('https://drive.google.com/file/d/1o_l--T7YEvGWcRlUvhwPWxWqNFN3LGMz/view?usp=sharing', 1),  
-    'de-DE-Wavenet-B-MALE': ('https://drive.google.com/file/d/1IhPiCyZoRP1jLZGEvBe1N4HAV1vQhD1t/view?usp=sharing', 1),
-    'es-ES-Wavenet-C-FEMALE': ('https://drive.google.com/file/d/1h6RrJxTT1vZfecOG84UOpLP_2FYsDtES/view?usp=sharing', 1),  
-    'es-ES-Wavenet-B-MALE': ('https://drive.google.com/file/d/1ErnbxFXJa69ccJVfSzAvqmD49QLz3Rez/view?usp=sharing', 1),
-    'nl-NL-Wavenet-B-MALE': ('https://drive.google.com/file/d/12mlrKqjEO87W10lmZiDAqcTnwzc8bUCv/view?usp=sharing', 1),  
-    'nl-NL-Wavenet-D-FEMALE': ('https://drive.google.com/file/d/1tTe9viNMPXPsQIrZtPRF0KuBXkgeESA3/view?usp=sharing', 1),
+    'en-US-Wavenet-E-FEMALE': ('https://drive.google.com/file/d/1XIj7pJPd9_utwPeQtIftGJz1RUPX6dg_/view?usp=sharing', 3),
+    'en-US-Wavenet-G-FEMALE': ('https://drive.google.com/file/d/1h_-xmklyIcq6qEh27ibJWeQtArsQs9eX/view?usp=sharing', 3),
+    'en-US-Wavenet-A-MALE': ('https://drive.google.com/file/d/1sKVRUt6_V0c45Les3lLiuR9uMGtdzqto/view?usp=sharing', 3),
+    'en-US-Wavenet-H-FEMALE': ('https://drive.google.com/file/d/1MshpjUt0uhQ37ai-3794y4LbewxgPqvX/view?usp=sharing', 3),
+    'en-US-Wavenet-I-MALE': ('https://drive.google.com/file/d/1lYjR2urFzV55HKNxCqeJXLBVu6LeKfYa/view?usp=sharing', 3),
+    'en-US-Wavenet-J-MALE': ('https://drive.google.com/file/d/1P6oFO0lFlanX2yYI_U-zlag4SE29LkXK/view?usp=sharing', 3),
+    'en-US-Wavenet-F-FEMALE': ('https://drive.google.com/file/d/1b-k1jAL8osH_5Mm2RLTDY_rSucF7Wn2_/view?usp=sharing', 3),
+    'fr-FR-Wavenet-E-FEMALE': ('https://drive.google.com/file/d/1fow359C2tt9E6Bf5_IO_MnJfNuyXgnyJ/view?usp=sharing', 2),
+    'fr-FR-Wavenet-B-MALE': ('https://drive.google.com/file/d/1lcmgTonyruYYLA7AqgPt5nfT05J7erih/view?usp=sharing', 2),
+    'ru-RU-Wavenet-E-FEMALE': ('https://drive.google.com/file/d/1tjafA4_25yTYEJg_JHHt9qTTeJubB7Fu/view?usp=sharing', 2),
+    'ru-RU-Wavenet-B-MALE': ('https://drive.google.com/file/d/1L9TccnpRn-Ms-pFx25-7eDR9ku3rQRbD/view?usp=sharing', 2),
+    'de-DE-Wavenet-F-FEMALE': ('https://drive.google.com/file/d/15T-mMILZgVpNflgEByzmIbqXaZaa585t/view?usp=sharing', 2),  
+    'de-DE-Wavenet-B-MALE': ('https://drive.google.com/file/d/1Bj4yb_fI4HnUiLcPCPJgzbubpyqsng-D/view?usp=sharing', 2),
+    'es-ES-Wavenet-C-FEMALE': ('https://drive.google.com/file/d/1HB_a3j7L9Nkhsk4GEYn_A4BftWZuL_0X/view?usp=sharing', 2),  
+    'es-ES-Wavenet-B-MALE': ('https://drive.google.com/file/d/1P1Iqt8sN7WbKlJgwRB03r5WjG4Sa8VBM/view?usp=sharing', 2),
+    'nl-NL-Wavenet-B-MALE': ('https://drive.google.com/file/d/1VGpsXKCMxE26jvBRwEw7nZYdK_wP9g7u/view?usp=sharing', 2),  
+    'nl-NL-Wavenet-D-FEMALE': ('https://drive.google.com/file/d/1bBOeUfJdeU81KDlkCZGTw1sMNGEdE-X0/view?usp=sharing', 2),
     # amazon
-    'en-US-Stephen-Male': ('https://drive.google.com/file/d/18gWVUWrGnlMuXgT91vy9DmppxOAdrBvI/view?usp=sharing', 2),  
-    'en-US-Ivy-Female': ('https://drive.google.com/file/d/1U7lt0-xQJwEIc-hwYVD8sRgml5yIByI9/view?usp=sharing', 2),
-    'de-DE-Vicki-Female': ('https://drive.google.com/file/d/1AZKSHs4XjFicR7FeppBjwJ6u-dDt8h7L/view?usp=sharing', 1),  
-    'de-DE-Daniel-Male': ('https://drive.google.com/file/d/1yRoEknlGOtmDb_rwh0WmDmWFPU3aXhcy/view?usp=sharing', 1),
-    'en-US-Kendra-Female': ('https://drive.google.com/file/d/12CbizYdgbRR24RzBjWEjEYTV8ZQ_lupz/view?usp=sharing', 2),
-    'en-US-Joey-Male': ('https://drive.google.com/file/d/1bXCNygCbK0na4J_d66NNFKViJuAn7IMw/view?usp=sharing', 2),
-    'en-US-Joanna-Female': ('https://drive.google.com/file/d/19Q7VO4NVH7YuXgeLat_7J8UYy5Cp6R36/view?usp=sharing', 2),
+    'en-US-Stephen-Male': ('https://drive.google.com/file/d/1ma3zOIPNXzocQGNSMy8M8SyaYjyYOIx4/view?usp=sharing', 3),  
+    'en-US-Ivy-Female': ('https://drive.google.com/file/d/1zOVr1H2MSsj3soX_l8WtBP0qtiCkZazY/view?usp=sharing', 3),
+    'de-DE-Vicki-Female': ('https://drive.google.com/file/d/1bU4vAFf9ligX6HZeiwVKbUCRCawOdvh0/view?usp=sharing', 2),  
+    'de-DE-Daniel-Male': ('https://drive.google.com/file/d/1L83p1nsDvqplEdoCTpan6yd63Jc-J9bj/view?usp=sharing', 2),
+    'en-US-Kendra-Female': ('https://drive.google.com/file/d/140otZWbkSr4DZ3EKVYD6oOqe0p1BJyXj/view?usp=sharing', 3),
+    'en-US-Joey-Male': ('https://drive.google.com/file/d/1KeVzV5qISezkIA3XUogXLCDVSSe9vsS-/view?usp=sharing', 3),
+    'en-US-Joanna-Female': ('https://drive.google.com/file/d/1VPccbKqLpKeTeqXZ6Ko-21bYVh4sgguB/view?usp=sharing', 3),
     
     # 'TODONAME': ('TODOLINK', TODOVERSION),  
     # 'TODONAME': ('TODOLINK', TODOVERSION), 
@@ -278,11 +278,14 @@ def download_callers():
         # Download and parse every caller-profile
         for cpr_name, cpr_download_url in download_list.items():
             try:
+                
                 # Check if caller-profile already present in users media-directory, yes ? -> stop for this caller-profile
                 caller_profile_exists = os.path.exists(os.path.join(AUDIO_MEDIA_PATH, cpr_name))
                 if caller_profile_exists == True:
                     # ppi('Caller-profile ' + cpr_name + ' already exists -> Skipping download')
                     continue
+
+                # ppi("DOWNLOADING voice-pack: " + cpr_name + " ..")
 
                 # clean download-area!
                 shutil.rmtree(DOWNLOADS_PATH, ignore_errors=True)
@@ -293,7 +296,7 @@ def download_callers():
                 dest = os.path.join(DOWNLOADS_PATH, 'download.zip')
 
                 # kind="zip", 
-                path = download(cpr_download_url, dest, progressbar=True, replace=False, verbose=DEBUG)
+                path = download(cpr_download_url, dest, progressbar=True, replace=False, timeout=20.0, verbose=DEBUG)
  
                 # LOCAL-Download
                 # shutil.copyfile('C:\\Users\\Luca\\Desktop\\download.zip', os.path.join(DOWNLOADS_PATH, 'download.zip'))
@@ -862,15 +865,12 @@ def listen_to_newest_match(m, ws):
             global accessToken
             res = requests.get(AUTODART_MATCHES_URL + currentMatch, headers={'Authorization': 'Bearer ' + accessToken})
             m = res.json()
-
-            currentPlayerIndex = 0
-            if 'player' in m:
-                currentPlayerIndex = m['player']
-            currentPlayer = m['players'][currentPlayerIndex]
-            currentPlayerName = str(currentPlayer['name']).lower()
-            mode = m['variant']
-
             # ppi(json.dumps(m, indent = 4, sort_keys = True))
+
+            currentPlayer = m['players'][0]
+            currentPlayerName = str(currentPlayer['name']).lower()
+
+            mode = m['variant']
 
             if mode == 'X01':
                 # Determine "baseScore"-Key
@@ -903,7 +903,7 @@ def listen_to_newest_match(m, ws):
                 broadcast(matchStarted)
 
             callPlayerNameState = False
-            if CALL_CURRENT_PLAYER:
+            if CALL_CURRENT_PLAYER and currentPlayerName != None:
                 callPlayerNameState = play_sound_effect(currentPlayerName)
 
             if play_sound_effect('matchon', callPlayerNameState) == False:
@@ -1156,7 +1156,7 @@ def process_match_x01(m):
         # currentPlayerScoreSets = m['scores'][currentPlayerIndex]['sets']
         currentLeg = m['leg']
         currentSet = m['set']
-        maxLeg = m['legs']
+        # maxLeg = m['legs']
         # maxSets = m['sets']
 
         # ppi('currentLeg: ' + str(currentLeg))
@@ -1693,22 +1693,29 @@ def connect_autodarts():
 def on_open_autodarts(ws):
     try:
         global accessToken
-        res = requests.get(AUTODART_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + accessToken})
+        res = requests.get(AUTODART_MATCHES_URL, headers={'Authorization': 'Bearer ' + accessToken})
         res = res.json()
         # ppi(json.dumps(res, indent = 4, sort_keys = True))
 
-        if 'matchId' in res:
-            match_id = res['matchId']
-            if match_id != None and match_id != '':  
-                m = {
+        # watchout for a match with my board-id
+        should_break = False
+        for m in res:
+            for p in m['players']:
+                if 'boardId' in p and p['boardId'] == AUTODART_USER_BOARD_ID:
+                    mes = {
                         "event": "start",
-                        "id": match_id
+                        "id": m['id']
                     }
-                listen_to_newest_match(m, ws)
+                    listen_to_newest_match(mes, ws)
+                    should_break = True
+                    break
+            if should_break:
+                break
             
     except Exception as e:
         ppe('Fetching matches failed', e)
 
+    
 
     try:
         ppi('Receiving live information from ' + AUTODART_URL)
@@ -1752,7 +1759,6 @@ def on_message_autodarts(ws, message):
         try:
             global lastMessage
             m = json.loads(message)
-
             # ppi(json.dumps(m, indent = 4, sort_keys = True))
   
             if m['channel'] == 'autodarts.matches':
