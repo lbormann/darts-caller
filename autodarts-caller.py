@@ -867,8 +867,11 @@ def listen_to_newest_match(m, ws):
             m = res.json()
             # ppi(json.dumps(m, indent = 4, sort_keys = True))
 
-            currentPlayer = m['players'][0]
-            currentPlayerName = str(currentPlayer['name']).lower()
+            currentPlayerName = None
+
+            if 'players' in m:
+                currentPlayer = m['players'][0]
+                currentPlayerName = str(currentPlayer['name']).lower()
 
             mode = m['variant']
 
