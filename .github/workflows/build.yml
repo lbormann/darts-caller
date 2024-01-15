@@ -44,15 +44,12 @@ jobs:
               sudo apt-get update
               sudo apt-get install -y qemu-user-static binfmt-support
               docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-              docker run -v $(pwd):/workdir -w /workdir multiarch/ubuntu-debootstrap:arm64-focal /usr/sbin/update-binfmts --package qemu-user-static --enable
-              docker run -v $(pwd):/workdir -w /workdir multiarch/ubuntu-debootstrap:arm64-focal apt-get update
-              docker run -v $(pwd):/workdir -w /workdir multiarch/ubuntu-debootstrap:arm64-focal apt-get install -y python3 python3-pip
-              docker run -v $(pwd):/workdir -w /workdir multiarch/ubuntu-debootstrap:arm64-focal pip3 install pyinstaller
-              docker run -v $(pwd):/workdir -w /workdir multiarch/ubuntu-debootstrap:arm64-focal pyinstaller -F -n autodarts-caller-linux-arm64 -i resources/autodarts-caller.svg --add-data "templates:templates" --add-data "static:static" --collect-all certifi autodarts-caller.py
+              docker run -v $(pwd):/workdir -w /workdir arm64v8/ubuntu:20.04 apt-get update
+              docker run -v $(pwd):/workdir -w /workdir arm64v8/ubuntu:20.04 apt-get install -y python3 python3-pip
+              docker run -v $(pwd):/workdir -w /workdir arm64v8/ubuntu:20.04 pip3 install pyinstaller
+              docker run -v $(pwd):/workdir -w /workdir arm64v8/ubuntu:20.04 pyinstaller -F -n autodarts-caller-linux-arm64 -i resources/autodarts-caller.svg --add-data "templates:templates" --add-data "static:static" --collect-all certifi autodarts-caller.py
             OUT_FILE_NAME: autodarts-caller-linux-arm64
             ASSET_MIME: application/octet-stream
-
-
 
     steps:
     - uses: actions/checkout@v1
