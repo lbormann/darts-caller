@@ -62,19 +62,11 @@ jobs:
               sudo apt-get update
               sudo apt-get install -y qemu-user-static binfmt-support
               docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-              docker run -v $(pwd):/workdir -w /workdir arm64v8/ubuntu:20.04 apt-get update -y && pip install -r requirements.txt --break-system-packages && pyinstaller -F -n autodarts-caller-arm64 -i resources/autodarts-caller.svg --add-data "templates:templates" --add-data "static:static" --collect-all certifi autodarts-caller.py
+              docker run --rm -v /usr/bin/qemu-arm-static:/usr/bin/qemu-arm-static --platform linux/arm64/v8 -v $(pwd):/workdir -w /workdir arm64v8/ubuntu:20.04 bash -c "apt-get update -y && apt-get install -y python3-pip && pip install -r requirements.txt && pyinstaller -F -n autodarts-caller-arm64 -i resources/autodarts-caller.svg --add-data 'templates:templates' --add-data 'static:static' --collect-all certifi autodarts-caller.py"
             OUT_FILE_NAME: autodarts-caller-arm64
             ASSET_MIME: application/octet-stream
 
-          - os: ubuntu-20.04
-            TARGET: linux-arm
-            CMD_BUILD: |
-              sudo apt-get update
-              sudo apt-get install -y qemu-user-static binfmt-support
-              docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-              docker run -v $(pwd):/workdir -w /workdir arm32v7/ubuntu:20.04 apt-get update -y && pip install -r requirements.txt --break-system-packages && pyinstaller -F -n autodarts-caller-arm -i resources/autodarts-caller.svg --add-data "templates:templates" --add-data "static:static" --collect-all certifi autodarts-caller.py
-            OUT_FILE_NAME: autodarts-caller-arm
-            ASSET_MIME: application/octet-stream
+
 
     steps:
     - uses: actions/checkout@v1
