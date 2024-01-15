@@ -46,7 +46,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.6.0'
+VERSION = '2.6.1'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -57,6 +57,7 @@ DEFAULT_RANDOM_CALLER_EACH_LEG = 0
 DEFAULT_RANDOM_CALLER_LANGUAGE = 0
 DEFAULT_RANDOM_CALLER_GENDER = 0
 DEFAULT_CALL_CURRENT_PLAYER = 1
+DEFAULT_CALL_CURRENT_PLAYER_ALWAYS = 0
 DEFAULT_CALL_EVERY_DART = 0
 DEFAULT_CALL_EVERY_DART_SINGLE_FILES = 1
 DEFAULT_POSSIBLE_CHECKOUT_CALL = 1
@@ -1069,6 +1070,9 @@ def process_match_x01(m):
                     
                     ppi('Checkout possible: ' + remaining)
 
+            if pcc_success == False and CALL_CURRENT_PLAYER and CALL_CURRENT_PLAYER_ALWAYS:
+                play_sound_effect(currentPlayerName)
+
             # Player-change
             if pcc_success == False and AMBIENT_SOUNDS != 0.0:
                 play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
@@ -1134,7 +1138,6 @@ def process_match_x01(m):
             play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
 
         
-
         if RANDOM_CALLER_EACH_LEG:
             setup_caller()
         ppi('Gameshot and match')
@@ -1165,11 +1168,13 @@ def process_match_x01(m):
         # ppi('currentLeg: ' + str(currentLeg))
         # ppi('currentSet: ' + str(currentSet))
 
+        isSet = False
         if 'sets' not in m:
             play_sound_effect('leg_' + str(currentLeg), gameshotState)
         else:
             if currentPlayerScoreLegs == 0:
                 play_sound_effect('set_' + str(currentSet), gameshotState)
+                isSet = True
             else:
                 play_sound_effect('leg_' + str(currentLeg), gameshotState)    
 
@@ -1177,9 +1182,11 @@ def process_match_x01(m):
             play_sound_effect(currentPlayerName, True)
 
         if AMBIENT_SOUNDS != 0.0:
-            play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
-
-        
+            if isSet == True:
+                if play_sound_effect('ambient_setshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
+                    play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+            else:
+                play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
 
         if RANDOM_CALLER_EACH_LEG:
             setup_caller()
@@ -1475,6 +1482,7 @@ def process_match_cricket(m):
         play_sound_effect(currentPlayerName, True)
         if AMBIENT_SOUNDS != 0.0:
             play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+        
         if RANDOM_CALLER_EACH_LEG:
             setup_caller()
         ppi('Gameshot')
@@ -1617,6 +1625,9 @@ def process_match_cricket(m):
         }
         broadcast(dartsPulled)
 
+        if CALL_CURRENT_PLAYER and CALL_CURRENT_PLAYER_ALWAYS:
+            play_sound_effect(currentPlayerName)
+
         if AMBIENT_SOUNDS != 0.0:
             play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
         
@@ -1674,7 +1685,7 @@ def receive_token_autodarts():
         accessToken = token['access_token']
         
     except Exception as e:
-        ppe('Receive token failed', e)    
+        ppe('Login failed: check your email address and password. 2FA must be turned off.', e)    
 
 def connect_autodarts():
     def process(*args):
@@ -2026,6 +2037,7 @@ if __name__ == "__main__":
     ap.add_argument("-RL", "--random_caller_language", type=int, choices=range(0, len(CALLER_LANGUAGES) + 1), default=DEFAULT_RANDOM_CALLER_LANGUAGE, required=False, help="If '0', the application will allow every language.., else it will limit caller selection by specific language")
     ap.add_argument("-RG", "--random_caller_gender", type=int, choices=range(0, len(CALLER_GENDERS) + 1), default=DEFAULT_RANDOM_CALLER_GENDER, required=False, help="If '0', the application will allow every gender.., else it will limit caller selection by specific gender")
     ap.add_argument("-CCP", "--call_current_player", type=int, choices=range(0, 2), default=DEFAULT_CALL_CURRENT_PLAYER, required=False, help="If '1', the application will call who is the current player to throw")
+    ap.add_argument("-CCPA", "--call_current_player_always", type=int, choices=range(0, 2), default=DEFAULT_CALL_CURRENT_PLAYER_ALWAYS, required=False, help="If '1', the application will call every playerchange")
     ap.add_argument("-E", "--call_every_dart", type=int, choices=range(0, 2), default=DEFAULT_CALL_EVERY_DART, required=False, help="If '1', the application will call every thrown dart")
     ap.add_argument("-ESF", "--call_every_dart_single_files", type=int, choices=range(0, 2), default=DEFAULT_CALL_EVERY_DART_SINGLE_FILES, required=False, help="If '1', the application will call a every dart by using single, dou.., else it uses two separated sounds: single + x (score)")
     ap.add_argument("-PCC", "--possible_checkout_call", type=int, default=DEFAULT_POSSIBLE_CHECKOUT_CALL, required=False, help="If '1', the application will call a possible checkout starting at 170")
@@ -2068,6 +2080,7 @@ if __name__ == "__main__":
     RANDOM_CALLER_GENDER = args['random_caller_gender'] 
     if RANDOM_CALLER_GENDER < 0: RANDOM_CALLER_GENDER = DEFAULT_RANDOM_CALLER_GENDER
     CALL_CURRENT_PLAYER = args['call_current_player']
+    CALL_CURRENT_PLAYER_ALWAYS = args['call_current_player_always']
     CALL_EVERY_DART = args['call_every_dart']
     CALL_EVERY_DART_SINGLE_FILE = args['call_every_dart_single_files']
     POSSIBLE_CHECKOUT_CALL = args['possible_checkout_call']
@@ -2179,6 +2192,7 @@ if __name__ == "__main__":
     ppi('VERSION: ' + VERSION, None, '')
     ppi('RUNNING OS: ' + osType + ' | ' + osName + ' | ' + osRelease, None, '')
     ppi('SUPPORTED GAME-VARIANTS: ' + " ".join(str(x) for x in SUPPORTED_GAME_VARIANTS), None, '')
+    ppi('DONATION: bitcoin:bc1q8dcva098rrrq2uqhv38rj5hayzrqywhudvrmxa', None, '')
     ppi('\r\n', None, '')
 
     if CERT_CHECK:

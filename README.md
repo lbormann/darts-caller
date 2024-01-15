@@ -109,6 +109,7 @@ Since Version 1.6.0 you can deposit multiple sounds for every ([sound-file-key](
 - ambient_playerchange
 - ambient_gameon 
 - ambient_gameshot
+- ambient_setshot [fallback: ambient_gameshot] 
 - ambient_matchon [fallback: ambient_gameon]  
 - ambient_matchshot [fallback: ambient_gameshot]
 - ambient_noscore
@@ -265,7 +266,11 @@ Filters randomly chosen voice-pack by its gender. '0' means no filtering. By def
 
 *`-CCP / --call_current_player`*
 
-If you set this to 1' the application will call playernames. By default this is activated.
+If you set this to '1' the application will call playernames for certain events like "you require", "leg/set start", "leg/set end". By default this is activated.
+
+*`-CCPA / --call_current_player_always`*
+
+If you set this to '1' the application will call playernames on every playerchange (-CCP needs to be activated). By default this is not activated. 
 
 *`-E / --call_every_dart`*
 

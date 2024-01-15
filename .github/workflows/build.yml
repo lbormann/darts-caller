@@ -44,6 +44,19 @@ jobs:
             OUT_FILE_NAME: autodarts-caller-mac
             ASSET_MIME: application/zip
 
+          - os: macos-latest
+            TARGET: macos-arm64
+            CMD_BUILD: |
+              sudo softwareupdate --install-rosetta
+              brew install pyenv
+              pyenv install 3.8.12
+              pyenv global 3.8.12
+              python -m pip install --upgrade pip
+              pip install pyinstaller
+              pyinstaller -F -n autodarts-caller-mac-arm64 -i resources/autodarts-caller.icns --add-data "templates:templates" --add-data "static:static" --collect-all certifi autodarts-caller.py
+            OUT_FILE_NAME: autodarts-caller-mac-arm64
+            ASSET_MIME: application/zip
+
           - os: ubuntu-20.04
             TARGET: ubuntu
             CMD_BUILD: pyinstaller -F -n autodarts-caller -i resources/autodarts-caller.svg --add-data "templates:templates" --add-data "static:static" --collect-all certifi autodarts-caller.py
@@ -55,6 +68,27 @@ jobs:
             CMD_BUILD: pyinstaller -F -n autodarts-caller -i resources/autodarts-caller.ico --add-data "templates;templates" --add-data "static;static" --collect-all certifi autodarts-caller.py
             OUT_FILE_NAME: autodarts-caller.exe
             ASSET_MIME: application/vnd.microsoft.portable-executable
+
+          - os: ubuntu-20.04
+            TARGET: linux-arm64
+            CMD_BUILD: |
+              sudo apt-get update
+              sudo apt-get install -y qemu-user-static
+              docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+              docker run -v $(pwd):/workdir -w /workdir multiarch/ubuntu-debootstrap:arm64-focal /usr/sbin/update-elf-interpreter --output ./dist/autodarts-caller-linux-arm64 autodarts-caller
+            OUT_FILE_NAME: autodarts-caller-linux-arm64
+            ASSET_MIME: application/octet-stream
+
+          - os: ubuntu-20.04
+            TARGET: linux-arm
+            CMD_BUILD: |
+              sudo apt-get update
+              sudo apt-get install -y qemu-user-static
+              docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+              docker run -v $(pwd):/workdir -w /workdir multiarch/ubuntu-debootstrap:armhf-focal /usr/sbin/update-elf-interpreter --output ./dist/autodarts-caller-linux-arm autodarts-caller
+            OUT_FILE_NAME: autodarts-caller-linux-arm
+            ASSET_MIME: application/octet-stream
+
     steps:
     - uses: actions/checkout@v1
 
