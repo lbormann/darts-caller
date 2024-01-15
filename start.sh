@@ -52,6 +52,9 @@ random_caller_gender=
 # -CCP
 call_current_player=
 
+# -CCPA
+call_current_player_always=
+
 # -E
 call_every_dart=
 
@@ -157,6 +160,9 @@ if [ -n "$random_caller_gender" ]; then
 fi
 if [ -n "$call_current_player" ]; then
   args="$args -CCP $call_current_player"
+fi
+if [ -n "$call_current_player_always" ]; then
+  args="$args -CCP $call_current_player_always"
 fi
 if [ -n "$call_every_dart" ]; then
   args="$args -E $call_every_dart"
