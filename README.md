@@ -13,7 +13,7 @@ Autodarts-caller plays back sound-files accordingly to the state of a https://au
 | Bermuda | |
 | Shanghai | |
 | Gotcha | |
-| Around the Clock | |
+| Around the Clock | :heavy_check_mark: |
 | Round the World | |
 | Random Checkout | :heavy_check_mark: |
 | Count Up | |
@@ -86,7 +86,7 @@ Since Version 1.6.0 you can deposit multiple sounds for every ([sound-file-key](
 - set_{x}
 - busted
 - 0-180
-- {playername(s)} (Name of Autodarts-player(s) | bot lvl 1-11)
+- {playername} (-CCP = 1)
 - you_require (-PCC = 1 and -PCCSF = 0)
 - yr_2-yr_170 (-PCC = 1 and -PCCSF = 1)
 
@@ -140,6 +140,11 @@ Since Version 1.6.0 you can deposit multiple sounds for every ([sound-file-key](
 - control_dart_correction_1 [overrides: control, control_dart_correction]
 - control_dart_correction_2 [overrides: control, control_dart_correction]
 - control_dart_correction_3 [overrides: control, control_dart_correction]
+
+**ATC (Around the clock)**
+- atc_target_hit
+- atc_target_missed
+
 
 
 ## RUN IT
