@@ -141,6 +141,10 @@ Since Version 1.6.0 you can deposit multiple sounds for every ([sound-file-key](
 - control_dart_correction_2 [overrides: control, control_dart_correction]
 - control_dart_correction_3 [overrides: control, control_dart_correction]
 
+**LOBBY-CALLING**
+
+- lobbychanged
+
 **ATC (Around the clock)**
 - atc_target_hit
 - atc_target_missed
@@ -424,7 +428,7 @@ Check log:
 ### App has strange behaviour / got an error message
 
 - Enable debug ('-DEB "1"') to display more information about a problem.
-- If you don't know how to fix an error, have a look below.
+- If you don't know how to solve a problem, have a look below.
 
 ### Failed to process voice-pack 'X'
 

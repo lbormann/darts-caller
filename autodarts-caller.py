@@ -670,24 +670,6 @@ def mirror_sounds():
         mirror_files = []
 
 
-def receive_local_board_address():
-    try:
-        global accessToken
-        global boardManagerAddress
-
-        if boardManagerAddress == None:
-            res = requests.get(AUTODART_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + accessToken})
-            board_ip = res.json()['ip']
-            if board_ip != None and board_ip != '':  
-                boardManagerAddress = 'http://' + board_ip
-                ppi('Board-address: ' + boardManagerAddress) 
-            else:
-                boardManagerAddress = None
-                ppi('Board-address: UNKNOWN') 
-            
-    except Exception as e:
-        boardManagerAddress = None
-        ppe('Fetching local-board-address failed', e)
 
 def next_game():
     if play_sound_effect('control_next_game', wait_for_last = False, volume_mult = 1.0) == False:
@@ -826,6 +808,25 @@ def reset_board():
     except Exception as e:
         ppe('Reset board failed', e)
 
+def receive_local_board_address():
+    try:
+        global accessToken
+        global boardManagerAddress
+
+        if boardManagerAddress == None:
+            res = requests.get(AUTODART_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + accessToken})
+            board_ip = res.json()['ip']
+            if board_ip != None and board_ip != '':  
+                boardManagerAddress = 'http://' + board_ip
+                ppi('Board-address: ' + boardManagerAddress) 
+            else:
+                boardManagerAddress = None
+                ppi('Board-address: UNKNOWN') 
+            
+    except Exception as e:
+        boardManagerAddress = None
+        ppe('Fetching local-board-address failed', e)
+
 def calibrate_board():
     if play_sound_effect('control_calibrate', wait_for_last = False, volume_mult = 1.0) == False:
         play_sound_effect('control', wait_for_last = False, volume_mult = 1.0)
@@ -837,6 +838,42 @@ def calibrate_board():
     except Exception as e:
         ppe('Calibrate board failed', e)
 
+
+def poll_lobbies(ws):
+    def process(*args):
+        global currentMatch
+        while currentMatch == None:
+            try:       
+                global accessToken
+                res = requests.get(AUTODART_LOBBIES_URL, headers={'Authorization': 'Bearer ' + accessToken})
+                res = res.json()
+                # ppi(json.dumps(res, indent = 4, sort_keys = True))
+
+                # watchout for a lobby with my board-id
+                for m in res:
+                    for p in m['players']:
+                        if 'boardId' in p and p['boardId'] == AUTODART_USER_BOARD_ID:
+                            ppi('New Lobby: ' + m['id'])
+                            paramsSubscribeLobbyEvents = {
+                                    "channel": "autodarts.lobbies",
+                                    "type": "subscribe",
+                                    "topic": m['id'] + ".state"
+                                }
+                            ws.send(json.dumps(paramsSubscribeLobbyEvents))
+                            paramsSubscribeLobbyEvents = {
+                                    "channel": "autodarts.lobbies",
+                                    "type": "subscribe",
+                                    "topic": m['id'] + ".events"
+                                }
+                            ws.send(json.dumps(paramsSubscribeLobbyEvents))
+                            return
+            except Exception as e:
+                ppe('Lobby-polling failed: ', e)
+            
+            # ppi('Lobby-polling sleeps..')
+            time.sleep(3)
+    t = threading.Thread(target=process)
+    t.start()
 
 def listen_to_match(m, ws):
     global currentMatch
@@ -1896,7 +1933,14 @@ def on_message_autodarts(ws, message):
                 data = m['data']
                 # ppi(json.dumps(data, indent = 4, sort_keys = True))
                 
-                if 'players' in data:
+                if 'event' in data:
+                    if data['event'] == 'start':
+                        pass
+
+                    elif data['event'] == 'finish' or data['event'] == 'delete':
+                        poll_lobbies(ws)
+
+                elif 'players' in data:
                     for p in data['players']:
                         if 'boardId' in p and p['boardId'] == AUTODART_USER_BOARD_ID:
                             play_sound_effect("lobbychanged")
@@ -1904,7 +1948,7 @@ def on_message_autodarts(ws, message):
                             break
             else:
                 ppi('INFO: unexpected ws-message')
-                ppi(json.dumps(m, indent = 4, sort_keys = True))
+                # ppi(json.dumps(m, indent = 4, sort_keys = True))
                 
 
         except Exception as e:
@@ -2014,44 +2058,6 @@ def broadcast(data):
     t.start()
     t.join()
    
-
-def poll_lobbies(ws):
-    def process(*args):
-        global currentMatch
-        while currentMatch == None:
-            try:       
-                global accessToken
-                res = requests.get(AUTODART_LOBBIES_URL, headers={'Authorization': 'Bearer ' + accessToken})
-                res = res.json()
-                ppi(json.dumps(res, indent = 4, sort_keys = True))
-
-                # watchout for a lobby with my board-id
-                # should_break = False
-                for m in res:
-                    for p in m['players']:
-                        if 'boardId' in p and p['boardId'] == AUTODART_USER_BOARD_ID:
-                            # mes = {
-                            #     "event": "start",
-                            #     "id": m['id']
-                            # }
-                            paramsSubscribeLobbyEvents = {
-                                    "channel": "autodarts.lobbies",
-                                    "type": "subscribe",
-                                    "topic": m['id'] + ".state"
-                                }
-                            ws.send(json.dumps(paramsSubscribeLobbyEvents))
-                            return
-                    #         should_break = True
-                    #         break
-                    # if should_break:
-                    #     break
-            except Exception as e:
-                ppe('Lobby-polling failed: ', e)
-            finally:
-                time.sleep(3)
-    t = threading.Thread(target=process)
-    t.start()
-
 
 def mute_audio_background(vol):
     global background_audios
