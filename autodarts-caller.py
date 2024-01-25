@@ -234,6 +234,32 @@ def ppe(message, error_object):
     if DEBUG:
         logger.exception("\r\n" + str(error_object))
 
+def check_paths(main_directory, audio_media_path, audio_media_path_shared):
+    errors = None
+
+    try:
+        main_directory = os.path.normpath(os.path.dirname(os.path.realpath(main_directory)))
+        audio_media_path = os.path.normpath(audio_media_path)
+        audio_media_path_shared = os.path.normpath(audio_media_path_shared)
+
+        if os.path.relpath(audio_media_path, main_directory)[:2] != '..':
+            errors = 'AUDIO_MEDIA_PATH resides inside MAIN-DIRECTORY! It is not allowed!'
+
+        if audio_media_path_shared != '':
+            if os.path.relpath(audio_media_path_shared, main_directory)[:2] != '..':
+                errors = 'AUDIO_MEDIA_PATH_SHARED resides inside MAIN-DIRECTORY! It is not allowed!'
+            elif os.path.relpath(audio_media_path_shared, audio_media_path)[:2] != '..':
+                errors = 'AUDIO_MEDIA_PATH_SHARED resides inside AUDIO_MEDIA_PATH! It is not allowed!'
+            elif os.path.relpath(audio_media_path, audio_media_path_shared)[:2] != '..':
+                errors = 'AUDIO_MEDIA_PATH resides inside AUDIO_MEDIA_SHARED! It is not allowed!'
+            elif audio_media_path == audio_media_path_shared:
+                errors = 'AUDIO_MEDIA_PATH is equal to AUDIO_MEDIA_SHARED! It is not allowed!'
+
+    except Exception as e:
+        errors = f'Path validation failed: {e}'
+
+    return errors
+
 def get_local_ip_address(target='8.8.8.8'):
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -2250,22 +2276,6 @@ if __name__ == "__main__":
         masked_args = mask(args, data_to_mask)
         ppi(json.dumps(masked_args, indent=4))
     
-    args_post_check = None
-    try:
-        if os.path.commonpath([AUDIO_MEDIA_PATH, main_directory]) == main_directory:
-            args_post_check = 'AUDIO_MEDIA_PATH resides inside MAIN-DIRECTORY! It is not allowed!'
-        if AUDIO_MEDIA_PATH_SHARED != DEFAULT_EMPTY_PATH:
-            if os.path.commonpath([AUDIO_MEDIA_PATH_SHARED, main_directory]) == main_directory:
-                args_post_check = 'AUDIO_MEDIA_PATH_SHARED resides inside MAIN-DIRECTORY! It is not allowed!'
-            elif os.path.commonpath([AUDIO_MEDIA_PATH_SHARED, AUDIO_MEDIA_PATH]) == AUDIO_MEDIA_PATH:
-                args_post_check = 'AUDIO_MEDIA_PATH_SHARED resides inside AUDIO_MEDIA_PATH! It is not allowed!'
-            elif os.path.commonpath([AUDIO_MEDIA_PATH, AUDIO_MEDIA_PATH_SHARED]) == AUDIO_MEDIA_PATH_SHARED:
-                args_post_check = 'AUDIO_MEDIA_PATH resides inside AUDIO_MEDIA_SHARED! It is not allowed!'
-            elif AUDIO_MEDIA_PATH == AUDIO_MEDIA_PATH_SHARED:
-                args_post_check = 'AUDIO_MEDIA_PATH is equal to AUDIO_MEDIA_SHARED! It is not allowed!'
-    except:
-        pass
-    
     
     global server
     server = None
@@ -2327,20 +2337,21 @@ if __name__ == "__main__":
     if CERT_CHECK:
         ssl._create_default_https_context = ssl.create_default_context
     else:
-        ppi("WARNING: SSL-cert-verification disabled!")
         ssl._create_default_https_context = ssl._create_unverified_context
         os.environ['PYTHONHTTPSVERIFY'] = '0'
+        ppi("WARNING: SSL-cert-verification disabled!")
 
     if WEB == 0 or WEB == 2:
         try:
             mixer.pre_init(MIXER_FREQUENCY, MIXER_SIZE, MIXER_CHANNELS, MIXER_BUFFERSIZE)
             mixer.init()
         except Exception as e:
-            ppe("Setup mixer failed! Make sure the target device is connected and configured as default. A device connected by HDMI can cause problems; use standard audio-jack instead.", e)
+            ppe("Failed to initialize audio device! Make sure the target device is connected and configured as os default. A device connected by HDMI can cause problems; use standard audio-jack instead.", e)
             sys.exit()  
 
-    if args_post_check is not None: 
-        ppi('Please check your arguments: ' + args_post_check)
+    path_status = check_paths(__file__, AUDIO_MEDIA_PATH, AUDIO_MEDIA_PATH_SHARED)
+    if path_status is not None: 
+        ppi('Please check your arguments: ' + path_status)
         sys.exit()  
     
 

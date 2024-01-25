@@ -1,0 +1,10 @@
+- fix audio output when is hdmi
+- improve/ stabalize voice-pack downloads
+- engage trojan warning on windows
+- add support for more game variants
+- stop calls for cricket when field is already closed
+- fix web-caller stop working after one leg if a speciic caller is set
+- imporove web-caller compatibility for ios, especially IPhone15 Pro (iOS 17.2.1)
+- improve caller (e.g. randomize speaker speed, pitch, volume etc.)
+- add license
+- clean code (use classes like AutodartsCaller, AutodartsConnection), refactor to best-practice
