@@ -94,7 +94,7 @@ AUTODART_BOARDS_URL = 'https://api.autodarts.io/bs/v0/boards/'
 AUTODART_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe'
 
 SUPPORTED_SOUND_FORMATS = ['.mp3', '.wav']
-SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket', 'Random Checkout']
+SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket', 'Random Checkout', 'ATC']
 SUPPORTED_CRICKET_FIELDS = [15, 16, 17, 18, 19, 20, 25]
 BOGEY_NUMBERS = [169, 168, 166, 165, 163, 162, 159]
 TEMPLATE_FILE_ENCODING = 'utf-8-sig'
@@ -869,7 +869,9 @@ def poll_lobbies(ws):
     def process(*args):
         global currentMatch
         while currentMatch == None:
-            try:       
+            try:   
+                receive_token_autodarts()
+
                 global accessToken
                 res = requests.get(AUTODART_LOBBIES_URL, headers={'Authorization': 'Bearer ' + accessToken})
                 res = res.json()
@@ -879,7 +881,7 @@ def poll_lobbies(ws):
                 for m in res:
                     for p in m['players']:
                         if 'boardId' in p and p['boardId'] == AUTODART_USER_BOARD_ID:
-                            ppi('New Lobby: ' + m['id'])
+                            ppi('Listen to lobby: ' + m['id'])
                             paramsSubscribeLobbyEvents = {
                                     "channel": "autodarts.lobbies",
                                     "type": "subscribe",
@@ -896,8 +898,8 @@ def poll_lobbies(ws):
             except Exception as e:
                 ppe('Lobby-polling failed: ', e)
             
-            # ppi('Lobby-polling sleeps..')
-            time.sleep(3)
+            ppi('Waiting for lobby or match..')
+            time.sleep(5)
     t = threading.Thread(target=process)
     t.start()
 
@@ -1056,6 +1058,7 @@ def process_match_x01(m):
     currentPlayer = m['players'][currentPlayerIndex]
     currentPlayerName = str(currentPlayer['name']).lower()
     remainingPlayerScore = m['gameScores'][currentPlayerIndex]
+    numberOfPlayers = len(m['players'])
 
     turns = m['turns'][0]
     points = str(turns['points'])
@@ -1140,7 +1143,7 @@ def process_match_x01(m):
                     
                     ppi('Checkout possible: ' + remaining)
 
-            if pcc_success == False and CALL_CURRENT_PLAYER and CALL_CURRENT_PLAYER_ALWAYS:
+            if pcc_success == False and CALL_CURRENT_PLAYER and CALL_CURRENT_PLAYER_ALWAYS and numberOfPlayers > 1:
                 play_sound_effect(currentPlayerName)
 
             # Player-change
@@ -1709,6 +1712,8 @@ def process_match_cricket(m):
 
 def process_match_atc(m):
     global isGameFinished
+
+    variant = m['variant']
     needHits = m['settings']['hits']
     currentPlayerIndex = m['player']
     currentPlayer = m['players'][currentPlayerIndex]
@@ -1747,62 +1752,50 @@ def process_match_atc(m):
             is_correct_bed = True
 
         if targetHit == currentTarget['number'] and is_correct_bed:
-            # delete if atc_target_hit is added
-            play_sound_effect(str(targetHit))
-            play_sound_effect('atc_target_hit')
+            if play_sound_effect('atc_target_hit') == False:
+                play_sound_effect(str(targetHit))
         else:
-            play_sound_effect('atc_target_missed')
+            if play_sound_effect('atc_target_missed') == False:
+                play_sound_effect(str(targetHit))
 
     if matchshot:
         isGameFinished = True
-        play_sound_effect('matchshot')
+        matchWon = {
+            "event": "match-won",
+            "player": currentPlayerName,
+            "game": {
+                "mode": variant,
+                "dartsThrownValue": "0"
+            } 
+        }
+        broadcast(matchWon)
+
+        if play_sound_effect('matchshot') == False:
+            play_sound_effect('gameshot')
+
+        if CALL_CURRENT_PLAYER:
+            play_sound_effect(currentPlayerName, True)
+
+        if play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
+            play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+
+        if RANDOM_CALLER_EACH_LEG:
+            setup_caller()
+        ppi('Gameshot and match')
 
     # only call next if more hits then 1
-    if currentTarget['hits'] == needHits and turns['throws'] != [] and (needHits > 1 or isRandomOrder):
-        play_sound_effect('next', True)
-        # only call next target if random order
+    elif currentTarget['hits'] == needHits and turns['throws'] != [] and (needHits > 1 or isRandomOrder):
+        play_sound_effect('atc_target_next', True)
+        # only call next target number if random order
         if isRandomOrder:
             play_sound_effect(str(m['state']['targets'][currentPlayerIndex][int(currentTargetsPlayer)]['number']), True)
 
     if turns['throws'] == []:
         play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
-        # only call require if multiple players (maybe add argument for this)
-        if numberOfPlayers > 1:
-            if CALL_CURRENT_PLAYER and CALL_CURRENT_PLAYER_ALWAYS:
-                play_sound_effect(currentPlayerName, True)
-            play_sound_effect('you_require', True)
-            play_sound_effect(str(currentTarget['number']), True)
-
-
-
-# def process_match_atc(m):
-#     global isGameFinished
-
-#     currentPlayerIndex = m['player']
-#     # currentPlayer = m['players'][currentPlayerIndex]
-#     # currentPlayerName = str(currentPlayer['name']).lower()
-
-#     turns = m['turns'][0]
-#     matchshot = (m['winner'] != -1 and isGameFinished == False)
-
-#     currentTarget = m['state']['currentTargets'][currentPlayerIndex]
-
-
-#     if turns is not None and turns['throws']:
-#         lastThrow = turns['throws'][-1]
-#         targetHit = lastThrow['segment']['number']
-
-#         if targetHit == currentTarget:
-#             play_sound_effect('atc_target_hit')
-#         else:
-#             play_sound_effect('atc_target_missed')
-
-#     if matchshot:
-#         isGameFinished = True
-#         play_sound_effect('matchshot')
-
-#     if turns['throws'] == []:
-#         play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+        if CALL_CURRENT_PLAYER and CALL_CURRENT_PLAYER_ALWAYS and numberOfPlayers > 1:
+            play_sound_effect(currentPlayerName, True)
+    
+    mirror_sounds()
 
 def process_common(m):
     broadcast(m)
@@ -1868,10 +1861,7 @@ def on_open_autodarts(ws):
         ppe('Fetching matches failed', e)
 
     
-
     try:
-        ppi('Receiving live information from ' + AUTODART_URL)
-
         # EXAMPLE:
         # const unsub = MessageBroker.getInstance().subscribe<{ id: string; event: 'start' | 'finish' | 'delete' }>(
         # 'autodarts.boards',
@@ -1892,27 +1882,13 @@ def on_open_autodarts(ws):
         }
         ws.send(json.dumps(paramsSubscribeMatchesEvents))
 
-        # paramsSubscribeMatchesEvents = {
-        #     "channel": "autodarts.boards",
-        #     "type": "subscribe",
-        #     "topic": AUTODART_USER_BOARD_ID + ".lobbies"
-        # }
-        # ws.send(json.dumps(paramsSubscribeMatchesEvents))
+        ppi('Receiving live information for board-id: ' + AUTODART_USER_BOARD_ID)
+        poll_lobbies(ws)
 
     except Exception as e:
         ppe('WS-Open-boards failed: ', e)
 
-    poll_lobbies(ws)
-    # DEPRECATED
-    # try:
-    #     paramsSubscribeLobbiesEvents = {
-    #         "channel": "autodarts.lobbies",
-    #         "type": "subscribe",
-    #         "topic": "*"
-    #     }
-    #     ws.send(json.dumps(paramsSubscribeLobbiesEvents))
-    # except Exception as e:
-    #     ppe('WS-Open-lobbies failed: ', e)
+    
 
 def on_message_autodarts(ws, message):
     def process(*args):

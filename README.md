@@ -75,7 +75,7 @@ Since Version 1.6.0 you can deposit multiple sounds for every ([sound-file-key](
 
 ***EVERY SOUND-FILE NEEDS TO BE .mp3 or .wav***
 
-**MAIN-CALLING:**
+**MAIN:**
 
 - gameon
 - matchon
@@ -127,7 +127,7 @@ Since Version 1.6.0 you can deposit multiple sounds for every ([sound-file-key](
 - ambient_group_normal
 - ambient_checkout_call_limit
 
-**CONTROL-CALLING**
+**CONTROL**
 
 - control
 - control_next [overrides: control]
@@ -141,13 +141,14 @@ Since Version 1.6.0 you can deposit multiple sounds for every ([sound-file-key](
 - control_dart_correction_2 [overrides: control, control_dart_correction]
 - control_dart_correction_3 [overrides: control, control_dart_correction]
 
-**LOBBY-CALLING**
+**LOBBY**
 
 - lobbychanged
 
 **ATC (Around the clock)**
 - atc_target_hit
 - atc_target_missed
+- atc_target_next
 
 
 
@@ -243,7 +244,12 @@ You can find your Board-ID in Board-Manager.
 
 *`-M / --media_path`*
 
-Setup an absolute path where sounds are located on drive. Make sure the given path doesn't reside inside main-directory (autodarts-caller).
+Setup an absolute path (do NOT use '.','..','~' or similar) where sounds are located on drive (Just create a new empty folder for that).
+Examples: 
+(Windows): C:\Users\Luca\Desktop\Programme\autodarts\autodarts-caller-speaker
+(Linux): /home/luca/autodarts/autodarts-caller-speaker
+By-the-way: this folder will be targeted for voice-pack-downloads/installs (-DL).
+Make sure the given path doesn't reside inside main-directory (autodarts-caller).
 
 *`-MS / --media_path_shared`*
 
@@ -318,7 +324,7 @@ If you set this to '1' ambient_*-sounds will wait until main-calls are finished.
 
 *`-DL / --downloads`*
 
-If you set this to '1' the application will download available voice-packs that are not already installed. By default this is activated.
+If you set this to '1' the application will download available voice-packs that are not already installed. Installation path is the value of -M. By default this is activated.
 
 *`-DLLA / --downloads_language`*
 
@@ -334,7 +340,7 @@ You can not hear any calls as your music is way too loud? Try to set this to '0.
 
 *`-WEB / --web_caller`*
 
-If you set this to a '1' or '2' the application will host a web-endpoint to mirror all call-events. A value '1' will play sounds only on the web-endpoint. Value '2' will play sounds on the application and on the web-endpoint. To use web-calling visit http://{machine-ip-address}:{web-caller-port} in browser.
+If you set this to a '1' or '2' the application will host a web-endpoint to mirror all call-events. A value '1' will play sounds only on the web-endpoint. Value '2' will play sounds on the application and on the web-endpoint. To use web-calling visit http://{machine-ip-address}:{web-caller-port} in browser. NOTE: iphone probably does not work (WIP).
 
 *`-WEBSB / --web_caller_scoreboard`*
 
@@ -494,11 +500,6 @@ Try https://www.audacity.de/ to modify your sound-files.
 2) Upload the ZIP archive to a file-hoster: Make sure you choose a filehoster that supports direct-links and UNLIMITED file-persistence without restrictions (GoogleDrive, OneDrive, ...). !!IMPORTANT!! Before you upload, check if you are eligible to distribute the sound-files - Are you the owner? Are you allowed to share it in public?
 
 3) Sent me a your link by PM on Discord - Wait for a new release :) 
-
-
-## BUGS
-
-It may be buggy. I've just coded it for fast fun with https://autodarts.io. You can give me feedback in Discord > wusaaa
 
 
 ## LAST WORDS

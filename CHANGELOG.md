@@ -2,13 +2,10 @@
 
 - add CHANGELOG
 - add BACKLOG
-- fix possible invalid path configuration on linux/macos
-- add lobbychanged sound-file-key
-- add caching mechnismn for web-caller by using indexedDB
+- fix possible invalid path configuration for linux/macos
+- reintroduce "lobbychanged" sound-file-key
+- introduce support for game-variant "ATC" (Around-the-clock); thanks to @takki2602 
 - improve -M / -DL description
-- add game-variant ATC (Around-the-clock)
-- fix deletion of blacklist-file on update
-
 
 ## 0.0.0
 

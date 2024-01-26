@@ -1,10 +1,13 @@
+- CALL_CURRENT_PLAYER_ALWAYS only with more than one player
+- add caching mechnismn for web-caller by using indexedDB
+- fix deletion of blacklist-file on ADD-Update
 - fix audio output when is hdmi
-- improve/ stabalize voice-pack downloads
-- engage trojan warning on windows
+- change file hoster for more stable downloads
+- adjust cricket-processing with x01-processing
 - add support for more game variants
 - stop calls for cricket when field is already closed
-- fix web-caller stop working after one leg if a speciic caller is set
-- imporove web-caller compatibility for ios, especially IPhone15 Pro (iOS 17.2.1)
+- fix web-caller stop working after one leg if a specific caller is set
+- improve web-caller compatibility for ios, especially IPhone15 Pro (iOS 17.2.1)
 - improve caller (e.g. randomize speaker speed, pitch, volume etc.)
 - add license
 - clean code (use classes like AutodartsCaller, AutodartsConnection), refactor to best-practice
