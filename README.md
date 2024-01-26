@@ -244,10 +244,11 @@ You can find your Board-ID in Board-Manager.
 
 *`-M / --media_path`*
 
-Setup an absolute path (do NOT use '.','..','~' or similar) where sounds are located on drive (Just create a new empty folder for that).
+Setup an absolute path where sounds should be/are located (Just create a new empty folder for that).
 Examples: 
-(Windows): C:\Users\Luca\Desktop\Programme\autodarts\autodarts-caller-speaker
-(Linux): /home/luca/autodarts/autodarts-caller-speaker
+- (Windows): C:\Users\Luca\Desktop\Programme\autodarts\autodarts-caller-speaker
+- (Linux): /home/luca/autodarts/autodarts-caller-speaker
+
 By-the-way: this folder will be targeted for voice-pack-downloads/installs (-DL).
 Make sure the given path doesn't reside inside main-directory (autodarts-caller).
 
