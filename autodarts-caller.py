@@ -46,7 +46,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.6.2'
+VERSION = '2.6.3'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -88,12 +88,13 @@ AUTODART_URL = 'https://autodarts.io'
 AUTODART_AUTH_URL = 'https://login.autodarts.io/'
 AUTODART_CLIENT_ID = 'autodarts-app'
 AUTODART_REALM_NAME = 'autodarts'
+AUTODART_LOBBIES_URL = 'https://api.autodarts.io/gs/v0/lobbies/'
 AUTODART_MATCHES_URL = 'https://api.autodarts.io/gs/v0/matches/'
 AUTODART_BOARDS_URL = 'https://api.autodarts.io/bs/v0/boards/'
 AUTODART_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe'
 
 SUPPORTED_SOUND_FORMATS = ['.mp3', '.wav']
-SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket', 'Random Checkout']
+SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket', 'Random Checkout', 'ATC']
 SUPPORTED_CRICKET_FIELDS = [15, 16, 17, 18, 19, 20, 25]
 BOGEY_NUMBERS = [169, 168, 166, 165, 163, 162, 159]
 TEMPLATE_FILE_ENCODING = 'utf-8-sig'
@@ -232,6 +233,32 @@ def ppe(message, error_object):
     ppi(message)
     if DEBUG:
         logger.exception("\r\n" + str(error_object))
+
+def check_paths(main_directory, audio_media_path, audio_media_path_shared):
+    errors = None
+
+    try:
+        main_directory = os.path.normpath(os.path.dirname(os.path.realpath(main_directory)))
+        audio_media_path = os.path.normpath(audio_media_path)
+        audio_media_path_shared = os.path.normpath(audio_media_path_shared)
+
+        if os.path.relpath(audio_media_path, main_directory)[:2] != '..':
+            errors = 'AUDIO_MEDIA_PATH resides inside MAIN-DIRECTORY! It is not allowed!'
+
+        if audio_media_path_shared != '':
+            if os.path.relpath(audio_media_path_shared, main_directory)[:2] != '..':
+                errors = 'AUDIO_MEDIA_PATH_SHARED resides inside MAIN-DIRECTORY! It is not allowed!'
+            elif os.path.relpath(audio_media_path_shared, audio_media_path)[:2] != '..':
+                errors = 'AUDIO_MEDIA_PATH_SHARED resides inside AUDIO_MEDIA_PATH! It is not allowed!'
+            elif os.path.relpath(audio_media_path, audio_media_path_shared)[:2] != '..':
+                errors = 'AUDIO_MEDIA_PATH resides inside AUDIO_MEDIA_SHARED! It is not allowed!'
+            elif audio_media_path == audio_media_path_shared:
+                errors = 'AUDIO_MEDIA_PATH is equal to AUDIO_MEDIA_SHARED! It is not allowed!'
+
+    except Exception as e:
+        errors = f'Path validation failed: {e}'
+
+    return errors
 
 def get_local_ip_address(target='8.8.8.8'):
     try:
@@ -669,24 +696,6 @@ def mirror_sounds():
         mirror_files = []
 
 
-def receive_local_board_address():
-    try:
-        global accessToken
-        global boardManagerAddress
-
-        if boardManagerAddress == None:
-            res = requests.get(AUTODART_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + accessToken})
-            board_ip = res.json()['ip']
-            if board_ip != None and board_ip != '':  
-                boardManagerAddress = 'http://' + board_ip
-                ppi('Board-address: ' + boardManagerAddress) 
-            else:
-                boardManagerAddress = None
-                ppi('Board-address: UNKNOWN') 
-            
-    except Exception as e:
-        boardManagerAddress = None
-        ppe('Fetching local-board-address failed', e)
 
 def next_game():
     if play_sound_effect('control_next_game', wait_for_last = False, volume_mult = 1.0) == False:
@@ -825,6 +834,25 @@ def reset_board():
     except Exception as e:
         ppe('Reset board failed', e)
 
+def receive_local_board_address():
+    try:
+        global accessToken
+        global boardManagerAddress
+
+        if boardManagerAddress == None:
+            res = requests.get(AUTODART_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + accessToken})
+            board_ip = res.json()['ip']
+            if board_ip != None and board_ip != '':  
+                boardManagerAddress = 'http://' + board_ip
+                ppi('Board-address: ' + boardManagerAddress) 
+            else:
+                boardManagerAddress = None
+                ppi('Board-address: UNKNOWN') 
+            
+    except Exception as e:
+        boardManagerAddress = None
+        ppe('Fetching local-board-address failed', e)
+
 def calibrate_board():
     if play_sound_effect('control_calibrate', wait_for_last = False, volume_mult = 1.0) == False:
         play_sound_effect('control', wait_for_last = False, volume_mult = 1.0)
@@ -837,7 +865,45 @@ def calibrate_board():
         ppe('Calibrate board failed', e)
 
 
-def listen_to_newest_match(m, ws):
+def poll_lobbies(ws):
+    def process(*args):
+        global currentMatch
+        while currentMatch == None:
+            try:   
+                receive_token_autodarts()
+
+                global accessToken
+                res = requests.get(AUTODART_LOBBIES_URL, headers={'Authorization': 'Bearer ' + accessToken})
+                res = res.json()
+                # ppi(json.dumps(res, indent = 4, sort_keys = True))
+
+                # watchout for a lobby with my board-id
+                for m in res:
+                    for p in m['players']:
+                        if 'boardId' in p and p['boardId'] == AUTODART_USER_BOARD_ID:
+                            ppi('Listen to lobby: ' + m['id'])
+                            paramsSubscribeLobbyEvents = {
+                                    "channel": "autodarts.lobbies",
+                                    "type": "subscribe",
+                                    "topic": m['id'] + ".state"
+                                }
+                            ws.send(json.dumps(paramsSubscribeLobbyEvents))
+                            paramsSubscribeLobbyEvents = {
+                                    "channel": "autodarts.lobbies",
+                                    "type": "subscribe",
+                                    "topic": m['id'] + ".events"
+                                }
+                            ws.send(json.dumps(paramsSubscribeLobbyEvents))
+                            return
+            except Exception as e:
+                ppe('Lobby-polling failed: ', e)
+            
+            ppi('Waiting for lobby or match..')
+            time.sleep(5)
+    t = threading.Thread(target=process)
+    t.start()
+
+def listen_to_match(m, ws):
     global currentMatch
 
     # EXAMPLE
@@ -874,6 +940,9 @@ def listen_to_newest_match(m, ws):
                 currentPlayer = m['players'][0]
                 currentPlayerName = str(currentPlayer['name']).lower()
 
+            if 'variant' not in m:
+                return
+            
             mode = m['variant']
 
             if mode == 'X01':
@@ -936,6 +1005,7 @@ def listen_to_newest_match(m, ws):
         ws.send(json.dumps(paramsSubscribeMatchesEvents))
         
     elif m['event'] == 'finish' or m['event'] == 'delete':
+        currentMatch = None
         ppi('Stop listening to match: ' + m['id'])
 
         paramsUnsubscribeMatchEvents = {
@@ -948,6 +1018,8 @@ def listen_to_newest_match(m, ws):
         if m['event'] == 'delete':
             play_sound_effect('matchcancel')
             mirror_sounds()
+
+        poll_lobbies(ws)
 
 def reset_checkouts_counter():
     global checkoutsCounter
@@ -986,6 +1058,7 @@ def process_match_x01(m):
     currentPlayer = m['players'][currentPlayerIndex]
     currentPlayerName = str(currentPlayer['name']).lower()
     remainingPlayerScore = m['gameScores'][currentPlayerIndex]
+    numberOfPlayers = len(m['players'])
 
     turns = m['turns'][0]
     points = str(turns['points'])
@@ -1070,7 +1143,7 @@ def process_match_x01(m):
                     
                     ppi('Checkout possible: ' + remaining)
 
-            if pcc_success == False and CALL_CURRENT_PLAYER and CALL_CURRENT_PLAYER_ALWAYS:
+            if pcc_success == False and CALL_CURRENT_PLAYER and CALL_CURRENT_PLAYER_ALWAYS and numberOfPlayers > 1:
                 play_sound_effect(currentPlayerName)
 
             # Player-change
@@ -1637,34 +1710,92 @@ def process_match_cricket(m):
     if isGameFin == True:
         isGameFinished = True
 
-# def process_match_atc(m):
-#     global isGameFinished
+def process_match_atc(m):
+    global isGameFinished
 
-#     currentPlayerIndex = m['player']
-#     # currentPlayer = m['players'][currentPlayerIndex]
-#     # currentPlayerName = str(currentPlayer['name']).lower()
+    variant = m['variant']
+    needHits = m['settings']['hits']
+    currentPlayerIndex = m['player']
+    currentPlayer = m['players'][currentPlayerIndex]
+    currentPlayerName = str(currentPlayer['name']).lower()
+    numberOfPlayers = len(m['players'])
+    isRandomOrder = m['settings']['order'] == 'Random-Bull'
 
-#     turns = m['turns'][0]
-#     matchshot = (m['winner'] != -1 and isGameFinished == False)
+    turns = m['turns'][0]
+    matchshot = (m['winner'] != -1 and isGameFinished == False)
 
-#     currentTarget = m['state']['currentTargets'][currentPlayerIndex]
+    currentTargetsPlayer = m['state']['currentTargets'][currentPlayerIndex]
+    currentTarget = m['state']['targets'][currentPlayerIndex][int(currentTargetsPlayer)]
 
+    # weird behavior by the api i guess?
+    if currentTarget['count'] == 0 and int(currentTargetsPlayer) > 0 and turns['throws'] != []:
+        currentTarget = m['state']['targets'][currentPlayerIndex][int(currentTargetsPlayer) -1]
 
-#     if turns is not None and turns['throws']:
-#         lastThrow = turns['throws'][-1]
-#         targetHit = lastThrow['segment']['number']
+    if turns is not None and turns['throws']:
+        lastThrow = turns['throws'][-1]
+        targetHit = lastThrow['segment']['number']
 
-#         if targetHit == currentTarget:
-#             play_sound_effect('atc_target_hit')
-#         else:
-#             play_sound_effect('atc_target_missed')
+        hit = lastThrow['segment']['bed']
+        target = currentTarget['bed']
 
-#     if matchshot:
-#         isGameFinished = True
-#         play_sound_effect('matchshot')
+        # ppi('hit: ' + hit + ' target: ' + target)
+        is_correct_bed = False
+        if hit != 'Outside' and target == 'Full':
+            is_correct_bed = True
+        elif hit == 'SingleInner' and (target == 'Inner Single' or target == 'Single'):
+            is_correct_bed = True
+        elif hit == 'SingleOuter' and (target == 'Outer Single' or target == 'Single'):
+            is_correct_bed = True
+        elif hit == 'Double' and target == 'Double':
+            is_correct_bed = True
+        elif hit == 'Triple' and target == 'Triple':
+            is_correct_bed = True
 
-#     if turns['throws'] == []:
-#         play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+        if targetHit == currentTarget['number'] and is_correct_bed:
+            if play_sound_effect('atc_target_hit') == False:
+                play_sound_effect(str(targetHit))
+        else:
+            if play_sound_effect('atc_target_missed') == False:
+                play_sound_effect(str(targetHit))
+
+    if matchshot:
+        isGameFinished = True
+        matchWon = {
+            "event": "match-won",
+            "player": currentPlayerName,
+            "game": {
+                "mode": variant,
+                "dartsThrownValue": "0"
+            } 
+        }
+        broadcast(matchWon)
+
+        if play_sound_effect('matchshot') == False:
+            play_sound_effect('gameshot')
+
+        if CALL_CURRENT_PLAYER:
+            play_sound_effect(currentPlayerName, True)
+
+        if play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
+            play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+
+        if RANDOM_CALLER_EACH_LEG:
+            setup_caller()
+        ppi('Gameshot and match')
+
+    # only call next if more hits then 1
+    elif currentTarget['hits'] == needHits and turns['throws'] != [] and (needHits > 1 or isRandomOrder):
+        play_sound_effect('atc_target_next', True)
+        # only call next target number if random order
+        if isRandomOrder:
+            play_sound_effect(str(m['state']['targets'][currentPlayerIndex][int(currentTargetsPlayer)]['number']), True)
+
+    if turns['throws'] == []:
+        play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+        if CALL_CURRENT_PLAYER and CALL_CURRENT_PLAYER_ALWAYS and numberOfPlayers > 1:
+            play_sound_effect(currentPlayerName, True)
+    
+    mirror_sounds()
 
 def process_common(m):
     broadcast(m)
@@ -1720,7 +1851,7 @@ def on_open_autodarts(ws):
                         "event": "start",
                         "id": m['id']
                     }
-                    listen_to_newest_match(mes, ws)
+                    listen_to_match(mes, ws)
                     should_break = True
                     break
             if should_break:
@@ -1730,10 +1861,7 @@ def on_open_autodarts(ws):
         ppe('Fetching matches failed', e)
 
     
-
     try:
-        ppi('Receiving live information from ' + AUTODART_URL)
-
         # EXAMPLE:
         # const unsub = MessageBroker.getInstance().subscribe<{ id: string; event: 'start' | 'finish' | 'delete' }>(
         # 'autodarts.boards',
@@ -1754,19 +1882,13 @@ def on_open_autodarts(ws):
         }
         ws.send(json.dumps(paramsSubscribeMatchesEvents))
 
+        ppi('Receiving live information for board-id: ' + AUTODART_USER_BOARD_ID)
+        poll_lobbies(ws)
+
     except Exception as e:
         ppe('WS-Open-boards failed: ', e)
 
-    # DEPRECATED
-    # try:
-    #     paramsSubscribeLobbiesEvents = {
-    #         "channel": "autodarts.lobbies",
-    #         "type": "subscribe",
-    #         "topic": "*.state"
-    #     }
-    #     ws.send(json.dumps(paramsSubscribeLobbiesEvents))
-    # except Exception as e:
-    #     ppe('WS-Open-lobbies failed: ', e)
+    
 
 def on_message_autodarts(ws, message):
     def process(*args):
@@ -1800,25 +1922,35 @@ def on_message_autodarts(ws, message):
                     elif variant == 'Cricket':
                         process_match_cricket(data)
                     
-                    # elif variant == 'ATC':
-                    #     process_match_atc(data)
+                    elif variant == 'ATC':
+                        process_match_atc(data)
 
             elif m['channel'] == 'autodarts.boards':
                 data = m['data']
                 # ppi(json.dumps(data, indent = 4, sort_keys = True))
 
-                listen_to_newest_match(data, ws)
+                listen_to_match(data, ws)
             
             elif m['channel'] == 'autodarts.lobbies':
                 data = m['data']
                 # ppi(json.dumps(data, indent = 4, sort_keys = True))
                 
-                if 'players' in data:
+                if 'event' in data:
+                    if data['event'] == 'start':
+                        pass
+
+                    elif data['event'] == 'finish' or data['event'] == 'delete':
+                        poll_lobbies(ws)
+
+                elif 'players' in data:
                     for p in data['players']:
                         if 'boardId' in p and p['boardId'] == AUTODART_USER_BOARD_ID:
                             play_sound_effect("lobbychanged")
                             mirror_sounds()
                             break
+            else:
+                ppi('INFO: unexpected ws-message')
+                # ppi(json.dumps(m, indent = 4, sort_keys = True))
                 
 
         except Exception as e:
@@ -1928,7 +2060,6 @@ def broadcast(data):
     t.start()
     t.join()
    
-
 
 def mute_audio_background(vol):
     global background_audios
@@ -2121,22 +2252,6 @@ if __name__ == "__main__":
         masked_args = mask(args, data_to_mask)
         ppi(json.dumps(masked_args, indent=4))
     
-    args_post_check = None
-    try:
-        if os.path.commonpath([AUDIO_MEDIA_PATH, main_directory]) == main_directory:
-            args_post_check = 'AUDIO_MEDIA_PATH resides inside MAIN-DIRECTORY! It is not allowed!'
-        if AUDIO_MEDIA_PATH_SHARED != DEFAULT_EMPTY_PATH:
-            if os.path.commonpath([AUDIO_MEDIA_PATH_SHARED, main_directory]) == main_directory:
-                args_post_check = 'AUDIO_MEDIA_PATH_SHARED resides inside MAIN-DIRECTORY! It is not allowed!'
-            elif os.path.commonpath([AUDIO_MEDIA_PATH_SHARED, AUDIO_MEDIA_PATH]) == AUDIO_MEDIA_PATH:
-                args_post_check = 'AUDIO_MEDIA_PATH_SHARED resides inside AUDIO_MEDIA_PATH! It is not allowed!'
-            elif os.path.commonpath([AUDIO_MEDIA_PATH, AUDIO_MEDIA_PATH_SHARED]) == AUDIO_MEDIA_PATH_SHARED:
-                args_post_check = 'AUDIO_MEDIA_PATH resides inside AUDIO_MEDIA_SHARED! It is not allowed!'
-            elif AUDIO_MEDIA_PATH == AUDIO_MEDIA_PATH_SHARED:
-                args_post_check = 'AUDIO_MEDIA_PATH is equal to AUDIO_MEDIA_SHARED! It is not allowed!'
-    except:
-        pass
-    
     
     global server
     server = None
@@ -2198,20 +2313,21 @@ if __name__ == "__main__":
     if CERT_CHECK:
         ssl._create_default_https_context = ssl.create_default_context
     else:
-        ppi("WARNING: SSL-cert-verification disabled!")
         ssl._create_default_https_context = ssl._create_unverified_context
         os.environ['PYTHONHTTPSVERIFY'] = '0'
+        ppi("WARNING: SSL-cert-verification disabled!")
 
     if WEB == 0 or WEB == 2:
         try:
             mixer.pre_init(MIXER_FREQUENCY, MIXER_SIZE, MIXER_CHANNELS, MIXER_BUFFERSIZE)
             mixer.init()
         except Exception as e:
-            ppe("Setup mixer failed!", e)
+            ppe("Failed to initialize audio device! Make sure the target device is connected and configured as os default. A device connected by HDMI can cause problems; use standard audio-jack instead.", e)
             sys.exit()  
 
-    if args_post_check is not None: 
-        ppi('Please check your arguments: ' + args_post_check)
+    path_status = check_paths(__file__, AUDIO_MEDIA_PATH, AUDIO_MEDIA_PATH_SHARED)
+    if path_status is not None: 
+        ppi('Please check your arguments: ' + path_status)
         sys.exit()  
     
 

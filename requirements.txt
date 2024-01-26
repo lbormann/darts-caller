@@ -1,4 +1,4 @@
-pyinstaller==5.9.0
+pyinstaller==6.3.0
 python-keycloak==2.13.2
 websocket-client==1.5.1
 websocket-server==0.6.4

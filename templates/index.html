@@ -68,6 +68,179 @@
             });
         }
 
+
+        // function fetchAndPlay(file) {
+        //     return new Promise((resolve, reject) => {
+        //         let file_url = `/sounds/${file.path}`;
+
+        //         // Versuche, die Audio-Datei aus IndexedDB abzuspielen
+        //         checkAndPlayAudio(file_url).then(audioBuffer => {
+        //             if (audioBuffer) {
+        //                 // Audio-Datei aus IndexedDB gefunden, abspielen
+        //                 playAudioFromBuffer(audioBuffer);
+        //                 resolve();
+        //             } else {
+        //                 // Audio-Datei nicht in IndexedDB gefunden, herunterladen und speichern
+        //                 fetch(file_url, {
+        //                     method: "GET",
+        //                     headers: {
+        //                         "Content-Type": "audio/mpeg"
+        //                     },
+        //                 })
+        //                 .then(response => response.arrayBuffer())
+        //                 .then(arrayBuffer => {
+        //                     // Speichern in IndexedDB
+        //                     saveAudioDataToIndexedDB(file_url, arrayBuffer);
+
+        //                     // Dekodieren und abspielen
+        //                     //playAudioFromBuffer(arrayBuffer);
+
+        //                     resolve();
+        //                 })
+        //                 .catch(err => {
+        //                     console.error(err);
+        //                     reject(err);
+        //                 });
+        //             }
+        //         });
+        //     });
+        // }
+
+        // // Funktion zum Überprüfen und Abspielen von Audio aus IndexedDB
+        // function checkAndPlayAudio(key) {
+        //     return new Promise((resolve, reject) => {
+        //         let request = indexedDB.open('audioDB', 2);
+                
+        //         // Bei erfolgreichem Öffnen der Datenbank
+        //         request.onsuccess = function(event) {
+                    
+        //             try {
+        //                 let db = event.target.result;
+
+        //                 // Erstelle einen Transaktionskontext
+        //                 let transaction = db.transaction(['audioStore'], 'readonly');
+        //                 // store = request.transaction.objectStore('yourStore');
+
+        //                 // Überprüfe, ob der Object Store vorhanden ist
+        //                 if (!transaction.objectStoreNames.contains('audioStore')) {
+        //                     // Wenn der Object Store nicht gefunden wurde, löse die Promise mit null aus
+        //                     resolve(null);
+        //                     return;
+        //                 }
+
+        //                 // Greife auf den Store zu
+        //                 let objectStore = transaction.objectStore('audioStore');
+
+        //                 // Überprüfe, ob der Schlüssel vorhanden ist
+        //                 let getRequest = objectStore.get(key);
+
+        //                 getRequest.onsuccess = function(event) {
+        //                     let result = event.target.result;
+
+        //                     if (result) {
+        //                         // Audio-Datei gefunden, löse die Promise mit dem ArrayBuffer aus
+        //                         resolve(result);
+        //                     } else {
+        //                         // Audio-Datei nicht gefunden, löse die Promise mit null aus
+        //                         resolve(null);
+        //                     }
+        //                 };
+
+        //                 // Schließe die Transaktion
+        //                 transaction.oncomplete = function() {
+        //                     db.close();
+        //                 };
+        //             }
+        //             catch(e) {
+        //                 // db.createObjectStore('audioStore');
+        //                 // transaction = db.transaction(['audioStore'], 'readonly');
+        //                 resolve(null);
+        //             }
+
+        //         };
+
+        //         // Bei Bedarf erstelle die Datenbank und den Store
+        //         request.onupgradeneeded = function(event) {
+        //             let db = event.target.result;
+
+        //             // Erstelle einen Object Store für die Audio-Daten
+        //             let objectStore = db.createObjectStore('audioStore', { keyPath: 'key' });
+
+        //             // Lege den Index für den Zugriff auf Audio-Daten fest
+        //             objectStore.createIndex('audioData', 'audioData', { unique: false });
+        //         };
+
+        //         // Bei Fehlern
+        //         request.onerror = function(event) {
+        //             console.error("Error opening IndexedDB:", event.target.error);
+        //             reject(event.target.error);
+        //         };
+        //     });
+        // }
+
+        // // Hilfsfunktion zum Speichern von Audio-Daten in IndexedDB
+        // function saveAudioDataToIndexedDB(key, arrayBuffer) {
+        //     // Öffne oder erstelle die IndexedDB-Datenbank
+        //     let request = indexedDB.open('audioDB', 2);
+
+        //     // Bei erfolgreichem Öffnen der Datenbank
+        //     request.onsuccess = function(event) {
+        //         let db = event.target.result;
+
+        //         // Erstelle einen Transaktionskontext
+        //         let transaction = db.transaction(['audioStore'], 'readwrite');
+
+        //         // Greife auf den Store zu
+        //         let objectStore = transaction.objectStore('audioStore');
+
+        //         // Füge die Audio-Daten hinzu
+        //         objectStore.put(arrayBuffer, key);
+
+        //         // Schließe die Transaktion
+        //         transaction.oncomplete = function() {
+        //             db.close();
+        //         };
+        //     };
+
+        //     // Bei Bedarf erstelle die Datenbank und den Store
+        //     request.onupgradeneeded = function(event) {
+        //         let db = event.target.result;
+
+        //         // Erstelle einen Object Store für die Audio-Daten
+        //         let objectStore = db.createObjectStore('audioStore', { keyPath: 'key' });
+
+        //         // Lege den Index für den Zugriff auf Audio-Daten fest
+        //         objectStore.createIndex('audioData', 'audioData', { unique: false });
+        //     };
+
+        //     // Bei Fehlern
+        //     request.onerror = function(event) {
+        //         console.error("Error opening IndexedDB:", event.target.error);
+        //     };
+        // }
+
+        // // Hilfsfunktion zum Abspielen von Audio aus dem ArrayBuffer
+        // function playAudioFromBuffer(arrayBuffer) {
+        //     audioContext.decodeAudioData(arrayBuffer)
+        //         .then(audioBuffer => {
+        //             // Code zum Abspielen der Audio-Datei hier einfügen
+        //             // (ähnlich wie in deiner fetchAndPlay-Funktion)
+        //             console.log("Play sound from IndexedDB");
+        //             let source = audioContext.createBufferSource();
+        //             source.buffer = audioBuffer;
+        //             let gainNode = audioContext.createGain();
+        //             gainNode.gain.value = 1.0;  // Hier kannst du die Lautstärke anpassen
+        //             source.connect(gainNode);
+        //             gainNode.connect(audioContext.destination);
+        //             source.start();
+        //         })
+        //         .catch(err => {
+        //             console.error(err);
+        //         });
+        // }
+
+
+
         function onWsOpen(){
             state.innerText = "CONNECTED!";
             state.classList = "success";
@@ -103,6 +276,36 @@
         document.addEventListener("DOMContentLoaded", function() {
             if("{{ state }}" == "0"){
                 showFullscreenOverlay("To use web-calling set -WEB (--web_caller) to 1 or 2");
+            }else{
+                // let request = indexedDB.open('audioDB', 2);
+                
+                // // Bei erfolgreichem Öffnen der Datenbank
+                // request.onsuccess = function(event) {
+                    
+                // }
+                // request.onupgradeneeded =
+                //     function(event) {
+                //         let db = event.target.result;
+                //         var transaction = event.target.transaction;
+
+                //         transaction.oncomplete =
+                //             function(event) {    
+                //                 // Now store is available to be populated
+                //             }
+
+                //         // Checks if the object store exists:
+                //         if (!db.objectStoreNames.contains('audioStore')) {
+                //             // If the object store does not exist, create it:
+                //             // db.createObjectStore('audioStore');
+
+                //             // Erstelle einen Object Store für die Audio-Daten
+                //             let objectStore = db.createObjectStore('audioStore', { keyPath: 'key' });
+
+                //             // Lege den Index für den Zugriff auf Audio-Daten fest
+                //             objectStore.createIndex('audioData', 'audioData', { unique: false });
+                //             // db.close();
+                //         }                        
+                //     }
             }
         });
         

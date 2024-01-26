@@ -13,7 +13,7 @@ Autodarts-caller plays back sound-files accordingly to the state of a https://au
 | Bermuda | |
 | Shanghai | |
 | Gotcha | |
-| Around the Clock | |
+| Around the Clock | :heavy_check_mark: |
 | Round the World | |
 | Random Checkout | :heavy_check_mark: |
 | Count Up | |
@@ -75,7 +75,7 @@ Since Version 1.6.0 you can deposit multiple sounds for every ([sound-file-key](
 
 ***EVERY SOUND-FILE NEEDS TO BE .mp3 or .wav***
 
-**MAIN-CALLING:**
+**MAIN:**
 
 - gameon
 - matchon
@@ -86,7 +86,7 @@ Since Version 1.6.0 you can deposit multiple sounds for every ([sound-file-key](
 - set_{x}
 - busted
 - 0-180
-- {playername(s)} (Name of Autodarts-player(s) | bot lvl 1-11)
+- {playername} (-CCP = 1)
 - you_require (-PCC = 1 and -PCCSF = 0)
 - yr_2-yr_170 (-PCC = 1 and -PCCSF = 1)
 
@@ -127,7 +127,7 @@ Since Version 1.6.0 you can deposit multiple sounds for every ([sound-file-key](
 - ambient_group_normal
 - ambient_checkout_call_limit
 
-**CONTROL-CALLING**
+**CONTROL**
 
 - control
 - control_next [overrides: control]
@@ -140,6 +140,16 @@ Since Version 1.6.0 you can deposit multiple sounds for every ([sound-file-key](
 - control_dart_correction_1 [overrides: control, control_dart_correction]
 - control_dart_correction_2 [overrides: control, control_dart_correction]
 - control_dart_correction_3 [overrides: control, control_dart_correction]
+
+**LOBBY**
+
+- lobbychanged
+
+**ATC (Around the clock)**
+- atc_target_hit
+- atc_target_missed
+- atc_target_next
+
 
 
 ## RUN IT
@@ -234,7 +244,12 @@ You can find your Board-ID in Board-Manager.
 
 *`-M / --media_path`*
 
-Setup an absolute path where sounds are located on drive. Make sure the given path doesn't reside inside main-directory (autodarts-caller).
+Setup an absolute path (do NOT use '.','..','~' or similar) where sounds are located on drive (Just create a new empty folder for that).
+Examples: 
+(Windows): C:\Users\Luca\Desktop\Programme\autodarts\autodarts-caller-speaker
+(Linux): /home/luca/autodarts/autodarts-caller-speaker
+By-the-way: this folder will be targeted for voice-pack-downloads/installs (-DL).
+Make sure the given path doesn't reside inside main-directory (autodarts-caller).
 
 *`-MS / --media_path_shared`*
 
@@ -309,7 +324,7 @@ If you set this to '1' ambient_*-sounds will wait until main-calls are finished.
 
 *`-DL / --downloads`*
 
-If you set this to '1' the application will download available voice-packs that are not already installed. By default this is activated.
+If you set this to '1' the application will download available voice-packs that are not already installed. Installation path is the value of -M. By default this is activated.
 
 *`-DLLA / --downloads_language`*
 
@@ -325,7 +340,7 @@ You can not hear any calls as your music is way too loud? Try to set this to '0.
 
 *`-WEB / --web_caller`*
 
-If you set this to a '1' or '2' the application will host a web-endpoint to mirror all call-events. A value '1' will play sounds only on the web-endpoint. Value '2' will play sounds on the application and on the web-endpoint. To use web-calling visit http://{machine-ip-address}:{web-caller-port} in browser.
+If you set this to a '1' or '2' the application will host a web-endpoint to mirror all call-events. A value '1' will play sounds only on the web-endpoint. Value '2' will play sounds on the application and on the web-endpoint. To use web-calling visit http://{machine-ip-address}:{web-caller-port} in browser. NOTE: iphone probably does not work (WIP).
 
 *`-WEBSB / --web_caller_scoreboard`*
 
@@ -419,7 +434,7 @@ Check log:
 ### App has strange behaviour / got an error message
 
 - Enable debug ('-DEB "1"') to display more information about a problem.
-- If you don't know how to fix an error, have a look below.
+- If you don't know how to solve a problem, have a look below.
 
 ### Failed to process voice-pack 'X'
 
@@ -485,79 +500,6 @@ Try https://www.audacity.de/ to modify your sound-files.
 2) Upload the ZIP archive to a file-hoster: Make sure you choose a filehoster that supports direct-links and UNLIMITED file-persistence without restrictions (GoogleDrive, OneDrive, ...). !!IMPORTANT!! Before you upload, check if you are eligible to distribute the sound-files - Are you the owner? Are you allowed to share it in public?
 
 3) Sent me a your link by PM on Discord - Wait for a new release :) 
-
-
-## BUGS
-
-It may be buggy. I've just coded it for fast fun with https://autodarts.io. You can give me feedback in Discord > wusaaa
-
-
-## TODOs
-
-- support other games modes
-- cricket 2 players 2x gameon
-- cricket: do not call marked fields, only call number if field is still open
-- bots no dart-sounds for every turn (at least not for ESF = 0)
-- add fading option for ambient, *? -> play(loops=0, maxtime=0, fade_ms=0) -> Channel
-- bot your aiming for (your require ...) but already gameshot (stop running sounds)
-- add ambient_x-pendent for every Main/Every-Dart-Sound
-- ambient_25bullbull fail?
-- if single-darts is on and last arrow hits; the programm also calls last dart effect / that is ie triple, 
-  that coming from curated caller-voices = wrong!
-- care about blocking python process on shutdown
-- do not load new caller on ad-disconnect
-
-
-### Done
-
-- prevent from double calling
-- only one webhook with all information (to prevent race condition on receiving app): leg_end, turn, throw_number, throw_value, points_left, variant, user
-- let the user configure caller-volume
-- sounds for every throw (single, double, tripple, missed)
-- add start argument for surpressing checkout calls
-- add sites for free sound-file downloads
-- cricket: Change call behaviour to default
-- improved possible checkout call for bogey numbers
-- yr_2-yr_170.{wav | mp3} different sounds-files for possible checkout calls
-- fix sound-play repetition
-- improved error logging
-- dont care about last slash in webhook
-- fix webhook for apps that need info of every throw
-- offer multiple WTT`s
-- add [playername] to gameshot like in [playername] you require
-- add configurable pygame.mixer
-- add possibility to have more sound-files for one event (random if multiple found)
-- add ambient-sounds for gameon, gamewon, noscore etc.
-- call every field possible
-- added matchshot
-- use WS
-- -E 25 will be called as 25 (that is wrong)
-- improve console logs
-- add debug by argument
-- add caller-profile-downloader
-- add media_path_shared
-- fix sending to websocket take too long / waiting for sound-playing (rework process_*)
-- optional activation of third dart (-E)
-- add "ambient1More"
-- add Readme-section for updating
-- background-audio-muting for windows-os
-- keys for dart-number-combinations ie ambient_t1d1s1 -> sound
-- add linux start-script
-- start board on app-start if board-address is available!
-- dl limit remove 1000 cap
-- consider x.leg/set -> Gameshot / !x_leg! / player
-- add ambient_group_level
-- prohibit -M and -MS in main-directory; prohibit -MS in -M
-- https://discord.com/channels/802528604067201055/955745166134747196/1089977962725650603
-- add web-caller
-- configure custom web-caller-port
-- added caller language and gender filter
-- fixed random-caller and random-caller-each-leg
-- adds PCCYO
-- rework PCC
-- add support for game control
-- add support for gc: dart-correction (multiple)
-- add ban/change caller
 
 
 ## LAST WORDS
