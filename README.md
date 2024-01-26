@@ -248,6 +248,7 @@ Setup an absolute path where sounds should be/are located (Just create a new emp
 Examples: 
 - (Windows): C:\Users\Luca\Desktop\Programme\autodarts\autodarts-caller-speaker
 - (Linux): /home/luca/autodarts/autodarts-caller-speaker
+
 By-the-way: this folder will be targeted for voice-pack-downloads/installs (-DL).
 Make sure the given path doesn't reside inside main-directory (autodarts-caller).
 
