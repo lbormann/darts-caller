@@ -1,4 +1,4 @@
-- CALL_CURRENT_PLAYER_ALWAYS only with more than one player
+- improve README: default to customization
 - add caching mechnismn for web-caller by using indexedDB
 - fix deletion of blacklist-file on ADD-Update
 - fix audio output when is hdmi
@@ -11,3 +11,4 @@
 - improve caller (e.g. randomize speaker speed, pitch, volume etc.)
 - add license
 - clean code (use classes like AutodartsCaller, AutodartsConnection), refactor to best-practice
+- show used audio-device on start

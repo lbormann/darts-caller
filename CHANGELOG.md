@@ -6,6 +6,8 @@
 - reintroduce "lobbychanged" sound-file-key
 - introduce support for game-variant "ATC" (Around-the-clock); thanks to @takki2602 
 - improve -M / -DL description
+- CALL_CURRENT_PLAYER_ALWAYS only with more than one player
+
 
 ## 0.0.0
 
