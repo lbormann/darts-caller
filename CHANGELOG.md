@@ -1,10 +1,10 @@
-## 2.6.4
+## 2.7.0
 
-- extend lobby-calling
-- add caching mechnismn for web-caller
+- extend lobby-calling (lobbychanged -> lobby_ambient_in)
+- improve web-caller delay (using indexeddb to cache audio-files)
 - change file-hoster for more stable downloads (dropbox)
-- update voice-packs (new lobby-sounds, ~3000 playernames)
-- fix deletion of blacklist-file on ADD-Update
+- update voice-packs (new lobby-sounds, ~3000 new playernames)
+- add path argument for blacklist-file
 
 
 ## 2.6.3

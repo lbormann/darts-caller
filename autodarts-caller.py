@@ -46,7 +46,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.6.4'
+VERSION = '2.7.0'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -113,18 +113,19 @@ CALLER_GENDERS = {
     2: ['male', 'm'],
 }
 CALLER_PROFILES = {
-    'charles-m-english-us-canada': ('https://www.dropbox.com/scl/fi/l7jv12w5tjqfhek0g05c2/charles-m-english-us-canada.zip?rlkey=fdvyhxxi8cdlyrmpmg2165ikv&dl=1', 1),
-    'clint-m-english-us-canada': ('https://www.dropbox.com/scl/fi/zd8v2cxlaasx8ewy0vh1g/clint-m-english-us-canada.zip?rlkey=0w5ot6v01fudhn0w5gk1wc4v2&dl=1', 1),
-    'alicia-f-english-us-canada': ('https://www.dropbox.com/scl/fi/uqubzt449fe0xiej9z34y/alicia-f-english-us-canada.zip?rlkey=2qgyjz4arhhv4vx7qewl2rmhq&dl=1', 1),
-    'kushal-m-english-india': ('https://www.dropbox.com/scl/fi/hdbqm076vh7inaekk9vdb/kushal-m-english-india.zip?rlkey=wdrvseqk51240z50jlfdv43uf&dl=1', 1),
-    'kylie-f-english-australia': ('https://www.dropbox.com/scl/fi/1rv4tmxnydxqmpi1nhfbe/kylie-f-english-australia.zip?rlkey=iynuqv0bl6z3ich8m9bvbm2wk&dl=1', 1),
-    'ruby-f-english-uk': ('https://www.dropbox.com/scl/fi/0aj8agfnpzbmvqu16swly/ruby-f-english-uk.zip?rlkey=b1ehvnweyjwluqvi5tbsfhv4l&dl=1', 1),
-    'ethan-m-english-us-canada': ('https://www.dropbox.com/scl/fi/4zkfo10buqredsg2gxn8f/ethan-m-english-us-canada.zip?rlkey=kau8b3m6gyzpek30z70pndef7&dl=1', 1),
-    'mitch-m-english-australia': ('https://www.dropbox.com/scl/fi/lfrfqjenotj3fuz953h6y/mitch-m-english-australia.zip?rlkey=e5l8ibiw9yzpzkfk86udw21sk&dl=1', 1),
-    'ava-f-english-us-canada': ('https://www.dropbox.com/scl/fi/tvy7ub0080ipb5jowk1a8/ava-f-english-us-canada.zip?rlkey=5vdwl8q36mb2q1k8d4eyb7xcw&dl=1', 1),
-    'aiden-m-english-uk': ('https://www.dropbox.com/scl/fi/sz4ogyw47ecqbyf0ru34m/aiden-m-english-uk.zip?rlkey=wftg1bzs0mety63b0yuta0ejb&dl=1', 1),
-    'theo-m-english-uk': ('https://www.dropbox.com/scl/fi/sfequbzrd498323x0zrql/theo-m-english-uk.zip?rlkey=9pna69ml42no1fttsg7m97zmi&dl=1', 1),
-    'emily-f-english-scottish': ('https://www.dropbox.com/scl/fi/mnnpyy4f19u7nhcdd92vb/emily-f-english-scottish.zip?rlkey=r5hsauwy67yx0w404t024gpo3&dl=1', 1),
+    # # murf
+    # 'charles-m-english-us-canada': ('https://www.dropbox.com/scl/fi/l7jv12w5tjqfhek0g05c2/charles-m-english-us-canada.zip?rlkey=fdvyhxxi8cdlyrmpmg2165ikv&dl=1', 1),
+    # 'clint-m-english-us-canada': ('https://www.dropbox.com/scl/fi/zd8v2cxlaasx8ewy0vh1g/clint-m-english-us-canada.zip?rlkey=0w5ot6v01fudhn0w5gk1wc4v2&dl=1', 1),
+    # 'alicia-f-english-us-canada': ('https://www.dropbox.com/scl/fi/uqubzt449fe0xiej9z34y/alicia-f-english-us-canada.zip?rlkey=2qgyjz4arhhv4vx7qewl2rmhq&dl=1', 1),
+    # 'kushal-m-english-india': ('https://www.dropbox.com/scl/fi/hdbqm076vh7inaekk9vdb/kushal-m-english-india.zip?rlkey=wdrvseqk51240z50jlfdv43uf&dl=1', 1),
+    # 'kylie-f-english-australia': ('https://www.dropbox.com/scl/fi/1rv4tmxnydxqmpi1nhfbe/kylie-f-english-australia.zip?rlkey=iynuqv0bl6z3ich8m9bvbm2wk&dl=1', 1),
+    # 'ruby-f-english-uk': ('https://www.dropbox.com/scl/fi/0aj8agfnpzbmvqu16swly/ruby-f-english-uk.zip?rlkey=b1ehvnweyjwluqvi5tbsfhv4l&dl=1', 1),
+    # 'ethan-m-english-us-canada': ('https://www.dropbox.com/scl/fi/4zkfo10buqredsg2gxn8f/ethan-m-english-us-canada.zip?rlkey=kau8b3m6gyzpek30z70pndef7&dl=1', 1),
+    # 'mitch-m-english-australia': ('https://www.dropbox.com/scl/fi/lfrfqjenotj3fuz953h6y/mitch-m-english-australia.zip?rlkey=e5l8ibiw9yzpzkfk86udw21sk&dl=1', 1),
+    # 'ava-f-english-us-canada': ('https://www.dropbox.com/scl/fi/tvy7ub0080ipb5jowk1a8/ava-f-english-us-canada.zip?rlkey=5vdwl8q36mb2q1k8d4eyb7xcw&dl=1', 1),
+    # 'aiden-m-english-uk': ('https://www.dropbox.com/scl/fi/sz4ogyw47ecqbyf0ru34m/aiden-m-english-uk.zip?rlkey=wftg1bzs0mety63b0yuta0ejb&dl=1', 1),
+    # 'theo-m-english-uk': ('https://www.dropbox.com/scl/fi/sfequbzrd498323x0zrql/theo-m-english-uk.zip?rlkey=9pna69ml42no1fttsg7m97zmi&dl=1', 1),
+    # 'emily-f-english-scottish': ('https://www.dropbox.com/scl/fi/mnnpyy4f19u7nhcdd92vb/emily-f-english-scottish.zip?rlkey=r5hsauwy67yx0w404t024gpo3&dl=1', 1),
     # # google
     # 'en-US-Wavenet-E-FEMALE': ('TODO', 4),
     # 'en-US-Wavenet-G-FEMALE': ('TODO', 4),
@@ -262,7 +263,7 @@ FIELD_COORDS = {
     "50": {"x": -0.007777097366809472, "y": 0.0022657685241886157},
 }
 
-
+WEB_DB_NAME = "ADC1"
 
 
 def ppi(message, info_object = None, prefix = '\r\n'):
@@ -471,12 +472,13 @@ def ban_caller(only_change):
         if not cbc_success:
             play_sound_effect('control', wait_for_last = False, volume_mult = 1.0)
 
-        global caller_profiles_banned
-        caller_profiles_banned.append(caller_title)
-        path_to_callers_banned_file = os.path.join(parent_directory, DEFAULT_CALLERS_BANNED_FILE)   
-        with open(path_to_callers_banned_file, 'w') as bcf:
-            for cpb in caller_profiles_banned:
-                bcf.write(cpb.lower() + '\n')
+        if BLACKLIST_PATH != DEFAULT_EMPTY_PATH:
+            global caller_profiles_banned
+            caller_profiles_banned.append(caller_title)
+            path_to_callers_banned_file = os.path.join(BLACKLIST_PATH, DEFAULT_CALLERS_BANNED_FILE)   
+            with open(path_to_callers_banned_file, 'w') as bcf:
+                for cpb in caller_profiles_banned:
+                    bcf.write(cpb.lower() + '\n')
 
     mirror_sounds()
     setup_caller()
@@ -488,12 +490,18 @@ def ban_caller(only_change):
 
 def load_callers_banned():
     global caller_profiles_banned
-    path_to_callers_banned_file = os.path.join(parent_directory, DEFAULT_CALLERS_BANNED_FILE)
+    caller_profiles_banned = []
+    
+    if BLACKLIST_PATH == DEFAULT_EMPTY_PATH:
+        return
+    
+    path_to_callers_banned_file = os.path.join(BLACKLIST_PATH, DEFAULT_CALLERS_BANNED_FILE)
     if os.path.exists(path_to_callers_banned_file):
         with open(path_to_callers_banned_file, 'r') as bcf:
             caller_profiles_banned = list(set(line.strip() for line in bcf))
     else:
-        caller_profiles_banned = []
+        with open(path_to_callers_banned_file, 'x'):
+            ppi(f"'{path_to_callers_banned_file}' created successfully.")
 
 def load_callers():
     # load shared-sounds
@@ -614,9 +622,11 @@ def filter_most_recent_version(path_list):
 def setup_caller():
     global caller
     global caller_title
+    global caller_title_without_version
     global caller_profiles_banned
     caller = None
     caller_title = ''
+    caller_title_without_version = ''
 
     callers = load_callers()
     ppi(str(len(callers)) + ' voice-pack(s) found.')
@@ -668,6 +678,7 @@ def setup_caller():
             caller[1][sound_file_key] = sound_list
 
         caller_title = str(os.path.basename(os.path.normpath(caller[0])))
+        caller_title_without_version = caller_title.split("-v")[0].lower()
         ppi("Your current caller: " + caller_title + " knows " + str(len(caller[1].values())) + " Sound-file-key(s)")
         # ppi(caller[1])
         caller = caller[1]
@@ -682,6 +693,7 @@ def play_sound(sound, wait_for_last, volume_mult):
         global mirror_files
         
         mirror_file = {
+                    "caller": caller_title_without_version,
                     "path": quote(sound, safe=""),
                     "wait": wait_for_last,
                     "volume": volume
@@ -953,8 +965,8 @@ def poll_lobbies(ws):
                             ws.send(json.dumps(paramsSubscribeLobbyEvents))
                             lobbyPlayers = []
 
-                            play_sound_effect("lobbychanged", True)
-                            mirror_sounds()
+                            if play_sound_effect("lobby_ambient_in", False):
+                                mirror_sounds()
                             return
             except Exception as e:
                 ppe('Lobby-polling failed: ', e)
@@ -2013,6 +2025,8 @@ def on_message_autodarts(ws, message):
                         #     "topic": m['id'] + ".state"
                         # }
                         # ws.send(json.dumps(paramsUnsubscribeLobbyEvents))
+                        if play_sound_effect("lobby_ambient_out", False):
+                            mirror_sounds()
   
                         poll_lobbies(ws)
 
@@ -2238,7 +2252,7 @@ def mute_background(mute_vol):
 
 @app.route('/')
 def index():
-    return render_template('index.html', host=WEB_HOST, ws_port=HOST_PORT, state=WEB)
+    return render_template('index.html', host=WEB_HOST, app_version=VERSION, db_name=WEB_DB_NAME, ws_port=HOST_PORT, state=WEB)
 
 @app.route('/sounds/<path:file_id>', methods=['GET'])
 def sound(file_id):
@@ -2295,6 +2309,7 @@ if __name__ == "__main__":
     ap.add_argument("-DL", "--downloads", type=int, choices=range(0, 2), default=DEFAULT_DOWNLOADS, required=False, help="If '1', the application will try to download a curated list of caller-voices")
     ap.add_argument("-DLL", "--downloads_limit", type=int, default=DEFAULT_DOWNLOADS_LIMIT, required=False, help="If '1', the application will try to download a only the X newest caller-voices. -DLN needs to be activated.")
     ap.add_argument("-DLLA", "--downloads_language", type=int, choices=range(0, len(CALLER_LANGUAGES) + 1), default=DEFAULT_DOWNLOADS_LANGUAGE, required=False, help="If '0', the application will download speakers of every language.., else it will limit speaker downloads by specific language")
+    ap.add_argument("-BLP", "--blacklist_path", required=False, default=DEFAULT_EMPTY_PATH, help="Absolute path to storage directory for blacklist-file")
     ap.add_argument("-BAV","--background_audio_volume", required=False, type=float, default=DEFAULT_BACKGROUND_AUDIO_VOLUME, help="Set background-audio-volume between 0.1 (silent) and 1.0 (no mute)")
     ap.add_argument("-WEB", "--web_caller", required=False, type=int, choices=range(0, 3), default=DEFAULT_WEB_CALLER, help="If '1' the application will host an web-endpoint, '2' it will do '1' and default caller-functionality.")
     ap.add_argument("-WEBSB", "--web_caller_scoreboard", required=False, type=int, choices=range(0, 2), default=DEFAULT_WEB_CALLER_SCOREBOARD, help="If '1' the application will host an web-endpoint, right to web-caller-functionality.")
@@ -2342,6 +2357,10 @@ if __name__ == "__main__":
     DOWNLOADS_LIMIT = args['downloads_limit']
     if DOWNLOADS_LIMIT < 0: DOWNLOADS_LIMIT = DEFAULT_DOWNLOADS_LIMIT
     DOWNLOADS_PATH = DEFAULT_DOWNLOADS_PATH
+    if args['blacklist_path'] != DEFAULT_EMPTY_PATH:
+        BLACKLIST_PATH = Path(args['blacklist_path'])
+    else:
+        BLACKLIST_PATH = DEFAULT_EMPTY_PATH
     BACKGROUND_AUDIO_VOLUME = args['background_audio_volume']
     WEB = args['web_caller']
     WEB_SCOREBOARD = args['web_caller_scoreboard']
@@ -2392,6 +2411,9 @@ if __name__ == "__main__":
 
     global caller_title
     caller_title = ''
+
+    global caller_title_without_version
+    caller_title_without_version = ''
 
     global caller_profiles_banned
     caller_profiles_banned = []

@@ -1,5 +1,5 @@
 - fix audio output when is hdmi
-- fix BAV
+- improve BAV
 - check start.sh (sh) media_path_shared if empty
 - integrate web-caller in autodarts.io
 - stop calls for cricket when field is already closed

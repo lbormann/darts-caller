@@ -36,22 +36,17 @@
         let previousWait = false;
 
 
-        function getFilename(path) {
-            let separator = path.includes('/') ? '/' : '\\';
-            let parts = path.split(separator);
-            return parts[parts.length - 1];
-        }
 
-        function fetchAndPlay(file) {
+        function processAudioEvent(audioEvent) {
             return new Promise((resolve, reject) => {
-                let path = file.path;
+                let path = audioEvent.path;
 
                 // Zuerst versuchen, die Audiodatei aus dem Cache abzurufen
-                getAudio(path)
+                getAudio(audioEvent)
                     .then(audioBlob => {
                         if (audioBlob) {
                             // Wenn die Audiodatei im Cache gefunden wurde, spiele sie ab
-                            playAudio(audioBlob, file, true)
+                            playAudio(audioBlob, audioEvent, true)
                                 .then(() => {
                                     resolve();
                                 })
@@ -70,10 +65,10 @@
                             .then(response => response.arrayBuffer())
                             .then(arrayBuffer => {
                                 // Audio im Cache speichern
-                                cacheAudio(path, arrayBuffer);
+                                cacheAudio(audioEvent, arrayBuffer);
                                 
                                 // Audio abspielen
-                                playAudio(arrayBuffer, file, false)
+                                playAudio(arrayBuffer, audioEvent, false)
                                     .then(() => {
                                         resolve();
                                     })
@@ -94,14 +89,14 @@
             });
         }
 
-        function playAudio(audioBlob, file, fromCache) {
+        function playAudio(audioBlob, audioEvent, fromCache) {
             return new Promise((resolve, reject) => {
                 audioContext.decodeAudioData(audioBlob)
                     .then(audioBuffer => {
                         let source = audioContext.createBufferSource();
                         source.buffer = audioBuffer;
                         let gainNode = audioContext.createGain();
-                        gainNode.gain.value = file.volume;
+                        gainNode.gain.value = audioEvent.volume;
                         source.connect(gainNode);
                         gainNode.connect(audioContext.destination);
                         // Auflösen der Promise, wenn der Sound abgespielt wurde
@@ -110,17 +105,16 @@
                         };
                         source.start();
 
-                        lastCall.innerText = getFilename(unescape(file.path));
+                        lastCall.innerText = audioEvent.name;
                         if(fromCache){
                             lastCall.style = "color:orange;"
-                            console.log("Play sound (by cache): ", file.path);
+                            console.log("Play sound (by cache)", audioEvent.name);
                         }else{
                             lastCall.style = "color:lightblue;"
-                            console.log("Play sound (by download): ", file.path);
+                            console.log("Play sound (by download)", audioEvent.name);
                             
                         }
                         
-                         
                     })
                     .catch(err => {
                         console.error(err);
@@ -129,42 +123,65 @@
             });
         }
 
-        function cacheAudio(path, audioBuffer) {
+        function cacheAudio(audioEvent, audioBuffer) {
             // Kopiere das ArrayBuffer, um die Detached-Exception zu vermeiden
-            const copiedBuffer = audioBuffer.slice(0);
+            const copiedAudioBuffer = audioBuffer.slice(0);
 
             // Öffne die Datenbank
             db.open().then(() => {
                 // Füge die Audiodatei zur Tabelle hinzu
-                db.sounds.put({ path, file: copiedBuffer })
+                db.sounds.put({ caller: audioEvent.caller, name: audioEvent.name, path: audioEvent.path, file: copiedAudioBuffer })
                     .then(() => {
-                        console.log(`Caching successful (${path})`);
+                        console.log(`Caching successful for ${audioEvent.name} -> ${audioEvent.path})`);
                     })
                     .catch(error => {
-                        console.error(`Caching failed (${path}): ${error}`);
+                        console.error(`Caching failed for ${audioEvent.name} -> ${audioEvent.path}: ${error}`);
                     });
             });
         }
 
-        function getAudio(path) {
+        function getAudio(audioEvent) {
             // Öffne die Datenbank
             return db.open()
-                .then(() => db.sounds.get(path))
+                .then(() => db.sounds.get({caller: audioEvent.caller, name: audioEvent.name}))
                 .then(result => {
                     if (result) {
-                        console.log(`Using cached (${path})`);
+                        console.log(`Using cache for ${audioEvent.name}`);
                         return result.file;
                     } else {
-                        console.log(`No cache for (${path})`);
+                        console.log(`No cache for ${audioEvent.name}`);
                         return null;
                     }
                 })
                 .catch(error => {
-                    console.error(`Fehler beim Abrufen der Audiodatei (${path}): ${error}`);
+                    console.error(`Cache-request failed for ${audioEvent.name}: ${error}`);
                     return null;
                 });
         }
 
+        function extractFilename(path) {
+            let separator = path.includes('/') ? '/' : '\\';
+            let parts = path.split(separator);
+            return parts[parts.length - 1];
+        }
+
+        function initialize_db(){
+            db = new Dexie("{{ db_name }}");
+            db.version(1).stores({
+            sounds: `
+                [caller+name],
+                path,
+                file`,
+            });
+        }
+
+        function check_db_compatibility () {
+            if (!('indexedDB' in window)) {
+                console.log("This browser doesn't support IndexedDB");
+                return false;
+            }
+            return true;
+        }
 
         function onWsOpen(){
             state.innerText = "CONNECTED!";
@@ -180,10 +197,12 @@
             if(data.event === 'mirror') {
                 previousWait = true;
                 for(let file of data.files) {
+                    file['name'] = extractFilename(unescape(file.path));
+
                     if(file.wait || previousWait) {
-                        audioQueue = audioQueue.then(() => fetchAndPlay(file));
+                        audioQueue = audioQueue.then(() => processAudioEvent(file));
                     } else {
-                        fetchAndPlay(file).catch(err => console.error(err));
+                        processAudioEvent(file).catch(err => console.error(err));
                     }
                     previousWait = file.wait;
                 }
@@ -199,17 +218,35 @@
         }
  
         document.addEventListener("DOMContentLoaded", function() {
+            console.log("APP-Version: '{{ app_version }}'");
+
             if("{{ state }}" == "0"){
                 showFullscreenOverlay("To use web-calling set -WEB (--web_caller) to 1 or 2");
             }else{
-                db = new Dexie("AutodartsCaller");
-                db.version(1).stores({
-                sounds: `
-                    path,
-                    file`,
-                });
+                
+                if(!check_db_compatibility){
+                    return;
+                }
+
+                console.log("USING DB: '{{ db_name }}'");
+                initialize_db();
+
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.has('clear')) {
+                    db.open().then(() => {
+                        db.delete().then(() => {
+                            console.log('Database cleared');
+                            initialize_db();
+                        }).catch(error => {
+                            console.error('Failed to clear database', error);
+                        });
+                    }).catch(error => {
+                        console.error('Failed to open database for clearing', error);
+                    });
+                }
             }
         });
+
         
     </script>
 </body>
