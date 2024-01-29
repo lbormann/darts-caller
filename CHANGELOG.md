@@ -1,3 +1,12 @@
+## 2.6.4
+
+- extend lobby-calling
+- add caching mechnismn for web-caller
+- change file-hoster for more stable downloads (dropbox)
+- update voice-packs (new lobby-sounds, ~3000 playernames)
+- fix deletion of blacklist-file on ADD-Update
+
+
 ## 2.6.3
 
 - add CHANGELOG

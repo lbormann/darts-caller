@@ -46,7 +46,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.6.3'
+VERSION = '2.6.4'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -91,6 +91,7 @@ AUTODART_REALM_NAME = 'autodarts'
 AUTODART_LOBBIES_URL = 'https://api.autodarts.io/gs/v0/lobbies/'
 AUTODART_MATCHES_URL = 'https://api.autodarts.io/gs/v0/matches/'
 AUTODART_BOARDS_URL = 'https://api.autodarts.io/bs/v0/boards/'
+AUTODART_USERS_URL = 'https://api.autodarts.io/as/v0/users/'
 AUTODART_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe'
 
 SUPPORTED_SOUND_FORMATS = ['.mp3', '.wav']
@@ -112,19 +113,59 @@ CALLER_GENDERS = {
     2: ['male', 'm'],
 }
 CALLER_PROFILES = {
-    # murf
-    'charles-m-english-us-canada': ('https://drive.google.com/file/d/1-CrWSFHBoT_I9kzDuo7PR7FLCfEO-Qg-/view?usp=sharing', 1),
-    'clint-m-english-us-canada': ('https://drive.google.com/file/d/1-IQ9Bvp1i0jG6Bu9fMWhlbyAj9SkoVGb/view?usp=sharing', 1),
-    'alicia-f-english-us-canada': ('https://drive.google.com/file/d/1-Cvk-IczRjOphDOCA14NwE1hy4DAB8Tt/view?usp=sharing', 1),
-    'kushal-m-english-india': ('https://drive.google.com/file/d/1-GavAG_oa3MrrremanvfYSfMI0U784EN/view?usp=sharing', 1),
-    'kylie-f-english-australia': ('https://drive.google.com/file/d/1-Y6XpdFjOotSLBi0sInf5CGpAAV3mv0b/view?usp=sharing', 1),
-    'ruby-f-english-uk': ('https://drive.google.com/file/d/1-kqVwCd4HJes0EVNda5EOF6tTwUxql3z/view?usp=sharing', 1),
-    'ethan-m-english-us-canada': ('https://drive.google.com/file/d/106PG96DLzcHHusbQ2zRfub2ZVXbz5TPs/view?usp=sharing', 1),
-    'mitch-m-english-australia': ('https://drive.google.com/file/d/10XEf0okustuoHnu2h_4eqRA6G-2d2mH1/view?usp=sharing', 1),
-    'ava-f-english-us-canada': ('https://drive.google.com/file/d/10XtdjfORUreALkcUxbDhjb0Bo6ym7IDK/view?usp=sharing', 1),
-    'aiden-m-english-uk': ('https://drive.google.com/file/d/10bYvcqp1nzqJnBDC7B6u7s8aequ5wGat/view?usp=sharing', 1),
-    'theo-m-english-uk': ('https://drive.google.com/file/d/10eQaYMZM3tkIA2PIDsb0r-5NhyDU86-C/view?usp=sharing', 1),
-    'emily-f-english-scottish': ('https://drive.google.com/file/d/10mOzTjA5tqBZCKI3EqxJ0YvQptqtMNQg/view?usp=sharing', 1),
+    'charles-m-english-us-canada': ('https://www.dropbox.com/scl/fi/l7jv12w5tjqfhek0g05c2/charles-m-english-us-canada.zip?rlkey=fdvyhxxi8cdlyrmpmg2165ikv&dl=1', 1),
+    'clint-m-english-us-canada': ('https://www.dropbox.com/scl/fi/zd8v2cxlaasx8ewy0vh1g/clint-m-english-us-canada.zip?rlkey=0w5ot6v01fudhn0w5gk1wc4v2&dl=1', 1),
+    'alicia-f-english-us-canada': ('https://www.dropbox.com/scl/fi/uqubzt449fe0xiej9z34y/alicia-f-english-us-canada.zip?rlkey=2qgyjz4arhhv4vx7qewl2rmhq&dl=1', 1),
+    'kushal-m-english-india': ('https://www.dropbox.com/scl/fi/hdbqm076vh7inaekk9vdb/kushal-m-english-india.zip?rlkey=wdrvseqk51240z50jlfdv43uf&dl=1', 1),
+    'kylie-f-english-australia': ('https://www.dropbox.com/scl/fi/1rv4tmxnydxqmpi1nhfbe/kylie-f-english-australia.zip?rlkey=iynuqv0bl6z3ich8m9bvbm2wk&dl=1', 1),
+    'ruby-f-english-uk': ('https://www.dropbox.com/scl/fi/0aj8agfnpzbmvqu16swly/ruby-f-english-uk.zip?rlkey=b1ehvnweyjwluqvi5tbsfhv4l&dl=1', 1),
+    'ethan-m-english-us-canada': ('https://www.dropbox.com/scl/fi/4zkfo10buqredsg2gxn8f/ethan-m-english-us-canada.zip?rlkey=kau8b3m6gyzpek30z70pndef7&dl=1', 1),
+    'mitch-m-english-australia': ('https://www.dropbox.com/scl/fi/lfrfqjenotj3fuz953h6y/mitch-m-english-australia.zip?rlkey=e5l8ibiw9yzpzkfk86udw21sk&dl=1', 1),
+    'ava-f-english-us-canada': ('https://www.dropbox.com/scl/fi/tvy7ub0080ipb5jowk1a8/ava-f-english-us-canada.zip?rlkey=5vdwl8q36mb2q1k8d4eyb7xcw&dl=1', 1),
+    'aiden-m-english-uk': ('https://www.dropbox.com/scl/fi/sz4ogyw47ecqbyf0ru34m/aiden-m-english-uk.zip?rlkey=wftg1bzs0mety63b0yuta0ejb&dl=1', 1),
+    'theo-m-english-uk': ('https://www.dropbox.com/scl/fi/sfequbzrd498323x0zrql/theo-m-english-uk.zip?rlkey=9pna69ml42no1fttsg7m97zmi&dl=1', 1),
+    'emily-f-english-scottish': ('https://www.dropbox.com/scl/fi/mnnpyy4f19u7nhcdd92vb/emily-f-english-scottish.zip?rlkey=r5hsauwy67yx0w404t024gpo3&dl=1', 1),
+    # # google
+    # 'en-US-Wavenet-E-FEMALE': ('TODO', 4),
+    # 'en-US-Wavenet-G-FEMALE': ('TODO', 4),
+    # 'en-US-Wavenet-A-MALE': ('TODO', 4),
+    # 'en-US-Wavenet-H-FEMALE': ('TODO', 4),
+    # 'en-US-Wavenet-I-MALE': ('TODO', 4),
+    # 'en-US-Wavenet-J-MALE': ('TODO', 4),
+    # 'en-US-Wavenet-F-FEMALE': ('TODO', 4),
+    # 'fr-FR-Wavenet-E-FEMALE': ('TODO', 3),
+    # 'fr-FR-Wavenet-B-MALE': ('TODO', 3),
+    # 'ru-RU-Wavenet-E-FEMALE': ('TODO', 3),
+    # 'ru-RU-Wavenet-B-MALE': ('TODO', 3),
+    # 'de-DE-Wavenet-F-FEMALE': ('TODO', 3),  
+    # 'de-DE-Wavenet-B-MALE': ('TODO', 3),
+    # 'es-ES-Wavenet-C-FEMALE': ('TODO', 3),  
+    # 'es-ES-Wavenet-B-MALE': ('TODO', 3),
+    # 'nl-NL-Wavenet-B-MALE': ('TODO', 3),  
+    # 'nl-NL-Wavenet-D-FEMALE': ('TODO', 3),
+    # # amazon
+    # 'en-US-Stephen-Male': ('TODO', 4),  
+    # 'en-US-Ivy-Female': ('TODO', 4),
+    # 'de-DE-Vicki-Female': ('TODO', 3),  
+    # 'de-DE-Daniel-Male': ('TODO', 3),
+    # 'en-US-Kendra-Female': ('TODO', 4),
+    # 'en-US-Joey-Male': ('TODO', 4),
+    # 'en-US-Joanna-Female': ('TODO', 4),
+
+
+    # # murf
+    # 'charles-m-english-us-canada': ('https://drive.google.com/file/d/1-CrWSFHBoT_I9kzDuo7PR7FLCfEO-Qg-/view?usp=sharing', 1),
+    # 'clint-m-english-us-canada': ('https://drive.google.com/file/d/1-IQ9Bvp1i0jG6Bu9fMWhlbyAj9SkoVGb/view?usp=sharing', 1),
+    # 'alicia-f-english-us-canada': ('https://drive.google.com/file/d/1-Cvk-IczRjOphDOCA14NwE1hy4DAB8Tt/view?usp=sharing', 1),
+    # 'kushal-m-english-india': ('https://drive.google.com/file/d/1-GavAG_oa3MrrremanvfYSfMI0U784EN/view?usp=sharing', 1),
+    # 'kylie-f-english-australia': ('https://drive.google.com/file/d/1-Y6XpdFjOotSLBi0sInf5CGpAAV3mv0b/view?usp=sharing', 1),
+    # 'ruby-f-english-uk': ('https://drive.google.com/file/d/1-kqVwCd4HJes0EVNda5EOF6tTwUxql3z/view?usp=sharing', 1),
+    # 'ethan-m-english-us-canada': ('https://drive.google.com/file/d/106PG96DLzcHHusbQ2zRfub2ZVXbz5TPs/view?usp=sharing', 1),
+    # 'mitch-m-english-australia': ('https://drive.google.com/file/d/10XEf0okustuoHnu2h_4eqRA6G-2d2mH1/view?usp=sharing', 1),
+    # 'ava-f-english-us-canada': ('https://drive.google.com/file/d/10XtdjfORUreALkcUxbDhjb0Bo6ym7IDK/view?usp=sharing', 1),
+    # 'aiden-m-english-uk': ('https://drive.google.com/file/d/10bYvcqp1nzqJnBDC7B6u7s8aequ5wGat/view?usp=sharing', 1),
+    # 'theo-m-english-uk': ('https://drive.google.com/file/d/10eQaYMZM3tkIA2PIDsb0r-5NhyDU86-C/view?usp=sharing', 1),
+    # 'emily-f-english-scottish': ('https://drive.google.com/file/d/10mOzTjA5tqBZCKI3EqxJ0YvQptqtMNQg/view?usp=sharing', 1),
     # google
     'en-US-Wavenet-E-FEMALE': ('https://drive.google.com/file/d/1XIj7pJPd9_utwPeQtIftGJz1RUPX6dg_/view?usp=sharing', 3),
     'en-US-Wavenet-G-FEMALE': ('https://drive.google.com/file/d/1h_-xmklyIcq6qEh27ibJWeQtArsQs9eX/view?usp=sharing', 3),
@@ -696,6 +737,54 @@ def mirror_sounds():
         mirror_files = []
 
 
+def start_board():
+    try:
+        res = requests.put(boardManagerAddress + '/api/detection/start')
+        # res = requests.put(boardManagerAddress + '/api/start')
+        # ppi(res)
+    except Exception as e:
+        ppe('Start board failed', e)
+
+def stop_board():
+    try:    
+        res = requests.put(boardManagerAddress + '/api/detection/stop')
+        # res = requests.put(boardManagerAddress + '/api/stop')
+        # ppi(res)
+    except Exception as e:
+        ppe('stop board failed', e)
+
+def reset_board():
+    try:
+        res = requests.post(boardManagerAddress + '/api/reset')
+        # ppi(res)
+    except Exception as e:
+        ppe('Reset board failed', e)
+
+def calibrate_board():
+    if play_sound_effect('control_calibrate', wait_for_last = False, volume_mult = 1.0) == False:
+        play_sound_effect('control', wait_for_last = False, volume_mult = 1.0)
+    mirror_sounds()
+
+    try:
+        res = requests.post(boardManagerAddress + '/api/config/calibration/auto')
+        # ppi(res)
+    except Exception as e:
+        ppe('Calibrate board failed', e)
+
+
+def get_player_average(player_id, variant = 'x01', limit = '100'):
+    # get
+    # https://api.autodarts.io/as/v0/users/<user-id>/stats/<variant>?limit=<limit>
+    try:
+        global accessToken
+        receive_token_autodarts()
+        res = requests.get(AUTODART_USERS_URL + player_id + "/stats/" + variant + "?limit=" + limit, headers={'Authorization': 'Bearer ' + accessToken})
+        m = res.json()
+        # ppi(m)
+        return m['average']['average']
+    except Exception as e:
+        ppe('Receive player-stats failed', e)
+        return None
 
 def next_game():
     if play_sound_effect('control_next_game', wait_for_last = False, volume_mult = 1.0) == False:
@@ -811,29 +900,6 @@ def correct_throw(throw_indices, score):
         lastCorrectThrow = None 
         ppe('Correcting throw failed', e)
 
-def start_board():
-    try:
-        res = requests.put(boardManagerAddress + '/api/detection/start')
-        # res = requests.put(boardManagerAddress + '/api/start')
-        # ppi(res)
-    except Exception as e:
-        ppe('Start board failed', e)
-
-def stop_board():
-    try:    
-        res = requests.put(boardManagerAddress + '/api/detection/stop')
-        # res = requests.put(boardManagerAddress + '/api/stop')
-        # ppi(res)
-    except Exception as e:
-        ppe('stop board failed', e)
-
-def reset_board():
-    try:
-        res = requests.post(boardManagerAddress + '/api/reset')
-        # ppi(res)
-    except Exception as e:
-        ppe('Reset board failed', e)
-
 def receive_local_board_address():
     try:
         global accessToken
@@ -853,21 +919,12 @@ def receive_local_board_address():
         boardManagerAddress = None
         ppe('Fetching local-board-address failed', e)
 
-def calibrate_board():
-    if play_sound_effect('control_calibrate', wait_for_last = False, volume_mult = 1.0) == False:
-        play_sound_effect('control', wait_for_last = False, volume_mult = 1.0)
-    mirror_sounds()
-
-    try:
-        res = requests.post(boardManagerAddress + '/api/config/calibration/auto')
-        # ppi(res)
-    except Exception as e:
-        ppe('Calibrate board failed', e)
-
 
 def poll_lobbies(ws):
     def process(*args):
         global currentMatch
+        global lobbyPlayers
+
         while currentMatch == None:
             try:   
                 receive_token_autodarts()
@@ -894,6 +951,10 @@ def poll_lobbies(ws):
                                     "topic": m['id'] + ".events"
                                 }
                             ws.send(json.dumps(paramsSubscribeLobbyEvents))
+                            lobbyPlayers = []
+
+                            play_sound_effect("lobbychanged", True)
+                            mirror_sounds()
                             return
             except Exception as e:
                 ppe('Lobby-polling failed: ', e)
@@ -1888,12 +1949,11 @@ def on_open_autodarts(ws):
     except Exception as e:
         ppe('WS-Open-boards failed: ', e)
 
-    
-
 def on_message_autodarts(ws, message):
     def process(*args):
         try:
             global lastMessage
+            global lobbyPlayers
             m = json.loads(message)
             # ppi(json.dumps(m, indent = 4, sort_keys = True))
   
@@ -1940,14 +2000,70 @@ def on_message_autodarts(ws, message):
                         pass
 
                     elif data['event'] == 'finish' or data['event'] == 'delete':
+                        # ppi('Stop listening to lobby: ' + m['id'])
+                        # paramsUnsubscribeLobbyEvents = {
+                        #     "type": "unsubscribe",
+                        #     "channel": "autodarts.lobbies",
+                        #     "topic": m['id'] + ".events"
+                        # }
+                        # ws.send(json.dumps(paramsUnsubscribeLobbyEvents))
+                        # paramsUnsubscribeLobbyEvents = {
+                        #     "type": "unsubscribe",
+                        #     "channel": "autodarts.lobbies",
+                        #     "topic": m['id'] + ".state"
+                        # }
+                        # ws.send(json.dumps(paramsUnsubscribeLobbyEvents))
+  
                         poll_lobbies(ws)
 
+
                 elif 'players' in data:
+
+                    # check for left players
+                    lobbyPlayersLeft = []
+                    for lp in lobbyPlayers:
+                        player_found = False
+                        for p in data['players']:
+                            if p['userId'] == lp['userId']:
+                                player_found = True
+                                break
+                        if player_found == False:
+                            lobbyPlayersLeft.append(lp)
+
+                    for lpl in lobbyPlayersLeft:
+                        lobbyPlayers.remove(lpl)
+                        player_name = str(lpl['name']).lower()
+                        ppi(player_name + " left the lobby")
+                        state = play_sound_effect(player_name, True)
+                        if state == False:
+                            state = play_sound_effect('player', True)
+                        play_sound_effect('left', True)
+
+
+                    # check for joined players
                     for p in data['players']:
-                        if 'boardId' in p and p['boardId'] == AUTODART_USER_BOARD_ID:
-                            play_sound_effect("lobbychanged")
-                            mirror_sounds()
+                        player_id = p['userId']
+                        if 'boardId' in p and p['boardId'] != AUTODART_USER_BOARD_ID and not any(lobbyPlayer['userId'] == player_id for lobbyPlayer in lobbyPlayers):
+                            lobbyPlayers.append(p)
+                            player_name = str(p['name']).lower()
+                            # data['variant'].lower()
+                            player_avg = get_player_average(player_id)
+                            if player_avg != None:
+                                player_avg = str(math.ceil(player_avg))
+                            ppi(player_name + " (" + player_avg + " average) joined the lobby")
+
+                            state = False
+                            state = play_sound_effect(player_name, True)
+                            if state == False:
+                                state = play_sound_effect('player', True)
+                                
+                            if player_avg != None:
+                                play_sound_effect('average', True)
+                                play_sound_effect(player_avg, True)
+                                    
+                            # play_sound_effect('joined', state, True)
                             break
+                    mirror_sounds()
             else:
                 ppi('INFO: unexpected ws-message')
                 # ppi(json.dumps(m, indent = 4, sort_keys = True))
@@ -2294,6 +2410,9 @@ if __name__ == "__main__":
 
     global checkoutsCounter
     checkoutsCounter = {}
+
+    global lobbyPlayers
+    lobbyPlayers = []
 
 
 

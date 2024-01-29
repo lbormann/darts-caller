@@ -244,7 +244,7 @@ You can find your Board-ID in Board-Manager.
 
 *`-M / --media_path`*
 
-Setup an absolute path where sounds should be/are located (Just create a new empty folder for that).
+Setup an absolute path where sounds should be/are located (If you are new just create an empty folder for that).
 Examples: 
 - (Windows): C:\Users\Luca\Desktop\Programme\autodarts\autodarts-caller-speaker
 - (Linux): /home/luca/autodarts/autodarts-caller-speaker
@@ -342,6 +342,7 @@ You can not hear any calls as your music is way too loud? Try to set this to '0.
 *`-WEB / --web_caller`*
 
 If you set this to a '1' or '2' the application will host a web-endpoint to mirror all call-events. A value '1' will play sounds only on the web-endpoint. Value '2' will play sounds on the application and on the web-endpoint. To use web-calling visit http://{machine-ip-address}:{web-caller-port} in browser. NOTE: iphone probably does not work (WIP).
+The web-caller caches sound-files resulting in more fast response times over time. If you configure one fixed speaker, you will notice it after a short playtime.
 
 *`-WEBSB / --web_caller_scoreboard`*
 
