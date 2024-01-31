@@ -1,14 +1,17 @@
-- improve README: default to customization
-- add caching mechnismn for web-caller by using indexedDB
-- fix deletion of blacklist-file on ADD-Update
+- improve web-caller (load every file + "change/ban-caller-function")
+- use userID instead of boardID
+- extend score-correction for not only correction
 - fix audio output when is hdmi
-- change file hoster for more stable downloads
+- improve BAV
+- check start.sh (sh) media_path_shared if empty
+- integrate web-caller in autodarts.io
+- stop calls for cricket when field is already closed
 - adjust cricket-processing with x01-processing
 - add support for more game variants
-- stop calls for cricket when field is already closed
 - fix web-caller stop working after one leg if a specific caller is set
 - improve web-caller compatibility for ios, especially IPhone15 Pro (iOS 17.2.1)
 - improve caller (e.g. randomize speaker speed, pitch, volume etc.)
 - add license
 - clean code (use classes like AutodartsCaller, AutodartsConnection), refactor to best-practice
 - show used audio-device on start
+- improve README: default to customization

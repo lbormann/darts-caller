@@ -1,3 +1,13 @@
+## 2.7.0
+
+- extend lobby-calling (lobbychanged -> lobby_ambient_in)
+- improve web-caller (using indexeddb for caching to continously prevent delays)
+- change file-hoster for more stable downloads (dropbox)
+- update voice-packs (new lobby-sounds, 2000+ new playernames)
+- add path argument for blacklist-file
+- fix token-requests
+
+
 ## 2.6.3
 
 - add CHANGELOG

@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+    <script type="text/javascript" src="/static/js/common.js?v=1.0.1"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/static/css/common.css?v=1.0.0">
@@ -25,6 +27,7 @@
         const button = document.getElementById('button');
         const state = document.getElementById('status');
         const lastCall = document.getElementById('last-call');
+        let db;
 
         button.addEventListener('click', onButtonClick);
 
@@ -32,214 +35,139 @@
         let audioQueue = Promise.resolve();
         let previousWait = false;
 
-        function getFilename(path) {
+
+
+        function processAudioEvent(audioEvent) {
+            return new Promise((resolve, reject) => {
+                let path = audioEvent.path;
+
+                getAudio(audioEvent)
+                    .then(audioBlob => {
+                        if (audioBlob) {
+                            playAudio(audioBlob, audioEvent, true)
+                                .then(() => {
+                                    resolve();
+                                })
+                                .catch(error => {
+                                    reject(error);
+                                });
+                        } else {
+                            let fileUrl = `/sounds/${path}`;
+                            fetch(fileUrl, {
+                                method: "GET",
+                                headers: {
+                                    "Content-Type": "audio/mpeg"
+                                },
+                            })
+                            .then(response => response.arrayBuffer())
+                            .then(arrayBuffer => {
+                                cacheAudio(audioEvent, arrayBuffer);
+                                playAudio(arrayBuffer, audioEvent, false)
+                                    .then(() => {
+                                        resolve();
+                                    })
+                                    .catch(error => {
+                                        reject(error);
+                                    });
+                            })
+                            .catch(err => {
+                                console.error(err);
+                                reject(err);
+                            });
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        reject(err);
+                    });
+            });
+        }
+
+        function playAudio(audioBlob, audioEvent, fromCache) {
+            return new Promise((resolve, reject) => {
+                audioContext.decodeAudioData(audioBlob)
+                    .then(audioBuffer => {
+                        let source = audioContext.createBufferSource();
+                        source.buffer = audioBuffer;
+                        let gainNode = audioContext.createGain();
+                        gainNode.gain.value = audioEvent.volume;
+                        source.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+                        source.onended = () => {
+                            resolve();
+                        };
+                        source.start();
+
+                        lastCall.innerText = audioEvent.name;
+                        if(fromCache){
+                            lastCall.style = "color:orange;"
+                            console.log("Play sound (by cache)", audioEvent.name);
+                        }else{
+                            lastCall.style = "color:lightblue;"
+                            console.log("Play sound (by download)", audioEvent.name);
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        reject(err);
+                    });
+            });
+        }
+
+        function cacheAudio(audioEvent, audioBuffer) {
+            const copiedAudioBuffer = audioBuffer.slice(0);
+            db.open().then(() => {
+                db.sounds.put({ caller: audioEvent.caller, name: audioEvent.name, path: audioEvent.path, file: copiedAudioBuffer })
+                    .then(() => {
+                        console.log(`Caching successful for ${audioEvent.name} -> ${audioEvent.path})`);
+                    })
+                    .catch(error => {
+                        console.error(`Caching failed for ${audioEvent.name} -> ${audioEvent.path}: ${error}`);
+                    });
+            });
+        }
+
+        function getAudio(audioEvent) {
+            return db.open()
+                .then(() => db.sounds.get({caller: audioEvent.caller, name: audioEvent.name}))
+                .then(result => {
+                    if (result) {
+                        console.log(`Using cache for ${audioEvent.name}`);
+                        return result.file;
+                    } else {
+                        console.log(`No cache for ${audioEvent.name}`);
+                        return null;
+                    }
+                })
+                .catch(error => {
+                    console.error(`Cache-request failed for ${audioEvent.name}: ${error}`);
+                    return null;
+                });
+        }
+
+        function extractFilename(path) {
             let separator = path.includes('/') ? '/' : '\\';
             let parts = path.split(separator);
             return parts[parts.length - 1];
         }
 
-        function fetchAndPlay(file) {
-            return new Promise((resolve, reject) => {
-                let file_url = `/sounds/${file.path}`;
-                fetch(file_url, {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "audio/mpeg"
-                    },
-                })
-                .then(response => response.arrayBuffer())
-                .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
-                .then(audioBuffer => {
-                    console.log("Play sound: ", file.path);
-                    lastCall.innerText = getFilename(unescape(file.path)); 
-                    let source = audioContext.createBufferSource();
-                    source.buffer = audioBuffer;
-                    let gainNode = audioContext.createGain();
-                    gainNode.gain.value = file.volume;
-                    source.connect(gainNode);
-                    gainNode.connect(audioContext.destination);
-                    source.start();
-                    source.onended = resolve;
-                })
-                .catch(err => {
-                    console.error(err);
-                    reject(err);
-                });
+        function initializeDB(){
+            db = new Dexie("{{ db_name }}");
+            db.version(1).stores({
+            sounds: `
+                [caller+name],
+                path,
+                file`,
             });
         }
 
-
-        // function fetchAndPlay(file) {
-        //     return new Promise((resolve, reject) => {
-        //         let file_url = `/sounds/${file.path}`;
-
-        //         // Versuche, die Audio-Datei aus IndexedDB abzuspielen
-        //         checkAndPlayAudio(file_url).then(audioBuffer => {
-        //             if (audioBuffer) {
-        //                 // Audio-Datei aus IndexedDB gefunden, abspielen
-        //                 playAudioFromBuffer(audioBuffer);
-        //                 resolve();
-        //             } else {
-        //                 // Audio-Datei nicht in IndexedDB gefunden, herunterladen und speichern
-        //                 fetch(file_url, {
-        //                     method: "GET",
-        //                     headers: {
-        //                         "Content-Type": "audio/mpeg"
-        //                     },
-        //                 })
-        //                 .then(response => response.arrayBuffer())
-        //                 .then(arrayBuffer => {
-        //                     // Speichern in IndexedDB
-        //                     saveAudioDataToIndexedDB(file_url, arrayBuffer);
-
-        //                     // Dekodieren und abspielen
-        //                     //playAudioFromBuffer(arrayBuffer);
-
-        //                     resolve();
-        //                 })
-        //                 .catch(err => {
-        //                     console.error(err);
-        //                     reject(err);
-        //                 });
-        //             }
-        //         });
-        //     });
-        // }
-
-        // // Funktion zum Überprüfen und Abspielen von Audio aus IndexedDB
-        // function checkAndPlayAudio(key) {
-        //     return new Promise((resolve, reject) => {
-        //         let request = indexedDB.open('audioDB', 2);
-                
-        //         // Bei erfolgreichem Öffnen der Datenbank
-        //         request.onsuccess = function(event) {
-                    
-        //             try {
-        //                 let db = event.target.result;
-
-        //                 // Erstelle einen Transaktionskontext
-        //                 let transaction = db.transaction(['audioStore'], 'readonly');
-        //                 // store = request.transaction.objectStore('yourStore');
-
-        //                 // Überprüfe, ob der Object Store vorhanden ist
-        //                 if (!transaction.objectStoreNames.contains('audioStore')) {
-        //                     // Wenn der Object Store nicht gefunden wurde, löse die Promise mit null aus
-        //                     resolve(null);
-        //                     return;
-        //                 }
-
-        //                 // Greife auf den Store zu
-        //                 let objectStore = transaction.objectStore('audioStore');
-
-        //                 // Überprüfe, ob der Schlüssel vorhanden ist
-        //                 let getRequest = objectStore.get(key);
-
-        //                 getRequest.onsuccess = function(event) {
-        //                     let result = event.target.result;
-
-        //                     if (result) {
-        //                         // Audio-Datei gefunden, löse die Promise mit dem ArrayBuffer aus
-        //                         resolve(result);
-        //                     } else {
-        //                         // Audio-Datei nicht gefunden, löse die Promise mit null aus
-        //                         resolve(null);
-        //                     }
-        //                 };
-
-        //                 // Schließe die Transaktion
-        //                 transaction.oncomplete = function() {
-        //                     db.close();
-        //                 };
-        //             }
-        //             catch(e) {
-        //                 // db.createObjectStore('audioStore');
-        //                 // transaction = db.transaction(['audioStore'], 'readonly');
-        //                 resolve(null);
-        //             }
-
-        //         };
-
-        //         // Bei Bedarf erstelle die Datenbank und den Store
-        //         request.onupgradeneeded = function(event) {
-        //             let db = event.target.result;
-
-        //             // Erstelle einen Object Store für die Audio-Daten
-        //             let objectStore = db.createObjectStore('audioStore', { keyPath: 'key' });
-
-        //             // Lege den Index für den Zugriff auf Audio-Daten fest
-        //             objectStore.createIndex('audioData', 'audioData', { unique: false });
-        //         };
-
-        //         // Bei Fehlern
-        //         request.onerror = function(event) {
-        //             console.error("Error opening IndexedDB:", event.target.error);
-        //             reject(event.target.error);
-        //         };
-        //     });
-        // }
-
-        // // Hilfsfunktion zum Speichern von Audio-Daten in IndexedDB
-        // function saveAudioDataToIndexedDB(key, arrayBuffer) {
-        //     // Öffne oder erstelle die IndexedDB-Datenbank
-        //     let request = indexedDB.open('audioDB', 2);
-
-        //     // Bei erfolgreichem Öffnen der Datenbank
-        //     request.onsuccess = function(event) {
-        //         let db = event.target.result;
-
-        //         // Erstelle einen Transaktionskontext
-        //         let transaction = db.transaction(['audioStore'], 'readwrite');
-
-        //         // Greife auf den Store zu
-        //         let objectStore = transaction.objectStore('audioStore');
-
-        //         // Füge die Audio-Daten hinzu
-        //         objectStore.put(arrayBuffer, key);
-
-        //         // Schließe die Transaktion
-        //         transaction.oncomplete = function() {
-        //             db.close();
-        //         };
-        //     };
-
-        //     // Bei Bedarf erstelle die Datenbank und den Store
-        //     request.onupgradeneeded = function(event) {
-        //         let db = event.target.result;
-
-        //         // Erstelle einen Object Store für die Audio-Daten
-        //         let objectStore = db.createObjectStore('audioStore', { keyPath: 'key' });
-
-        //         // Lege den Index für den Zugriff auf Audio-Daten fest
-        //         objectStore.createIndex('audioData', 'audioData', { unique: false });
-        //     };
-
-        //     // Bei Fehlern
-        //     request.onerror = function(event) {
-        //         console.error("Error opening IndexedDB:", event.target.error);
-        //     };
-        // }
-
-        // // Hilfsfunktion zum Abspielen von Audio aus dem ArrayBuffer
-        // function playAudioFromBuffer(arrayBuffer) {
-        //     audioContext.decodeAudioData(arrayBuffer)
-        //         .then(audioBuffer => {
-        //             // Code zum Abspielen der Audio-Datei hier einfügen
-        //             // (ähnlich wie in deiner fetchAndPlay-Funktion)
-        //             console.log("Play sound from IndexedDB");
-        //             let source = audioContext.createBufferSource();
-        //             source.buffer = audioBuffer;
-        //             let gainNode = audioContext.createGain();
-        //             gainNode.gain.value = 1.0;  // Hier kannst du die Lautstärke anpassen
-        //             source.connect(gainNode);
-        //             gainNode.connect(audioContext.destination);
-        //             source.start();
-        //         })
-        //         .catch(err => {
-        //             console.error(err);
-        //         });
-        // }
-
-
+        function checkDBCompatibility () {
+            if (!('indexedDB' in window)) {
+                console.log("This browser doesn't support IndexedDB");
+                return false;
+            }
+            return true;
+        }
 
         function onWsOpen(){
             state.innerText = "CONNECTED!";
@@ -255,10 +183,12 @@
             if(data.event === 'mirror') {
                 previousWait = true;
                 for(let file of data.files) {
+                    file['name'] = extractFilename(unescape(file.path));
+
                     if(file.wait || previousWait) {
-                        audioQueue = audioQueue.then(() => fetchAndPlay(file));
+                        audioQueue = audioQueue.then(() => processAudioEvent(file));
                     } else {
-                        fetchAndPlay(file).catch(err => console.error(err));
+                        processAudioEvent(file).catch(err => console.error(err));
                     }
                     previousWait = file.wait;
                 }
@@ -274,43 +204,34 @@
         }
  
         document.addEventListener("DOMContentLoaded", function() {
+            console.log("APP-Version: '{{ app_version }}'");
+
             if("{{ state }}" == "0"){
                 showFullscreenOverlay("To use web-calling set -WEB (--web_caller) to 1 or 2");
-            }else{
-                // let request = indexedDB.open('audioDB', 2);
-                
-                // // Bei erfolgreichem Öffnen der Datenbank
-                // request.onsuccess = function(event) {
-                    
-                // }
-                // request.onupgradeneeded =
-                //     function(event) {
-                //         let db = event.target.result;
-                //         var transaction = event.target.transaction;
+            }else{ 
+                if(!checkDBCompatibility){
+                    return;
+                }
 
-                //         transaction.oncomplete =
-                //             function(event) {    
-                //                 // Now store is available to be populated
-                //             }
+                console.log("USING DB: '{{ db_name }}'");
+                initializeDB();
 
-                //         // Checks if the object store exists:
-                //         if (!db.objectStoreNames.contains('audioStore')) {
-                //             // If the object store does not exist, create it:
-                //             // db.createObjectStore('audioStore');
-
-                //             // Erstelle einen Object Store für die Audio-Daten
-                //             let objectStore = db.createObjectStore('audioStore', { keyPath: 'key' });
-
-                //             // Lege den Index für den Zugriff auf Audio-Daten fest
-                //             objectStore.createIndex('audioData', 'audioData', { unique: false });
-                //             // db.close();
-                //         }                        
-                //     }
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.has('clear')) {
+                    db.open().then(() => {
+                        db.delete().then(() => {
+                            console.log('Database cleared');
+                            initializeDB();
+                        }).catch(error => {
+                            console.error('Failed to clear database', error);
+                        });
+                    }).catch(error => {
+                        console.error('Failed to open database for clearing', error);
+                    });
+                }
             }
         });
-        
-    </script>
 
-    <script type="text/javascript" src="/static/js/common.js?v=1.0.0"></script>
+    </script>
 </body>
 </html>

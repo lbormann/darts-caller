@@ -127,6 +127,19 @@ Since Version 1.6.0 you can deposit multiple sounds for every ([sound-file-key](
 - ambient_group_normal
 - ambient_checkout_call_limit
 
+**LOBBY**
+
+- lobby_ambient_in
+- lobby_ambient_out
+- lobby_player
+- lobby_average
+- lobby_left
+
+**ATC (Around the clock)**
+- atc_target_hit
+- atc_target_missed
+- atc_target_next
+
 **CONTROL**
 
 - control
@@ -141,14 +154,7 @@ Since Version 1.6.0 you can deposit multiple sounds for every ([sound-file-key](
 - control_dart_correction_2 [overrides: control, control_dart_correction]
 - control_dart_correction_3 [overrides: control, control_dart_correction]
 
-**LOBBY**
 
-- lobbychanged
-
-**ATC (Around the clock)**
-- atc_target_hit
-- atc_target_missed
-- atc_target_next
 
 
 
@@ -221,6 +227,7 @@ Start the script:
 - -DL / --downloads [Default: 1] [Possible values: 0 | 1]
 - -DLL / --downloads_limit [Default: 0]
 - -DLLA / --downloads_language [Default: 1] [Possible values: 0 (every language) | 1 (english) | 2 (french) | 3 (russian) | 4 (german) | 5 (spanish) | 6 (dutch)]
+- -BLP / --blacklist_path [Default: '']
 - -BAV / --background_audio_volume [Default: 0.0] [Possible values: 0.0 .. 1.0]
 - -WEB / --web_caller [Default: 0] [Possible values: 0,1,2]
 - -WEBSB / --web_caller_scoreboard [Default: 0] [Possible values: 0 | 1]
@@ -244,7 +251,7 @@ You can find your Board-ID in Board-Manager.
 
 *`-M / --media_path`*
 
-Setup an absolute path where sounds should be/are located (Just create a new empty folder for that).
+Setup an absolute path where sounds should be/are located (If you are new just create an empty folder for that).
 Examples: 
 - (Windows): C:\Users\Luca\Desktop\Programme\autodarts\autodarts-caller-speaker
 - (Linux): /home/luca/autodarts/autodarts-caller-speaker
@@ -327,13 +334,17 @@ If you set this to '1' ambient_*-sounds will wait until main-calls are finished.
 
 If you set this to '1' the application will download available voice-packs that are not already installed. Installation path is the value of -M. By default this is activated.
 
+*`-DLL / --downloads_limit`*
+
+If you want to limit downloads-count, you can set it to x most recent. By default this is '0' (no limitation).
+
 *`-DLLA / --downloads_language`*
 
 If you want to filter downloads to a specific language. '0' means no filtering. By default this is '1' (english).
 
-*`-DLL / --downloads_limit`*
+*`-BLP / --blacklist_path`*
 
-If you want to limit downloads-count, you can set it to x most recent. By default this is '0' (no limitation).
+The blacklist-file stores voice-pack-names that are undesired for downloads or calls. In other words: those ones are just ignored by the application. To use blacklist define an absolute path where the blacklist-file should be located (it will be generated automatically on application start). Now you can simply add an undesired voice-pack-name (have a look at available ones on application start). 
 
 *`-BAV / --background_audio_volume`*
 
@@ -341,7 +352,9 @@ You can not hear any calls as your music is way too loud? Try to set this to '0.
 
 *`-WEB / --web_caller`*
 
-If you set this to a '1' or '2' the application will host a web-endpoint to mirror all call-events. A value '1' will play sounds only on the web-endpoint. Value '2' will play sounds on the application and on the web-endpoint. To use web-calling visit http://{machine-ip-address}:{web-caller-port} in browser. NOTE: iphone probably does not work (WIP).
+If you set this '1' or '2' the application will host a web-endpoint to mirror all local call-events. A value '1' will play sounds only on the web-endpoint. Value '2' will play sounds on the application (locally) and on the web-endpoint; to use web-calling visit http://{machine-ip-address}:{web-caller-port} in a browser. For continuous calling make sure your device display stays on while you are playing. For better processing the web-caller caches sound-files resulting in better response times over time; if you configure a fixed speaker, you will notice less delay after certain playtime. Internet Explorer, non-chromium Edge and Safari > v10 is mandantory.
+
+NOTE: iphone probably does not work (WIP). 
 
 *`-WEBSB / --web_caller_scoreboard`*
 
@@ -464,11 +477,12 @@ EVERY sound is optional! If you don't like a specific sound just delete it! The 
 
 ### I don't like voice-pack X
 
-There are two ways to ban a voice-pack.
+There are two ways to ban an undesired voice-pack.
 Option 1) Delete ALL files of voice-pack-folder.
-Option 2) use [autodarts-voice](https://github.com/lbormann/autodarts-voice) to ban the the current caller when active.
-Both options forcing the application to either download files again nor using a voice-pack anymore. 
-If you wish to revoke a ban, open 'autodarts-caller-banned.txt' and remove the line from the list. You find the file (Windows) in C:\Users\YOUR-USER\AppData\Local\Temp\autodarts-caller-banned.txt
+Option 2) use [autodarts-voice](https://github.com/lbormann/autodarts-voice) to ban the the current caller when he/she is active.
+Option 3) put the name of the current caller autodarts-caller-banned.txt by yourself.
+All 3 options forcing the application to either download files again nor using a voice-pack anymore. 
+If you wish to revoke a ban, open 'autodarts-caller-banned.txt' and remove the line from the list.
 
 ### App starts and stops immediately?!
 
