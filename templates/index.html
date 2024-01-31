@@ -41,11 +41,9 @@
             return new Promise((resolve, reject) => {
                 let path = audioEvent.path;
 
-                // Zuerst versuchen, die Audiodatei aus dem Cache abzurufen
                 getAudio(audioEvent)
                     .then(audioBlob => {
                         if (audioBlob) {
-                            // Wenn die Audiodatei im Cache gefunden wurde, spiele sie ab
                             playAudio(audioBlob, audioEvent, true)
                                 .then(() => {
                                     resolve();
@@ -54,7 +52,6 @@
                                     reject(error);
                                 });
                         } else {
-                            // Wenn die Audiodatei nicht im Cache gefunden wurde, vom Server holen und cachen
                             let fileUrl = `/sounds/${path}`;
                             fetch(fileUrl, {
                                 method: "GET",
@@ -64,10 +61,7 @@
                             })
                             .then(response => response.arrayBuffer())
                             .then(arrayBuffer => {
-                                // Audio im Cache speichern
                                 cacheAudio(audioEvent, arrayBuffer);
-                                
-                                // Audio abspielen
                                 playAudio(arrayBuffer, audioEvent, false)
                                     .then(() => {
                                         resolve();
@@ -99,7 +93,6 @@
                         gainNode.gain.value = audioEvent.volume;
                         source.connect(gainNode);
                         gainNode.connect(audioContext.destination);
-                        // Auflösen der Promise, wenn der Sound abgespielt wurde
                         source.onended = () => {
                             resolve();
                         };
@@ -112,9 +105,7 @@
                         }else{
                             lastCall.style = "color:lightblue;"
                             console.log("Play sound (by download)", audioEvent.name);
-                            
                         }
-                        
                     })
                     .catch(err => {
                         console.error(err);
@@ -124,12 +115,8 @@
         }
 
         function cacheAudio(audioEvent, audioBuffer) {
-            // Kopiere das ArrayBuffer, um die Detached-Exception zu vermeiden
             const copiedAudioBuffer = audioBuffer.slice(0);
-
-            // Öffne die Datenbank
             db.open().then(() => {
-                // Füge die Audiodatei zur Tabelle hinzu
                 db.sounds.put({ caller: audioEvent.caller, name: audioEvent.name, path: audioEvent.path, file: copiedAudioBuffer })
                     .then(() => {
                         console.log(`Caching successful for ${audioEvent.name} -> ${audioEvent.path})`);
@@ -141,7 +128,6 @@
         }
 
         function getAudio(audioEvent) {
-            // Öffne die Datenbank
             return db.open()
                 .then(() => db.sounds.get({caller: audioEvent.caller, name: audioEvent.name}))
                 .then(result => {
@@ -165,7 +151,7 @@
             return parts[parts.length - 1];
         }
 
-        function initialize_db(){
+        function initializeDB(){
             db = new Dexie("{{ db_name }}");
             db.version(1).stores({
             sounds: `
@@ -175,7 +161,7 @@
             });
         }
 
-        function check_db_compatibility () {
+        function checkDBCompatibility () {
             if (!('indexedDB' in window)) {
                 console.log("This browser doesn't support IndexedDB");
                 return false;
@@ -222,21 +208,20 @@
 
             if("{{ state }}" == "0"){
                 showFullscreenOverlay("To use web-calling set -WEB (--web_caller) to 1 or 2");
-            }else{
-                
-                if(!check_db_compatibility){
+            }else{ 
+                if(!checkDBCompatibility){
                     return;
                 }
 
                 console.log("USING DB: '{{ db_name }}'");
-                initialize_db();
+                initializeDB();
 
                 const urlParams = new URLSearchParams(window.location.search);
                 if (urlParams.has('clear')) {
                     db.open().then(() => {
                         db.delete().then(() => {
                             console.log('Database cleared');
-                            initialize_db();
+                            initializeDB();
                         }).catch(error => {
                             console.error('Failed to clear database', error);
                         });
@@ -247,7 +232,6 @@
             }
         });
 
-        
     </script>
 </body>
 </html>

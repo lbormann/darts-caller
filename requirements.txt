@@ -1,5 +1,5 @@
 pyinstaller==6.3.0
-python-keycloak==2.13.2
+python-keycloak==3.7.0
 websocket-client==1.5.1
 websocket-server==0.6.4
 pygame==2.3.0

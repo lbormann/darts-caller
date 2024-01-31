@@ -2,6 +2,7 @@ import os
 import sys
 from pathlib import Path
 import time
+from datetime import datetime, timedelta
 import json
 import platform
 import random
@@ -86,8 +87,9 @@ DEFAULT_HOST_IP = '0.0.0.0'
 
 AUTODART_URL = 'https://autodarts.io'
 AUTODART_AUTH_URL = 'https://login.autodarts.io/'
-AUTODART_CLIENT_ID = 'autodarts-app'
+AUTODART_CLIENT_ID = 'wusaaa-caller-for-autodarts'
 AUTODART_REALM_NAME = 'autodarts'
+AUTODART_CLIENT_SECRET = "4hg5d4fddW7rqgoY8gZ42aMpi2vjLkzf"
 AUTODART_LOBBIES_URL = 'https://api.autodarts.io/gs/v0/lobbies/'
 AUTODART_MATCHES_URL = 'https://api.autodarts.io/gs/v0/matches/'
 AUTODART_BOARDS_URL = 'https://api.autodarts.io/bs/v0/boards/'
@@ -113,47 +115,8 @@ CALLER_GENDERS = {
     2: ['male', 'm'],
 }
 CALLER_PROFILES = {
-    # # murf
-    # 'charles-m-english-us-canada': ('https://www.dropbox.com/scl/fi/l7jv12w5tjqfhek0g05c2/charles-m-english-us-canada.zip?rlkey=fdvyhxxi8cdlyrmpmg2165ikv&dl=1', 1),
-    # 'clint-m-english-us-canada': ('https://www.dropbox.com/scl/fi/zd8v2cxlaasx8ewy0vh1g/clint-m-english-us-canada.zip?rlkey=0w5ot6v01fudhn0w5gk1wc4v2&dl=1', 1),
-    # 'alicia-f-english-us-canada': ('https://www.dropbox.com/scl/fi/uqubzt449fe0xiej9z34y/alicia-f-english-us-canada.zip?rlkey=2qgyjz4arhhv4vx7qewl2rmhq&dl=1', 1),
-    # 'kushal-m-english-india': ('https://www.dropbox.com/scl/fi/hdbqm076vh7inaekk9vdb/kushal-m-english-india.zip?rlkey=wdrvseqk51240z50jlfdv43uf&dl=1', 1),
-    # 'kylie-f-english-australia': ('https://www.dropbox.com/scl/fi/1rv4tmxnydxqmpi1nhfbe/kylie-f-english-australia.zip?rlkey=iynuqv0bl6z3ich8m9bvbm2wk&dl=1', 1),
-    # 'ruby-f-english-uk': ('https://www.dropbox.com/scl/fi/0aj8agfnpzbmvqu16swly/ruby-f-english-uk.zip?rlkey=b1ehvnweyjwluqvi5tbsfhv4l&dl=1', 1),
-    # 'ethan-m-english-us-canada': ('https://www.dropbox.com/scl/fi/4zkfo10buqredsg2gxn8f/ethan-m-english-us-canada.zip?rlkey=kau8b3m6gyzpek30z70pndef7&dl=1', 1),
-    # 'mitch-m-english-australia': ('https://www.dropbox.com/scl/fi/lfrfqjenotj3fuz953h6y/mitch-m-english-australia.zip?rlkey=e5l8ibiw9yzpzkfk86udw21sk&dl=1', 1),
-    # 'ava-f-english-us-canada': ('https://www.dropbox.com/scl/fi/tvy7ub0080ipb5jowk1a8/ava-f-english-us-canada.zip?rlkey=5vdwl8q36mb2q1k8d4eyb7xcw&dl=1', 1),
-    # 'aiden-m-english-uk': ('https://www.dropbox.com/scl/fi/sz4ogyw47ecqbyf0ru34m/aiden-m-english-uk.zip?rlkey=wftg1bzs0mety63b0yuta0ejb&dl=1', 1),
-    # 'theo-m-english-uk': ('https://www.dropbox.com/scl/fi/sfequbzrd498323x0zrql/theo-m-english-uk.zip?rlkey=9pna69ml42no1fttsg7m97zmi&dl=1', 1),
-    # 'emily-f-english-scottish': ('https://www.dropbox.com/scl/fi/mnnpyy4f19u7nhcdd92vb/emily-f-english-scottish.zip?rlkey=r5hsauwy67yx0w404t024gpo3&dl=1', 1),
-    # # google
-    # 'en-US-Wavenet-E-FEMALE': ('TODO', 4),
-    # 'en-US-Wavenet-G-FEMALE': ('TODO', 4),
-    # 'en-US-Wavenet-A-MALE': ('TODO', 4),
-    # 'en-US-Wavenet-H-FEMALE': ('TODO', 4),
-    # 'en-US-Wavenet-I-MALE': ('TODO', 4),
-    # 'en-US-Wavenet-J-MALE': ('TODO', 4),
-    # 'en-US-Wavenet-F-FEMALE': ('TODO', 4),
-    # 'fr-FR-Wavenet-E-FEMALE': ('TODO', 3),
-    # 'fr-FR-Wavenet-B-MALE': ('TODO', 3),
-    # 'ru-RU-Wavenet-E-FEMALE': ('TODO', 3),
-    # 'ru-RU-Wavenet-B-MALE': ('TODO', 3),
-    # 'de-DE-Wavenet-F-FEMALE': ('TODO', 3),  
-    # 'de-DE-Wavenet-B-MALE': ('TODO', 3),
-    # 'es-ES-Wavenet-C-FEMALE': ('TODO', 3),  
-    # 'es-ES-Wavenet-B-MALE': ('TODO', 3),
-    # 'nl-NL-Wavenet-B-MALE': ('TODO', 3),  
-    # 'nl-NL-Wavenet-D-FEMALE': ('TODO', 3),
-    # # amazon
-    # 'en-US-Stephen-Male': ('TODO', 4),  
-    # 'en-US-Ivy-Female': ('TODO', 4),
-    # 'de-DE-Vicki-Female': ('TODO', 3),  
-    # 'de-DE-Daniel-Male': ('TODO', 3),
-    # 'en-US-Kendra-Female': ('TODO', 4),
-    # 'en-US-Joey-Male': ('TODO', 4),
-    # 'en-US-Joanna-Female': ('TODO', 4),
-
-
+    # MS-ONEDRIVE (DEPRECATED)
+    # --------
     # # murf
     # 'charles-m-english-us-canada': ('https://drive.google.com/file/d/1-CrWSFHBoT_I9kzDuo7PR7FLCfEO-Qg-/view?usp=sharing', 1),
     # 'clint-m-english-us-canada': ('https://drive.google.com/file/d/1-IQ9Bvp1i0jG6Bu9fMWhlbyAj9SkoVGb/view?usp=sharing', 1),
@@ -167,32 +130,78 @@ CALLER_PROFILES = {
     # 'aiden-m-english-uk': ('https://drive.google.com/file/d/10bYvcqp1nzqJnBDC7B6u7s8aequ5wGat/view?usp=sharing', 1),
     # 'theo-m-english-uk': ('https://drive.google.com/file/d/10eQaYMZM3tkIA2PIDsb0r-5NhyDU86-C/view?usp=sharing', 1),
     # 'emily-f-english-scottish': ('https://drive.google.com/file/d/10mOzTjA5tqBZCKI3EqxJ0YvQptqtMNQg/view?usp=sharing', 1),
+    # # google
+    # 'en-US-Wavenet-E-FEMALE': ('https://drive.google.com/file/d/1XIj7pJPd9_utwPeQtIftGJz1RUPX6dg_/view?usp=sharing', 3),
+    # 'en-US-Wavenet-G-FEMALE': ('https://drive.google.com/file/d/1h_-xmklyIcq6qEh27ibJWeQtArsQs9eX/view?usp=sharing', 3),
+    # 'en-US-Wavenet-A-MALE': ('https://drive.google.com/file/d/1sKVRUt6_V0c45Les3lLiuR9uMGtdzqto/view?usp=sharing', 3),
+    # 'en-US-Wavenet-H-FEMALE': ('https://drive.google.com/file/d/1MshpjUt0uhQ37ai-3794y4LbewxgPqvX/view?usp=sharing', 3),
+    # 'en-US-Wavenet-I-MALE': ('https://drive.google.com/file/d/1lYjR2urFzV55HKNxCqeJXLBVu6LeKfYa/view?usp=sharing', 3),
+    # 'en-US-Wavenet-J-MALE': ('https://drive.google.com/file/d/1P6oFO0lFlanX2yYI_U-zlag4SE29LkXK/view?usp=sharing', 3),
+    # 'en-US-Wavenet-F-FEMALE': ('https://drive.google.com/file/d/1b-k1jAL8osH_5Mm2RLTDY_rSucF7Wn2_/view?usp=sharing', 3),
+    # 'fr-FR-Wavenet-E-FEMALE': ('https://drive.google.com/file/d/1fow359C2tt9E6Bf5_IO_MnJfNuyXgnyJ/view?usp=sharing', 2),
+    # 'fr-FR-Wavenet-B-MALE': ('https://drive.google.com/file/d/1lcmgTonyruYYLA7AqgPt5nfT05J7erih/view?usp=sharing', 2),
+    # 'ru-RU-Wavenet-E-FEMALE': ('https://drive.google.com/file/d/1tjafA4_25yTYEJg_JHHt9qTTeJubB7Fu/view?usp=sharing', 2),
+    # 'ru-RU-Wavenet-B-MALE': ('https://drive.google.com/file/d/1L9TccnpRn-Ms-pFx25-7eDR9ku3rQRbD/view?usp=sharing', 2),
+    # 'de-DE-Wavenet-F-FEMALE': ('https://drive.google.com/file/d/15T-mMILZgVpNflgEByzmIbqXaZaa585t/view?usp=sharing', 2),  
+    # 'de-DE-Wavenet-B-MALE': ('https://drive.google.com/file/d/1Bj4yb_fI4HnUiLcPCPJgzbubpyqsng-D/view?usp=sharing', 2),
+    # 'es-ES-Wavenet-C-FEMALE': ('https://drive.google.com/file/d/1HB_a3j7L9Nkhsk4GEYn_A4BftWZuL_0X/view?usp=sharing', 2),  
+    # 'es-ES-Wavenet-B-MALE': ('https://drive.google.com/file/d/1P1Iqt8sN7WbKlJgwRB03r5WjG4Sa8VBM/view?usp=sharing', 2),
+    # 'nl-NL-Wavenet-B-MALE': ('https://drive.google.com/file/d/1VGpsXKCMxE26jvBRwEw7nZYdK_wP9g7u/view?usp=sharing', 2),  
+    # 'nl-NL-Wavenet-D-FEMALE': ('https://drive.google.com/file/d/1bBOeUfJdeU81KDlkCZGTw1sMNGEdE-X0/view?usp=sharing', 2),
+    # # amazon
+    # 'en-US-Stephen-Male': ('https://drive.google.com/file/d/1ma3zOIPNXzocQGNSMy8M8SyaYjyYOIx4/view?usp=sharing', 3),  
+    # 'en-US-Ivy-Female': ('https://drive.google.com/file/d/1zOVr1H2MSsj3soX_l8WtBP0qtiCkZazY/view?usp=sharing', 3),
+    # 'de-DE-Vicki-Female': ('https://drive.google.com/file/d/1bU4vAFf9ligX6HZeiwVKbUCRCawOdvh0/view?usp=sharing', 2),  
+    # 'de-DE-Daniel-Male': ('https://drive.google.com/file/d/1L83p1nsDvqplEdoCTpan6yd63Jc-J9bj/view?usp=sharing', 2),
+    # 'en-US-Kendra-Female': ('https://drive.google.com/file/d/140otZWbkSr4DZ3EKVYD6oOqe0p1BJyXj/view?usp=sharing', 3),
+    # 'en-US-Joey-Male': ('https://drive.google.com/file/d/1KeVzV5qISezkIA3XUogXLCDVSSe9vsS-/view?usp=sharing', 3),
+    # 'en-US-Joanna-Female': ('https://drive.google.com/file/d/1VPccbKqLpKeTeqXZ6Ko-21bYVh4sgguB/view?usp=sharing', 3),
+
+
+    # DROPBOX
+    # --------
+    # # murf
+    # 'charles-m-english-us-canada': ('https://www.dropbox.com/scl/fi/l7jv12w5tjqfhek0g05c2/charles-m-english-us-canada.zip?rlkey=fdvyhxxi8cdlyrmpmg2165ikv&dl=1', 1),
+    # 'clint-m-english-us-canada': ('https://www.dropbox.com/scl/fi/zd8v2cxlaasx8ewy0vh1g/clint-m-english-us-canada.zip?rlkey=0w5ot6v01fudhn0w5gk1wc4v2&dl=1', 1),
+    # 'alicia-f-english-us-canada': ('https://www.dropbox.com/scl/fi/uqubzt449fe0xiej9z34y/alicia-f-english-us-canada.zip?rlkey=2qgyjz4arhhv4vx7qewl2rmhq&dl=1', 1),
+    # 'kushal-m-english-india': ('https://www.dropbox.com/scl/fi/hdbqm076vh7inaekk9vdb/kushal-m-english-india.zip?rlkey=wdrvseqk51240z50jlfdv43uf&dl=1', 1),
+    # 'kylie-f-english-australia': ('https://www.dropbox.com/scl/fi/1rv4tmxnydxqmpi1nhfbe/kylie-f-english-australia.zip?rlkey=iynuqv0bl6z3ich8m9bvbm2wk&dl=1', 1),
+    # 'ruby-f-english-uk': ('https://www.dropbox.com/scl/fi/0aj8agfnpzbmvqu16swly/ruby-f-english-uk.zip?rlkey=b1ehvnweyjwluqvi5tbsfhv4l&dl=1', 1),
+    # 'ethan-m-english-us-canada': ('https://www.dropbox.com/scl/fi/4zkfo10buqredsg2gxn8f/ethan-m-english-us-canada.zip?rlkey=kau8b3m6gyzpek30z70pndef7&dl=1', 1),
+    # 'mitch-m-english-australia': ('https://www.dropbox.com/scl/fi/lfrfqjenotj3fuz953h6y/mitch-m-english-australia.zip?rlkey=e5l8ibiw9yzpzkfk86udw21sk&dl=1', 1),
+    # 'ava-f-english-us-canada': ('https://www.dropbox.com/scl/fi/tvy7ub0080ipb5jowk1a8/ava-f-english-us-canada.zip?rlkey=5vdwl8q36mb2q1k8d4eyb7xcw&dl=1', 1),
+    # 'aiden-m-english-uk': ('https://www.dropbox.com/scl/fi/sz4ogyw47ecqbyf0ru34m/aiden-m-english-uk.zip?rlkey=wftg1bzs0mety63b0yuta0ejb&dl=1', 1),
+    # 'theo-m-english-uk': ('https://www.dropbox.com/scl/fi/sfequbzrd498323x0zrql/theo-m-english-uk.zip?rlkey=9pna69ml42no1fttsg7m97zmi&dl=1', 1),
+    # 'emily-f-english-scottish': ('https://www.dropbox.com/scl/fi/mnnpyy4f19u7nhcdd92vb/emily-f-english-scottish.zip?rlkey=r5hsauwy67yx0w404t024gpo3&dl=1', 1),
     # google
-    'en-US-Wavenet-E-FEMALE': ('https://drive.google.com/file/d/1XIj7pJPd9_utwPeQtIftGJz1RUPX6dg_/view?usp=sharing', 3),
-    'en-US-Wavenet-G-FEMALE': ('https://drive.google.com/file/d/1h_-xmklyIcq6qEh27ibJWeQtArsQs9eX/view?usp=sharing', 3),
-    'en-US-Wavenet-A-MALE': ('https://drive.google.com/file/d/1sKVRUt6_V0c45Les3lLiuR9uMGtdzqto/view?usp=sharing', 3),
-    'en-US-Wavenet-H-FEMALE': ('https://drive.google.com/file/d/1MshpjUt0uhQ37ai-3794y4LbewxgPqvX/view?usp=sharing', 3),
-    'en-US-Wavenet-I-MALE': ('https://drive.google.com/file/d/1lYjR2urFzV55HKNxCqeJXLBVu6LeKfYa/view?usp=sharing', 3),
-    'en-US-Wavenet-J-MALE': ('https://drive.google.com/file/d/1P6oFO0lFlanX2yYI_U-zlag4SE29LkXK/view?usp=sharing', 3),
-    'en-US-Wavenet-F-FEMALE': ('https://drive.google.com/file/d/1b-k1jAL8osH_5Mm2RLTDY_rSucF7Wn2_/view?usp=sharing', 3),
-    'fr-FR-Wavenet-E-FEMALE': ('https://drive.google.com/file/d/1fow359C2tt9E6Bf5_IO_MnJfNuyXgnyJ/view?usp=sharing', 2),
-    'fr-FR-Wavenet-B-MALE': ('https://drive.google.com/file/d/1lcmgTonyruYYLA7AqgPt5nfT05J7erih/view?usp=sharing', 2),
-    'ru-RU-Wavenet-E-FEMALE': ('https://drive.google.com/file/d/1tjafA4_25yTYEJg_JHHt9qTTeJubB7Fu/view?usp=sharing', 2),
-    'ru-RU-Wavenet-B-MALE': ('https://drive.google.com/file/d/1L9TccnpRn-Ms-pFx25-7eDR9ku3rQRbD/view?usp=sharing', 2),
-    'de-DE-Wavenet-F-FEMALE': ('https://drive.google.com/file/d/15T-mMILZgVpNflgEByzmIbqXaZaa585t/view?usp=sharing', 2),  
-    'de-DE-Wavenet-B-MALE': ('https://drive.google.com/file/d/1Bj4yb_fI4HnUiLcPCPJgzbubpyqsng-D/view?usp=sharing', 2),
-    'es-ES-Wavenet-C-FEMALE': ('https://drive.google.com/file/d/1HB_a3j7L9Nkhsk4GEYn_A4BftWZuL_0X/view?usp=sharing', 2),  
-    'es-ES-Wavenet-B-MALE': ('https://drive.google.com/file/d/1P1Iqt8sN7WbKlJgwRB03r5WjG4Sa8VBM/view?usp=sharing', 2),
-    'nl-NL-Wavenet-B-MALE': ('https://drive.google.com/file/d/1VGpsXKCMxE26jvBRwEw7nZYdK_wP9g7u/view?usp=sharing', 2),  
-    'nl-NL-Wavenet-D-FEMALE': ('https://drive.google.com/file/d/1bBOeUfJdeU81KDlkCZGTw1sMNGEdE-X0/view?usp=sharing', 2),
+    'en-US-Wavenet-E-FEMALE': ('https://www.dropbox.com/scl/fi/698d3o1yft3a1ieh58p4z/en-US-Wavenet-E-FEMALE-v4.zip?rlkey=n8gds5xo5g5rf0tn4f1o0d87j&dl=1', 4),
+    'en-US-Wavenet-G-FEMALE': ('https://www.dropbox.com/scl/fi/nifog7il7d7ldtamwjb1t/en-US-Wavenet-G-FEMALE-v4.zip?rlkey=6uu0zn4109s7prz937dyz9qo1&dl=1', 4),
+    'en-US-Wavenet-A-MALE': ('https://www.dropbox.com/scl/fi/gy6pi7qfpn96fxhf1uny7/en-US-Wavenet-A-MALE-v4.zip?rlkey=gea403degyv460roai96zbu28&dl=1', 4),
+    'en-US-Wavenet-H-FEMALE': ('https://www.dropbox.com/scl/fi/o2p9thbla1d3bl8r8117g/en-US-Wavenet-H-FEMALE-v4.zip?rlkey=is94731r0yvqx3p5vcwb1zyjc&dl=1', 4),
+    'en-US-Wavenet-I-MALE': ('https://www.dropbox.com/scl/fi/i0qhvgdkjvjroxexr352k/en-US-Wavenet-I-MALE-v4.zip?rlkey=lzlk2zu3lkafetxcw26nopy11&dl=1', 4),
+    'en-US-Wavenet-J-MALE': ('https://www.dropbox.com/scl/fi/rm35rdfhpu91mfyrqg34m/en-US-Wavenet-J-MALE-v4.zip?rlkey=vfgixpwy1rew99ebngdaf52xp&dl=1', 4),
+    'en-US-Wavenet-F-FEMALE': ('https://www.dropbox.com/scl/fi/9w3711dr37mwxdqt7cxkt/en-US-Wavenet-F-FEMALE-v4.zip?rlkey=babhc4rgelnd3t0bs6m0ojy1t&dl=1', 4),
+    'fr-FR-Wavenet-E-FEMALE': ('https://www.dropbox.com/scl/fi/y75iqu34exb4ypbw5y632/fr-FR-Wavenet-E-FEMALE-v3.zip?rlkey=wdnu3b9yuu2krwgs0v0kodiaa&dl=1', 3),
+    'fr-FR-Wavenet-B-MALE': ('https://www.dropbox.com/scl/fi/6o6rds0ur4ndlrutud9wt/fr-FR-Wavenet-B-MALE-v3.zip?rlkey=kw23qmbi03yhphcboktpobikm&dl=1', 3),
+    'ru-RU-Wavenet-E-FEMALE': ('https://www.dropbox.com/scl/fi/hugouc1p2hlipboxmnwq9/ru-RU-Wavenet-E-FEMALE-v3.zip?rlkey=d24xxno33vexs172tl1ghyh0n&dl=1', 3),
+    'ru-RU-Wavenet-B-MALE': ('https://www.dropbox.com/scl/fi/vwj1g73j9mzzscpm21hwm/ru-RU-Wavenet-B-MALE-v3.zip?rlkey=i6betexw4ccbqoehkt7o9s9ow&dl=1', 3),
+    'de-DE-Wavenet-F-FEMALE': ('https://www.dropbox.com/scl/fi/22pmr59ynvipa7bbawubo/de-DE-Wavenet-F-FEMALE-v3.zip?rlkey=cjssiio7i40bwci31a0uo09pn&dl=1', 3),  
+    'de-DE-Wavenet-B-MALE': ('https://www.dropbox.com/scl/fi/3exhv255br0yjazirytpe/de-DE-Wavenet-B-MALE-v3.zip?rlkey=iqiv77b2f93hq0gq9ogwi1fg8&dl=1', 3),
+    'es-ES-Wavenet-C-FEMALE': ('https://www.dropbox.com/scl/fi/vd24f4n15a0qsz7rdjz3a/es-ES-Wavenet-C-FEMALE-v3.zip?rlkey=b7585d9prrjunuwsw3sryoqsa&dl=1', 3),  
+    'es-ES-Wavenet-B-MALE': ('https://www.dropbox.com/scl/fi/fmsls92b58djem445dro0/es-ES-Wavenet-B-MALE-v3.zip?rlkey=1z6h7i6bsi29a0s0t1ogq20c8&dl=1', 3),
+    'nl-NL-Wavenet-B-MALE': ('https://www.dropbox.com/scl/fi/bdg0kgo7dkw7os632qc2o/nl-NL-Wavenet-D-FEMALE-v3.zip?rlkey=tqesoqizt0i5ha602cnrknsfc&dl=1', 3),  
+    'nl-NL-Wavenet-D-FEMALE': ('https://www.dropbox.com/scl/fi/bdg0kgo7dkw7os632qc2o/nl-NL-Wavenet-D-FEMALE-v3.zip?rlkey=tqesoqizt0i5ha602cnrknsfc&dl=1', 3),
     # amazon
-    'en-US-Stephen-Male': ('https://drive.google.com/file/d/1ma3zOIPNXzocQGNSMy8M8SyaYjyYOIx4/view?usp=sharing', 3),  
-    'en-US-Ivy-Female': ('https://drive.google.com/file/d/1zOVr1H2MSsj3soX_l8WtBP0qtiCkZazY/view?usp=sharing', 3),
-    'de-DE-Vicki-Female': ('https://drive.google.com/file/d/1bU4vAFf9ligX6HZeiwVKbUCRCawOdvh0/view?usp=sharing', 2),  
-    'de-DE-Daniel-Male': ('https://drive.google.com/file/d/1L83p1nsDvqplEdoCTpan6yd63Jc-J9bj/view?usp=sharing', 2),
-    'en-US-Kendra-Female': ('https://drive.google.com/file/d/140otZWbkSr4DZ3EKVYD6oOqe0p1BJyXj/view?usp=sharing', 3),
-    'en-US-Joey-Male': ('https://drive.google.com/file/d/1KeVzV5qISezkIA3XUogXLCDVSSe9vsS-/view?usp=sharing', 3),
-    'en-US-Joanna-Female': ('https://drive.google.com/file/d/1VPccbKqLpKeTeqXZ6Ko-21bYVh4sgguB/view?usp=sharing', 3),
+    'en-US-Stephen-Male': ('https://www.dropbox.com/scl/fi/6dacvqb5uwl9lvoi6vjog/en-US-Stephen-Male-v4.zip?rlkey=3puy54nl4yu78v6a5pil13jo5&dl=1', 4),  
+    'en-US-Ivy-Female': ('https://www.dropbox.com/scl/fi/brszx8roikdrizuclx06r/en-US-Ivy-Female-v4.zip?rlkey=iywwcvdkggw4a7j63ils5czrs&dl=1', 4),
+    'de-DE-Vicki-Female': ('https://www.dropbox.com/scl/fi/il33c2xqx1tc94gxdzv4f/de-DE-Vicki-Female-v3.zip?rlkey=sttkidrjocg9rxnbnhhrj5s9p&dl=1', 3),  
+    'de-DE-Daniel-Male': ('https://www.dropbox.com/scl/fi/ojm0ougp1z6r2gopsp3yi/de-DE-Daniel-Male-v3.zip?rlkey=s0fs8z18t5svl6i2iyn37cy9m&dl=1', 3),
+    'en-US-Kendra-Female': ('https://www.dropbox.com/scl/fi/k3vlyhlavq4zyrig4o5b3/en-US-Kendra-Female-v4.zip?rlkey=ow7zac3jay14znaoi9pteo22y&dl=1', 4),
+    'en-US-Joey-Male': ('https://www.dropbox.com/scl/fi/0x1wxad6van440gtbn525/en-US-Joey-Male-v4.zip?rlkey=691jvalngwjdx6kaeedhmjss3&dl=1', 4),
+    'en-US-Joanna-Female': ('https://www.dropbox.com/scl/fi/a9vqbazt7pa02f98l7er0/en-US-Joanna-Female-v4.zip?rlkey=cowxk0ctje34uh18gnogl57q1&dl=1', 4),
+
+
+
     
     # 'TODONAME': ('TODOLINK', TODOVERSION),  
     # 'TODONAME': ('TODOLINK', TODOVERSION), 
@@ -264,6 +273,7 @@ FIELD_COORDS = {
 }
 
 WEB_DB_NAME = "ADC1"
+
 
 
 def ppi(message, info_object = None, prefix = '\r\n'):
@@ -367,9 +377,10 @@ def download_callers():
 
                 # kind="zip", 
                 path = download(cpr_download_url, dest, progressbar=True, replace=False, timeout=20.0, verbose=DEBUG)
- 
                 # LOCAL-Download
                 # shutil.copyfile('C:\\Users\\Luca\\Desktop\\download.zip', os.path.join(DOWNLOADS_PATH, 'download.zip'))
+
+                ppi("Extracting voice-pack..")
 
                 shutil.unpack_archive(dest, DOWNLOADS_PATH)
                 os.remove(dest)
@@ -448,7 +459,7 @@ def download_callers():
                         os.remove(current_sound)
 
                 shutil.move(dest, AUDIO_MEDIA_PATH)
-                ppi('A new voice-pack was added: ' + cpr_name)
+                ppi('Voice-pack added: ' + cpr_name)
 
             except Exception as e:
                 ppe('Failed to process voice-pack: ' + cpr_name, e)
@@ -784,13 +795,14 @@ def calibrate_board():
         ppe('Calibrate board failed', e)
 
 
-def get_player_average(player_id, variant = 'x01', limit = '100'):
+def get_player_average(user_id, variant = 'x01', limit = '100'):
     # get
     # https://api.autodarts.io/as/v0/users/<user-id>/stats/<variant>?limit=<limit>
     try:
         global accessToken
-        receive_token_autodarts()
-        res = requests.get(AUTODART_USERS_URL + player_id + "/stats/" + variant + "?limit=" + limit, headers={'Authorization': 'Bearer ' + accessToken})
+
+        auth_autodarts()
+        res = requests.get(AUTODART_USERS_URL + user_id + "/stats/" + variant + "?limit=" + limit, headers={'Authorization': 'Bearer ' + accessToken})
         m = res.json()
         # ppi(m)
         return m['average']['average']
@@ -809,8 +821,7 @@ def next_game():
         global accessToken
         global currentMatch
 
-        receive_token_autodarts()
-
+        auth_autodarts()
         if currentMatch != None:
             requests.post(AUTODART_MATCHES_URL + currentMatch + "/games/next", headers={'Authorization': 'Bearer ' + accessToken})
 
@@ -828,8 +839,7 @@ def next_throw():
         global accessToken
         global currentMatch
 
-        receive_token_autodarts()
-
+        auth_autodarts()
         if currentMatch != None:
             requests.post(AUTODART_MATCHES_URL + currentMatch + "/players/next", headers={'Authorization': 'Bearer ' + accessToken})
 
@@ -847,8 +857,7 @@ def undo_throw():
         global accessToken
         global currentMatch
 
-        receive_token_autodarts()
-
+        auth_autodarts()
         if currentMatch != None:
             requests.post(AUTODART_MATCHES_URL + currentMatch + "/undo", headers={'Authorization': 'Bearer ' + accessToken})
     except Exception as e:
@@ -895,8 +904,7 @@ def correct_throw(throw_indices, score):
         global accessToken
         global lastCorrectThrow
 
-        receive_token_autodarts()
-
+        auth_autodarts()
         data = {"changes": {}}
         for ti in throw_indices:
             data["changes"][ti] = {"point": score, "type": "normal"}
@@ -918,14 +926,29 @@ def receive_local_board_address():
         global boardManagerAddress
 
         if boardManagerAddress == None:
-            res = requests.get(AUTODART_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + accessToken})
-            board_ip = res.json()['ip']
-            if board_ip != None and board_ip != '':  
-                boardManagerAddress = 'http://' + board_ip
-                ppi('Board-address: ' + boardManagerAddress) 
+
+            # Führe eine GET-Anfrage durch
+            response = keycloakConnection.raw_get(AUTODART_BOARDS_URL + AUTODART_USER_BOARD_ID)
+
+            # Überprüfe die Antwort
+            if response.status_code == 200:
+                # res = requests.get(AUTODART_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + accessToken})
+                # board_ip = res.json()['ip']
+                board_ip = response.json()['ip']
+
+                if board_ip != None and board_ip != '':  
+                    boardManagerAddress = 'http://' + board_ip
+                    ppi('Board-address: ' + boardManagerAddress) 
+                else:
+                    boardManagerAddress = None
+                    ppi('Board-address: UNKNOWN') 
+
+                # print("Erfolgreiche Anfrage:", response.json())
             else:
-                boardManagerAddress = None
-                ppi('Board-address: UNKNOWN') 
+                raise Exception(response.text)
+                # print("Fehlerhafte Anfrage:", response.status_code, response.text)
+
+
             
     except Exception as e:
         boardManagerAddress = None
@@ -939,9 +962,9 @@ def poll_lobbies(ws):
 
         while currentMatch == None:
             try:   
-                receive_token_autodarts()
-
                 global accessToken
+
+                auth_autodarts()
                 res = requests.get(AUTODART_LOBBIES_URL, headers={'Authorization': 'Bearer ' + accessToken})
                 res = res.json()
                 # ppi(json.dumps(res, indent = 4, sort_keys = True))
@@ -1092,7 +1115,7 @@ def listen_to_match(m, ws):
             play_sound_effect('matchcancel')
             mirror_sounds()
 
-        poll_lobbies(ws)
+        # poll_lobbies(ws)
 
 def reset_checkouts_counter():
     global checkoutsCounter
@@ -1874,28 +1897,51 @@ def process_common(m):
     broadcast(m)
 
 
-def receive_token_autodarts():
+def auth_autodarts():
     try:
         global accessToken
-
-        # Configure client
+        global refreshToken
+        global tokenExpiresAt
+        global userId
+                 
         keycloak_openid = KeycloakOpenID(server_url = AUTODART_AUTH_URL,
                                             client_id = AUTODART_CLIENT_ID,
+                                            client_secret_key = AUTODART_CLIENT_SECRET,
                                             realm_name = AUTODART_REALM_NAME,
                                             verify = bool(CERT_CHECK))
-        token = keycloak_openid.token(AUTODART_USER_EMAIL, AUTODART_USER_PASSWORD)
-        # ppi(token)
-
-        accessToken = token['access_token']
         
+        if accessToken is None or refreshToken is None or tokenExpiresAt is None or userId is None:
+            token = keycloak_openid.token(AUTODART_USER_EMAIL, AUTODART_USER_PASSWORD)
+            # ppi("LOGIN: ", token)
+            accessToken = token['access_token']
+            refreshToken = token['refresh_token']
+            tokenExpiresAt = datetime.now() + timedelta(seconds=int(0.9 * token["expires_in"] if token else 0))
+            # Get Userinfo
+            userinfo = keycloak_openid.userinfo(accessToken)
+            # ppi("USER INFO: ", userinfo)
+            userId = userinfo['sub']     
+        else:
+            now = datetime.now()
+            if tokenExpiresAt <= now:
+                token = keycloak_openid.refresh_token(refreshToken)
+                # ppi("LOGIN REFRESHED: ", token)
+                accessToken = token['access_token']
+                refreshToken = token['refresh_token']
+                tokenExpiresAt = datetime.now() + timedelta(seconds=int(0.9 * token["expires_in"] if token else 0))
+            # else:
+            #     ppi("TOKEN VALID .." + str(tokenExpiresAt) + " vs " + str(now))
     except Exception as e:
+        accessToken = None
+        refreshToken = None
+        tokenExpiresAt = None
+        userId = None
         ppe('Login failed: check your email address and password. 2FA must be turned off.', e)    
 
 def connect_autodarts():
     def process(*args):
         global accessToken
 
-        receive_token_autodarts()
+        auth_autodarts()
 
         websocket.enableTrace(False)
         ws = websocket.WebSocketApp(AUTODART_WEBSOCKET_URL,
@@ -1909,8 +1955,12 @@ def connect_autodarts():
     threading.Thread(target=process).start()
 
 def on_open_autodarts(ws):
+    global accessToken
+    global userId
+
+    auth_autodarts()
+
     try:
-        global accessToken
         res = requests.get(AUTODART_MATCHES_URL, headers={'Authorization': 'Bearer ' + accessToken})
         res = res.json()
         # ppi(json.dumps(res, indent = 4, sort_keys = True))
@@ -1956,11 +2006,25 @@ def on_open_autodarts(ws):
         ws.send(json.dumps(paramsSubscribeMatchesEvents))
 
         ppi('Receiving live information for board-id: ' + AUTODART_USER_BOARD_ID)
-        poll_lobbies(ws)
+        # poll_lobbies(ws)
 
     except Exception as e:
         ppe('WS-Open-boards failed: ', e)
 
+
+    try:
+        paramsSubscribeUserEvents = {
+            "channel": "autodarts.users",
+            "type": "subscribe",
+            "topic": userId + ".events"
+        }
+        ws.send(json.dumps(paramsSubscribeUserEvents))
+
+        ppi('Receiving live information for user-id: ' + userId)
+
+    except Exception as e:
+        ppe('WS-Open-users failed: ', e)
+        
 def on_message_autodarts(ws, message):
     def process(*args):
         try:
@@ -2003,6 +2067,60 @@ def on_message_autodarts(ws, message):
 
                 listen_to_match(data, ws)
             
+            elif m['channel'] == 'autodarts.users':
+                data = m['data']
+                # ppi(json.dumps(data, indent = 4, sort_keys = True))
+                
+                # {type: "lobby", id: <lobby_id>}
+                if 'event' in data:
+                    if data['event'] == 'lobby-enter':
+                        ppi("lobby-enter", data)
+
+                        lobby_id = data['body']['id']
+
+                        ppi('Listen to lobby: ' + lobby_id)
+                        paramsSubscribeLobbyEvents = {
+                                "channel": "autodarts.lobbies",
+                                "type": "subscribe",
+                                "topic": lobby_id + ".state"
+                            }
+                        ws.send(json.dumps(paramsSubscribeLobbyEvents))
+                        paramsSubscribeLobbyEvents = {
+                                "channel": "autodarts.lobbies",
+                                "type": "subscribe",
+                                "topic": lobby_id + ".events"
+                            }
+                        ws.send(json.dumps(paramsSubscribeLobbyEvents))
+                        lobbyPlayers = []
+
+                        if play_sound_effect("lobby_ambient_in", False):
+                            mirror_sounds()
+
+
+                    elif data['event'] == 'lobby-leave':
+                        ppi("lobby-leave", data)
+
+                        lobby_id = data['body']['id']
+
+                        ppi('Stop Listen to lobby: ' + lobby_id)
+                        paramsUnsubscribeLobbyEvents = {
+                                "channel": "autodarts.lobbies",
+                                "type": "unsubscribe",
+                                "topic": lobby_id + ".state"
+                            }
+                        ws.send(json.dumps(paramsUnsubscribeLobbyEvents))
+                        paramsUnsubscribeLobbyEvents = {
+                                "channel": "autodarts.lobbies",
+                                "type": "unsubscribe",
+                                "topic": lobby_id + ".events"
+                            }
+                        ws.send(json.dumps(paramsUnsubscribeLobbyEvents))
+                        lobbyPlayers = []
+
+                        if play_sound_effect("lobby_ambient_out", False):
+                            mirror_sounds()
+
+
             elif m['channel'] == 'autodarts.lobbies':
                 data = m['data']
                 # ppi(json.dumps(data, indent = 4, sort_keys = True))
@@ -2012,6 +2130,7 @@ def on_message_autodarts(ws, message):
                         pass
 
                     elif data['event'] == 'finish' or data['event'] == 'delete':
+                        pass
                         # ppi('Stop listening to lobby: ' + m['id'])
                         # paramsUnsubscribeLobbyEvents = {
                         #     "type": "unsubscribe",
@@ -2025,10 +2144,10 @@ def on_message_autodarts(ws, message):
                         #     "topic": m['id'] + ".state"
                         # }
                         # ws.send(json.dumps(paramsUnsubscribeLobbyEvents))
-                        if play_sound_effect("lobby_ambient_out", False):
-                            mirror_sounds()
+                        # if play_sound_effect("lobby_ambient_out", False):
+                        #     mirror_sounds()
   
-                        poll_lobbies(ws)
+                        # poll_lobbies(ws)
 
 
                 elif 'players' in data:
@@ -2393,6 +2512,15 @@ if __name__ == "__main__":
 
     global accessToken
     accessToken = None
+
+    global refreshToken
+    refreshToken = None
+
+    global tokenExpiresAt
+    tokenExpiresAt = None
+
+    global userId
+    userId = None
 
     global boardManagerAddress
     boardManagerAddress = None
