@@ -332,7 +332,9 @@ If you set this to '1' ambient_*-sounds will wait until main-calls are finished.
 
 *`-DL / --downloads`*
 
-If you set this to '1' the application will download available voice-packs that are not already installed. Installation path is the value of -M. By default this is activated.
+If you set this to '1' the application will download available voice-packs that are not already installed. Installation path is the value of -M. 
+On first application-start, it downloads and extracts multiple voice-packs: it will take several minutes; be patient - take a coffee. 
+By default this is activated.
 
 *`-DLL / --downloads_limit`*
 
@@ -452,7 +454,7 @@ Check log:
 
 ### Failed to process voice-pack 'X'
 
-All voice-packs are hosted on google. There is a chance that you encounter this error as google allows only a certain download count in unknown time window.
+All voice-packs are hosted on dropbox. There is a chance that you encounter this error as dropbox allows only a certain download count in unknown time window.
 Just be patient, wait a few hours and restart the application. It could be helpful to restart your router or use a vpn to bypass.
 
 ### failed keycloakauthentication Error (401 invalid_grant)

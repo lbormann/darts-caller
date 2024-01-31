@@ -188,8 +188,8 @@ CALLER_PROFILES = {
     'de-DE-Wavenet-F-FEMALE': ('https://www.dropbox.com/scl/fi/22pmr59ynvipa7bbawubo/de-DE-Wavenet-F-FEMALE-v3.zip?rlkey=cjssiio7i40bwci31a0uo09pn&dl=1', 3),  
     'de-DE-Wavenet-B-MALE': ('https://www.dropbox.com/scl/fi/3exhv255br0yjazirytpe/de-DE-Wavenet-B-MALE-v3.zip?rlkey=iqiv77b2f93hq0gq9ogwi1fg8&dl=1', 3),
     'es-ES-Wavenet-C-FEMALE': ('https://www.dropbox.com/scl/fi/vd24f4n15a0qsz7rdjz3a/es-ES-Wavenet-C-FEMALE-v3.zip?rlkey=b7585d9prrjunuwsw3sryoqsa&dl=1', 3),  
-    'es-ES-Wavenet-B-MALE': ('https://www.dropbox.com/scl/fi/fmsls92b58djem445dro0/es-ES-Wavenet-B-MALE-v3.zip?rlkey=1z6h7i6bsi29a0s0t1ogq20c8&dl=1', 3),
-    'nl-NL-Wavenet-B-MALE': ('https://www.dropbox.com/scl/fi/bdg0kgo7dkw7os632qc2o/nl-NL-Wavenet-D-FEMALE-v3.zip?rlkey=tqesoqizt0i5ha602cnrknsfc&dl=1', 3),  
+    'es-ES-Wavenet-B-MALE': ('https://www.dropbox.com/scl/fi/huxrkzur3z6xzq7lwxefv/es-ES-Wavenet-B-MALE-v3.zip?rlkey=mwuiov507s2admi54jd6viz70&dl=1', 3),
+    'nl-NL-Wavenet-B-MALE': ('https://www.dropbox.com/scl/fi/my32dnfilfv7yu0boljqs/nl-NL-Wavenet-B-MALE-v3.zip?rlkey=wtv3bpv4h4yixlgmuj4q5usmz&dl=1', 3),  
     'nl-NL-Wavenet-D-FEMALE': ('https://www.dropbox.com/scl/fi/bdg0kgo7dkw7os632qc2o/nl-NL-Wavenet-D-FEMALE-v3.zip?rlkey=tqesoqizt0i5ha602cnrknsfc&dl=1', 3),
     # amazon
     'en-US-Stephen-Male': ('https://www.dropbox.com/scl/fi/6dacvqb5uwl9lvoi6vjog/en-US-Stephen-Male-v4.zip?rlkey=3puy54nl4yu78v6a5pil13jo5&dl=1', 4),  
@@ -286,13 +286,16 @@ def ppe(message, error_object):
     if DEBUG:
         logger.exception("\r\n" + str(error_object))
 
-def check_paths(main_directory, audio_media_path, audio_media_path_shared):
+def check_paths(main_directory, audio_media_path, audio_media_path_shared, blacklist_path):
     errors = None
 
     try:
         main_directory = os.path.normpath(os.path.dirname(os.path.realpath(main_directory)))
         audio_media_path = os.path.normpath(audio_media_path)
-        audio_media_path_shared = os.path.normpath(audio_media_path_shared)
+        if audio_media_path_shared != DEFAULT_EMPTY_PATH:
+            audio_media_path_shared = os.path.normpath(audio_media_path_shared)
+        if blacklist_path != DEFAULT_EMPTY_PATH:
+            blacklist_path = os.path.normpath(blacklist_path)
 
         if os.path.relpath(audio_media_path, main_directory)[:2] != '..':
             errors = 'AUDIO_MEDIA_PATH resides inside MAIN-DIRECTORY! It is not allowed!'
@@ -306,6 +309,10 @@ def check_paths(main_directory, audio_media_path, audio_media_path_shared):
                 errors = 'AUDIO_MEDIA_PATH resides inside AUDIO_MEDIA_SHARED! It is not allowed!'
             elif audio_media_path == audio_media_path_shared:
                 errors = 'AUDIO_MEDIA_PATH is equal to AUDIO_MEDIA_SHARED! It is not allowed!'
+
+        if blacklist_path != '':
+            if os.path.relpath(blacklist_path, main_directory)[:2] != '..':
+                errors = 'BLACKLIST_FILE_PATH resides inside MAIN-DIRECTORY! It is not allowed!'
 
     except Exception as e:
         errors = f'Path validation failed: {e}'
@@ -376,7 +383,7 @@ def download_callers():
                 dest = os.path.join(DOWNLOADS_PATH, 'download.zip')
 
                 # kind="zip", 
-                path = download(cpr_download_url, dest, progressbar=True, replace=False, timeout=20.0, verbose=DEBUG)
+                path = download(cpr_download_url, dest, progressbar=True, replace=False, timeout=15.0, verbose=DEBUG)
                 # LOCAL-Download
                 # shutil.copyfile('C:\\Users\\Luca\\Desktop\\download.zip', os.path.join(DOWNLOADS_PATH, 'download.zip'))
 
@@ -2591,7 +2598,7 @@ if __name__ == "__main__":
             ppe("Failed to initialize audio device! Make sure the target device is connected and configured as os default. A device connected by HDMI can cause problems; use standard audio-jack instead.", e)
             sys.exit()  
 
-    path_status = check_paths(__file__, AUDIO_MEDIA_PATH, AUDIO_MEDIA_PATH_SHARED)
+    path_status = check_paths(__file__, AUDIO_MEDIA_PATH, AUDIO_MEDIA_PATH_SHARED, BLACKLIST_PATH)
     if path_status is not None: 
         ppi('Please check your arguments: ' + path_status)
         sys.exit()  
