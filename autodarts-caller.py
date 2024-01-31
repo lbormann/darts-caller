@@ -2020,7 +2020,7 @@ def on_open_autodarts(ws):
         }
         ws.send(json.dumps(paramsSubscribeUserEvents))
 
-        ppi('Receiving live information for user-id: ' + userId)
+        # ppi('Receiving live information for user-id: ' + userId)
 
     except Exception as e:
         ppe('WS-Open-users failed: ', e)
@@ -2070,11 +2070,9 @@ def on_message_autodarts(ws, message):
             elif m['channel'] == 'autodarts.users':
                 data = m['data']
                 # ppi(json.dumps(data, indent = 4, sort_keys = True))
-                
-                # {type: "lobby", id: <lobby_id>}
                 if 'event' in data:
                     if data['event'] == 'lobby-enter':
-                        ppi("lobby-enter", data)
+                        # ppi("lobby-enter", data)
 
                         lobby_id = data['body']['id']
 
@@ -2098,7 +2096,7 @@ def on_message_autodarts(ws, message):
 
 
                     elif data['event'] == 'lobby-leave':
-                        ppi("lobby-leave", data)
+                        # ppi("lobby-leave", data)
 
                         lobby_id = data['body']['id']
 
@@ -2151,7 +2149,6 @@ def on_message_autodarts(ws, message):
 
 
                 elif 'players' in data:
-
                     # check for left players
                     lobbyPlayersLeft = []
                     for lp in lobbyPlayers:
