@@ -6,6 +6,7 @@
 - update voice-packs (new lobby-sounds, 2000+ new playernames)
 - add path argument for blacklist-file
 - fix token-requests
+- fix empty-SHARED_MEDIA_PATH error
 
 
 ## 2.6.3
