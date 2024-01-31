@@ -47,7 +47,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.7.0'
+VERSION = '2.7.1'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -932,30 +932,17 @@ def receive_local_board_address():
         global accessToken
         global boardManagerAddress
 
+        auth_autodarts()
+
         if boardManagerAddress == None:
-
-            # Führe eine GET-Anfrage durch
-            response = keycloakConnection.raw_get(AUTODART_BOARDS_URL + AUTODART_USER_BOARD_ID)
-
-            # Überprüfe die Antwort
-            if response.status_code == 200:
-                # res = requests.get(AUTODART_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + accessToken})
-                # board_ip = res.json()['ip']
-                board_ip = response.json()['ip']
-
-                if board_ip != None and board_ip != '':  
-                    boardManagerAddress = 'http://' + board_ip
-                    ppi('Board-address: ' + boardManagerAddress) 
-                else:
-                    boardManagerAddress = None
-                    ppi('Board-address: UNKNOWN') 
-
-                # print("Erfolgreiche Anfrage:", response.json())
+            res = requests.get(AUTODART_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + accessToken})
+            board_ip = res.json()['ip']
+            if board_ip != None and board_ip != '':  
+                boardManagerAddress = 'http://' + board_ip
+                ppi('Board-address: ' + boardManagerAddress) 
             else:
-                raise Exception(response.text)
-                # print("Fehlerhafte Anfrage:", response.status_code, response.text)
-
-
+                boardManagerAddress = None
+                ppi('Board-address: UNKNOWN') 
             
     except Exception as e:
         boardManagerAddress = None
