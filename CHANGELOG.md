@@ -1,3 +1,8 @@
+## 2.7.1
+
+- hotfix: receive_local_board_address
+
+
 ## 2.7.0
 
 - extend lobby-calling (lobbychanged -> lobby_ambient_in)
