@@ -1,5 +1,6 @@
 - add bull-calling
 - improve web-caller (load every file on start + "change/ban-caller-function")
+- add setshot for main-calling
 - use userID instead of boardID
 - extend score-control to not only correction
 - fix audio output when is hdmi

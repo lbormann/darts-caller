@@ -1,7 +1,7 @@
 ## 2.7.2
 
 - change file-hoster for more stable downloads
-- add option for downloads, to only download a selected voice-pack (-C)
+- add option for downloads, to only download a specific voice-pack by its name
 - add lobby-event-broadcasts
 - add ambient_gameshot_{playername}, ambient_matchshot_{playername} and more
 - hotfix: fix occasional call-stops after one match

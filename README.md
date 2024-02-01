@@ -107,11 +107,22 @@ Since Version 1.6.0 you can deposit multiple sounds for every ([sound-file-key](
 **AMBIENT (Argument -A > 0.0):**
 
 - ambient_playerchange
+
 - ambient_gameon 
-- ambient_gameshot
-- ambient_setshot [fallback: ambient_gameshot] 
+- ambient_gameon_{playername} [overrides: ambient_gameon]
+
 - ambient_matchon [fallback: ambient_gameon]  
+- ambient_matchon_{playername} [overrides: ambient_matchon]  
+
+- ambient_gameshot
+- ambient_gameshot_{playername} [overrides: ambient_gameshot]
+
+- ambient_setshot [fallback: ambient_gameshot] 
+- ambient_setshot_{playername} [overrides: ambient_setshot] 
+
 - ambient_matchshot [fallback: ambient_gameshot]
+- ambient_matchshot_{playername} [overrides: ambient_matchshot]
+
 - ambient_noscore
 - ambient_1more
 - ambient_50more  
@@ -120,11 +131,13 @@ Since Version 1.6.0 you can deposit multiple sounds for every ([sound-file-key](
 - ambient_150more 
 - ambient_1-ambient_180 [overrides: ambient_Xmore]
 - ambient_{any 3 darts combo, for example "t1s1d1"} [overrides: ambient_1-ambient_180]
+
 - ambient_group_legendary
 - ambient_group_perfect
 - ambient_group_very_nice
 - ambient_group_good
 - ambient_group_normal
+
 - ambient_checkout_call_limit
 
 **LOBBY**
@@ -136,6 +149,7 @@ Since Version 1.6.0 you can deposit multiple sounds for every ([sound-file-key](
 - lobby_left
 
 **ATC (Around the clock)**
+
 - atc_target_hit
 - atc_target_missed
 - atc_target_next
@@ -227,6 +241,7 @@ Start the script:
 - -DL / --downloads [Default: 1] [Possible values: 0 | 1]
 - -DLL / --downloads_limit [Default: 0]
 - -DLLA / --downloads_language [Default: 1] [Possible values: 0 (every language) | 1 (english) | 2 (french) | 3 (russian) | 4 (german) | 5 (spanish) | 6 (dutch)]
+- -DLN / --downloads_name [Default: '']
 - -BLP / --blacklist_path [Default: '']
 - -BAV / --background_audio_volume [Default: 0.0] [Possible values: 0.0 .. 1.0]
 - -WEB / --web_caller [Default: 0] [Possible values: 0,1,2]
@@ -338,11 +353,15 @@ By default this is activated.
 
 *`-DLL / --downloads_limit`*
 
-If you want to limit downloads-count, you can set it to x most recent. By default this is '0' (no limitation).
+If you want to limit download-count, you can set it to x most recent. By default this is '0' (no limitation).
 
 *`-DLLA / --downloads_language`*
 
-If you want to filter downloads to a specific language. '0' means no filtering. By default this is '1' (english).
+If you want to filter downloads for a specific language. '0' means no language-filtering. By default this is '1' (english).
+
+*`-DLN / --downloads_name`*
+
+If you want to filter downloads to a specific voice-pack-name. '' means no name-filtering. By default this is ''.
 
 *`-BLP / --blacklist_path`*
 
