@@ -1,5 +1,3 @@
-- add lobby-event-broadcasts
-- add option for downloads, to only download selected voice-pack
 - add bull-calling
 - improve web-caller (load every file on start + "change/ban-caller-function")
 - use userID instead of boardID
