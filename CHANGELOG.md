@@ -1,3 +1,8 @@
+## 2.7.2
+
+- hotfix: fix occasional call-stops after one match
+
+
 ## 2.7.1
 
 - hotfix: receive_local_board_address
