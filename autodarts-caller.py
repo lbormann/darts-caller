@@ -69,6 +69,7 @@ DEFAULT_AMBIENT_SOUNDS_AFTER_CALLS = 0
 DEFAULT_DOWNLOADS = True
 DEFAULT_DOWNLOADS_LIMIT = 0
 DEFAULT_DOWNLOADS_LANGUAGE = 1
+DEFAULT_DOWNLOADS_NAME = None
 DEFAULT_BACKGROUND_AUDIO_VOLUME = 0.0
 DEFAULT_WEB_CALLER = 0
 DEFAULT_WEB_CALLER_SCOREBOARD = 0
@@ -1035,7 +1036,6 @@ def listen_to_match(m, ws):
         ws.send(json.dumps(paramsSubscribeMatchesEvents))
         
     elif m['event'] == 'finish' or m['event'] == 'delete':
-        currentMatch = None
         ppi('Stop listening to match: ' + m['id'])
 
         paramsUnsubscribeMatchEvents = {
@@ -1044,6 +1044,7 @@ def listen_to_match(m, ws):
             "topic": m['id'] + ".state"
         }
         ws.send(json.dumps(paramsUnsubscribeMatchEvents))
+        currentMatch = None
 
         if m['event'] == 'delete':
             play_sound_effect('matchcancel')
@@ -1831,44 +1832,60 @@ def process_common(m):
     broadcast(m)
 
 
+
 def auth_autodarts():
     try:
         global accessToken
         global refreshToken
         global tokenExpiresAt
+        global tokenRefreshExpiresAt
         global userId
-                 
-        keycloak_openid = KeycloakOpenID(server_url = AUTODART_AUTH_URL,
+
+        KC = KeycloakOpenID(server_url = AUTODART_AUTH_URL,
                                             client_id = AUTODART_CLIENT_ID,
                                             client_secret_key = AUTODART_CLIENT_SECRET,
                                             realm_name = AUTODART_REALM_NAME,
                                             verify = bool(CERT_CHECK))
         
-        if accessToken is None or refreshToken is None or tokenExpiresAt is None or userId is None:
-            token = keycloak_openid.token(AUTODART_USER_EMAIL, AUTODART_USER_PASSWORD)
-            # ppi("LOGIN: ", token)
+        if accessToken is None:
+            token = KC.token(AUTODART_USER_EMAIL, AUTODART_USER_PASSWORD)
+            ppi("LOGIN: ", token)
             accessToken = token['access_token']
             refreshToken = token['refresh_token']
-            tokenExpiresAt = datetime.now() + timedelta(seconds=int(0.9 * token["expires_in"] if token else 0))
+
+            now = datetime.now()
+            tokenExpiresAt = now + timedelta(seconds=int(0.9 * token["expires_in"]))
+            tokenRefreshExpiresAt = now + timedelta(seconds=int(0.9 * token["refresh_expires_in"]))
+
             # Get Userinfo
-            userinfo = keycloak_openid.userinfo(accessToken)
+            userinfo = KC.userinfo(accessToken)
             # ppi("USER INFO: ", userinfo)
             userId = userinfo['sub']     
         else:
             now = datetime.now()
-            if tokenExpiresAt <= now:
-                token = keycloak_openid.refresh_token(refreshToken)
-                # ppi("LOGIN REFRESHED: ", token)
-                accessToken = token['access_token']
-                refreshToken = token['refresh_token']
-                tokenExpiresAt = datetime.now() + timedelta(seconds=int(0.9 * token["expires_in"] if token else 0))
+            if tokenExpiresAt < now:
+                if now < tokenRefreshExpiresAt:
+                    token = KC.refresh_token(refreshToken)
+                    ppi("LOGIN REFRESHED: ", token)
+                    accessToken = token['access_token']
+                    refreshToken = token['refresh_token']
+
+                    now = datetime.now()
+                    tokenExpiresAt = now + timedelta(seconds=int(0.9 * token["expires_in"]))
+                    tokenRefreshExpiresAt = now + timedelta(seconds=int(0.9 * token["refresh_expires_in"]))
+                else:
+                    accessToken = None
+                    refreshToken = None
+                    tokenExpiresAt = None
+                    tokenRefreshExpiresAt = None
+                    auth_autodarts()
             # else:
             #     ppi("TOKEN VALID .." + str(tokenExpiresAt) + " vs " + str(now))
     except Exception as e:
         accessToken = None
-        refreshToken = None
-        tokenExpiresAt = None
-        userId = None
+        # refreshToken = None
+        # tokenExpiresAt = None
+        # userId = None
         ppe('Login failed: check your email address and password. 2FA must be turned off.', e)    
 
 def connect_autodarts():
@@ -1884,6 +1901,7 @@ def connect_autodarts():
                                     on_message = on_message_autodarts,
                                     on_error = on_error_autodarts,
                                     on_close = on_close_autodarts)
+        
 
         ws.run_forever()
     threading.Thread(target=process).start()
@@ -1945,19 +1963,18 @@ def on_open_autodarts(ws):
     except Exception as e:
         ppe('WS-Open-boards failed: ', e)
 
+    # try:
+    #     paramsSubscribeUserEvents = {
+    #         "channel": "autodarts.users",
+    #         "type": "subscribe",
+    #         "topic": userId + ".events"
+    #     }
+    #     ws.send(json.dumps(paramsSubscribeUserEvents))
 
-    try:
-        paramsSubscribeUserEvents = {
-            "channel": "autodarts.users",
-            "type": "subscribe",
-            "topic": userId + ".events"
-        }
-        ws.send(json.dumps(paramsSubscribeUserEvents))
+    #     # ppi('Receiving live information for user-id: ' + userId)
 
-        # ppi('Receiving live information for user-id: ' + userId)
-
-    except Exception as e:
-        ppe('WS-Open-users failed: ', e)
+    # except Exception as e:
+    #     ppe('WS-Open-users failed: ', e)
         
 def on_message_autodarts(ws, message):
     def process(*args):
@@ -2051,7 +2068,6 @@ def on_message_autodarts(ws, message):
 
                         if play_sound_effect("lobby_ambient_out", False):
                             mirror_sounds()
-
 
             elif m['channel'] == 'autodarts.lobbies':
                 data = m['data']
@@ -2341,8 +2357,8 @@ if __name__ == "__main__":
     ap.add_argument("-B", "--autodarts_board_id", required=True, help="Registered board-id at " + AUTODART_URL)
     ap.add_argument("-M", "--media_path", required=True, help="Absolute path to your media")
     ap.add_argument("-MS", "--media_path_shared", required=False, default=DEFAULT_EMPTY_PATH, help="Absolute path to shared media folder (every caller get sounds)")
-    ap.add_argument("-V", "--caller_volume", type=float, default=DEFAULT_CALLER_VOLUME, required=False, help="Set the caller volume between 0.0 (silent) and 1.0 (max)")
-    ap.add_argument("-C", "--caller", default=DEFAULT_CALLER, required=False, help="Sets a particular caller")
+    ap.add_argument("-V", "--caller_volume", type=float, default=DEFAULT_CALLER_VOLUME, required=False, help="Sets calling-volume between 0.0 (silent) and 1.0 (max)")
+    ap.add_argument("-C", "--caller", default=DEFAULT_CALLER, required=False, help="Sets a specific caller (voice-pack) for calling")
     ap.add_argument("-R", "--random_caller", type=int, choices=range(0, 2), default=DEFAULT_RANDOM_CALLER, required=False, help="If '1', the application will randomly choose a caller each game. It only works when your base-media-folder has subfolders with its files")
     ap.add_argument("-L", "--random_caller_each_leg", type=int, choices=range(0, 2), default=DEFAULT_RANDOM_CALLER_EACH_LEG, required=False, help="If '1', the application will randomly choose a caller each leg instead of each game. It only works when 'random_caller=1'")
     ap.add_argument("-RL", "--random_caller_language", type=int, choices=range(0, len(CALLER_LANGUAGES) + 1), default=DEFAULT_RANDOM_CALLER_LANGUAGE, required=False, help="If '0', the application will allow every language.., else it will limit caller selection by specific language")
@@ -2359,6 +2375,7 @@ if __name__ == "__main__":
     ap.add_argument("-DL", "--downloads", type=int, choices=range(0, 2), default=DEFAULT_DOWNLOADS, required=False, help="If '1', the application will try to download a curated list of caller-voices")
     ap.add_argument("-DLL", "--downloads_limit", type=int, default=DEFAULT_DOWNLOADS_LIMIT, required=False, help="If '1', the application will try to download a only the X newest caller-voices. -DLN needs to be activated.")
     ap.add_argument("-DLLA", "--downloads_language", type=int, choices=range(0, len(CALLER_LANGUAGES) + 1), default=DEFAULT_DOWNLOADS_LANGUAGE, required=False, help="If '0', the application will download speakers of every language.., else it will limit speaker downloads by specific language")
+    ap.add_argument("-DLN", "--downloads_name", default=DEFAULT_DOWNLOADS_NAME, required=False, help="Sets a specific caller (voice-pack) for download")
     ap.add_argument("-BLP", "--blacklist_path", required=False, default=DEFAULT_EMPTY_PATH, help="Absolute path to storage directory for blacklist-file")
     ap.add_argument("-BAV","--background_audio_volume", required=False, type=float, default=DEFAULT_BACKGROUND_AUDIO_VOLUME, help="Set background-audio-volume between 0.1 (silent) and 1.0 (no mute)")
     ap.add_argument("-WEB", "--web_caller", required=False, type=int, choices=range(0, 3), default=DEFAULT_WEB_CALLER, help="If '1' the application will host an web-endpoint, '2' it will do '1' and default caller-functionality.")
@@ -2407,6 +2424,7 @@ if __name__ == "__main__":
     DOWNLOADS_LIMIT = args['downloads_limit']
     if DOWNLOADS_LIMIT < 0: DOWNLOADS_LIMIT = DEFAULT_DOWNLOADS_LIMIT
     DOWNLOADS_PATH = DEFAULT_DOWNLOADS_PATH
+    DOWNLOADS_NAME = args['downloads_name']
     if args['blacklist_path'] != DEFAULT_EMPTY_PATH:
         BLACKLIST_PATH = Path(args['blacklist_path'])
     else:
@@ -2449,6 +2467,9 @@ if __name__ == "__main__":
 
     global tokenExpiresAt
     tokenExpiresAt = None
+
+    global tokenRefreshExpiresAt
+    tokenRefreshExpiresAt = None
 
     global userId
     userId = None
