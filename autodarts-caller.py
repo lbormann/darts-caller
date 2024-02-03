@@ -46,7 +46,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.7.2'
+VERSION = '2.7.3'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -282,7 +282,9 @@ def download_callers():
         download_list = CALLER_PROFILES
 
         # versionize, exclude bans, force download-name
-        dl_name = DOWNLOADS_NAME.lower()
+        dl_name = DOWNLOADS_NAME
+        if dl_name is not None:
+            dl_name = dl_name.lower()
     
         downloads_filtered = {}
         for speaker_name, (speaker_download_url, speaker_version) in download_list.items():

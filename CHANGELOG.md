@@ -1,3 +1,8 @@
+## 2.7.3
+
+- hotfix: fix typo
+
+
 ## 2.7.2
 
 - hotfix: fix occasional call-stops after one match
