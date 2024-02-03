@@ -107,22 +107,16 @@ Since Version 1.6.0 you can deposit multiple sounds for every ([sound-file-key](
 **AMBIENT (Argument -A > 0.0):**
 
 - ambient_playerchange
-
 - ambient_gameon 
 - ambient_gameon_{playername} [overrides: ambient_gameon]
-
-- ambient_matchon [fallback: ambient_gameon]  
+- ambient_matchon
 - ambient_matchon_{playername} [overrides: ambient_matchon]  
-
 - ambient_gameshot
 - ambient_gameshot_{playername} [overrides: ambient_gameshot]
-
-- ambient_setshot [fallback: ambient_gameshot] 
+- ambient_setshot
 - ambient_setshot_{playername} [overrides: ambient_setshot] 
-
-- ambient_matchshot [fallback: ambient_gameshot]
+- ambient_matchshot
 - ambient_matchshot_{playername} [overrides: ambient_matchshot]
-
 - ambient_noscore
 - ambient_1more
 - ambient_50more  
@@ -131,13 +125,11 @@ Since Version 1.6.0 you can deposit multiple sounds for every ([sound-file-key](
 - ambient_150more 
 - ambient_1-ambient_180 [overrides: ambient_Xmore]
 - ambient_{any 3 darts combo, for example "t1s1d1"} [overrides: ambient_1-ambient_180]
-
 - ambient_group_legendary
 - ambient_group_perfect
 - ambient_group_very_nice
 - ambient_group_good
 - ambient_group_normal
-
 - ambient_checkout_call_limit
 
 **LOBBY**
@@ -501,8 +493,8 @@ EVERY sound is optional! If you don't like a specific sound just delete it! The 
 There are two ways to ban an undesired voice-pack.
 Option 1) Delete ALL files of voice-pack-folder.
 Option 2) use [autodarts-voice](https://github.com/lbormann/autodarts-voice) to ban the the current caller when he/she is active.
-Option 3) put the name of the current caller autodarts-caller-banned.txt by yourself.
-All 3 options forcing the application to either download files again nor using a voice-pack anymore. 
+Option 3) put the name of the current caller (voice-pack) in autodarts-caller-banned.txt by yourself.
+All 3 options forcing the application to either download files again nor using a voice-pack anymore, except you define it in -C or -DLN
 If you wish to revoke a ban, open 'autodarts-caller-banned.txt' and remove the line from the list.
 
 ### App starts and stops immediately?!

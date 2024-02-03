@@ -2,9 +2,10 @@
 
 - hotfix: fix occasional call-stops after one match
 - change file-hoster for more stable downloads
-- add option for downloads, to only download a specific voice-pack by its name
+- add option for downloads: only download specific voice-pack by its name
 - add ambient_gameshot_{playername}, ambient_matchshot_{playername} and more
 - add lobby-event-broadcasts
+- add voice-pack 'en-US-Gregory-Male'
 
 
 ## 2.7.1

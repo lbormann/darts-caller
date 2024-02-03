@@ -2,12 +2,10 @@ import os
 import sys
 from pathlib import Path
 import time
-from datetime import datetime, timedelta
 import json
 import platform
 import random
 import argparse
-from keycloak import KeycloakOpenID
 import requests
 from pygame import mixer
 import websocket
@@ -25,6 +23,7 @@ from mask import mask
 import re
 from urllib.parse import quote, unquote
 from flask import Flask, render_template, send_from_directory
+from autodarts_keycloak_client import AutodartsKeycloakClient
 
 os.environ['SSL_CERT_FILE'] = certifi.where()
 
@@ -142,6 +141,7 @@ CALLER_PROFILES = {
     'en-US-Kendra-Female': ('https://add.arnes-design.de/ADC/en-US-Kendra-Female-v4.zip', 4),
     'en-US-Joey-Male': ('https://add.arnes-design.de/ADC/en-US-Joey-Male-v4.zip', 4),
     'en-US-Joanna-Female': ('https://add.arnes-design.de/ADC/en-US-Joanna-Female-v4.zip', 4),
+    'en-US-Gregory-Male': ('https://add.arnes-design.de/ADC/en-US-Gregory-Male.zip', 1),
 
     
     # 'TODONAME': ('TODOLINK', TODOVERSION),  
@@ -281,24 +281,50 @@ def download_callers():
     if DOWNLOADS:
         download_list = CALLER_PROFILES
 
+        # versionize, exclude bans, force download-name
+        dl_name = DOWNLOADS_NAME.lower()
+    
         downloads_filtered = {}
         for speaker_name, (speaker_download_url, speaker_version) in download_list.items():
+            spn = speaker_name.lower()
+
             speaker_versionized = versionize_speaker(speaker_name, speaker_version)
-            if speaker_versionized.lower() not in caller_profiles_banned:
+            speaker_versionized_lower = speaker_versionized.lower()
+
+            if dl_name == spn or dl_name == speaker_versionized.lower():
+                downloads_filtered = {}   
                 downloads_filtered[speaker_versionized] = speaker_download_url
+                break
+               
+            if speaker_versionized_lower not in caller_profiles_banned and spn not in caller_profiles_banned:  
+                # ppi("spn: " + spn)
+                # ppi("dl_name: " + dl_name)
+                # ppi("speaker_versionized: " + speaker_versionized.lower())
+                downloads_filtered[speaker_versionized] = speaker_download_url
+         
         download_list = downloads_filtered
 
-        if DOWNLOADS_LANGUAGE > 0:
-            downloads_filtered = {}
-            for speaker_name, speaker_download_url in download_list.items():
-                caller_language_key = grab_caller_language(speaker_name)
-                if caller_language_key != DOWNLOADS_LANGUAGE:
-                    continue
-                downloads_filtered[speaker_name] = speaker_download_url
-            download_list = downloads_filtered
+        
+        if dl_name != DEFAULT_DOWNLOADS_NAME:
+            ppi("Downloader: filter for name: " + str(dl_name))
+        else:
+            # filter for language
+            if DOWNLOADS_LANGUAGE > 0:
+                ppi("Downloader: filter for language: " + str(DOWNLOADS_LANGUAGE))
+                downloads_filtered = {}
+                for speaker_name, speaker_download_url in download_list.items():
+                    caller_language_key = grab_caller_language(speaker_name)
+                    if caller_language_key != DOWNLOADS_LANGUAGE:
+                        continue
+                    downloads_filtered[speaker_name] = speaker_download_url
+                download_list = downloads_filtered
 
-        if DOWNLOADS_LIMIT > 0 and len(download_list) > 0 and DOWNLOADS_LIMIT < len(download_list):
-            download_list = {k: download_list[k] for k in list(download_list.keys())[-DOWNLOADS_LIMIT:]}
+            # filter for limit
+            if DOWNLOADS_LIMIT > 0 and len(download_list) > 0 and DOWNLOADS_LIMIT < len(download_list):
+                ppi("Downloader: limit to: " + str(DOWNLOADS_LIMIT))
+                download_list = {k: download_list[k] for k in list(download_list.keys())[-DOWNLOADS_LIMIT:]}
+
+
 
         if len(download_list) > 0:
             if os.path.exists(AUDIO_MEDIA_PATH) == False: os.mkdir(AUDIO_MEDIA_PATH)
@@ -610,7 +636,7 @@ def setup_caller():
             for c in callers:
                 caller_name = grab_caller_name(c)
 
-                if caller_name in caller_profiles_banned:
+                if caller_name in caller_profiles_banned or caller_name.split("-v")[0] in caller_profiles_banned:
                     continue
 
                 if RANDOM_CALLER_LANGUAGE != 0:
@@ -650,6 +676,7 @@ def play_sound(sound, wait_for_last, volume_mult):
 
     if WEB > 0:
         global mirror_files
+        global caller_title_without_version
         
         mirror_file = {
                     "caller": caller_title_without_version,
@@ -747,10 +774,7 @@ def get_player_average(user_id, variant = 'x01', limit = '100'):
     # get
     # https://api.autodarts.io/as/v0/users/<user-id>/stats/<variant>?limit=<limit>
     try:
-        global accessToken
-
-        auth_autodarts()
-        res = requests.get(AUTODART_USERS_URL + user_id + "/stats/" + variant + "?limit=" + limit, headers={'Authorization': 'Bearer ' + accessToken})
+        res = requests.get(AUTODART_USERS_URL + user_id + "/stats/" + variant + "?limit=" + limit, headers={'Authorization': 'Bearer ' + kc.access_token})
         m = res.json()
         # ppi(m)
         return m['average']['average']
@@ -766,12 +790,9 @@ def next_game():
     # post
     # https://api.autodarts.io/gs/v0/matches/<match-id>/games/next
     try:
-        global accessToken
         global currentMatch
-
-        auth_autodarts()
         if currentMatch != None:
-            requests.post(AUTODART_MATCHES_URL + currentMatch + "/games/next", headers={'Authorization': 'Bearer ' + accessToken})
+            requests.post(AUTODART_MATCHES_URL + currentMatch + "/games/next", headers={'Authorization': 'Bearer ' + kc.access_token})
 
     except Exception as e:
         ppe('Next game failed', e)
@@ -784,12 +805,9 @@ def next_throw():
     # post
     # https://api.autodarts.io/gs/v0/matches/<match-id>/players/next
     try:
-        global accessToken
         global currentMatch
-
-        auth_autodarts()
         if currentMatch != None:
-            requests.post(AUTODART_MATCHES_URL + currentMatch + "/players/next", headers={'Authorization': 'Bearer ' + accessToken})
+            requests.post(AUTODART_MATCHES_URL + currentMatch + "/players/next", headers={'Authorization': 'Bearer ' + kc.access_token})
 
     except Exception as e:
         ppe('Next throw failed', e)
@@ -802,12 +820,9 @@ def undo_throw():
     # post
     # https://api.autodarts.io/gs/v0/matches/<match-id>/undo
     try:
-        global accessToken
         global currentMatch
-
-        auth_autodarts()
         if currentMatch != None:
-            requests.post(AUTODART_MATCHES_URL + currentMatch + "/undo", headers={'Authorization': 'Bearer ' + accessToken})
+            requests.post(AUTODART_MATCHES_URL + currentMatch + "/undo", headers={'Authorization': 'Bearer ' + kc.access_token})
     except Exception as e:
         ppe('Undo throw failed', e)
 
@@ -849,17 +864,14 @@ def correct_throw(throw_indices, score):
     #     }
     # }
     try:
-        global accessToken
         global lastCorrectThrow
-
-        auth_autodarts()
         data = {"changes": {}}
         for ti in throw_indices:
             data["changes"][ti] = {"point": score, "type": "normal"}
 
         # ppi(f'Data: {data}')
         if lastCorrectThrow == None or lastCorrectThrow != data:
-            requests.patch(AUTODART_MATCHES_URL + currentMatch + "/throws", json=data, headers={'Authorization': 'Bearer ' + accessToken})
+            requests.patch(AUTODART_MATCHES_URL + currentMatch + "/throws", json=data, headers={'Authorization': 'Bearer ' + kc.access_token})
             lastCorrectThrow = data
         else:
             lastCorrectThrow = None 
@@ -870,13 +882,10 @@ def correct_throw(throw_indices, score):
 
 def receive_local_board_address():
     try:
-        global accessToken
         global boardManagerAddress
 
-        auth_autodarts()
-
         if boardManagerAddress == None:
-            res = requests.get(AUTODART_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + accessToken})
+            res = requests.get(AUTODART_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + kc.access_token})
             board_ip = res.json()['ip']
             if board_ip != None and board_ip != '':  
                 boardManagerAddress = 'http://' + board_ip
@@ -897,10 +906,7 @@ def poll_lobbies(ws):
 
         while currentMatch == None:
             try:   
-                global accessToken
-
-                auth_autodarts()
-                res = requests.get(AUTODART_LOBBIES_URL, headers={'Authorization': 'Bearer ' + accessToken})
+                res = requests.get(AUTODART_LOBBIES_URL, headers={'Authorization': 'Bearer ' + kc.access_token})
                 res = res.json()
                 # ppi(json.dumps(res, indent = 4, sort_keys = True))
 
@@ -960,8 +966,7 @@ def listen_to_match(m, ws):
             ppe("Setup callers failed!", e)
 
         try:
-            global accessToken
-            res = requests.get(AUTODART_MATCHES_URL + currentMatch, headers={'Authorization': 'Bearer ' + accessToken})
+            res = requests.get(AUTODART_MATCHES_URL + currentMatch, headers={'Authorization': 'Bearer ' + kc.access_token})
             m = res.json()
             # ppi(json.dumps(m, indent = 4, sort_keys = True))
 
@@ -1044,7 +1049,6 @@ def listen_to_match(m, ws):
             "topic": m['id'] + ".state"
         }
         ws.send(json.dumps(paramsUnsubscribeMatchEvents))
-        currentMatch = None
 
         if m['event'] == 'delete':
             play_sound_effect('matchcancel')
@@ -1079,7 +1083,6 @@ def checkout_only_yourself(currentPlayer):
     return True
 
 def process_match_x01(m):
-    global accessToken
     global currentMatch
     global isGameFinished
     global lastPoints
@@ -1238,10 +1241,17 @@ def process_match_x01(m):
         if CALL_CURRENT_PLAYER:
             play_sound_effect(currentPlayerName, True)
 
-        if play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
-            play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+        if AMBIENT_SOUNDS != 0.0:
+            if play_sound_effect('ambient_matchshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+                pass
+            elif play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+                pass
+            elif play_sound_effect('ambient_gameshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+                pass
+            else:
+                play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+            
 
-        
         if RANDOM_CALLER_EACH_LEG:
             setup_caller()
         ppi('Gameshot and match')
@@ -1287,10 +1297,20 @@ def process_match_x01(m):
 
         if AMBIENT_SOUNDS != 0.0:
             if isSet == True:
-                if play_sound_effect('ambient_setshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
+                if play_sound_effect('ambient_setshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+                    pass
+                elif play_sound_effect('ambient_setshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+                    pass
+                elif play_sound_effect('ambient_gameshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+                    pass
+                else:
                     play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                    
             else:
-                play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                if play_sound_effect('ambient_gameshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+                    pass
+                else:
+                    play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
 
         if RANDOM_CALLER_EACH_LEG:
             setup_caller()
@@ -1321,8 +1341,12 @@ def process_match_x01(m):
         if play_sound_effect('matchon', callPlayerNameState) == False:
             play_sound_effect('gameon', callPlayerNameState)
 
-        if AMBIENT_SOUNDS != 0.0 and play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
-            play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+        if AMBIENT_SOUNDS != 0.0:
+            state = play_sound_effect('ambient_matchon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+            if state == False and play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
+                if play_sound_effect('ambient_gameon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
+                    play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+
 
         ppi('Matchon')
 
@@ -1351,7 +1375,8 @@ def process_match_x01(m):
         play_sound_effect('gameon', callPlayerNameState)
 
         if AMBIENT_SOUNDS != 0.0:
-            play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+            if play_sound_effect('ambient_gameon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
+                play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
 
         ppi('Gameon')
           
@@ -1553,9 +1578,17 @@ def process_match_cricket(m):
         if play_sound_effect('matchshot') == False:
             play_sound_effect('gameshot')
         play_sound_effect(currentPlayerName, True)
+        
         if AMBIENT_SOUNDS != 0.0:
-            if play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
+            if play_sound_effect('ambient_matchshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+                pass
+            elif play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+                pass
+            elif play_sound_effect('ambient_gameshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+                pass
+            else:
                 play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+        
         setup_caller()
         ppi('Gameshot and match')
 
@@ -1584,8 +1617,12 @@ def process_match_cricket(m):
 
         play_sound_effect('gameshot')
         play_sound_effect(currentPlayerName, True)
+        
         if AMBIENT_SOUNDS != 0.0:
-            play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+            if play_sound_effect('ambient_gameshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+                pass
+            else:
+                play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
         
         if RANDOM_CALLER_EACH_LEG:
             setup_caller()
@@ -1610,10 +1647,17 @@ def process_match_cricket(m):
         play_sound_effect(currentPlayerName, False)
         if play_sound_effect('matchon', True) == False:
             play_sound_effect('gameon', True)
+        
         # play only if it is a real match not just legs!
-        if AMBIENT_SOUNDS != 0.0 and ('legs' in m and 'sets'):
-            if play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
-                play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+        # if AMBIENT_SOUNDS != 0.0 and ('legs' in m and 'sets'):
+        #     if play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
+        #         play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+        if AMBIENT_SOUNDS != 0.0:
+            state = play_sound_effect('ambient_matchon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+            if state == False and play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
+                if play_sound_effect('ambient_gameon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
+                    play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)    
+        
         ppi('Matchon')
 
     # Check for gameon
@@ -1634,8 +1678,11 @@ def process_match_cricket(m):
 
         play_sound_effect(currentPlayerName, False)
         play_sound_effect('gameon', True)
+
         if AMBIENT_SOUNDS != 0.0:
-            play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+            if play_sound_effect('ambient_gameon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
+                play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+
         ppi('Gameon')
 
     # Check for busted turn
@@ -1807,11 +1854,16 @@ def process_match_atc(m):
         if CALL_CURRENT_PLAYER:
             play_sound_effect(currentPlayerName, True)
 
-        if play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
-            play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+        if AMBIENT_SOUNDS != 0.0:
+            if play_sound_effect('ambient_matchshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+                pass
+            elif play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+                pass
+            elif play_sound_effect('ambient_gameshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+                pass
+            else:
+                play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
 
-        if RANDOM_CALLER_EACH_LEG:
-            setup_caller()
         ppi('Gameshot and match')
 
     # only call next if more hits then 1
@@ -1832,71 +1884,11 @@ def process_common(m):
     broadcast(m)
 
 
-
-def auth_autodarts():
-    try:
-        global accessToken
-        global refreshToken
-        global tokenExpiresAt
-        global tokenRefreshExpiresAt
-        global userId
-
-        KC = KeycloakOpenID(server_url = AUTODART_AUTH_URL,
-                                            client_id = AUTODART_CLIENT_ID,
-                                            client_secret_key = AUTODART_CLIENT_SECRET,
-                                            realm_name = AUTODART_REALM_NAME,
-                                            verify = bool(CERT_CHECK))
-        
-        if accessToken is None:
-            token = KC.token(AUTODART_USER_EMAIL, AUTODART_USER_PASSWORD)
-            ppi("LOGIN: ", token)
-            accessToken = token['access_token']
-            refreshToken = token['refresh_token']
-
-            now = datetime.now()
-            tokenExpiresAt = now + timedelta(seconds=int(0.9 * token["expires_in"]))
-            tokenRefreshExpiresAt = now + timedelta(seconds=int(0.9 * token["refresh_expires_in"]))
-
-            # Get Userinfo
-            userinfo = KC.userinfo(accessToken)
-            # ppi("USER INFO: ", userinfo)
-            userId = userinfo['sub']     
-        else:
-            now = datetime.now()
-            if tokenExpiresAt < now:
-                if now < tokenRefreshExpiresAt:
-                    token = KC.refresh_token(refreshToken)
-                    ppi("LOGIN REFRESHED: ", token)
-                    accessToken = token['access_token']
-                    refreshToken = token['refresh_token']
-
-                    now = datetime.now()
-                    tokenExpiresAt = now + timedelta(seconds=int(0.9 * token["expires_in"]))
-                    tokenRefreshExpiresAt = now + timedelta(seconds=int(0.9 * token["refresh_expires_in"]))
-                else:
-                    accessToken = None
-                    refreshToken = None
-                    tokenExpiresAt = None
-                    tokenRefreshExpiresAt = None
-                    auth_autodarts()
-            # else:
-            #     ppi("TOKEN VALID .." + str(tokenExpiresAt) + " vs " + str(now))
-    except Exception as e:
-        accessToken = None
-        # refreshToken = None
-        # tokenExpiresAt = None
-        # userId = None
-        ppe('Login failed: check your email address and password. 2FA must be turned off.', e)    
-
 def connect_autodarts():
     def process(*args):
-        global accessToken
-
-        auth_autodarts()
-
         websocket.enableTrace(False)
         ws = websocket.WebSocketApp(AUTODART_WEBSOCKET_URL,
-                                    header={'Authorization': 'Bearer ' + accessToken},
+                                    header={'Authorization': 'Bearer ' + kc.access_token},
                                     on_open = on_open_autodarts,
                                     on_message = on_message_autodarts,
                                     on_error = on_error_autodarts,
@@ -1907,13 +1899,8 @@ def connect_autodarts():
     threading.Thread(target=process).start()
 
 def on_open_autodarts(ws):
-    global accessToken
-    global userId
-
-    auth_autodarts()
-
     try:
-        res = requests.get(AUTODART_MATCHES_URL, headers={'Authorization': 'Bearer ' + accessToken})
+        res = requests.get(AUTODART_MATCHES_URL, headers={'Authorization': 'Bearer ' + kc.access_token})
         res = res.json()
         # ppi(json.dumps(res, indent = 4, sort_keys = True))
 
@@ -1963,18 +1950,18 @@ def on_open_autodarts(ws):
     except Exception as e:
         ppe('WS-Open-boards failed: ', e)
 
-    # try:
-    #     paramsSubscribeUserEvents = {
-    #         "channel": "autodarts.users",
-    #         "type": "subscribe",
-    #         "topic": userId + ".events"
-    #     }
-    #     ws.send(json.dumps(paramsSubscribeUserEvents))
+    try:
+        paramsSubscribeUserEvents = {
+            "channel": "autodarts.users",
+            "type": "subscribe",
+            "topic": kc.user_id + ".events"
+        }
+        ws.send(json.dumps(paramsSubscribeUserEvents))
 
-    #     # ppi('Receiving live information for user-id: ' + userId)
+        # ppi('Receiving live information for user-id: ' + kc.user_id)
 
-    # except Exception as e:
-    #     ppe('WS-Open-users failed: ', e)
+    except Exception as e:
+        ppe('WS-Open-users failed: ', e)
         
 def on_message_autodarts(ws, message):
     def process(*args):
@@ -2078,22 +2065,21 @@ def on_message_autodarts(ws, message):
                         pass
 
                     elif data['event'] == 'finish' or data['event'] == 'delete':
-                        pass
-                        # ppi('Stop listening to lobby: ' + m['id'])
-                        # paramsUnsubscribeLobbyEvents = {
-                        #     "type": "unsubscribe",
-                        #     "channel": "autodarts.lobbies",
-                        #     "topic": m['id'] + ".events"
-                        # }
-                        # ws.send(json.dumps(paramsUnsubscribeLobbyEvents))
-                        # paramsUnsubscribeLobbyEvents = {
-                        #     "type": "unsubscribe",
-                        #     "channel": "autodarts.lobbies",
-                        #     "topic": m['id'] + ".state"
-                        # }
-                        # ws.send(json.dumps(paramsUnsubscribeLobbyEvents))
-                        # if play_sound_effect("lobby_ambient_out", False):
-                        #     mirror_sounds()
+                        ppi('Stop listening to lobby: ' + m['id'])
+                        paramsUnsubscribeLobbyEvents = {
+                            "type": "unsubscribe",
+                            "channel": "autodarts.lobbies",
+                            "topic": m['id'] + ".events"
+                        }
+                        ws.send(json.dumps(paramsUnsubscribeLobbyEvents))
+                        paramsUnsubscribeLobbyEvents = {
+                            "type": "unsubscribe",
+                            "channel": "autodarts.lobbies",
+                            "topic": m['id'] + ".state"
+                        }
+                        ws.send(json.dumps(paramsUnsubscribeLobbyEvents))
+                        if play_sound_effect("lobby_ambient_out", False):
+                            mirror_sounds()
   
                         # poll_lobbies(ws)
 
@@ -2459,21 +2445,6 @@ if __name__ == "__main__":
     global server
     server = None
 
-    global accessToken
-    accessToken = None
-
-    global refreshToken
-    refreshToken = None
-
-    global tokenExpiresAt
-    tokenExpiresAt = None
-
-    global tokenRefreshExpiresAt
-    tokenRefreshExpiresAt = None
-
-    global userId
-    userId = None
-
     global boardManagerAddress
     boardManagerAddress = None
 
@@ -2579,6 +2550,14 @@ if __name__ == "__main__":
         websocket_server_thread = threading.Thread(target=start_websocket_server, args=(DEFAULT_HOST_IP, HOST_PORT))
         websocket_server_thread.start()
 
+        kc = AutodartsKeycloakClient(username=AUTODART_USER_EMAIL, 
+                                     password=AUTODART_USER_PASSWORD, 
+                                     client_id=AUTODART_CLIENT_ID, 
+                                     client_secret=AUTODART_CLIENT_SECRET,
+                                     debug=DEBUG
+                                     )
+        kc.start()
+
         if WEB > 0 or WEB_SCOREBOARD:
             WEB_HOST = get_local_ip_address()
             flask_app_thread = threading.Thread(target=start_flask_app, args=(DEFAULT_HOST_IP, WEB_PORT))
@@ -2590,6 +2569,8 @@ if __name__ == "__main__":
 
         if WEB > 0 or WEB_SCOREBOARD:
             flask_app_thread.join() 
+
+        kc.stop()
     except Exception as e:
         ppe("Connect failed: ", e)
    
