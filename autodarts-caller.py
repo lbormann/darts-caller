@@ -2,12 +2,10 @@ import os
 import sys
 from pathlib import Path
 import time
-from datetime import datetime, timedelta
 import json
 import platform
 import random
 import argparse
-from keycloak import KeycloakOpenID
 import requests
 from pygame import mixer
 import websocket
@@ -25,6 +23,7 @@ from mask import mask
 import re
 from urllib.parse import quote, unquote
 from flask import Flask, render_template, send_from_directory
+from autodarts_keycloak_client import AutodartsKeycloakClient
 
 os.environ['SSL_CERT_FILE'] = certifi.where()
 
@@ -47,7 +46,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.7.1'
+VERSION = '2.7.2'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -69,6 +68,7 @@ DEFAULT_AMBIENT_SOUNDS_AFTER_CALLS = 0
 DEFAULT_DOWNLOADS = True
 DEFAULT_DOWNLOADS_LIMIT = 0
 DEFAULT_DOWNLOADS_LANGUAGE = 1
+DEFAULT_DOWNLOADS_NAME = None
 DEFAULT_BACKGROUND_AUDIO_VOLUME = 0.0
 DEFAULT_WEB_CALLER = 0
 DEFAULT_WEB_CALLER_SCOREBOARD = 0
@@ -115,92 +115,33 @@ CALLER_GENDERS = {
     2: ['male', 'm'],
 }
 CALLER_PROFILES = {
-    # MS-ONEDRIVE (DEPRECATED)
-    # --------
-    # # murf
-    # 'charles-m-english-us-canada': ('https://drive.google.com/file/d/1-CrWSFHBoT_I9kzDuo7PR7FLCfEO-Qg-/view?usp=sharing', 1),
-    # 'clint-m-english-us-canada': ('https://drive.google.com/file/d/1-IQ9Bvp1i0jG6Bu9fMWhlbyAj9SkoVGb/view?usp=sharing', 1),
-    # 'alicia-f-english-us-canada': ('https://drive.google.com/file/d/1-Cvk-IczRjOphDOCA14NwE1hy4DAB8Tt/view?usp=sharing', 1),
-    # 'kushal-m-english-india': ('https://drive.google.com/file/d/1-GavAG_oa3MrrremanvfYSfMI0U784EN/view?usp=sharing', 1),
-    # 'kylie-f-english-australia': ('https://drive.google.com/file/d/1-Y6XpdFjOotSLBi0sInf5CGpAAV3mv0b/view?usp=sharing', 1),
-    # 'ruby-f-english-uk': ('https://drive.google.com/file/d/1-kqVwCd4HJes0EVNda5EOF6tTwUxql3z/view?usp=sharing', 1),
-    # 'ethan-m-english-us-canada': ('https://drive.google.com/file/d/106PG96DLzcHHusbQ2zRfub2ZVXbz5TPs/view?usp=sharing', 1),
-    # 'mitch-m-english-australia': ('https://drive.google.com/file/d/10XEf0okustuoHnu2h_4eqRA6G-2d2mH1/view?usp=sharing', 1),
-    # 'ava-f-english-us-canada': ('https://drive.google.com/file/d/10XtdjfORUreALkcUxbDhjb0Bo6ym7IDK/view?usp=sharing', 1),
-    # 'aiden-m-english-uk': ('https://drive.google.com/file/d/10bYvcqp1nzqJnBDC7B6u7s8aequ5wGat/view?usp=sharing', 1),
-    # 'theo-m-english-uk': ('https://drive.google.com/file/d/10eQaYMZM3tkIA2PIDsb0r-5NhyDU86-C/view?usp=sharing', 1),
-    # 'emily-f-english-scottish': ('https://drive.google.com/file/d/10mOzTjA5tqBZCKI3EqxJ0YvQptqtMNQg/view?usp=sharing', 1),
-    # # google
-    # 'en-US-Wavenet-E-FEMALE': ('https://drive.google.com/file/d/1XIj7pJPd9_utwPeQtIftGJz1RUPX6dg_/view?usp=sharing', 3),
-    # 'en-US-Wavenet-G-FEMALE': ('https://drive.google.com/file/d/1h_-xmklyIcq6qEh27ibJWeQtArsQs9eX/view?usp=sharing', 3),
-    # 'en-US-Wavenet-A-MALE': ('https://drive.google.com/file/d/1sKVRUt6_V0c45Les3lLiuR9uMGtdzqto/view?usp=sharing', 3),
-    # 'en-US-Wavenet-H-FEMALE': ('https://drive.google.com/file/d/1MshpjUt0uhQ37ai-3794y4LbewxgPqvX/view?usp=sharing', 3),
-    # 'en-US-Wavenet-I-MALE': ('https://drive.google.com/file/d/1lYjR2urFzV55HKNxCqeJXLBVu6LeKfYa/view?usp=sharing', 3),
-    # 'en-US-Wavenet-J-MALE': ('https://drive.google.com/file/d/1P6oFO0lFlanX2yYI_U-zlag4SE29LkXK/view?usp=sharing', 3),
-    # 'en-US-Wavenet-F-FEMALE': ('https://drive.google.com/file/d/1b-k1jAL8osH_5Mm2RLTDY_rSucF7Wn2_/view?usp=sharing', 3),
-    # 'fr-FR-Wavenet-E-FEMALE': ('https://drive.google.com/file/d/1fow359C2tt9E6Bf5_IO_MnJfNuyXgnyJ/view?usp=sharing', 2),
-    # 'fr-FR-Wavenet-B-MALE': ('https://drive.google.com/file/d/1lcmgTonyruYYLA7AqgPt5nfT05J7erih/view?usp=sharing', 2),
-    # 'ru-RU-Wavenet-E-FEMALE': ('https://drive.google.com/file/d/1tjafA4_25yTYEJg_JHHt9qTTeJubB7Fu/view?usp=sharing', 2),
-    # 'ru-RU-Wavenet-B-MALE': ('https://drive.google.com/file/d/1L9TccnpRn-Ms-pFx25-7eDR9ku3rQRbD/view?usp=sharing', 2),
-    # 'de-DE-Wavenet-F-FEMALE': ('https://drive.google.com/file/d/15T-mMILZgVpNflgEByzmIbqXaZaa585t/view?usp=sharing', 2),  
-    # 'de-DE-Wavenet-B-MALE': ('https://drive.google.com/file/d/1Bj4yb_fI4HnUiLcPCPJgzbubpyqsng-D/view?usp=sharing', 2),
-    # 'es-ES-Wavenet-C-FEMALE': ('https://drive.google.com/file/d/1HB_a3j7L9Nkhsk4GEYn_A4BftWZuL_0X/view?usp=sharing', 2),  
-    # 'es-ES-Wavenet-B-MALE': ('https://drive.google.com/file/d/1P1Iqt8sN7WbKlJgwRB03r5WjG4Sa8VBM/view?usp=sharing', 2),
-    # 'nl-NL-Wavenet-B-MALE': ('https://drive.google.com/file/d/1VGpsXKCMxE26jvBRwEw7nZYdK_wP9g7u/view?usp=sharing', 2),  
-    # 'nl-NL-Wavenet-D-FEMALE': ('https://drive.google.com/file/d/1bBOeUfJdeU81KDlkCZGTw1sMNGEdE-X0/view?usp=sharing', 2),
-    # # amazon
-    # 'en-US-Stephen-Male': ('https://drive.google.com/file/d/1ma3zOIPNXzocQGNSMy8M8SyaYjyYOIx4/view?usp=sharing', 3),  
-    # 'en-US-Ivy-Female': ('https://drive.google.com/file/d/1zOVr1H2MSsj3soX_l8WtBP0qtiCkZazY/view?usp=sharing', 3),
-    # 'de-DE-Vicki-Female': ('https://drive.google.com/file/d/1bU4vAFf9ligX6HZeiwVKbUCRCawOdvh0/view?usp=sharing', 2),  
-    # 'de-DE-Daniel-Male': ('https://drive.google.com/file/d/1L83p1nsDvqplEdoCTpan6yd63Jc-J9bj/view?usp=sharing', 2),
-    # 'en-US-Kendra-Female': ('https://drive.google.com/file/d/140otZWbkSr4DZ3EKVYD6oOqe0p1BJyXj/view?usp=sharing', 3),
-    # 'en-US-Joey-Male': ('https://drive.google.com/file/d/1KeVzV5qISezkIA3XUogXLCDVSSe9vsS-/view?usp=sharing', 3),
-    # 'en-US-Joanna-Female': ('https://drive.google.com/file/d/1VPccbKqLpKeTeqXZ6Ko-21bYVh4sgguB/view?usp=sharing', 3),
-
-
-    # DROPBOX
-    # --------
-    # # murf
-    # 'charles-m-english-us-canada': ('https://www.dropbox.com/scl/fi/l7jv12w5tjqfhek0g05c2/charles-m-english-us-canada.zip?rlkey=fdvyhxxi8cdlyrmpmg2165ikv&dl=1', 1),
-    # 'clint-m-english-us-canada': ('https://www.dropbox.com/scl/fi/zd8v2cxlaasx8ewy0vh1g/clint-m-english-us-canada.zip?rlkey=0w5ot6v01fudhn0w5gk1wc4v2&dl=1', 1),
-    # 'alicia-f-english-us-canada': ('https://www.dropbox.com/scl/fi/uqubzt449fe0xiej9z34y/alicia-f-english-us-canada.zip?rlkey=2qgyjz4arhhv4vx7qewl2rmhq&dl=1', 1),
-    # 'kushal-m-english-india': ('https://www.dropbox.com/scl/fi/hdbqm076vh7inaekk9vdb/kushal-m-english-india.zip?rlkey=wdrvseqk51240z50jlfdv43uf&dl=1', 1),
-    # 'kylie-f-english-australia': ('https://www.dropbox.com/scl/fi/1rv4tmxnydxqmpi1nhfbe/kylie-f-english-australia.zip?rlkey=iynuqv0bl6z3ich8m9bvbm2wk&dl=1', 1),
-    # 'ruby-f-english-uk': ('https://www.dropbox.com/scl/fi/0aj8agfnpzbmvqu16swly/ruby-f-english-uk.zip?rlkey=b1ehvnweyjwluqvi5tbsfhv4l&dl=1', 1),
-    # 'ethan-m-english-us-canada': ('https://www.dropbox.com/scl/fi/4zkfo10buqredsg2gxn8f/ethan-m-english-us-canada.zip?rlkey=kau8b3m6gyzpek30z70pndef7&dl=1', 1),
-    # 'mitch-m-english-australia': ('https://www.dropbox.com/scl/fi/lfrfqjenotj3fuz953h6y/mitch-m-english-australia.zip?rlkey=e5l8ibiw9yzpzkfk86udw21sk&dl=1', 1),
-    # 'ava-f-english-us-canada': ('https://www.dropbox.com/scl/fi/tvy7ub0080ipb5jowk1a8/ava-f-english-us-canada.zip?rlkey=5vdwl8q36mb2q1k8d4eyb7xcw&dl=1', 1),
-    # 'aiden-m-english-uk': ('https://www.dropbox.com/scl/fi/sz4ogyw47ecqbyf0ru34m/aiden-m-english-uk.zip?rlkey=wftg1bzs0mety63b0yuta0ejb&dl=1', 1),
-    # 'theo-m-english-uk': ('https://www.dropbox.com/scl/fi/sfequbzrd498323x0zrql/theo-m-english-uk.zip?rlkey=9pna69ml42no1fttsg7m97zmi&dl=1', 1),
-    # 'emily-f-english-scottish': ('https://www.dropbox.com/scl/fi/mnnpyy4f19u7nhcdd92vb/emily-f-english-scottish.zip?rlkey=r5hsauwy67yx0w404t024gpo3&dl=1', 1),
     # google
-    'en-US-Wavenet-E-FEMALE': ('https://www.dropbox.com/scl/fi/698d3o1yft3a1ieh58p4z/en-US-Wavenet-E-FEMALE-v4.zip?rlkey=n8gds5xo5g5rf0tn4f1o0d87j&dl=1', 4),
-    'en-US-Wavenet-G-FEMALE': ('https://www.dropbox.com/scl/fi/nifog7il7d7ldtamwjb1t/en-US-Wavenet-G-FEMALE-v4.zip?rlkey=6uu0zn4109s7prz937dyz9qo1&dl=1', 4),
-    'en-US-Wavenet-A-MALE': ('https://www.dropbox.com/scl/fi/gy6pi7qfpn96fxhf1uny7/en-US-Wavenet-A-MALE-v4.zip?rlkey=gea403degyv460roai96zbu28&dl=1', 4),
-    'en-US-Wavenet-H-FEMALE': ('https://www.dropbox.com/scl/fi/o2p9thbla1d3bl8r8117g/en-US-Wavenet-H-FEMALE-v4.zip?rlkey=is94731r0yvqx3p5vcwb1zyjc&dl=1', 4),
-    'en-US-Wavenet-I-MALE': ('https://www.dropbox.com/scl/fi/i0qhvgdkjvjroxexr352k/en-US-Wavenet-I-MALE-v4.zip?rlkey=lzlk2zu3lkafetxcw26nopy11&dl=1', 4),
-    'en-US-Wavenet-J-MALE': ('https://www.dropbox.com/scl/fi/rm35rdfhpu91mfyrqg34m/en-US-Wavenet-J-MALE-v4.zip?rlkey=vfgixpwy1rew99ebngdaf52xp&dl=1', 4),
-    'en-US-Wavenet-F-FEMALE': ('https://www.dropbox.com/scl/fi/9w3711dr37mwxdqt7cxkt/en-US-Wavenet-F-FEMALE-v4.zip?rlkey=babhc4rgelnd3t0bs6m0ojy1t&dl=1', 4),
-    'fr-FR-Wavenet-E-FEMALE': ('https://www.dropbox.com/scl/fi/y75iqu34exb4ypbw5y632/fr-FR-Wavenet-E-FEMALE-v3.zip?rlkey=wdnu3b9yuu2krwgs0v0kodiaa&dl=1', 3),
-    'fr-FR-Wavenet-B-MALE': ('https://www.dropbox.com/scl/fi/6o6rds0ur4ndlrutud9wt/fr-FR-Wavenet-B-MALE-v3.zip?rlkey=kw23qmbi03yhphcboktpobikm&dl=1', 3),
-    'ru-RU-Wavenet-E-FEMALE': ('https://www.dropbox.com/scl/fi/hugouc1p2hlipboxmnwq9/ru-RU-Wavenet-E-FEMALE-v3.zip?rlkey=d24xxno33vexs172tl1ghyh0n&dl=1', 3),
-    'ru-RU-Wavenet-B-MALE': ('https://www.dropbox.com/scl/fi/vwj1g73j9mzzscpm21hwm/ru-RU-Wavenet-B-MALE-v3.zip?rlkey=i6betexw4ccbqoehkt7o9s9ow&dl=1', 3),
-    'de-DE-Wavenet-F-FEMALE': ('https://www.dropbox.com/scl/fi/22pmr59ynvipa7bbawubo/de-DE-Wavenet-F-FEMALE-v3.zip?rlkey=cjssiio7i40bwci31a0uo09pn&dl=1', 3),  
-    'de-DE-Wavenet-B-MALE': ('https://www.dropbox.com/scl/fi/3exhv255br0yjazirytpe/de-DE-Wavenet-B-MALE-v3.zip?rlkey=iqiv77b2f93hq0gq9ogwi1fg8&dl=1', 3),
-    'es-ES-Wavenet-C-FEMALE': ('https://www.dropbox.com/scl/fi/vd24f4n15a0qsz7rdjz3a/es-ES-Wavenet-C-FEMALE-v3.zip?rlkey=b7585d9prrjunuwsw3sryoqsa&dl=1', 3),  
-    'es-ES-Wavenet-B-MALE': ('https://www.dropbox.com/scl/fi/huxrkzur3z6xzq7lwxefv/es-ES-Wavenet-B-MALE-v3.zip?rlkey=mwuiov507s2admi54jd6viz70&dl=1', 3),
-    'nl-NL-Wavenet-B-MALE': ('https://www.dropbox.com/scl/fi/my32dnfilfv7yu0boljqs/nl-NL-Wavenet-B-MALE-v3.zip?rlkey=wtv3bpv4h4yixlgmuj4q5usmz&dl=1', 3),  
-    'nl-NL-Wavenet-D-FEMALE': ('https://www.dropbox.com/scl/fi/bdg0kgo7dkw7os632qc2o/nl-NL-Wavenet-D-FEMALE-v3.zip?rlkey=tqesoqizt0i5ha602cnrknsfc&dl=1', 3),
+    'en-US-Wavenet-E-FEMALE': ('https://add.arnes-design.de/ADC/en-US-Wavenet-E-FEMALE-v4.zip', 4),
+    'en-US-Wavenet-G-FEMALE': ('https://add.arnes-design.de/ADC/en-US-Wavenet-G-FEMALE-v4.zip', 4),
+    'en-US-Wavenet-A-MALE': ('https://add.arnes-design.de/ADC/en-US-Wavenet-A-MALE-v4.zip', 4),
+    'en-US-Wavenet-H-FEMALE': ('https://add.arnes-design.de/ADC/en-US-Wavenet-H-FEMALE-v4.zip', 4),
+    'en-US-Wavenet-I-MALE': ('https://add.arnes-design.de/ADC/en-US-Wavenet-I-MALE-v4.zip', 4),
+    'en-US-Wavenet-J-MALE': ('https://add.arnes-design.de/ADC/en-US-Wavenet-J-MALE-v4.zip', 4),
+    'en-US-Wavenet-F-FEMALE': ('https://add.arnes-design.de/ADC/en-US-Wavenet-F-FEMALE-v4.zip', 4),
+    'fr-FR-Wavenet-E-FEMALE': ('https://add.arnes-design.de/ADC/fr-FR-Wavenet-E-FEMALE-v3.zip', 3),
+    'fr-FR-Wavenet-B-MALE': ('https://add.arnes-design.de/ADC/fr-FR-Wavenet-B-MALE-v3.zip', 3),
+    'ru-RU-Wavenet-E-FEMALE': ('https://add.arnes-design.de/ADC/ru-RU-Wavenet-E-FEMALE-v3.zip', 3),
+    'ru-RU-Wavenet-B-MALE': ('https://add.arnes-design.de/ADC/ru-RU-Wavenet-B-MALE-v3.zip', 3),
+    'de-DE-Wavenet-F-FEMALE': ('https://add.arnes-design.de/ADC/de-DE-Wavenet-F-FEMALE-v3.zip', 3),  
+    'de-DE-Wavenet-B-MALE': ('https://add.arnes-design.de/ADC/de-DE-Wavenet-B-MALE-v3.zip', 3),
+    'es-ES-Wavenet-C-FEMALE': ('https://add.arnes-design.de/ADC/es-ES-Wavenet-C-FEMALE-v3.zip', 3),  
+    'es-ES-Wavenet-B-MALE': ('https://add.arnes-design.de/ADC/es-ES-Wavenet-B-MALE-v3.zip', 3),
+    'nl-NL-Wavenet-B-MALE': ('https://add.arnes-design.de/ADC/nl-NL-Wavenet-B-MALE-v3.zip', 3),  
+    'nl-NL-Wavenet-D-FEMALE': ('https://add.arnes-design.de/ADC/nl-NL-Wavenet-D-FEMALE-v3.zip', 3),
     # amazon
-    'en-US-Stephen-Male': ('https://www.dropbox.com/scl/fi/6dacvqb5uwl9lvoi6vjog/en-US-Stephen-Male-v4.zip?rlkey=3puy54nl4yu78v6a5pil13jo5&dl=1', 4),  
-    'en-US-Ivy-Female': ('https://www.dropbox.com/scl/fi/brszx8roikdrizuclx06r/en-US-Ivy-Female-v4.zip?rlkey=iywwcvdkggw4a7j63ils5czrs&dl=1', 4),
-    'de-DE-Vicki-Female': ('https://www.dropbox.com/scl/fi/il33c2xqx1tc94gxdzv4f/de-DE-Vicki-Female-v3.zip?rlkey=sttkidrjocg9rxnbnhhrj5s9p&dl=1', 3),  
-    'de-DE-Daniel-Male': ('https://www.dropbox.com/scl/fi/ojm0ougp1z6r2gopsp3yi/de-DE-Daniel-Male-v3.zip?rlkey=s0fs8z18t5svl6i2iyn37cy9m&dl=1', 3),
-    'en-US-Kendra-Female': ('https://www.dropbox.com/scl/fi/k3vlyhlavq4zyrig4o5b3/en-US-Kendra-Female-v4.zip?rlkey=ow7zac3jay14znaoi9pteo22y&dl=1', 4),
-    'en-US-Joey-Male': ('https://www.dropbox.com/scl/fi/0x1wxad6van440gtbn525/en-US-Joey-Male-v4.zip?rlkey=691jvalngwjdx6kaeedhmjss3&dl=1', 4),
-    'en-US-Joanna-Female': ('https://www.dropbox.com/scl/fi/a9vqbazt7pa02f98l7er0/en-US-Joanna-Female-v4.zip?rlkey=cowxk0ctje34uh18gnogl57q1&dl=1', 4),
-
-
+    'en-US-Stephen-Male': ('https://add.arnes-design.de/ADC/en-US-Stephen-Male-v4.zip', 4),  
+    'en-US-Ivy-Female': ('https://add.arnes-design.de/ADC/en-US-Ivy-Female-v4.zip', 4),
+    'de-DE-Vicki-Female': ('https://add.arnes-design.de/ADC/de-DE-Vicki-Female-v3.zip', 3),  
+    'de-DE-Daniel-Male': ('https://add.arnes-design.de/ADC/de-DE-Daniel-Male-v3.zip', 3),
+    'en-US-Kendra-Female': ('https://add.arnes-design.de/ADC/en-US-Kendra-Female-v4.zip', 4),
+    'en-US-Joey-Male': ('https://add.arnes-design.de/ADC/en-US-Joey-Male-v4.zip', 4),
+    'en-US-Joanna-Female': ('https://add.arnes-design.de/ADC/en-US-Joanna-Female-v4.zip', 4),
+    'en-US-Gregory-Male': ('https://add.arnes-design.de/ADC/en-US-Gregory-Male.zip', 1),
 
     
     # 'TODONAME': ('TODOLINK', TODOVERSION),  
@@ -340,24 +281,50 @@ def download_callers():
     if DOWNLOADS:
         download_list = CALLER_PROFILES
 
+        # versionize, exclude bans, force download-name
+        dl_name = DOWNLOADS_NAME.lower()
+    
         downloads_filtered = {}
         for speaker_name, (speaker_download_url, speaker_version) in download_list.items():
+            spn = speaker_name.lower()
+
             speaker_versionized = versionize_speaker(speaker_name, speaker_version)
-            if speaker_versionized.lower() not in caller_profiles_banned:
+            speaker_versionized_lower = speaker_versionized.lower()
+
+            if dl_name == spn or dl_name == speaker_versionized.lower():
+                downloads_filtered = {}   
                 downloads_filtered[speaker_versionized] = speaker_download_url
+                break
+               
+            if speaker_versionized_lower not in caller_profiles_banned and spn not in caller_profiles_banned:  
+                # ppi("spn: " + spn)
+                # ppi("dl_name: " + dl_name)
+                # ppi("speaker_versionized: " + speaker_versionized.lower())
+                downloads_filtered[speaker_versionized] = speaker_download_url
+         
         download_list = downloads_filtered
 
-        if DOWNLOADS_LANGUAGE > 0:
-            downloads_filtered = {}
-            for speaker_name, speaker_download_url in download_list.items():
-                caller_language_key = grab_caller_language(speaker_name)
-                if caller_language_key != DOWNLOADS_LANGUAGE:
-                    continue
-                downloads_filtered[speaker_name] = speaker_download_url
-            download_list = downloads_filtered
+        
+        if dl_name != DEFAULT_DOWNLOADS_NAME:
+            ppi("Downloader: filter for name: " + str(dl_name))
+        else:
+            # filter for language
+            if DOWNLOADS_LANGUAGE > 0:
+                ppi("Downloader: filter for language: " + str(DOWNLOADS_LANGUAGE))
+                downloads_filtered = {}
+                for speaker_name, speaker_download_url in download_list.items():
+                    caller_language_key = grab_caller_language(speaker_name)
+                    if caller_language_key != DOWNLOADS_LANGUAGE:
+                        continue
+                    downloads_filtered[speaker_name] = speaker_download_url
+                download_list = downloads_filtered
 
-        if DOWNLOADS_LIMIT > 0 and len(download_list) > 0 and DOWNLOADS_LIMIT < len(download_list):
-            download_list = {k: download_list[k] for k in list(download_list.keys())[-DOWNLOADS_LIMIT:]}
+            # filter for limit
+            if DOWNLOADS_LIMIT > 0 and len(download_list) > 0 and DOWNLOADS_LIMIT < len(download_list):
+                ppi("Downloader: limit to: " + str(DOWNLOADS_LIMIT))
+                download_list = {k: download_list[k] for k in list(download_list.keys())[-DOWNLOADS_LIMIT:]}
+
+
 
         if len(download_list) > 0:
             if os.path.exists(AUDIO_MEDIA_PATH) == False: os.mkdir(AUDIO_MEDIA_PATH)
@@ -669,7 +636,7 @@ def setup_caller():
             for c in callers:
                 caller_name = grab_caller_name(c)
 
-                if caller_name in caller_profiles_banned:
+                if caller_name in caller_profiles_banned or caller_name.split("-v")[0] in caller_profiles_banned:
                     continue
 
                 if RANDOM_CALLER_LANGUAGE != 0:
@@ -709,6 +676,7 @@ def play_sound(sound, wait_for_last, volume_mult):
 
     if WEB > 0:
         global mirror_files
+        global caller_title_without_version
         
         mirror_file = {
                     "caller": caller_title_without_version,
@@ -806,10 +774,7 @@ def get_player_average(user_id, variant = 'x01', limit = '100'):
     # get
     # https://api.autodarts.io/as/v0/users/<user-id>/stats/<variant>?limit=<limit>
     try:
-        global accessToken
-
-        auth_autodarts()
-        res = requests.get(AUTODART_USERS_URL + user_id + "/stats/" + variant + "?limit=" + limit, headers={'Authorization': 'Bearer ' + accessToken})
+        res = requests.get(AUTODART_USERS_URL + user_id + "/stats/" + variant + "?limit=" + limit, headers={'Authorization': 'Bearer ' + kc.access_token})
         m = res.json()
         # ppi(m)
         return m['average']['average']
@@ -825,12 +790,9 @@ def next_game():
     # post
     # https://api.autodarts.io/gs/v0/matches/<match-id>/games/next
     try:
-        global accessToken
         global currentMatch
-
-        auth_autodarts()
         if currentMatch != None:
-            requests.post(AUTODART_MATCHES_URL + currentMatch + "/games/next", headers={'Authorization': 'Bearer ' + accessToken})
+            requests.post(AUTODART_MATCHES_URL + currentMatch + "/games/next", headers={'Authorization': 'Bearer ' + kc.access_token})
 
     except Exception as e:
         ppe('Next game failed', e)
@@ -843,12 +805,9 @@ def next_throw():
     # post
     # https://api.autodarts.io/gs/v0/matches/<match-id>/players/next
     try:
-        global accessToken
         global currentMatch
-
-        auth_autodarts()
         if currentMatch != None:
-            requests.post(AUTODART_MATCHES_URL + currentMatch + "/players/next", headers={'Authorization': 'Bearer ' + accessToken})
+            requests.post(AUTODART_MATCHES_URL + currentMatch + "/players/next", headers={'Authorization': 'Bearer ' + kc.access_token})
 
     except Exception as e:
         ppe('Next throw failed', e)
@@ -861,12 +820,9 @@ def undo_throw():
     # post
     # https://api.autodarts.io/gs/v0/matches/<match-id>/undo
     try:
-        global accessToken
         global currentMatch
-
-        auth_autodarts()
         if currentMatch != None:
-            requests.post(AUTODART_MATCHES_URL + currentMatch + "/undo", headers={'Authorization': 'Bearer ' + accessToken})
+            requests.post(AUTODART_MATCHES_URL + currentMatch + "/undo", headers={'Authorization': 'Bearer ' + kc.access_token})
     except Exception as e:
         ppe('Undo throw failed', e)
 
@@ -908,17 +864,14 @@ def correct_throw(throw_indices, score):
     #     }
     # }
     try:
-        global accessToken
         global lastCorrectThrow
-
-        auth_autodarts()
         data = {"changes": {}}
         for ti in throw_indices:
             data["changes"][ti] = {"point": score, "type": "normal"}
 
         # ppi(f'Data: {data}')
         if lastCorrectThrow == None or lastCorrectThrow != data:
-            requests.patch(AUTODART_MATCHES_URL + currentMatch + "/throws", json=data, headers={'Authorization': 'Bearer ' + accessToken})
+            requests.patch(AUTODART_MATCHES_URL + currentMatch + "/throws", json=data, headers={'Authorization': 'Bearer ' + kc.access_token})
             lastCorrectThrow = data
         else:
             lastCorrectThrow = None 
@@ -929,13 +882,10 @@ def correct_throw(throw_indices, score):
 
 def receive_local_board_address():
     try:
-        global accessToken
         global boardManagerAddress
 
-        auth_autodarts()
-
         if boardManagerAddress == None:
-            res = requests.get(AUTODART_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + accessToken})
+            res = requests.get(AUTODART_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + kc.access_token})
             board_ip = res.json()['ip']
             if board_ip != None and board_ip != '':  
                 boardManagerAddress = 'http://' + board_ip
@@ -956,10 +906,7 @@ def poll_lobbies(ws):
 
         while currentMatch == None:
             try:   
-                global accessToken
-
-                auth_autodarts()
-                res = requests.get(AUTODART_LOBBIES_URL, headers={'Authorization': 'Bearer ' + accessToken})
+                res = requests.get(AUTODART_LOBBIES_URL, headers={'Authorization': 'Bearer ' + kc.access_token})
                 res = res.json()
                 # ppi(json.dumps(res, indent = 4, sort_keys = True))
 
@@ -1019,8 +966,7 @@ def listen_to_match(m, ws):
             ppe("Setup callers failed!", e)
 
         try:
-            global accessToken
-            res = requests.get(AUTODART_MATCHES_URL + currentMatch, headers={'Authorization': 'Bearer ' + accessToken})
+            res = requests.get(AUTODART_MATCHES_URL + currentMatch, headers={'Authorization': 'Bearer ' + kc.access_token})
             m = res.json()
             # ppi(json.dumps(m, indent = 4, sort_keys = True))
 
@@ -1095,7 +1041,6 @@ def listen_to_match(m, ws):
         ws.send(json.dumps(paramsSubscribeMatchesEvents))
         
     elif m['event'] == 'finish' or m['event'] == 'delete':
-        currentMatch = None
         ppi('Stop listening to match: ' + m['id'])
 
         paramsUnsubscribeMatchEvents = {
@@ -1138,7 +1083,6 @@ def checkout_only_yourself(currentPlayer):
     return True
 
 def process_match_x01(m):
-    global accessToken
     global currentMatch
     global isGameFinished
     global lastPoints
@@ -1297,10 +1241,17 @@ def process_match_x01(m):
         if CALL_CURRENT_PLAYER:
             play_sound_effect(currentPlayerName, True)
 
-        if play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
-            play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+        if AMBIENT_SOUNDS != 0.0:
+            if play_sound_effect('ambient_matchshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+                pass
+            elif play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+                pass
+            elif play_sound_effect('ambient_gameshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+                pass
+            else:
+                play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+            
 
-        
         if RANDOM_CALLER_EACH_LEG:
             setup_caller()
         ppi('Gameshot and match')
@@ -1346,10 +1297,20 @@ def process_match_x01(m):
 
         if AMBIENT_SOUNDS != 0.0:
             if isSet == True:
-                if play_sound_effect('ambient_setshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
+                if play_sound_effect('ambient_setshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+                    pass
+                elif play_sound_effect('ambient_setshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+                    pass
+                elif play_sound_effect('ambient_gameshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+                    pass
+                else:
                     play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                    
             else:
-                play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                if play_sound_effect('ambient_gameshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+                    pass
+                else:
+                    play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
 
         if RANDOM_CALLER_EACH_LEG:
             setup_caller()
@@ -1380,8 +1341,12 @@ def process_match_x01(m):
         if play_sound_effect('matchon', callPlayerNameState) == False:
             play_sound_effect('gameon', callPlayerNameState)
 
-        if AMBIENT_SOUNDS != 0.0 and play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
-            play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+        if AMBIENT_SOUNDS != 0.0:
+            state = play_sound_effect('ambient_matchon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+            if state == False and play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
+                if play_sound_effect('ambient_gameon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
+                    play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+
 
         ppi('Matchon')
 
@@ -1410,7 +1375,8 @@ def process_match_x01(m):
         play_sound_effect('gameon', callPlayerNameState)
 
         if AMBIENT_SOUNDS != 0.0:
-            play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+            if play_sound_effect('ambient_gameon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
+                play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
 
         ppi('Gameon')
           
@@ -1612,9 +1578,17 @@ def process_match_cricket(m):
         if play_sound_effect('matchshot') == False:
             play_sound_effect('gameshot')
         play_sound_effect(currentPlayerName, True)
+        
         if AMBIENT_SOUNDS != 0.0:
-            if play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
+            if play_sound_effect('ambient_matchshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+                pass
+            elif play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+                pass
+            elif play_sound_effect('ambient_gameshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+                pass
+            else:
                 play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+        
         setup_caller()
         ppi('Gameshot and match')
 
@@ -1643,8 +1617,12 @@ def process_match_cricket(m):
 
         play_sound_effect('gameshot')
         play_sound_effect(currentPlayerName, True)
+        
         if AMBIENT_SOUNDS != 0.0:
-            play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+            if play_sound_effect('ambient_gameshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+                pass
+            else:
+                play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
         
         if RANDOM_CALLER_EACH_LEG:
             setup_caller()
@@ -1669,10 +1647,17 @@ def process_match_cricket(m):
         play_sound_effect(currentPlayerName, False)
         if play_sound_effect('matchon', True) == False:
             play_sound_effect('gameon', True)
+        
         # play only if it is a real match not just legs!
-        if AMBIENT_SOUNDS != 0.0 and ('legs' in m and 'sets'):
-            if play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
-                play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+        # if AMBIENT_SOUNDS != 0.0 and ('legs' in m and 'sets'):
+        #     if play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
+        #         play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+        if AMBIENT_SOUNDS != 0.0:
+            state = play_sound_effect('ambient_matchon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+            if state == False and play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
+                if play_sound_effect('ambient_gameon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
+                    play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)    
+        
         ppi('Matchon')
 
     # Check for gameon
@@ -1693,8 +1678,11 @@ def process_match_cricket(m):
 
         play_sound_effect(currentPlayerName, False)
         play_sound_effect('gameon', True)
+
         if AMBIENT_SOUNDS != 0.0:
-            play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+            if play_sound_effect('ambient_gameon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
+                play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+
         ppi('Gameon')
 
     # Check for busted turn
@@ -1866,11 +1854,16 @@ def process_match_atc(m):
         if CALL_CURRENT_PLAYER:
             play_sound_effect(currentPlayerName, True)
 
-        if play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
-            play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+        if AMBIENT_SOUNDS != 0.0:
+            if play_sound_effect('ambient_matchshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+                pass
+            elif play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+                pass
+            elif play_sound_effect('ambient_gameshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+                pass
+            else:
+                play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
 
-        if RANDOM_CALLER_EACH_LEG:
-            setup_caller()
         ppi('Gameshot and match')
 
     # only call next if more hits then 1
@@ -1891,71 +1884,23 @@ def process_common(m):
     broadcast(m)
 
 
-def auth_autodarts():
-    try:
-        global accessToken
-        global refreshToken
-        global tokenExpiresAt
-        global userId
-                 
-        keycloak_openid = KeycloakOpenID(server_url = AUTODART_AUTH_URL,
-                                            client_id = AUTODART_CLIENT_ID,
-                                            client_secret_key = AUTODART_CLIENT_SECRET,
-                                            realm_name = AUTODART_REALM_NAME,
-                                            verify = bool(CERT_CHECK))
-        
-        if accessToken is None or refreshToken is None or tokenExpiresAt is None or userId is None:
-            token = keycloak_openid.token(AUTODART_USER_EMAIL, AUTODART_USER_PASSWORD)
-            # ppi("LOGIN: ", token)
-            accessToken = token['access_token']
-            refreshToken = token['refresh_token']
-            tokenExpiresAt = datetime.now() + timedelta(seconds=int(0.9 * token["expires_in"] if token else 0))
-            # Get Userinfo
-            userinfo = keycloak_openid.userinfo(accessToken)
-            # ppi("USER INFO: ", userinfo)
-            userId = userinfo['sub']     
-        else:
-            now = datetime.now()
-            if tokenExpiresAt <= now:
-                token = keycloak_openid.refresh_token(refreshToken)
-                # ppi("LOGIN REFRESHED: ", token)
-                accessToken = token['access_token']
-                refreshToken = token['refresh_token']
-                tokenExpiresAt = datetime.now() + timedelta(seconds=int(0.9 * token["expires_in"] if token else 0))
-            # else:
-            #     ppi("TOKEN VALID .." + str(tokenExpiresAt) + " vs " + str(now))
-    except Exception as e:
-        accessToken = None
-        refreshToken = None
-        tokenExpiresAt = None
-        userId = None
-        ppe('Login failed: check your email address and password. 2FA must be turned off.', e)    
-
 def connect_autodarts():
     def process(*args):
-        global accessToken
-
-        auth_autodarts()
-
         websocket.enableTrace(False)
         ws = websocket.WebSocketApp(AUTODART_WEBSOCKET_URL,
-                                    header={'Authorization': 'Bearer ' + accessToken},
+                                    header={'Authorization': 'Bearer ' + kc.access_token},
                                     on_open = on_open_autodarts,
                                     on_message = on_message_autodarts,
                                     on_error = on_error_autodarts,
                                     on_close = on_close_autodarts)
+        
 
         ws.run_forever()
     threading.Thread(target=process).start()
 
 def on_open_autodarts(ws):
-    global accessToken
-    global userId
-
-    auth_autodarts()
-
     try:
-        res = requests.get(AUTODART_MATCHES_URL, headers={'Authorization': 'Bearer ' + accessToken})
+        res = requests.get(AUTODART_MATCHES_URL, headers={'Authorization': 'Bearer ' + kc.access_token})
         res = res.json()
         # ppi(json.dumps(res, indent = 4, sort_keys = True))
 
@@ -2005,16 +1950,15 @@ def on_open_autodarts(ws):
     except Exception as e:
         ppe('WS-Open-boards failed: ', e)
 
-
     try:
         paramsSubscribeUserEvents = {
             "channel": "autodarts.users",
             "type": "subscribe",
-            "topic": userId + ".events"
+            "topic": kc.user_id + ".events"
         }
         ws.send(json.dumps(paramsSubscribeUserEvents))
 
-        # ppi('Receiving live information for user-id: ' + userId)
+        # ppi('Receiving live information for user-id: ' + kc.user_id)
 
     except Exception as e:
         ppe('WS-Open-users failed: ', e)
@@ -2112,7 +2056,6 @@ def on_message_autodarts(ws, message):
                         if play_sound_effect("lobby_ambient_out", False):
                             mirror_sounds()
 
-
             elif m['channel'] == 'autodarts.lobbies':
                 data = m['data']
                 # ppi(json.dumps(data, indent = 4, sort_keys = True))
@@ -2122,22 +2065,21 @@ def on_message_autodarts(ws, message):
                         pass
 
                     elif data['event'] == 'finish' or data['event'] == 'delete':
-                        pass
-                        # ppi('Stop listening to lobby: ' + m['id'])
-                        # paramsUnsubscribeLobbyEvents = {
-                        #     "type": "unsubscribe",
-                        #     "channel": "autodarts.lobbies",
-                        #     "topic": m['id'] + ".events"
-                        # }
-                        # ws.send(json.dumps(paramsUnsubscribeLobbyEvents))
-                        # paramsUnsubscribeLobbyEvents = {
-                        #     "type": "unsubscribe",
-                        #     "channel": "autodarts.lobbies",
-                        #     "topic": m['id'] + ".state"
-                        # }
-                        # ws.send(json.dumps(paramsUnsubscribeLobbyEvents))
-                        # if play_sound_effect("lobby_ambient_out", False):
-                        #     mirror_sounds()
+                        ppi('Stop listening to lobby: ' + m['id'])
+                        paramsUnsubscribeLobbyEvents = {
+                            "type": "unsubscribe",
+                            "channel": "autodarts.lobbies",
+                            "topic": m['id'] + ".events"
+                        }
+                        ws.send(json.dumps(paramsUnsubscribeLobbyEvents))
+                        paramsUnsubscribeLobbyEvents = {
+                            "type": "unsubscribe",
+                            "channel": "autodarts.lobbies",
+                            "topic": m['id'] + ".state"
+                        }
+                        ws.send(json.dumps(paramsUnsubscribeLobbyEvents))
+                        if play_sound_effect("lobby_ambient_out", False):
+                            mirror_sounds()
   
                         # poll_lobbies(ws)
 
@@ -2401,8 +2343,8 @@ if __name__ == "__main__":
     ap.add_argument("-B", "--autodarts_board_id", required=True, help="Registered board-id at " + AUTODART_URL)
     ap.add_argument("-M", "--media_path", required=True, help="Absolute path to your media")
     ap.add_argument("-MS", "--media_path_shared", required=False, default=DEFAULT_EMPTY_PATH, help="Absolute path to shared media folder (every caller get sounds)")
-    ap.add_argument("-V", "--caller_volume", type=float, default=DEFAULT_CALLER_VOLUME, required=False, help="Set the caller volume between 0.0 (silent) and 1.0 (max)")
-    ap.add_argument("-C", "--caller", default=DEFAULT_CALLER, required=False, help="Sets a particular caller")
+    ap.add_argument("-V", "--caller_volume", type=float, default=DEFAULT_CALLER_VOLUME, required=False, help="Sets calling-volume between 0.0 (silent) and 1.0 (max)")
+    ap.add_argument("-C", "--caller", default=DEFAULT_CALLER, required=False, help="Sets a specific caller (voice-pack) for calling")
     ap.add_argument("-R", "--random_caller", type=int, choices=range(0, 2), default=DEFAULT_RANDOM_CALLER, required=False, help="If '1', the application will randomly choose a caller each game. It only works when your base-media-folder has subfolders with its files")
     ap.add_argument("-L", "--random_caller_each_leg", type=int, choices=range(0, 2), default=DEFAULT_RANDOM_CALLER_EACH_LEG, required=False, help="If '1', the application will randomly choose a caller each leg instead of each game. It only works when 'random_caller=1'")
     ap.add_argument("-RL", "--random_caller_language", type=int, choices=range(0, len(CALLER_LANGUAGES) + 1), default=DEFAULT_RANDOM_CALLER_LANGUAGE, required=False, help="If '0', the application will allow every language.., else it will limit caller selection by specific language")
@@ -2419,6 +2361,7 @@ if __name__ == "__main__":
     ap.add_argument("-DL", "--downloads", type=int, choices=range(0, 2), default=DEFAULT_DOWNLOADS, required=False, help="If '1', the application will try to download a curated list of caller-voices")
     ap.add_argument("-DLL", "--downloads_limit", type=int, default=DEFAULT_DOWNLOADS_LIMIT, required=False, help="If '1', the application will try to download a only the X newest caller-voices. -DLN needs to be activated.")
     ap.add_argument("-DLLA", "--downloads_language", type=int, choices=range(0, len(CALLER_LANGUAGES) + 1), default=DEFAULT_DOWNLOADS_LANGUAGE, required=False, help="If '0', the application will download speakers of every language.., else it will limit speaker downloads by specific language")
+    ap.add_argument("-DLN", "--downloads_name", default=DEFAULT_DOWNLOADS_NAME, required=False, help="Sets a specific caller (voice-pack) for download")
     ap.add_argument("-BLP", "--blacklist_path", required=False, default=DEFAULT_EMPTY_PATH, help="Absolute path to storage directory for blacklist-file")
     ap.add_argument("-BAV","--background_audio_volume", required=False, type=float, default=DEFAULT_BACKGROUND_AUDIO_VOLUME, help="Set background-audio-volume between 0.1 (silent) and 1.0 (no mute)")
     ap.add_argument("-WEB", "--web_caller", required=False, type=int, choices=range(0, 3), default=DEFAULT_WEB_CALLER, help="If '1' the application will host an web-endpoint, '2' it will do '1' and default caller-functionality.")
@@ -2467,6 +2410,7 @@ if __name__ == "__main__":
     DOWNLOADS_LIMIT = args['downloads_limit']
     if DOWNLOADS_LIMIT < 0: DOWNLOADS_LIMIT = DEFAULT_DOWNLOADS_LIMIT
     DOWNLOADS_PATH = DEFAULT_DOWNLOADS_PATH
+    DOWNLOADS_NAME = args['downloads_name']
     if args['blacklist_path'] != DEFAULT_EMPTY_PATH:
         BLACKLIST_PATH = Path(args['blacklist_path'])
     else:
@@ -2500,18 +2444,6 @@ if __name__ == "__main__":
     
     global server
     server = None
-
-    global accessToken
-    accessToken = None
-
-    global refreshToken
-    refreshToken = None
-
-    global tokenExpiresAt
-    tokenExpiresAt = None
-
-    global userId
-    userId = None
 
     global boardManagerAddress
     boardManagerAddress = None
@@ -2618,6 +2550,14 @@ if __name__ == "__main__":
         websocket_server_thread = threading.Thread(target=start_websocket_server, args=(DEFAULT_HOST_IP, HOST_PORT))
         websocket_server_thread.start()
 
+        kc = AutodartsKeycloakClient(username=AUTODART_USER_EMAIL, 
+                                     password=AUTODART_USER_PASSWORD, 
+                                     client_id=AUTODART_CLIENT_ID, 
+                                     client_secret=AUTODART_CLIENT_SECRET,
+                                     debug=DEBUG
+                                     )
+        kc.start()
+
         if WEB > 0 or WEB_SCOREBOARD:
             WEB_HOST = get_local_ip_address()
             flask_app_thread = threading.Thread(target=start_flask_app, args=(DEFAULT_HOST_IP, WEB_PORT))
@@ -2629,6 +2569,8 @@ if __name__ == "__main__":
 
         if WEB > 0 or WEB_SCOREBOARD:
             flask_app_thread.join() 
+
+        kc.stop()
     except Exception as e:
         ppe("Connect failed: ", e)
    
