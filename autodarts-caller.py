@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 import time
 import json
+import base64
 import platform
 import random
 import argparse
@@ -669,6 +670,26 @@ def setup_caller():
         ppi("Your current caller: " + caller_title + " knows " + str(len(caller[1].values())) + " Sound-file-key(s)")
         # ppi(caller[1])
         caller = caller[1]
+
+        # TODO: woanders
+        # files = []
+        # for key, value in caller.items():
+        #     for sound_file in value:
+        #         files.append(quote(sound_file, safe=""))
+        # get_event = {
+        #     "event": "get",
+        #     "caller": caller_title_without_version,
+        #     "files": files
+        # }
+        # broadcast(get_event)
+
+        # TODO: "caller-list": callers
+        welcome_event = {
+            "event": "welcome",
+            "caller": caller_title_without_version,
+            "caller-version": caller_title,   
+        }
+        broadcast(welcome_event)
 
 
 def play_sound(sound, wait_for_last, volume_mult):
@@ -2161,10 +2182,17 @@ def on_error_autodarts(ws, error):
 def on_open_client(client, server):
     ppi('NEW CLIENT CONNECTED: ' + str(client))
 
+    # TODO: "caller-list": callers
+    welcome_event = {
+        "event": "welcome",
+        "caller": caller_title_without_version,
+        "caller-version": caller_title,   
+    }
+    unicast(client, welcome_event)
+
 def on_message_client(client, server, message):
     def process(*args):
         try:
-            ppi('CLIENT MESSAGE: ' + str(message))
 
             if message.startswith('board'):
                 receive_local_board_address()
@@ -2218,7 +2246,7 @@ def on_message_client(client, server, message):
                     ban_caller(True)
                 else:
                     ban_caller(False)
-                unicast_get(client)
+                # unicast_get(client)
 
             elif message.startswith('call'):
                 msg_splitted = message.split(':')
@@ -2228,10 +2256,52 @@ def on_message_client(client, server, message):
                     play_sound_effect(cp, wait_for_last = False, volume_mult = 1.0)
                 mirror_sounds()
 
-            elif message.startswith('get'):
-                unicast_get(client)
+            # elif message.startswith('get'):
+            #     files = []
+            #     for key, value in caller.items():
+            #         for sound_file in value:
+            #             files.append(quote(sound_file, safe=""))
+            #     get_event = {
+            #         "event": "get",
+            #         "caller": caller_title_without_version,
+            #         "files": files
+            #     }
+            #     unicast(client, get_event)
+            
+            # else try to read json
+            else: 
+                messageJson = json.loads(message)
+                # ppi('CLIENT MESSAGE: ' + str(message))
 
+                # client requests for caller-file-sync
+                if 'event' in messageJson and messageJson['event'] == 'sync':
+                    new = []
+                    count_exists = 0
+                    count_new = 0
+                    for key, value in caller.items():
+                        for sound_file in value:
+                            # care encoding!
+                            base_name = os.path.basename(sound_file)
+                            if base_name not in messageJson['exists']:
+                                count_new+=1
+                                # ppi("exists: " + base_name)
 
+                                with open(sound_file, 'rb') as file:
+                                    # encoded_file = base64.b64encode(file.read())
+                                    encoded_file = (base64.b64encode(file.read())).decode('ascii')
+                                # print(encoded_file)
+                                    
+                                new.append({"name": base_name, "path": quote(sound_file, safe=""), "file": encoded_file})
+                            else:
+                                count_exists+=1
+                                # ppi("new: " + base_name)   
+                                 
+                    ppi(f"Sync {count_new} new files")
+
+                    messageJson['exists'] = new
+                    unicast(client, messageJson, dump=True)
+
+          
         except Exception as e:
             ppe('WS-Client-Message failed: ', e)
 
@@ -2248,18 +2318,16 @@ def broadcast(data):
     t.start()
     t.join()
 
-def unicast_get(client):
-    files = []
-    for key, value in caller.items():
-        for sound_file in value:
-            files.append(quote(sound_file, safe=""))
-
-    get_event = {
-        "event": "get",
-        "caller": caller_title_without_version,
-        "files": files
-    }
-    server.send_message(client, json.dumps(get_event, indent=2).encode('utf-8'))
+def unicast(client, data, dump=True):
+    def process(*args):
+        global server
+        send_data = data
+        if dump:
+            send_data = json.dumps(send_data, indent=2).encode('utf-8')
+        server.send_message(client, send_data)
+    t = threading.Thread(target=process)
+    t.start()
+    # t.join()
 
 
 

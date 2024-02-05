@@ -18,18 +18,18 @@ function setupWebSocketConnection(host, port, onOpenHandle, onCloseHandle, onMes
 
     socket.onopen = function() {
         console.log("Socket: connected!");
-        onOpenHandle();
+        onOpenHandle(socket);
     };
 
     socket.onclose = function() {
         console.log("Socket: disconnected!");
-        onCloseHandle();
+        onCloseHandle(socket);
         setTimeout(() => setupWebSocketConnection(host, port, onOpenHandle, onCloseHandle, onMessageHandle), 1000);
     };
 
     socket.onmessage = function(event) {
         let data = JSON.parse(event.data);
-        onMessageHandle(data); 
+        onMessageHandle(socket, data); 
     };
 
     return socket;

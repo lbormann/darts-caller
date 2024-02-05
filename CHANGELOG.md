@@ -1,6 +1,6 @@
 ## 2.7.4
 
-- improve web-caller (load every file on start + "change/ban-caller-function")
+- improve web-caller (load all files on start + "change/ban-caller"-function)
 - fix invalid -M and -MS
 - add voice-pack 'XY'
 - add lobby-event-broadcasts

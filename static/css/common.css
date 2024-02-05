@@ -25,9 +25,13 @@ button{
     padding: 20px;
     color: white;
     height: auto;
+    background-color: royalblue;
 }
 #caller-name{
     margin-top: 40px;
+}
+#caller-call{
+    margin-bottom: 40px;
 }
 #button-start{
     width: 100%;
@@ -35,12 +39,12 @@ button{
     background-color: royalblue;
 }
 #button-change{
-    width: 75%;  
+    width: 60%;  
     font-size: 40pt;
-    background-color: orange;
+    /* background-color: orange; */
 }
 #button-ban{
-    width: 75%;
+    width: 60%;
     font-size: 40pt;
-    background-color: orangered;
+    /* background-color: orangered; */
 }
