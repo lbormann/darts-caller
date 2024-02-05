@@ -1,3 +1,11 @@
+## 2.7.4
+
+- improve web-caller (load every file on start + "change/ban-caller-function")
+- fix invalid -M and -MS
+- add voice-pack 'XY'
+- add lobby-event-broadcasts
+
+
 ## 2.7.3
 
 - hotfix: fix typo
@@ -9,7 +17,6 @@
 - change file-hoster for more stable downloads
 - add option for downloads: only download specific voice-pack by its name
 - add ambient_gameshot_{playername}, ambient_matchshot_{playername} and more
-- add lobby-event-broadcasts
 - add voice-pack 'en-US-Gregory-Male'
 
 

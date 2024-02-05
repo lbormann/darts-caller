@@ -6,6 +6,13 @@ function showFullscreenOverlay(text) {
     document.body.appendChild(overlay);
 }
 
+function getRandomInterval(min, max) {
+    return Math.random() * (max - min) + min;
+}
+
+
+
+
 function setupWebSocketConnection(host, port, onOpenHandle, onCloseHandle, onMessageHandle) {
     const socket = new WebSocket(`ws://${host}:${port}`);
 
@@ -24,8 +31,7 @@ function setupWebSocketConnection(host, port, onOpenHandle, onCloseHandle, onMes
         let data = JSON.parse(event.data);
         onMessageHandle(data); 
     };
+
+    return socket;
 }
 
-function getRandomInterval(min, max) {
-    return Math.random() * (max - min) + min;
-}

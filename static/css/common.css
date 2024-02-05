@@ -20,9 +20,27 @@
     color: red;
 }
 button{
-    width: 100%;
-    height: 100px;
-    font-size: 50pt;
-    background-color: orangered;
+    border-radius: 10px;
+    margin-top: 15px;
+    padding: 20px;
     color: white;
+    height: auto;
+}
+#caller-name{
+    margin-top: 40px;
+}
+#button-start{
+    width: 100%;
+    font-size: 50pt;
+    background-color: royalblue;
+}
+#button-change{
+    width: 75%;  
+    font-size: 40pt;
+    background-color: orange;
+}
+#button-ban{
+    width: 75%;
+    font-size: 40pt;
+    background-color: orangered;
 }

@@ -46,7 +46,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.7.3'
+VERSION = '2.7.4'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -2218,6 +2218,7 @@ def on_message_client(client, server, message):
                     ban_caller(True)
                 else:
                     ban_caller(False)
+                unicast_get(client)
 
             elif message.startswith('call'):
                 msg_splitted = message.split(':')
@@ -2226,7 +2227,10 @@ def on_message_client(client, server, message):
                 for cp in call_parts:
                     play_sound_effect(cp, wait_for_last = False, volume_mult = 1.0)
                 mirror_sounds()
-        
+
+            elif message.startswith('get'):
+                unicast_get(client)
+
 
         except Exception as e:
             ppe('WS-Client-Message failed: ', e)
@@ -2243,7 +2247,21 @@ def broadcast(data):
     t = threading.Thread(target=process)
     t.start()
     t.join()
-   
+
+def unicast_get(client):
+    files = []
+    for key, value in caller.items():
+        for sound_file in value:
+            files.append(quote(sound_file, safe=""))
+
+    get_event = {
+        "event": "get",
+        "caller": caller_title_without_version,
+        "files": files
+    }
+    server.send_message(client, json.dumps(get_event, indent=2).encode('utf-8'))
+
+
 
 def mute_audio_background(vol):
     global background_audios

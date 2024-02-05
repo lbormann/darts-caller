@@ -17,69 +17,220 @@
 </head>
 
 <body>
-    <button id="button">Click me to start calling!</button>
     <audio id="audio" preload="auto"></audio>
-    <h1 id="status" style="visibility:hidden;">Disconnected!</h1>
+    <h3 id="status" style="visibility:hidden;">Disconnected!</h1>
+    <h2 id="caller-name" style="visibility:hidden;"></h1>
     <h1 id="last-call" style="visibility:hidden;">Waiting for calls ..</h1>
+    <button id="button-start">Click me to start calling!</button>
+    <button id="button-change" style="visibility:hidden;">Change caller!</button>
+    <button id="button-ban" style="visibility:hidden;">Ban caller!</button>
+
 
     <script>
+        let db, ws, done, loading;
         const audio = document.getElementById('audio');
-        const button = document.getElementById('button');
-        const state = document.getElementById('status');
-        const lastCall = document.getElementById('last-call');
-        let db;
 
+        const button = document.getElementById('button-start');
+        const buttonChange = document.getElementById('button-change');
+        const buttonBan = document.getElementById('button-ban');
+        const state = document.getElementById('status');
+        const callerName = document.getElementById('caller-name');
+        const lastCall = document.getElementById('last-call');
+
+        
         button.addEventListener('click', onButtonClick);
+        buttonChange.addEventListener('click', onButtonChangeClick);
+        buttonBan.addEventListener('click', onButtonBanClick);
 
         let audioContext = new (window.AudioContext || window.webkitAudioContext)();
         let audioQueue = Promise.resolve();
         let previousWait = false;
 
 
+        function wait(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            console.log("APP-Version: '{{ app_version }}'");
+
+            if("{{ state }}" == "0"){
+                showFullscreenOverlay("To use web-calling set -WEB (--web_caller) to 1 or 2");
+            }else{ 
+                if(!checkDBCompatibility){
+                    return;
+                }
+
+                console.log("USING DB: '{{ db_name }}'");
+                initializeDB();
+
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.has('clear')) {
+                    db.open().then(() => {
+                        db.delete().then(() => {
+                            console.log('Database cleared');
+                            initializeDB();
+                        }).catch(error => {
+                            console.error('Failed to clear database', error);
+                        });
+                    }).catch(error => {
+                        console.error('Failed to open database for clearing', error);
+                    });
+                }
+            }
+        });
+
+
+        function onButtonClick() {
+            audio.load();
+             
+            state.style.visibility='visible'; 
+            lastCall.style.visibility='visible'; 
+            ws = setupWebSocketConnection("{{ host }}", "{{ ws_port }}", onWsOpen, onWsClose, onWsData);            
+        }
+
+        function onButtonChangeClick() {
+            ws.send('ban:change')            
+        }
+
+        function onButtonBanClick() {
+            ws.send('ban')            
+        }
+ 
+
+        function checkDBCompatibility () {
+            if (!('indexedDB' in window)) {
+                console.log("This browser doesn't support IndexedDB");
+                return false;
+            }
+            return true;
+        }
+
+        function initializeDB(){
+            db = new Dexie("{{ db_name }}");
+            db.version(1).stores({
+            sounds: `
+                [caller+name],
+                path,
+                file`,
+            });
+        }
+
+
+        async function downloadAndCacheSound(caller, file) {
+            if(!loading){
+                return;
+            }
+
+            const file_name = extractFilename(unescape(file));
+            
+            try {
+                const result = await db.sounds.get({caller: caller, name: file_name});
+                
+                if (result) {
+                    console.log(`Using cache for ${file_name}`);
+                } else {
+                    console.log(`No cache for ${file_name}`);
+                    
+                    await wait(Math.floor(Math.random() * 10000) + 1);
+
+                    const fileUrl = `/sounds/${file}`;
+                    const response = await fetch(fileUrl, {
+                        method: "GET",
+                        headers: {
+                            "Content-Type": "audio/mpeg"
+                        },
+                    });
+
+                    const arrayBuffer = await response.arrayBuffer();
+                    const copiedAudioBuffer = arrayBuffer.slice(0);
+
+                    await db.sounds.put({ caller: caller, name: file_name, path: file, file: copiedAudioBuffer });
+                    console.log(`Caching successful for ${file_name} -> ${file}`); 
+                    
+                    // let success = false;
+                    // let attempt = 0;
+                    // let maxAttempts = 2000;
+                    // const fileUrl = `/sounds/${file}`;
+                    // do {
+                    //     const response = await fetch(fileUrl, {
+                    //         method: "GET",
+                    //         headers: {
+                    //             "Content-Type": "audio/mpeg"
+                    //         },
+                    //     });
+
+                    //     if (response.status === 200) {
+                    //         success = true;
+
+                    //         const arrayBuffer = await response.arrayBuffer();
+                    //         const copiedAudioBuffer = arrayBuffer.slice(0);
+
+                    //         await db.sounds.put({ caller: caller, name: file_name, path: file, file: copiedAudioBuffer });
+                    //         console.log(`Caching successful for ${file_name} -> ${file}`); 
+
+                    //     } else {
+                    //         attempt++;
+                    //         await wait(Math.floor(Math.random() * 2000) + 1);
+                    //     }
+                    // } while (!success && attempt < maxAttempts);
+
+
+
+ 
+                }
+
+                done += 1;
+                //  + " / " + data.files.length;
+                lastCall.innerText = done;
+            } catch (error) {
+                console.error(`Error processing ${file}: ${error}`);
+            }
+        }
 
         function processAudioEvent(audioEvent) {
             return new Promise((resolve, reject) => {
                 let path = audioEvent.path;
 
                 getAudio(audioEvent)
-                    .then(audioBlob => {
-                        if (audioBlob) {
-                            playAudio(audioBlob, audioEvent, true)
+                .then(audioBlob => {
+                    if (audioBlob) {
+                        playAudio(audioBlob, audioEvent, true)
+                            .then(() => {
+                                resolve();
+                            })
+                            .catch(error => {
+                                reject(error);
+                            });
+                    } else {
+                        let fileUrl = `/sounds/${path}`;
+                        fetch(fileUrl, {
+                            method: "GET",
+                            headers: {
+                                "Content-Type": "audio/mpeg"
+                            },
+                        })
+                        .then(response => response.arrayBuffer())
+                        .then(arrayBuffer => {
+                            cacheAudio(audioEvent, arrayBuffer);
+                            playAudio(arrayBuffer, audioEvent, false)
                                 .then(() => {
                                     resolve();
                                 })
                                 .catch(error => {
                                     reject(error);
                                 });
-                        } else {
-                            let fileUrl = `/sounds/${path}`;
-                            fetch(fileUrl, {
-                                method: "GET",
-                                headers: {
-                                    "Content-Type": "audio/mpeg"
-                                },
-                            })
-                            .then(response => response.arrayBuffer())
-                            .then(arrayBuffer => {
-                                cacheAudio(audioEvent, arrayBuffer);
-                                playAudio(arrayBuffer, audioEvent, false)
-                                    .then(() => {
-                                        resolve();
-                                    })
-                                    .catch(error => {
-                                        reject(error);
-                                    });
-                            })
-                            .catch(err => {
-                                console.error(err);
-                                reject(err);
-                            });
-                        }
-                    })
-                    .catch(err => {
-                        console.error(err);
-                        reject(err);
-                    });
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            reject(err);
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    reject(err);
+                });
             });
         }
 
@@ -151,27 +302,25 @@
             return parts[parts.length - 1];
         }
 
-        function initializeDB(){
-            db = new Dexie("{{ db_name }}");
-            db.version(1).stores({
-            sounds: `
-                [caller+name],
-                path,
-                file`,
-            });
-        }
 
-        function checkDBCompatibility () {
-            if (!('indexedDB' in window)) {
-                console.log("This browser doesn't support IndexedDB");
-                return false;
+        function setLoading(state){
+            loading = state
+            if(!loading){
+                buttonBan.style.visibility = 'visible';
+                buttonChange.style.visibility = 'visible';
+            }else{
+                buttonBan.style.visibility = 'hidden';
+                buttonChange.style.visibility = 'hidden';
             }
-            return true;
         }
 
         function onWsOpen(){
+            button.remove();
+
             state.innerText = "CONNECTED!";
             state.classList = "success";
+
+            ws.send('get');
         }
         
         function onWsClose(){
@@ -179,8 +328,8 @@
             state.classList = "failure";
         }
 
-        function onWsData(data) {
-            if(data.event === 'mirror') {
+        function onWsData(data){
+            if(data.event === 'mirror' && !loading){
                 previousWait = true;
                 for(let file of data.files) {
                     file['name'] = extractFilename(unescape(file.path));
@@ -193,44 +342,90 @@
                     previousWait = file.wait;
                 }
             }
-        }
 
-        function onButtonClick() {
-            audio.load();
-            button.style.visibility='hidden'; 
-            state.style.visibility='visible'; 
-            lastCall.style.visibility='visible'; 
-            setupWebSocketConnection("{{ host }}", "{{ ws_port }}", onWsOpen, onWsClose, onWsData);            
-        }
- 
-        document.addEventListener("DOMContentLoaded", function() {
-            console.log("APP-Version: '{{ app_version }}'");
+            else if(data.event === 'get') {
+                console.log(data.caller + " - " + data.files.length + " files");
 
-            if("{{ state }}" == "0"){
-                showFullscreenOverlay("To use web-calling set -WEB (--web_caller) to 1 or 2");
-            }else{ 
-                if(!checkDBCompatibility){
-                    return;
-                }
+                callerName.innerText = data.caller
+                callerName.style.visibility = 'visible'; 
+                setLoading(false);
 
-                console.log("USING DB: '{{ db_name }}'");
-                initializeDB();
+                done = 0;
+                var limit = data.files.length
 
-                const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.has('clear')) {
-                    db.open().then(() => {
-                        db.delete().then(() => {
-                            console.log('Database cleared');
-                            initializeDB();
-                        }).catch(error => {
-                            console.error('Failed to clear database', error);
-                        });
-                    }).catch(error => {
-                        console.error('Failed to open database for clearing', error);
+                db.open()
+                    .then(async () => {
+                        setLoading(true);
+                        await Promise.all(data.files.slice(0, limit).map(file => downloadAndCacheSound(data.caller, file)));
+                        setLoading(false);
+                    })
+                    .catch(error => {
+                        console.error(`Database error: ${error}`);
                     });
-                }
+
+
+                // // for(let file of data.files) {
+                // for (let i = 0; i < limit && i < data.files.length; i++) {
+                //     const file = data.files[i];
+                //     const file_name = extractFilename(unescape(file));
+
+                //     db.open()
+                //     .then(() => {
+
+                //         db.sounds.get({caller: data.caller, name: file_name})
+                //         .then(result => {
+                //             if (result) {
+                //                 console.log(`Using cache for ${file_name}`);
+                //                 done += 1;
+                //                 lastCall.innerText = done + " / " + data.files.length;
+
+                //             } else {
+                //                 console.log(`No cache for ${file_name}`);
+                //                 // return null;
+
+                //                 let fileUrl = `/sounds/${file}`;
+                //                 fetch(fileUrl, {
+                //                     method: "GET",
+                //                     headers: {
+                //                         "Content-Type": "audio/mpeg"
+                //                     },
+                //                 })
+                //                 .then(response => response.arrayBuffer())
+                //                 .then(arrayBuffer => {
+                //                     const copiedAudioBuffer = arrayBuffer.slice(0);
+                                    
+                //                     db.sounds.put({ caller: data.caller, name: file_name, path: file, file: copiedAudioBuffer })
+                //                         .then(() => {
+                //                             done += 1;
+                //                             lastCall.innerText = done + " / " + data.files.length;
+                //                             console.log(`Caching successful for ${file_name} -> ${file})`);
+                //                         })
+                //                         .catch(error => {
+                //                             console.error(`Caching failed for ${file_name} -> ${file}: ${error}`);
+                //                         });
+                                    
+                //                 })
+                //                 .catch(err => {
+                //                     console.error(err);
+                //                     // reject(err);
+                //                 });
+
+                //             }
+                //         });
+
+            
+                //     });
+                    
+                // }
             }
-        });
+            
+            else{
+                console.log("Unknown message");
+            }
+        }
+
+
+        
 
     </script>
 </body>
