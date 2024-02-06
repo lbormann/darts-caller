@@ -240,7 +240,7 @@ Start the script:
 - -WEBSB / --web_caller_scoreboard [Default: 0] [Possible values: 0 | 1]
 - -WEBP / --web_caller_port [Default: 5000]
 - -HP / --host_port [Default: 8079]
-
+- -DEB / --debug [Default: 0] [Possible values: 0 | 1]
 
 
 
@@ -381,6 +381,10 @@ If web-calling or web-scoreboard is enabled, you can configure a custom port. By
 
 The application provides a websocket-service. Other extensions like autodarts-extern or autodarts-wled can connect to this service (ws://ip:port).
 For a list of json-examples look at 'broadcast-examples.dat' - who knows maybe you build your own extension upon this?!
+
+*`-DEB / --debug`*
+
+Set this to value '1', to output extended event-information on console. By default this is '0'.
 
 
 

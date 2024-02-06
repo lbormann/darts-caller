@@ -702,8 +702,7 @@ def setup_caller():
 
         welcome_event = {
             "event": "welcome",
-            "caller": caller_title_without_version,
-            "caller-version": caller_title,   
+            "caller": caller_title_without_version
         }
         if server != None:
             broadcast(welcome_event)
@@ -2278,21 +2277,18 @@ def on_message_client(client, server, message):
             #     unicast(client, get_event)
 
             elif message.startswith('hello'):
-                # TODO: "caller-list": callers
                 welcome_event = {
                     "event": "welcome",
-                    "caller": caller_title_without_version,
-                    "caller-version": caller_title,   
+                    "caller": caller_title_without_version
                 }
                 unicast(client, welcome_event)
 
             # else try to read json
             else: 
                 messageJson = json.loads(message)
-                # ppi('CLIENT MESSAGE: ' + str(message))
 
-                # client requests for caller-file-sync
-                if 'event' in messageJson and messageJson['event'] == 'sync':
+                # client requests for sync
+                if 'event' in messageJson and messageJson['event'] == 'sync' and caller is not None:
                     new = []
                     count_exists = 0
                     count_new = 0
