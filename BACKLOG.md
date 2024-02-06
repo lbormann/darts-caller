@@ -1,11 +1,10 @@
 - add bull-calling
-- improve web-caller (load every file on start + "change/ban-caller-function")
+- add lobby-event broadcasts
 - add setshot for main-calling
-- highlight blacklisted voice-packs
 - use userID instead of boardID
 - extend score-control to not only correction
-- fix audio output when is hdmi
-- add BAV for liux and macos
+- fix audio device hdmi
+- add BAV for linux and macos
 - improve BAV
 - check start.sh (sh) media_path_shared if empty
 - integrate web-caller in autodarts.io

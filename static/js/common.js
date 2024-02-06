@@ -6,26 +6,44 @@ function showFullscreenOverlay(text) {
     document.body.appendChild(overlay);
 }
 
+function getRandomInterval(min, max) {
+    return Math.random() * (max - min) + min;
+}
+
+
+
+
 function setupWebSocketConnection(host, port, onOpenHandle, onCloseHandle, onMessageHandle) {
     const socket = new WebSocket(`ws://${host}:${port}`);
 
     socket.onopen = function() {
         console.log("Socket: connected!");
-        onOpenHandle();
+        onOpenHandle(socket);
     };
 
-    socket.onclose = function() {
+    socket.onclose = function(event) {
         console.log("Socket: disconnected!");
-        onCloseHandle();
+        onCloseHandle(socket);
+
+        if (event.wasClean) {
+            console.log('Verbindung geschlossen sauber.');
+        } else {
+            console.log('Verbindung unerwartet geschlossen.');
+        }
+        console.log('Code: ' + event.code + ', Grund: ' + event.reason);
+
         setTimeout(() => setupWebSocketConnection(host, port, onOpenHandle, onCloseHandle, onMessageHandle), 1000);
     };
 
     socket.onmessage = function(event) {
         let data = JSON.parse(event.data);
-        onMessageHandle(data); 
+        onMessageHandle(socket, data); 
     };
+
+    socket.onerror = function(error) {
+        console.error('WebSocket-Fehler aufgetreten: ', error);
+    };
+
+    return socket;
 }
 
-function getRandomInterval(min, max) {
-    return Math.random() * (max - min) + min;
-}

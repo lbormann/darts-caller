@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 import time
 import json
+import base64
 import platform
 import random
 import argparse
@@ -46,7 +47,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.7.3'
+VERSION = '2.7.4'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -142,6 +143,7 @@ CALLER_PROFILES = {
     'en-US-Joey-Male': ('https://add.arnes-design.de/ADC/en-US-Joey-Male-v4.zip', 4),
     'en-US-Joanna-Female': ('https://add.arnes-design.de/ADC/en-US-Joanna-Female-v4.zip', 4),
     'en-US-Gregory-Male': ('https://add.arnes-design.de/ADC/en-US-Gregory-Male.zip', 1),
+    'en-US-Matthew-Male': ('https://add.arnes-design.de/ADC/en-US-Matthew-Male.zip', 1),
 
     
     # 'TODONAME': ('TODOLINK', TODOVERSION),  
@@ -232,7 +234,10 @@ def check_paths(main_directory, audio_media_path, audio_media_path_shared, black
 
     try:
         main_directory = os.path.normpath(os.path.dirname(os.path.realpath(main_directory)))
+        os.chdir(main_directory)  # Set the working directory to main_directory
+
         audio_media_path = os.path.normpath(audio_media_path)
+        
         if audio_media_path_shared != DEFAULT_EMPTY_PATH:
             audio_media_path_shared = os.path.normpath(audio_media_path_shared)
         if blacklist_path != DEFAULT_EMPTY_PATH:
@@ -257,6 +262,12 @@ def check_paths(main_directory, audio_media_path, audio_media_path_shared, black
 
     except Exception as e:
         errors = f'Path validation failed: {e}'
+
+    if errors != None:
+        ppi("main_directory: " + main_directory)
+        ppi("audio_media_path: " + str(audio_media_path))
+        ppi("audio_media_path_shared: " + str(audio_media_path_shared))
+        ppi("blacklist_path: " + str(blacklist_path))
 
     return errors
 
@@ -475,7 +486,7 @@ def ban_caller(only_change):
     
 
 
-def load_callers_banned():
+def load_callers_banned(preview = False):
     global caller_profiles_banned
     caller_profiles_banned = []
     
@@ -486,6 +497,12 @@ def load_callers_banned():
     if os.path.exists(path_to_callers_banned_file):
         with open(path_to_callers_banned_file, 'r') as bcf:
             caller_profiles_banned = list(set(line.strip() for line in bcf))
+            if preview:
+                banned_info = f"Banned voice-packs: {len(caller_profiles_banned)} [ - "
+                for cpb in caller_profiles_banned:
+                    banned_info += cpb + " - "
+                banned_info += "]"
+                ppi(banned_info)
     else:
         with open(path_to_callers_banned_file, 'x'):
             ppi(f"'{path_to_callers_banned_file}' created successfully.")
@@ -669,6 +686,26 @@ def setup_caller():
         ppi("Your current caller: " + caller_title + " knows " + str(len(caller[1].values())) + " Sound-file-key(s)")
         # ppi(caller[1])
         caller = caller[1]
+
+
+        # files = []
+        # for key, value in caller.items():
+        #     for sound_file in value:
+        #         files.append(quote(sound_file, safe=""))
+        # get_event = {
+        #     "event": "get",
+        #     "caller": caller_title_without_version,
+        #     "files": files
+        # }
+        # if server != None:
+        #   broadcast(get_event)
+
+        welcome_event = {
+            "event": "welcome",
+            "caller": caller_title_without_version
+        }
+        if server != None:
+            broadcast(welcome_event)
 
 
 def play_sound(sound, wait_for_last, volume_mult):
@@ -2164,7 +2201,6 @@ def on_open_client(client, server):
 def on_message_client(client, server, message):
     def process(*args):
         try:
-            ppi('CLIENT MESSAGE: ' + str(message))
 
             if message.startswith('board'):
                 receive_local_board_address()
@@ -2218,6 +2254,7 @@ def on_message_client(client, server, message):
                     ban_caller(True)
                 else:
                     ban_caller(False)
+                # unicast_get(client)
 
             elif message.startswith('call'):
                 msg_splitted = message.split(':')
@@ -2226,10 +2263,62 @@ def on_message_client(client, server, message):
                 for cp in call_parts:
                     play_sound_effect(cp, wait_for_last = False, volume_mult = 1.0)
                 mirror_sounds()
-        
 
+            # elif message.startswith('get'):
+            #     files = []
+            #     for key, value in caller.items():
+            #         for sound_file in value:
+            #             files.append(quote(sound_file, safe=""))
+            #     get_event = {
+            #         "event": "get",
+            #         "caller": caller_title_without_version,
+            #         "files": files
+            #     }
+            #     unicast(client, get_event)
+
+            elif message.startswith('hello'):
+                welcome_event = {
+                    "event": "welcome",
+                    "caller": caller_title_without_version
+                }
+                unicast(client, welcome_event)
+
+            # else try to read json
+            else: 
+                messageJson = json.loads(message)
+
+                # client requests for sync
+                if 'event' in messageJson and messageJson['event'] == 'sync' and caller is not None:
+                    new = []
+                    count_exists = 0
+                    count_new = 0
+                    caller_copied = caller.copy()
+                    for key, value in caller_copied.items():
+                        for sound_file in value:
+                            # care encoding!
+                            base_name = os.path.basename(sound_file)
+                            if base_name not in messageJson['exists']:
+                                count_new+=1
+                                # ppi("exists: " + base_name)
+
+                                with open(sound_file, 'rb') as file:
+                                    # encoded_file = base64.b64encode(file.read())
+                                    encoded_file = (base64.b64encode(file.read())).decode('ascii')
+                                # print(encoded_file)
+                                    
+                                new.append({"name": base_name, "path": quote(sound_file, safe=""), "file": encoded_file})
+                            else:
+                                count_exists+=1
+                                # ppi("new: " + base_name)   
+                                 
+                    ppi(f"Sync {count_new} new files")
+
+                    messageJson['exists'] = new
+                    unicast(client, messageJson, dump=True)
+
+          
         except Exception as e:
-            ppe('WS-Client-Message failed: ', e)
+            ppe('WS-Client-Message failed. Message: ' + message, e)
 
     t = threading.Thread(target=process).start()
 
@@ -2242,8 +2331,20 @@ def broadcast(data):
         server.send_message_to_all(json.dumps(data, indent=2).encode('utf-8'))
     t = threading.Thread(target=process)
     t.start()
-    t.join()
-   
+    # t.join()
+
+def unicast(client, data, dump=True):
+    def process(*args):
+        global server
+        send_data = data
+        if dump:
+            send_data = json.dumps(send_data, indent=2).encode('utf-8')
+        server.send_message(client, send_data)
+    t = threading.Thread(target=process)
+    t.start()
+    # t.join()
+
+
 
 def mute_audio_background(vol):
     global background_audios
@@ -2516,8 +2617,9 @@ if __name__ == "__main__":
             mixer.pre_init(MIXER_FREQUENCY, MIXER_SIZE, MIXER_CHANNELS, MIXER_BUFFERSIZE)
             mixer.init()
         except Exception as e:
-            ppe("Failed to initialize audio device! Make sure the target device is connected and configured as os default. A device connected by HDMI can cause problems; use standard audio-jack instead.", e)
-            sys.exit()  
+            WEB = 1
+            ppe("Failed to initialize audio device! Make sure the target device is connected and configured as os default. Fallback to web-caller", e)
+            # sys.exit()  
 
     path_status = check_paths(__file__, AUDIO_MEDIA_PATH, AUDIO_MEDIA_PATH_SHARED, BLACKLIST_PATH)
     if path_status is not None: 
@@ -2534,7 +2636,7 @@ if __name__ == "__main__":
             ppe("Background-Muter failed!", e)
 
     try:
-        load_callers_banned()
+        load_callers_banned(preview = True)
         download_callers()
     except Exception as e:
         ppe("Voice-pack fetching failed!", e)
