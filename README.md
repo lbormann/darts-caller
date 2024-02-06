@@ -365,9 +365,9 @@ You can not hear any calls as your music is way too loud? Try to set this to '0.
 
 *`-WEB / --web_caller`*
 
-If you set this '1' or '2' the application will host a web-endpoint to mirror all local call-events. A value '1' will play sounds only on the web-endpoint. Value '2' will play sounds on the application (locally) and on the web-endpoint; to use web-calling visit http://{machine-ip-address}:{web-caller-port} in a browser. For continuous calling make sure your device display stays on while you are playing. For better processing the web-caller caches sound-files resulting in better response times over time; if you configure a fixed speaker, you will notice less delay after certain playtime. Internet Explorer, non-chromium Edge and Safari > v10 is mandantory.
+If you set this '1' or '2' the application will host a web-server to mirror call-events. A value '1' will play sounds only on the website. Value '2' will play sounds on the application (locally) and on the website; Use your smartphone, tablet or other device and visit http://{machine-ip-address}:{web-caller-port}. For a continuous calling experience make sure your device display stays on while you are playing. For faster processing the web-caller caches sound-files which results in fast response times; Internet Explorer, non-chromium Edge and Safari > v10 is mandantory as caching is realized by indexeddb.
 
-NOTE: iphone probably does not work (WIP). 
+NOTE: iphones probably do not work (WIP). 
 
 *`-WEBSB / --web_caller_scoreboard`*
 

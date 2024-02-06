@@ -1,9 +1,11 @@
 ## 2.7.4
 
 - improve web-caller (load all files on start + "change/ban-caller"-function)
+- add voice-pack 'en-US-Matthew-Male'
+- preview banned voice-packs
+- add fallback for unreachable audio device
+- add lobby-event broadcasts
 - fix invalid -M and -MS
-- add voice-pack 'XY'
-- add lobby-event-broadcasts
 
 
 ## 2.7.3
