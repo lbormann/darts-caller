@@ -1,3 +1,17 @@
+## 2.7.5
+
+- hotfix: disables: prevent app from start twice
+
+
+## 2.7.4
+
+- improve web-caller (load all files on start + "change/ban-caller"-function)
+- add voice-pack 'en-US-Matthew-Male'
+- preview banned voice-packs
+- add fallback for unreachable audio device
+- prevent app from start twice
+
+
 ## 2.7.3
 
 - hotfix: fix typo
@@ -9,7 +23,6 @@
 - change file-hoster for more stable downloads
 - add option for downloads: only download specific voice-pack by its name
 - add ambient_gameshot_{playername}, ambient_matchshot_{playername} and more
-- add lobby-event-broadcasts
 - add voice-pack 'en-US-Gregory-Male'
 
 

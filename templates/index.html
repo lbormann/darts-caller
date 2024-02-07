@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+    <!-- https://unpkg.com/dexie/dist/dexie.js -->
+    <script type="text/javascript" src="/static/js/dexie-min-3.2.4.js"></script>
     <script type="text/javascript" src="/static/js/common.js?v=1.0.1"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,73 +14,224 @@
             color: white
         }
     </style>
-    <title>autodarts-caller</title>
+    <title>web-caller</title>
 </head>
 
 <body>
-    <button id="button">Click me to start calling!</button>
     <audio id="audio" preload="auto"></audio>
-    <h1 id="status" style="visibility:hidden;">Disconnected!</h1>
-    <h1 id="last-call" style="visibility:hidden;">Waiting for calls ..</h1>
+    <h3 id="status" style="visibility:hidden;">Disconnected!</h1>
+    <h2 id="caller-name" style="visibility:hidden;"></h1>
+    <h1 id="caller-call" style="visibility:hidden;"></h1>
+    <button id="button-clear"></button>
+    <button id="button-start">Click me to start calling!</button>
+    <button id="button-ban" style="visibility:hidden;">Ban caller!</button>
+    <button id="button-change" style="visibility:hidden;">Change caller!</button>
+
 
     <script>
+        let db, socket, done, loading, caller_name, dexie, buttonClickCounter = 2;
         const audio = document.getElementById('audio');
-        const button = document.getElementById('button');
-        const state = document.getElementById('status');
-        const lastCall = document.getElementById('last-call');
-        let db;
 
+        const buttonClear = document.getElementById('button-clear'); 
+        const button = document.getElementById('button-start');
+        const buttonChange = document.getElementById('button-change');
+        const buttonBan = document.getElementById('button-ban');
+        const state = document.getElementById('status');
+        const callerName = document.getElementById('caller-name');
+        const lastCall = document.getElementById('caller-call');
+
+        buttonClear.addEventListener('click', onButtonClearClick);
         button.addEventListener('click', onButtonClick);
+        buttonChange.addEventListener('click', onButtonChangeClick);
+        buttonBan.addEventListener('click', onButtonBanClick);
 
         let audioContext = new (window.AudioContext || window.webkitAudioContext)();
         let audioQueue = Promise.resolve();
         let previousWait = false;
 
 
+        function wait(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            console.log("APP-Version: '{{ app_version }}'");
+
+            if("{{ state }}" == "0"){
+                showFullscreenOverlay("To use web-calling set -WEB (--web_caller) to 1 or 2");
+            }else{ 
+                if(!checkDBCompatibility){
+                    return;
+                }
+
+                console.log("USING DB: '{{ db_name }}'");
+                initializeDB();
+
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.has('clear')) {
+                    clearDatabase();
+                }        
+            }
+        });
+
+
+
+        async function onButtonClick(){
+            audio.load();
+            caller_name = undefined;
+            state.style.visibility='visible'; 
+            lastCall.style.visibility='visible';
+            button.remove();
+            socket = setupWebSocketConnection("{{ host }}", "{{ ws_port }}", onWsOpen, onWsClose, onWsData);
+        }
+
+        function onButtonClearClick() {
+            clearDatabase();          
+        }
+
+        function onButtonChangeClick() {
+            socket.send('ban:change');            
+        }
+
+        function onButtonBanClick() {
+            socket.send('ban');            
+        }
+ 
+        function clearDatabase(){
+            if(!checkDBCompatibility){
+                return;
+            }
+
+            db.open().then(() => {
+                        db.delete().then(() => {
+                            console.log('Database cleared');
+                            initializeDB();
+                            if(socket){
+                                socket.send('hello');
+                            }
+                        }).catch(error => {
+                            console.error('Failed to clear database', error);
+                        });
+                    }).catch(error => {
+                        console.error('Failed to open database for clearing', error);
+                    });
+        }
+
+        function checkDBCompatibility () {
+            if (!('indexedDB' in window)) {
+                console.log("This browser doesn't support IndexedDB");
+                dexie = False;
+                return false;
+            }
+            dexie = True;
+            return true;
+        }
+
+        function initializeDB(){
+            db = new Dexie("{{ db_name }}");
+            db.version(1).stores({
+                sounds: `
+                    [caller+name],
+                    path,
+                    file`,
+            });
+        }
+
+
+        async function decodeAndCacheSound(caller, new_file){
+            // Convert the Base64 string to a Blob
+            const blob = new Blob([new Uint8Array(atob(new_file.file).split('').map(char => char.charCodeAt(0)))], { type: 'audio/mpeg' });
+            const arrayBuffer = await blob.arrayBuffer()
+
+            await db.sounds.put({ caller: caller, name: new_file.name, path: new_file.path, file: arrayBuffer});
+
+            done += 1;
+            callerName.innerText = caller_name + " [Syncing .. " + done + "]";
+            console.log(`Caching successful for ${new_file.name} -> ${new_file.path}`); 
+        }
+        
+        async function downloadAndCacheSound(caller, file) {
+            if(!loading){
+                return;
+            }
+
+            const file_name = extractFilename(unescape(file));
+            
+            try {
+                const result = await db.sounds.get({caller: caller, name: file_name});
+                
+                if (result) {
+                    console.log(`Using cache for ${file_name}`);
+                } else {
+                    console.log(`No cache for ${file_name}`);
+                    
+                    await wait(Math.floor(Math.random() * 1000) + 1);
+
+                    const fileUrl = `/sounds/${file}`;
+                    const response = await fetch(fileUrl, {
+                        method: "GET",
+                        headers: {
+                            "Content-Type": "audio/mpeg"
+                        },
+                    });
+
+                    const arrayBuffer = await response.arrayBuffer();
+                    const copiedAudioBuffer = arrayBuffer.slice(0);
+
+                    await db.sounds.put({ caller: caller, name: file_name, path: file, file: copiedAudioBuffer });
+                    console.log(`Caching successful for ${file_name} -> ${file}`);  
+                }
+
+                done += 1;
+                lastCall.innerText = done;
+            } catch (error) {
+                console.error(`Error processing ${file}: ${error}`);
+            }
+        }
 
         function processAudioEvent(audioEvent) {
             return new Promise((resolve, reject) => {
                 let path = audioEvent.path;
 
                 getAudio(audioEvent)
-                    .then(audioBlob => {
-                        if (audioBlob) {
-                            playAudio(audioBlob, audioEvent, true)
+                .then(audioBlob => {
+                    if (audioBlob) {
+                        playAudio(audioBlob, audioEvent, true)
+                            .then(() => {
+                                resolve();
+                            })
+                            .catch(error => {
+                                reject(error);
+                            });
+                    } else {
+                        let fileUrl = `/sounds/${path}`;
+                        fetch(fileUrl, {
+                            method: "GET",
+                            headers: {
+                                "Content-Type": "audio/mpeg"
+                            },
+                        })
+                        .then(response => response.arrayBuffer())
+                        .then(arrayBuffer => {
+                            // cacheAudio(audioEvent, arrayBuffer);
+                            playAudio(arrayBuffer, audioEvent, false)
                                 .then(() => {
                                     resolve();
                                 })
                                 .catch(error => {
                                     reject(error);
                                 });
-                        } else {
-                            let fileUrl = `/sounds/${path}`;
-                            fetch(fileUrl, {
-                                method: "GET",
-                                headers: {
-                                    "Content-Type": "audio/mpeg"
-                                },
-                            })
-                            .then(response => response.arrayBuffer())
-                            .then(arrayBuffer => {
-                                cacheAudio(audioEvent, arrayBuffer);
-                                playAudio(arrayBuffer, audioEvent, false)
-                                    .then(() => {
-                                        resolve();
-                                    })
-                                    .catch(error => {
-                                        reject(error);
-                                    });
-                            })
-                            .catch(err => {
-                                console.error(err);
-                                reject(err);
-                            });
-                        }
-                    })
-                    .catch(err => {
-                        console.error(err);
-                        reject(err);
-                    });
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            reject(err);
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    reject(err);
+                });
             });
         }
 
@@ -151,36 +303,42 @@
             return parts[parts.length - 1];
         }
 
-        function initializeDB(){
-            db = new Dexie("{{ db_name }}");
-            db.version(1).stores({
-            sounds: `
-                [caller+name],
-                path,
-                file`,
-            });
-        }
-
-        function checkDBCompatibility () {
-            if (!('indexedDB' in window)) {
-                console.log("This browser doesn't support IndexedDB");
-                return false;
+        function setLoading(state){
+            loading = state
+            if(!loading){
+                lastCall.innerText = 'Waiting for throws ..';
+                buttonBan.style.visibility = 'visible';
+                buttonChange.style.visibility = 'visible';
             }
-            return true;
+            else{
+                buttonBan.style.visibility = 'hidden';
+                buttonChange.style.visibility = 'hidden';
+            }
+            callerName.innerText = caller_name;
         }
 
-        function onWsOpen(){
+
+        function onWsOpen(ws){
+            socket = ws;
+
             state.innerText = "CONNECTED!";
             state.classList = "success";
+
+            // ws.send('get');
+            socket.send('hello');
         }
         
-        function onWsClose(){
+        function onWsClose(ws){
+            socket = ws;
+
             state.innerText = "DISCONNECTED!";
             state.classList = "failure";
         }
 
-        function onWsData(data) {
-            if(data.event === 'mirror') {
+        async function onWsData(ws, data){
+            socket = ws;
+
+            if(data.event === 'mirror'){
                 previousWait = true;
                 for(let file of data.files) {
                     file['name'] = extractFilename(unescape(file.path));
@@ -193,44 +351,81 @@
                     previousWait = file.wait;
                 }
             }
-        }
 
-        function onButtonClick() {
-            audio.load();
-            button.style.visibility='hidden'; 
-            state.style.visibility='visible'; 
-            lastCall.style.visibility='visible'; 
-            setupWebSocketConnection("{{ host }}", "{{ ws_port }}", onWsOpen, onWsClose, onWsData);            
-        }
- 
-        document.addEventListener("DOMContentLoaded", function() {
-            console.log("APP-Version: '{{ app_version }}'");
+            /*
+            else if(data.event === 'get') {
+                console.log(data.caller + " - " + data.files.length + " files");
 
-            if("{{ state }}" == "0"){
-                showFullscreenOverlay("To use web-calling set -WEB (--web_caller) to 1 or 2");
-            }else{ 
-                if(!checkDBCompatibility){
-                    return;
-                }
+                callerName.innerText = data.caller
+                callerName.style.visibility = 'visible'; 
+                // setLoading(false);
 
-                console.log("USING DB: '{{ db_name }}'");
-                initializeDB();
+                done = 0;
+                lastCall.innerText = done;
+                var limit = data.files.length
 
-                const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.has('clear')) {
-                    db.open().then(() => {
-                        db.delete().then(() => {
-                            console.log('Database cleared');
-                            initializeDB();
-                        }).catch(error => {
-                            console.error('Failed to clear database', error);
-                        });
-                    }).catch(error => {
-                        console.error('Failed to open database for clearing', error);
+                db.open()
+                    .then(async () => {
+                        setLoading(true);
+                        await Promise.all(data.files.slice(0, limit).map(file => downloadAndCacheSound(data.caller, file)));
+                        setLoading(false);
+                    })
+                    .catch(error => {
+                        console.error(`Database error: ${error}`);
                     });
-                }
             }
-        });
+            */
+
+            else if(data.event === 'welcome'){
+                console.log('welcome by server');
+
+                caller_name = data.caller;
+                callerName.innerText = data.caller
+                callerName.style.visibility = 'visible'; 
+
+                //db.open()
+                 //   .then(async () => {
+                        const exists_db_entries = await db.sounds.where('caller').equals(data.caller).primaryKeys();
+                        const exists = exists_db_entries.map(entry => entry[1]);
+                        // const exists_entries = await db.sounds.where('caller').equals(data.caller).toArray();
+                        // const exists = exists_entries.map(entry => entry['name']);
+
+                        console.log(`${exists.length} cached files for ${data.caller}`);
+
+                        data['exists'] = exists;
+                        data['event'] = 'sync';
+                        
+                        setLoading(true);
+                        setTimeout(function() {
+                            socket.send(JSON.stringify(data));
+                        }, 2000); 
+                    //})
+                    //.catch(error => {
+                    //    console.error(`Database error: ${error}`);
+                    //});
+            }
+
+            else if(data.event === 'sync'){
+                done = 0;
+                
+                //db.open()
+                    //.then(async () => {
+                        for(let new_file of data.exists) {
+                            await decodeAndCacheSound(data.caller, new_file);
+                        }
+                        setLoading(false);
+                    //})
+                    //.catch(error => {
+                    //    setLoading(false);
+                    //    console.error(`Database error: ${error}`);
+                    //});   
+            }
+            
+            else{
+                console.log("Unknown message");
+            }
+        }
+
 
     </script>
 </body>
