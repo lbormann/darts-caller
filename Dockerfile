@@ -1,21 +1,32 @@
-ARG PYTHON_VERSION
-FROM --platform=${TARGETPLATFORM} python:${PYTHON_VERSION}-slim-bookworm
+ARG PYTHON_VERSION \
+    REF \
+    REPOSITORY="lbormann/autodarts-caller"
+
+FROM --platform=${BUILDPLATFORM} python:${PYTHON_VERSION}-slim-bookworm AS build
+
+ARG PYTHON_VERSION \
+    REF \
+    REPOSITORY \
+    TARGETPLATFORM
 
 ENV AUTODARTS_EMAIL='' \
     AUTODARTS_PASSWORD='' \
     AUTODARTS_BOARD_ID='' \
     AUTODARTS_MEDIA_PATH='/usr/share/autodarts-caller/media'
 
-WORKDIR /usr/src/app
-
-COPY requirements.txt ./
+WORKDIR /
 RUN apt update && \
-    apt install -y libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libfreetype6-dev libportmidi-dev libjpeg-dev python3-setuptools python3-dev python3-numpy && \
-    pip3 install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    apt install -y wget tar && \
+    case ${TARGETPLATFORM} in \
+        "linux/amd64")  DOWNLOAD_ARCH=""  ;; \
+        "linux/arm64") DOWNLOAD_ARCH="-arm64"  ;; \
+    esac && \
+    wget "https://github.com/${REPOSITORY}/releases/download/${REF}/autodarts-caller$DOWNLOAD_ARCH"
 
-COPY . .
+FROM python:${PYTHON_VERSION}-slim-bookworm
 
+WORKDIR /usr/share/autodarts-caller
+COPY --from=build /autodarts-caller* ./autodarts-caller
 EXPOSE 5000 8079
 
-CMD [ "python", "./autodarts-caller.py", "-U", "${AUTODARTS_EMAIL}", "-P", "${AUTODARTS_PASSWORD}", "-B", "${AUTODARTS_BOARD_ID}", "-M", "${AUTODARTS_MEDIA_PATH}"]
+CMD [ "./autodarts-caller", "-U", "${AUTODARTS_EMAIL}", "-P", "${AUTODARTS_PASSWORD}", "-B", "${AUTODARTS_BOARD_ID}", "-M", "${AUTODARTS_MEDIA_PATH}"]
