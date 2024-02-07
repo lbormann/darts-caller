@@ -11,38 +11,43 @@ function getRandomInterval(min, max) {
 }
 
 
+function setupWebSocketConnection(host, port, onOpenHandle, onCloseHandle, onMessageHandle, maxReconnectAttempts = 3, reconnectInterval = 1000) {
+    let socket;
 
+    function connect() {
+        socket = new WebSocket(`ws://${host}:${port}`);
 
-function setupWebSocketConnection(host, port, onOpenHandle, onCloseHandle, onMessageHandle) {
-    const socket = new WebSocket(`ws://${host}:${port}`);
+        socket.onopen = function() {
+            console.log("Socket: connected!");
+            onOpenHandle(socket);
+        };
 
-    socket.onopen = function() {
-        console.log("Socket: connected!");
-        onOpenHandle(socket);
-    };
+        socket.onclose = function(event) {
+            console.log("Socket: disconnected!");
+            onCloseHandle(socket, event);
 
-    socket.onclose = function(event) {
-        console.log("Socket: disconnected!");
-        onCloseHandle(socket);
+            // && maxReconnectAttempts > 0
+            if (event.code !== 1000) {
+                console.log(`Reconnecting in ${reconnectInterval / 1000} seconds...`);
+                setTimeout(connect, reconnectInterval);
+                // maxReconnectAttempts--;
+            }
+        };
 
-        if (event.wasClean) {
-            console.log('Verbindung geschlossen sauber.');
-        } else {
-            console.log('Verbindung unerwartet geschlossen.');
-        }
-        console.log('Code: ' + event.code + ', Grund: ' + event.reason);
+        socket.onmessage = function(event) {
+            try {
+                let data = JSON.parse(event.data);
+                onMessageHandle(socket, data);
+            } catch (error) {
+                console.error('Error parsing incoming JSON:', error);
+            }
+        };
 
-        setTimeout(() => setupWebSocketConnection(host, port, onOpenHandle, onCloseHandle, onMessageHandle), 1000);
-    };
-
-    socket.onmessage = function(event) {
-        let data = JSON.parse(event.data);
-        onMessageHandle(socket, data); 
-    };
-
-    socket.onerror = function(error) {
-        console.error('WebSocket-Fehler aufgetreten: ', error);
-    };
+        socket.onerror = function(error) {
+            console.error('WebSocket error occurred:', error);
+        };
+    }
+    connect();
 
     return socket;
 }

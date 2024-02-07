@@ -1,6 +1,7 @@
 - add bull-calling
 - add lobby-event broadcasts
 - add setshot for main-calling
+- stop grabbing every audio file if -M is /home
 - use userID instead of boardID
 - extend score-control to not only correction
 - fix audio device hdmi

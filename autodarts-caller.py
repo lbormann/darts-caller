@@ -20,6 +20,7 @@ import csv
 import math
 import ssl
 import certifi
+import psutil
 from mask import mask
 import re
 from urllib.parse import quote, unquote
@@ -270,6 +271,15 @@ def check_paths(main_directory, audio_media_path, audio_media_path_shared, black
         ppi("blacklist_path: " + str(blacklist_path))
 
     return errors
+
+def check_already_running():
+    me, extension = os.path.splitext(os.path.basename(__file__))
+    for proc in psutil.process_iter(['pid', 'name']):
+        proc_name = proc.info['name'].lower()
+        proc_name, extension = os.path.splitext(proc_name)
+        if proc_name == me:
+            ppi(f"{me} is already running")
+            sys.exit()  
 
 def get_local_ip_address(target='8.8.8.8'):
     try:
@@ -2283,6 +2293,7 @@ def on_message_client(client, server, message):
                 }
                 unicast(client, welcome_event)
 
+
             # else try to read json
             else: 
                 messageJson = json.loads(message)
@@ -2295,14 +2306,12 @@ def on_message_client(client, server, message):
                     caller_copied = caller.copy()
                     for key, value in caller_copied.items():
                         for sound_file in value:
-                            # care encoding!
                             base_name = os.path.basename(sound_file)
                             if base_name not in messageJson['exists']:
                                 count_new+=1
                                 # ppi("exists: " + base_name)
 
                                 with open(sound_file, 'rb') as file:
-                                    # encoded_file = base64.b64encode(file.read())
                                     encoded_file = (base64.b64encode(file.read())).decode('ascii')
                                 # print(encoded_file)
                                     
@@ -2316,9 +2325,16 @@ def on_message_client(client, server, message):
                     messageJson['exists'] = new
                     unicast(client, messageJson, dump=True)
 
-          
         except Exception as e:
-            ppe('WS-Client-Message failed. Message: ' + message, e)
+            ppe('WS-Client-Message failed.', message)
+            # if message.startswith("{\"event\":\"sync\""):
+            #     ppi("Sync 0 new files (FALLBACK)")
+            #     syncFallbackResponse = {
+            #         "event": "sync",
+            #         "caller": caller_title_without_version,
+            #         "exists": []
+            #     }
+            #     unicast(client, syncFallbackResponse, dump=True)
 
     t = threading.Thread(target=process).start()
 
@@ -2439,6 +2455,8 @@ def start_flask_app(host, port):
 
 
 if __name__ == "__main__":
+    check_already_running()
+        
     ap = argparse.ArgumentParser()
     
     ap.add_argument("-U", "--autodarts_email", required=True, help="Registered email address at " + AUTODART_URL)
