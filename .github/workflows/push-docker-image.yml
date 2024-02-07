@@ -68,7 +68,9 @@ jobs:
           context: .
           provenance: false
           platforms: ${{ env.PLATFORMS }}
-          build-args: PYTHON_VERSION=${{ env.PYTHON_VERSION}},REF=${{ github.ref_name }}
+          build-args: | 
+            PYTHON_VERSION=${{ env.PYTHON_VERSION }}
+            REF=${{ github.ref_name }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.set_image_metadata.outputs.tags }}
           labels: ${{ steps.set_image_metadata.outputs.labels }}
