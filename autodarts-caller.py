@@ -2455,7 +2455,7 @@ def start_flask_app(host, port):
 
 
 if __name__ == "__main__":
-    check_already_running()
+    # check_already_running()
         
     ap = argparse.ArgumentParser()
     
