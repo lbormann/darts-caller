@@ -22,15 +22,17 @@
     <h3 id="status" style="visibility:hidden;">Disconnected!</h1>
     <h2 id="caller-name" style="visibility:hidden;"></h1>
     <h1 id="caller-call" style="visibility:hidden;"></h1>
+    <button id="button-clear"></button>
     <button id="button-start">Click me to start calling!</button>
     <button id="button-ban" style="visibility:hidden;">Ban caller!</button>
     <button id="button-change" style="visibility:hidden;">Change caller!</button>
 
 
     <script>
-        let db, socket, done, loading, caller_name;
+        let db, socket, done, loading, caller_name, dexie, buttonClickCounter = 2;
         const audio = document.getElementById('audio');
 
+        const buttonClear = document.getElementById('button-clear'); 
         const button = document.getElementById('button-start');
         const buttonChange = document.getElementById('button-change');
         const buttonBan = document.getElementById('button-ban');
@@ -38,6 +40,7 @@
         const callerName = document.getElementById('caller-name');
         const lastCall = document.getElementById('caller-call');
 
+        buttonClear.addEventListener('click', onButtonClearClick);
         button.addEventListener('click', onButtonClick);
         buttonChange.addEventListener('click', onButtonChangeClick);
         buttonBan.addEventListener('click', onButtonBanClick);
@@ -66,29 +69,24 @@
 
                 const urlParams = new URLSearchParams(window.location.search);
                 if (urlParams.has('clear')) {
-                    db.open().then(() => {
-                        db.delete().then(() => {
-                            console.log('Database cleared');
-                            initializeDB();
-                        }).catch(error => {
-                            console.error('Failed to clear database', error);
-                        });
-                    }).catch(error => {
-                        console.error('Failed to open database for clearing', error);
-                    });
-                }
+                    clearDatabase();
+                }        
             }
         });
 
 
-        function onButtonClick() {
-            audio.load();
 
+        async function onButtonClick(){
+            audio.load();
             caller_name = undefined;
-             
             state.style.visibility='visible'; 
-            lastCall.style.visibility='visible'; 
-            socket = setupWebSocketConnection("{{ host }}", "{{ ws_port }}", onWsOpen, onWsClose, onWsData);               
+            lastCall.style.visibility='visible';
+            button.remove();
+            socket = setupWebSocketConnection("{{ host }}", "{{ ws_port }}", onWsOpen, onWsClose, onWsData);
+        }
+
+        function onButtonClearClick() {
+            clearDatabase();          
         }
 
         function onButtonChangeClick() {
@@ -99,12 +97,33 @@
             socket.send('ban');            
         }
  
+        function clearDatabase(){
+            if(!checkDBCompatibility){
+                return;
+            }
+
+            db.open().then(() => {
+                        db.delete().then(() => {
+                            console.log('Database cleared');
+                            initializeDB();
+                            if(socket){
+                                socket.send('hello');
+                            }
+                        }).catch(error => {
+                            console.error('Failed to clear database', error);
+                        });
+                    }).catch(error => {
+                        console.error('Failed to open database for clearing', error);
+                    });
+        }
 
         function checkDBCompatibility () {
             if (!('indexedDB' in window)) {
                 console.log("This browser doesn't support IndexedDB");
+                dexie = False;
                 return false;
             }
+            dexie = True;
             return true;
         }
 
@@ -164,7 +183,6 @@
                 }
 
                 done += 1;
-                //  + " / " + data.files.length;
                 lastCall.innerText = done;
             } catch (error) {
                 console.error(`Error processing ${file}: ${error}`);
@@ -291,34 +309,23 @@
                 lastCall.innerText = 'Waiting for throws ..';
                 buttonBan.style.visibility = 'visible';
                 buttonChange.style.visibility = 'visible';
-                // callerName.innerText = caller_name;
-
-            }else{
+            }
+            else{
                 buttonBan.style.visibility = 'hidden';
                 buttonChange.style.visibility = 'hidden';
-                // callerName.innerText = caller_name + " [Waiting for sync ..]";
             }
             callerName.innerText = caller_name;
-            //lastCall.style = "color:white;";
         }
 
 
         function onWsOpen(ws){
             socket = ws;
 
-            button.remove();
-
             state.innerText = "CONNECTED!";
             state.classList = "success";
 
             // ws.send('get');
-
-            //if(caller_name === undefined){
-                socket.send('hello');
-                //setTimeout(function() {
-                    //ws.send('hello');
-                //}, 500); 
-            //}
+            socket.send('hello');
         }
         
         function onWsClose(ws){
@@ -331,7 +338,6 @@
         async function onWsData(ws, data){
             socket = ws;
 
-            // && !loading
             if(data.event === 'mirror'){
                 previousWait = true;
                 for(let file of data.files) {
@@ -390,16 +396,7 @@
                         data['event'] = 'sync';
                         
                         setLoading(true);
-
-                        // ws.send(JSON.stringify(data));
                         setTimeout(function() {
-                            //new Promise(resolve => {
-                                //ws.send(JSON.stringify(data), resolve);
-                           // });
-                            // var t = JSON.stringify(data);
-                            // callerName.innerText = t;
-                            // ws.send(t);
-
                             socket.send(JSON.stringify(data));
                         }, 2000); 
                     //})
@@ -413,7 +410,6 @@
                 
                 //db.open()
                     //.then(async () => {
-                        
                         for(let new_file of data.exists) {
                             await decodeAndCacheSound(data.caller, new_file);
                         }
@@ -430,8 +426,6 @@
             }
         }
 
-
-        
 
     </script>
 </body>

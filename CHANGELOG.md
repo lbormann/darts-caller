@@ -4,8 +4,7 @@
 - add voice-pack 'en-US-Matthew-Male'
 - preview banned voice-packs
 - add fallback for unreachable audio device
-- prevent double execution
-- fix invalid -M (-MS)
+- prevent app from start twice
 
 
 ## 2.7.3
