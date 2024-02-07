@@ -1,3 +1,9 @@
+## 2.7.6
+
+- enables: prevent app from start twice
+- add open-lobby command
+
+
 ## 2.7.5
 
 - hotfix: disables: prevent app from start twice
