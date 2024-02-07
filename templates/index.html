@@ -88,7 +88,7 @@
              
             state.style.visibility='visible'; 
             lastCall.style.visibility='visible'; 
-            socket = setupWebSocketConnection("{{ host }}", "{{ ws_port }}", onWsOpen, onWsClose, onWsData);            
+            socket = setupWebSocketConnection("{{ host }}", "{{ ws_port }}", onWsOpen, onWsClose, onWsData);               
         }
 
         function onButtonChangeClick() {
@@ -127,7 +127,7 @@
             await db.sounds.put({ caller: caller, name: new_file.name, path: new_file.path, file: arrayBuffer});
 
             done += 1;
-            callerName.innerText = caller_name + " [Syncing " + done + "]";
+            callerName.innerText = caller_name + " [Syncing .. " + done + "]";
             console.log(`Caching successful for ${new_file.name} -> ${new_file.path}`); 
         }
         
@@ -195,7 +195,7 @@
                         })
                         .then(response => response.arrayBuffer())
                         .then(arrayBuffer => {
-                            cacheAudio(audioEvent, arrayBuffer);
+                            // cacheAudio(audioEvent, arrayBuffer);
                             playAudio(arrayBuffer, audioEvent, false)
                                 .then(() => {
                                     resolve();
@@ -291,20 +291,15 @@
                 lastCall.innerText = 'Waiting for throws ..';
                 buttonBan.style.visibility = 'visible';
                 buttonChange.style.visibility = 'visible';
-                callerName.innerText = caller_name;
+                // callerName.innerText = caller_name;
 
             }else{
-                lastCall.innerText = 'Waiting for sync ..';
                 buttonBan.style.visibility = 'hidden';
                 buttonChange.style.visibility = 'hidden';
+                // callerName.innerText = caller_name + " [Waiting for sync ..]";
             }
-            lastCall.style = "color:white;";
-        }
-
-        function makeAsync(key) {
-            return new Promise((resolve, reject) => {
-                return key;
-            });
+            callerName.innerText = caller_name;
+            //lastCall.style = "color:white;";
         }
 
 
@@ -317,44 +312,24 @@
             state.classList = "success";
 
             // ws.send('get');
-            if(caller_name === undefined){
+
+            //if(caller_name === undefined){
                 socket.send('hello');
-            }
+                //setTimeout(function() {
+                    //ws.send('hello');
+                //}, 500); 
+            //}
         }
         
         function onWsClose(ws){
-            // socket = ws;
+            socket = ws;
 
             state.innerText = "DISCONNECTED!";
             state.classList = "failure";
         }
 
-        async function getExisting(ws, data){
-            // const exists_db_entries = await db.sounds.where('caller').equals(data.caller).primaryKeys();
-
-            // const exists_db_entries = await db.sounds.where('[caller+name]').between([data.caller, Dexie.minKey], [data.caller, Dexie.maxKey]).primaryKeys();    
-            // const exists = exists_db_entries.map(entry => entry[1]);
-
-            const exists_entries = await db.sounds.where('caller').equals(data.caller).toArray();
-            const exists = exists_entries.map(entry => entry[0]);
-
-            data['exists'] = exists;
-            // exists = []
-            // data['exists'] = exists;
-
-            data['event'] = 'sync';
-            // console.log(data);
-            console.log(`${exists.length} cached files for ${data.caller}`);
-
-            ret = JSON.stringify(data);
-            ws.send(ret);
-            setLoading(true);
-
-            return ret;
-        }
-
-        function onWsData(ws, data){
-            // socket = ws;
+        async function onWsData(ws, data){
+            socket = ws;
 
             // && !loading
             if(data.event === 'mirror'){
@@ -402,46 +377,52 @@
                 callerName.innerText = data.caller
                 callerName.style.visibility = 'visible'; 
 
-                db.open()
-                    .then(async () => {
-                        // const exists_db_entries = await db.sounds.where('caller').equals(data.caller).primaryKeys();
-                        // const exists = exists_db_entries.map(entry => entry[1]);
-                        const exists_entries = await db.sounds.where('caller').equals(data.caller).toArray();
-                        //console.log(exists_entries[0]['name']);
-                        const exists = exists_entries.map(entry => entry['name']);
+                //db.open()
+                 //   .then(async () => {
+                        const exists_db_entries = await db.sounds.where('caller').equals(data.caller).primaryKeys();
+                        const exists = exists_db_entries.map(entry => entry[1]);
+                        // const exists_entries = await db.sounds.where('caller').equals(data.caller).toArray();
+                        // const exists = exists_entries.map(entry => entry['name']);
 
                         console.log(`${exists.length} cached files for ${data.caller}`);
 
                         data['exists'] = exists;
                         data['event'] = 'sync';
                         
-                        console.log('START SENDING EXISTING NAMES');
-                        ws.send(JSON.stringify(data));
-                        console.log('STOP SENDING EXISTING NAMES');
-
                         setLoading(true);
 
-                        // getExisting(ws, data);
-                    })
-                    .catch(error => {
-                        console.error(`Database error: ${error}`);
-                    });
+                        // ws.send(JSON.stringify(data));
+                        setTimeout(function() {
+                            //new Promise(resolve => {
+                                //ws.send(JSON.stringify(data), resolve);
+                           // });
+                            // var t = JSON.stringify(data);
+                            // callerName.innerText = t;
+                            // ws.send(t);
+
+                            socket.send(JSON.stringify(data));
+                        }, 2000); 
+                    //})
+                    //.catch(error => {
+                    //    console.error(`Database error: ${error}`);
+                    //});
             }
 
             else if(data.event === 'sync'){
                 done = 0;
                 
-                db.open()
-                    .then(async () => {
+                //db.open()
+                    //.then(async () => {
+                        
                         for(let new_file of data.exists) {
                             await decodeAndCacheSound(data.caller, new_file);
                         }
                         setLoading(false);
-                    })
-                    .catch(error => {
-                        setLoading(false);
-                        console.error(`Database error: ${error}`);
-                    });   
+                    //})
+                    //.catch(error => {
+                    //    setLoading(false);
+                    //    console.error(`Database error: ${error}`);
+                    //});   
             }
             
             else{
