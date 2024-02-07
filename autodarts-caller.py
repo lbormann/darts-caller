@@ -48,7 +48,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.7.4'
+VERSION = '2.7.5'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -2455,7 +2455,7 @@ def start_flask_app(host, port):
 
 
 if __name__ == "__main__":
-    check_already_running()
+    # check_already_running()
         
     ap = argparse.ArgumentParser()
     
