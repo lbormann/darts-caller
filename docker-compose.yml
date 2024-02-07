@@ -1,0 +1,56 @@
+version: '3.3'
+secrets:
+  autodarts_email:
+    file: ./autodarts_email
+  autodarts_password:
+    file: ./autodarts_password
+  autodarts_board_id:
+    file: ./autodarts_board_id
+
+services:
+  autodarts:
+    build: .
+    container_name: autodarts-caller
+    restart: unless-stopped
+    ports:
+    - 8080:80
+    privileged: true
+    environment:
+      AUTODARTS_EMAIL:      '' #Your autodarts mail adress
+      AUTODARTS_PASSWORD:   '' #Your autodarts password
+      AUTODARTS_BOARD_ID:   '' #Your autodarts board id
+
+    volumes:
+    - ./autodarts-caller/media:/usr/share/autodarts-caller/media
+    #If you wish to use additional settings, uncomment them below and add the desired values in the double quotes after the comma.
+    #IMPORTANT: For this to work you have to always uncomment the line that starts with "python", otherwise the container will not start.
+    #For mor information about the settings, see https://github.com/lbormann/autodarts-caller/blob/master/README.md
+    command: [
+      # "python", "./autodarts-caller.py", "-U", "$${AUTODARTS_EMAIL}", "-P", "$${AUTODARTS_PASSWORD}", "-B", "$${AUTODARTS_BOARD_ID}", "-M", "$${AUTODARTS_MEDIA_PATH}"
+      # ,"--media_path_shared","" # [Default: ''] [Note: This is the path inside the container. If you wish to set it, you have to add it as a volume as well]
+      # ,"--caller_volume","" # [Default: 1.0] [Possible values: 0.0 .. 1.0]
+      # ,"--caller","" # [Default: None] [Possible values: look at description below]
+      # ,"--random_caller","" # [Default: 1] [Possible values: 0 | 1]
+      # ,"--random_caller_each_leg","" # [Default: 0] [Possible values: 0 | 1]
+      # ,"--random_caller_language","" # [Default: 1] [Possible values: 0 (every language) | 1 (english) | 2 (french) | 3 (russian) | 4 (german) | 5 (spanish) | 6 (dutch)]
+      # ,"--random_caller_gender","" # [Default: 0] [Possible values: 0 (every gender) | 1 (female) | 2 (male) ]
+      # ,"--call_current_player","" # [Default: 1] [Possible values: 0 | 1]
+      # ,"--call_current_player_always","" # [Default: 0] [Possible values: 0 | 1]
+      # ,"--call_every_dart","" # [Default: 0] [Possible values: 0 | 1]
+      # ,"--call_every_dart_single_files","" # [Default: 1] [Possible values: 0 | 1]
+      # ,"--possible_checkout_call","" # [Default: 1] [Possible values: 0..Inf]
+      # ,"--possible_checkout_call_single_files","" # [Default: 1] [Possible values: 0 | 1]
+      # ,"--possible_checkout_call_yourself_only","" # [Default: 0] [Possible values: 0 | 1]
+      # ,"--ambient_sounds","" # [Default: 0.0] [Possible values: 0.0 .. 1.0]
+      # ,"--ambient_sounds_after_calls","" # [Default: 0] [Possible values: 0 | 1]
+      # ,"--downloads","" # [Default: 1] [Possible values: 0 | 1]
+      # ,"--downloads_limit","" # [Default: 0]
+      # ,"--downloads_language","" # [Default: 1] [Possible values: 0 (every language) | 1 (english) | 2 (french) | 3 (russian) | 4 (german) | 5 (spanish) | 6 (dutch)]
+      # ,"--downloads_name","" # [Default: '']
+      # ,"--blacklist_path","" # [Default: '']
+      # ,"--background_audio_volume","" # [Default: 0.0] [Possible values: 0.0 .. 1.0]
+      # ,"--web_caller","" # [Default: 0] [Possible values: 0,1,2]
+      # ,"--web_caller_scoreboard","" # [Default: 0] [Possible values: 0 | 1]
+      # ,"--web_caller_port","" # [Default: 5000]
+      # ,"--host_port","" # [Default: 8079]
+    ]
