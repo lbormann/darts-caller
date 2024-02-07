@@ -1,3 +1,8 @@
+## 2.7.5
+
+- hotfix: disables: prevent app from start twice
+
+
 ## 2.7.4
 
 - improve web-caller (load all files on start + "change/ban-caller"-function)
