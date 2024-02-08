@@ -1,8 +1,7 @@
-ARG PYTHON_VERSION \
-    REF \
+ARG REF \
     REPOSITORY="lbormann/autodarts-caller"
 
-FROM --platform=${BUILDPLATFORM} python:${PYTHON_VERSION}-alpine AS build
+FROM --platform=${BUILDPLATFORM} alpine:latest AS build
 
 ARG REF \
     REPOSITORY \
@@ -19,7 +18,7 @@ RUN apk update && \
     wget "https://github.com/${REPOSITORY}/releases/download/${REF}/$ASSETNAME" && \
     mv $ASSETNAME autodarts-caller
 
-FROM python:${PYTHON_VERSION}-slim-bookworm
+FROM debian:bookworm-slim
 
 ENV AUTODARTS_EMAIL= \
     AUTODARTS_PASSWORD= \

@@ -15,10 +15,7 @@ on:
     types: [published]
 
 env:
-  #latest available version in the image. To find the latest version, go to https://hub.docker.com/_/python/tags?page=1&name=slim-bookworm
-  #make sure to use a version that is available on all platforms you want to support
   PLATFORMS: linux/amd64,linux/arm64
-  PYTHON_VERSION: 3.9.18
   IMAGE_NAME: lbormann/autodarts-caller
 
 jobs:
@@ -68,8 +65,7 @@ jobs:
           context: ./docker
           provenance: false
           platforms: ${{ env.PLATFORMS }}
-          build-args: | 
-            PYTHON_VERSION=${{ env.PYTHON_VERSION }}
+          build-args: |
             REF=${{ github.ref_name }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.set_image_metadata.outputs.tags }}
