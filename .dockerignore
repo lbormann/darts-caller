@@ -1,8 +1,0 @@
-.github
-.gitignore
-*.md
-*.bat
-*.sh
-*.yml
-Dockerfile
-*.dat

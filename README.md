@@ -57,31 +57,34 @@ To install the caller inside a docker container, use a compose file that looks l
 version: '3.3'
 
 services:
-  autodarts:
-    build: .
+  autodarts-caller:
+    image: michvllni/autodarts-caller
     container_name: autodarts-caller
     restart: unless-stopped
     ports:
-    - 8080:80
+    - 5000:5000 #Web Caller Port
+    - 8079:8079 #Host Port
     privileged: true
     environment:
+      #required settings
       AUTODARTS_EMAIL:    '' #Your autodarts mail adress
       AUTODARTS_PASSWORD: '' #Your autodarts password
       AUTODARTS_BOARD_ID: '' #Your autodarts board id
-      AUTODARTS_MEDIA_PATH: /usr/share/autodarts-caller/media #this is the path inside the container. If you want to change it, you have to change it in the volume as well
+      
     volumes:
     - ./autodarts-caller/media:/usr/share/autodarts-caller/media
+    - ./autodarts-caller/media-shared:/usr/share/autodarts-caller/media-shared
+    - ./autodarts-caller:/usr/share/autodarts-caller
 ```
+If you want additional parameters, add them as environment variables:
 
-If you wish to use additional settings, you cann append them via an additional command block:
 ```yml
-    command: [
-      "python", "./autodarts-caller.py", "-U", "$${AUTODARTS_EMAIL}", "-P", "$${AUTODARTS_PASSWORD}", "-B", "$${AUTODARTS_BOARD_ID}", "-M", "$${AUTODARTS_MEDIA_PATH}"
-      ,"--caller_volume","0.5"
-    ]
+environment:
+  AUTODARTS_EMAIL:    '' #Your autodarts mail adress
+  AUTODARTS_PASSWORD: '' #Your autodarts password
+  AUTODARTS_BOARD_ID: '' #Your autodarts board id
+  CALLER_VOLUME: 0.5
 ```
-
-When doing this, make sure to add the line `"python", "./autodarts-caller.py", "-U", "$${AUTODARTS_EMAIL}", "-P", "$${AUTODARTS_PASSWORD}", "-B", "$${AUTODARTS_BOARD_ID}", "-M", "$${AUTODARTS_MEDIA_PATH}"` first in order to correctly launch the container.
 
 If you wish to no paste your password, consider storing it in a separate .env file. Make sure to secure your env-file (`chmod 600 .env` should be enough)
 
@@ -96,26 +99,19 @@ AUTODARTS_BOARD_ID=123-456-789
 docker-compose.yml:
 ```yml
 version: '3.3'
-secrets:
-  autodarts_email:
-    file: ./autodarts_email
-  autodarts_password:
-    file: ./autodarts_password
-  autodarts_board_id:
-    file: ./autodarts_board_id
 
 services:
   autodarts:
-    build: .
+    image: michvllni/autodarts-caller
     container_name: autodarts-caller
     restart: unless-stopped
     ports:
-    - 8080:80
+    - 5000:5000 #Web Caller Port
+    - 8079:8079 #Host Port
     privileged: true
     env_files:
     - .env
-    environment:
-      AUTODARTS_MEDIA_PATH: /usr/share/autodarts-caller/media #this is the path inside the container. If you want to change it, you have to change it in the volume as well
+
     volumes:
     - ./autodarts-caller/media:/usr/share/autodarts-caller/media
 ```
