@@ -1,5 +1,17 @@
 #!/bin/sh
-args="-U $AUTODARTS_EMAIL -P $AUTODARTS_PASSWORD -B $AUTODARTS_BOARD_ID -M $MEDIA_PATH"
+args=""
+if [ -n "$AUTODARTS_EMAIL" ]; then
+  args="$args -U $AUTODARTS_EMAIL"
+fi
+if [ -n "$AUTODARTS_PASSWORD" ]; then
+  args="$args -P $AUTODARTS_PASSWORD"
+fi
+if [ -n "$AUTODARTS_BOARD_ID" ]; then
+  args="$args -B $AUTODARTS_BOARD_ID"
+fi
+if [ -n "$MEDIA_PATH" ]; then
+  args="$args -M $MEDIA_PATH"
+fi
 if [ -n "$MEDIA_PATH_SHARED" ]; then
   args="$args -MS $MEDIA_PATH_SHARED"
 fi
@@ -96,5 +108,5 @@ fi
 if [ -n "$MIXER_BUFFERSIZE" ]; then
   args="$args -MIB $MIXER_BUFFERSIZE"
 fi
-echo "Arguments: $args"
+
 ./autodarts-caller $args
