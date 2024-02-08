@@ -58,7 +58,7 @@ version: '3.3'
 
 services:
   autodarts-caller:
-    image: michvllni/autodarts-caller
+    image: lbormann/autodarts-caller
     container_name: autodarts-caller
     restart: unless-stopped
     ports:
@@ -102,7 +102,7 @@ version: '3.3'
 
 services:
   autodarts:
-    image: michvllni/autodarts-caller
+    image: lbormann/autodarts-caller
     container_name: autodarts-caller
     restart: unless-stopped
     ports:

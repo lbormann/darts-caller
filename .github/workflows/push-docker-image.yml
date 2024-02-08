@@ -19,7 +19,7 @@ env:
   #make sure to use a version that is available on all platforms you want to support
   PLATFORMS: linux/amd64,linux/arm64
   PYTHON_VERSION: 3.9.18
-  IMAGE_NAME: michvllni/autodarts-caller
+  IMAGE_NAME: lbormann/autodarts-caller
 
 jobs:
   push_to_registry:
