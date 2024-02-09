@@ -62,9 +62,7 @@ COPY --from=build /autodarts-caller* ./autodarts-caller
 COPY ./entrypoint.sh ./entrypoint.sh
 RUN chmod +x autodarts-caller && \
     chmod +x entrypoint.sh && \
-    if [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \
-      apk add glib \
-    fi
+    apk add glib
 EXPOSE 5000 8079
 
 CMD ./entrypoint.sh
