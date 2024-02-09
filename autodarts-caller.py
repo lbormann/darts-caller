@@ -275,18 +275,20 @@ def check_paths(main_directory, audio_media_path, audio_media_path_shared, black
     return errors
 
 def check_already_running():
-    max_count = 3 # app uses 2 bins -> so max is 2 + 1 as this start counts also.
+    max_count = 3 # app (binary) uses 2 processes => max is (2 + 1) as this one here counts also.
     count = 0
     # me, extension = os.path.splitext(os.path.basename(__file__))
     me, extension = os.path.splitext(os.path.basename(sys.argv[0]))
+    ppi("Process is " + me)
     for proc in psutil.process_iter(['pid', 'name']):
         proc_name = proc.info['name'].lower()
         proc_name, extension = os.path.splitext(proc_name)
         if proc_name == me:
             count += 1
             if count >= max_count:
-                ppi(f"{me} is already running")
+                ppi(f"{me} is already running. Exit")
                 sys.exit()  
+    # ppi("Start info: " + str(count))
 
 def get_local_ip_address(target='8.8.8.8'):
     try:
