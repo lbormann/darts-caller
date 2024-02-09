@@ -9,14 +9,13 @@
 - add BAV for linux and macos
 - improve BAV
 - check start.sh (sh) media_path_shared if empty
-- integrate web-caller in autodarts.io
 - stop calls for cricket when field is already closed
 - adjust cricket-processing with x01-processing
 - add support for more game variants
-- fix web-caller stop working after one leg if a specific caller is set
 - improve web-caller compatibility for ios, especially IPhone15 Pro (iOS 17.2.1)
 - improve caller (e.g. randomize speaker speed, pitch, volume etc.)
 - add license
 - clean code (use classes like AutodartsCaller, AutodartsConnection), refactor to best-practice
 - show used audio-device on start
 - improve README: default to customization
+- improve error handling: no net connection on start

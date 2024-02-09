@@ -1,3 +1,10 @@
+## 2.8.1
+
+- improve sound-mods: prevent extreme differences in associated sounds
+- correct every sound-event for mod-ability
+- add sound-file-key for bogey numbers (ambient_bogey_number)
+
+
 ## 2.8.0
 
 - prevent app from start twice

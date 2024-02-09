@@ -5,7 +5,7 @@ button{
     color: white;
     height: auto;
     background-color: royalblue;
-    width: 60%;  
+    width: 65%;  
     font-size: 40pt;
     margin-bottom: 15px;
 }
@@ -48,11 +48,26 @@ span{
     font-size: 20pt;
 }
 
+#app-info{
+    color: darkgoldenrod;
+    position: fixed;
+    font-weight: bold;
+    top: 0px;
+    right: 15px;
+    background-color: transparent;
+    border: none;
+    outline: none;
+    z-index: 999;
+}
 #caller-name{
     margin-top: 40px;
 }
 #caller-call{
     margin-bottom: 40px;
+}
+#button-start{
+    margin-top: 50px;
+    width: 80%;  
 }
 #button-clear{
     position: fixed;
@@ -73,13 +88,14 @@ span{
     color: white;
     font-weight: bold;
     font-size: 18pt;
+    margin-bottom: 0px;
 }
 #container-mod{
     display: none;
     margin: 0 auto;
     padding: 5px;
     border-radius: 20px;
-    width: 85%;
+    width: 75%;
     background-color: gray;
     border: 2px solid darkgray;
 }
