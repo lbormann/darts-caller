@@ -19,7 +19,7 @@ RUN apk update && \
     mv $ASSETNAME autodarts-caller
 
 FROM debian:bookworm-slim
-
+ARG TARGETPLATFORM
 ENV AUTODARTS_EMAIL= \
     AUTODARTS_PASSWORD= \
     AUTODARTS_BOARD_ID= \
@@ -61,7 +61,10 @@ WORKDIR /usr/bin/autodarts-caller
 COPY --from=build /autodarts-caller* ./autodarts-caller
 COPY ./entrypoint.sh ./entrypoint.sh
 RUN chmod +x autodarts-caller && \
-    chmod +x entrypoint.sh
+    chmod +x entrypoint.sh && \
+    if [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \
+      apk add glib \
+    fi
 EXPOSE 5000 8079
 
 CMD ./entrypoint.sh
