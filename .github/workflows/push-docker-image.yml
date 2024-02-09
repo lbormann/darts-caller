@@ -1,0 +1,72 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+# GitHub recommends pinning actions to a commit SHA.
+# To get a newer version, you will need to update the SHA.
+# You can also reference a tag or branch, but the action may change without warning.
+
+name: Publish autodarts docker image
+
+#trigger when a new version tag is set
+on:
+  release:
+    types: [published]
+
+env:
+  PLATFORMS: linux/amd64,linux/arm64
+  IMAGE_NAME: lbormann/autodarts-caller
+
+jobs:
+  push_to_registry:
+    name: Build and Push Docker image to Github Container Registry
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      # https://github.com/docker/setup-qemu-action
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      # https://github.com/docker/setup-buildx-action
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set Docker Image Metadata
+        id: set_image_metadata
+        uses: docker/metadata-action@v3
+        with:
+          # list of Docker images to use as base name for tags
+          images: |
+            docker.io/${{ env.IMAGE_NAME }}
+          # Docker tags based on the following events/attributes
+          tags: |
+            type=schedule
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha
+            latest
+
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: ./docker
+          provenance: false
+          platforms: ${{ env.PLATFORMS }}
+          build-args: |
+            REF=${{ github.ref_name }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.set_image_metadata.outputs.tags }}
+          labels: ${{ steps.set_image_metadata.outputs.labels }}
