@@ -19,20 +19,55 @@
 
 <body>
     <audio id="audio" preload="auto"></audio>
-    <h3 id="status" style="visibility:hidden;">Disconnected!</h1>
-    <h2 id="caller-name" style="visibility:hidden;"></h1>
-    <h1 id="caller-call" style="visibility:hidden;"></h1>
-    <button id="button-clear"></button>
-    <button id="button-start">Click me to start calling!</button>
-    <button id="button-ban" style="visibility:hidden;">Ban caller!</button>
-    <button id="button-change" style="visibility:hidden;">Change caller!</button>
 
+    <button id="button-clear"></button>
+    
+    <h3 id="status" style="display:none;">Disconnected!</h1>
+
+    <button id="button-start">Click me to start calling!</button>
+
+    <button id="button-container-mod-toggle">Mods</button>
+    <div id="container-mod">
+        <h2>Playback-Rate</h2>
+        <p>
+            <input id="slider-playback-rate-min" class="ranger" type="range" min="0.01" max="2.00" step="0.01" value="1.00">
+            <span id="slider-playback-rate-min-value"></span>
+            <input id="slider-playback-rate-max" class="ranger" type="range" min="0.01" max="2.00" step="0.01" value="1.00">
+            <span id="slider-playback-rate-max-value"></span>
+        </p>
+        <button id="button-playback-rate-reset" class="reset">Reset</button>
+
+        <h2>Detune</h2>
+        <p>
+            <input id="slider-detune-min" class="ranger" type="range" min="-2000" max="2000" step="100" value="0">
+            <span id="slider-detune-min-value"></span>
+            <input id="slider-detune-max" class="ranger" type="range" min="-2000" max="2000" step="100" value="0">
+            <span id="slider-detune-max-value"></span>
+        </p>
+        <button id="button-detune-reset" class="reset">Reset</button>
+    </div>
+
+    <h2 id="caller-name" style="display:none;"></h1>
+    <h1 id="caller-call" style="display:none;"></h1>
+    
+    <button id="button-ban" style="display:none;">Ban caller!</button>
+    <button id="button-change" style="display:none;">Change caller!</button>
 
     <script>
-        let db, socket, done, loading, caller_name, dexie, buttonClickCounter = 2;
-        const audio = document.getElementById('audio');
+        const localStorageAppKey = 'ADC';
+        let db, socket, done, loading, caller_name, dexie, specific, banable, playbackRateMin, playbackRateMax, detuneMin, detuneMax;
+        let audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let audioQueue = Promise.resolve();
+        let previousWait = false;
 
+        playbackRateDefault = 1.0;
+        detuneDefault = 0;
+
+        // misc stuff
+        const audio = document.getElementById('audio');
         const buttonClear = document.getElementById('button-clear'); 
+
+        // caller stuff
         const button = document.getElementById('button-start');
         const buttonChange = document.getElementById('button-change');
         const buttonBan = document.getElementById('button-ban');
@@ -40,19 +75,66 @@
         const callerName = document.getElementById('caller-name');
         const lastCall = document.getElementById('caller-call');
 
+        // mod stuff
+        const buttonContainerModToggle = document.getElementById('button-container-mod-toggle');
+        const containerMod = document.getElementById('container-mod');
+
+        const sliderPlaybackRateMin = document.getElementById('slider-playback-rate-min');
+        const sliderPlaybackRateMinValue = document.getElementById('slider-playback-rate-min-value');
+        const sliderPlaybackRateMax = document.getElementById('slider-playback-rate-max');
+        const sliderPlaybackRateMaxValue = document.getElementById('slider-playback-rate-max-value');
+        const buttonPlaybackRateReset = document.getElementById('button-playback-rate-reset');
+
+        const sliderDetuneMin = document.getElementById('slider-detune-min');
+        const sliderDetuneMinValue = document.getElementById('slider-detune-min-value');
+        const sliderDetuneMax = document.getElementById('slider-detune-max');
+        const sliderDetuneMaxValue = document.getElementById('slider-detune-max-value');
+        const buttonDetuneReset = document.getElementById('button-detune-reset');
+
+
+        buttonContainerModToggle.addEventListener('click', onButtonContainerModToggleClick);
         buttonClear.addEventListener('click', onButtonClearClick);
         button.addEventListener('click', onButtonClick);
         buttonChange.addEventListener('click', onButtonChangeClick);
         buttonBan.addEventListener('click', onButtonBanClick);
 
-        let audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        let audioQueue = Promise.resolve();
-        let previousWait = false;
+        sliderPlaybackRateMin.addEventListener('input', function() {
+            if(this.value <= playbackRateMax){
+                playbackRateMin = parseFloat(this.value);
+            } else {
+                playbackRateMax = parseFloat(this.value);
+            }
+            updatePlaybackRateSliders();
+        });
+        sliderPlaybackRateMax.addEventListener('input', function() {
+            if(this.value >= playbackRateMin){
+                playbackRateMax = parseFloat(this.value);
+            } else {
+                playbackRateMin = parseFloat(this.value);
+            }
+            updatePlaybackRateSliders();
+        });
+        buttonPlaybackRateReset.addEventListener('click', resetPlaybackRates);
+        
+        sliderDetuneMin.addEventListener('input', function() {
+            if(this.value <= detuneMax){
+                detuneMin = parseInt(this.value);
+            } else {
+                detuneMax = parseInt(this.value);
+            }
+            updateDetuneSliders();
+        });
+        sliderDetuneMax.addEventListener('input', function() {
+            if(this.value >= detuneMin){
+                detuneMax = parseInt(this.value);
+            } else {
+                detuneMin = parseInt(this.value);
+            }
+            updateDetuneSliders();
+        });
+        buttonDetuneReset.addEventListener('click', resetDetunes);
 
-
-        function wait(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
+    
 
         document.addEventListener("DOMContentLoaded", function() {
             console.log("APP-Version: '{{ app_version }}'");
@@ -70,23 +152,33 @@
                 const urlParams = new URLSearchParams(window.location.search);
                 if (urlParams.has('clear')) {
                     clearDatabase();
-                }        
+                } 
+                
+                resetPlaybackRates(false);
+                resetDetunes(false);
+                loadValuesFromLocalStorage();
             }
         });
 
+        function onButtonClearClick() {
+            clearDatabase();          
+        }
 
+        function onButtonContainerModToggleClick(){
+            if(containerMod.style.display == 'block'){
+                containerMod.style.display = 'none';
+            }else{
+                containerMod.style.display = 'block';
+            }
+        }
 
         async function onButtonClick(){
             audio.load();
             caller_name = undefined;
-            state.style.visibility='visible'; 
-            lastCall.style.visibility='visible';
+            state.style.display='block'; 
+            lastCall.style.display='block';
             button.remove();
             socket = setupWebSocketConnection("{{ host }}", "{{ ws_port }}", onWsOpen, onWsClose, onWsData);
-        }
-
-        function onButtonClearClick() {
-            clearDatabase();          
         }
 
         function onButtonChangeClick() {
@@ -96,7 +188,69 @@
         function onButtonBanClick() {
             socket.send('ban');            
         }
- 
+
+        function resetPlaybackRates(save = true) {
+            playbackRateMin = playbackRateDefault;
+            playbackRateMax = playbackRateDefault;
+            updatePlaybackRateSliders(save);
+        }
+
+        function resetDetunes(save = true) {
+            detuneMin = detuneDefault;
+            detuneMax = detuneDefault;
+            updateDetuneSliders(save);
+        }
+
+        function updatePlaybackRateSliders(save = true) {
+            sliderPlaybackRateMin.value = playbackRateMin;
+            sliderPlaybackRateMax.value = playbackRateMax;
+            sliderPlaybackRateMinValue.innerHTML = playbackRateMin + " (Min)";
+            sliderPlaybackRateMaxValue.innerHTML = playbackRateMax + " (Max)";
+            if(save){
+                saveValuesToLocalStorage();
+            }
+        }
+        
+        function updateDetuneSliders(save = true) {
+            sliderDetuneMin.value = detuneMin;
+            sliderDetuneMax.value = detuneMax;
+            sliderDetuneMinValue.innerHTML = detuneMin + " (Min)";
+            sliderDetuneMaxValue.innerHTML = detuneMax + " (Max)";
+            if(save){
+                saveValuesToLocalStorage();
+            }
+        }
+
+        function saveValuesToLocalStorage() {
+            localStorage.setItem('ADC_playbackRateMin', playbackRateMin);
+            localStorage.setItem('ADC_playbackRateMax', playbackRateMax);
+            localStorage.setItem('ADC_detuneMin', detuneMin);
+            localStorage.setItem('ADC_detuneMax', detuneMax);
+        }
+
+        function loadValuesFromLocalStorage() {           
+            if (localStorage.getItem('ADC_playbackRateMin') !== null) {
+                playbackRateMin = parseFloat(localStorage.getItem('ADC_playbackRateMin'));
+            }
+            if (localStorage.getItem('ADC_playbackRateMax') !== null) {
+                playbackRateMax = parseFloat(localStorage.getItem('ADC_playbackRateMax'));
+            }
+            if (localStorage.getItem('ADC_detuneMin') !== null) {
+                detuneMin = parseInt(localStorage.getItem('ADC_detuneMin'));
+            }
+            if (localStorage.getItem('ADC_detuneMax') !== null) {
+                detuneMax = parseInt(localStorage.getItem('ADC_detuneMax'));
+            }
+
+            updatePlaybackRateSliders();
+            updateDetuneSliders();
+        }
+
+
+        function wait(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
         function clearDatabase(){
             if(!checkDBCompatibility){
                 return;
@@ -195,15 +349,22 @@
 
                 getAudio(audioEvent)
                 .then(audioBlob => {
+
+                    // file in cache, play it!
                     if (audioBlob) {
                         playAudio(audioBlob, audioEvent, true)
                             .then(() => {
                                 resolve();
                             })
                             .catch(error => {
+                                console.error(error);
+                                // lastCall.innerText = audioEvent.name
+                                lastCall.style.color = "red";
                                 reject(error);
                             });
-                    } else {
+                    } 
+                    // file not cached, fetch it this time!
+                    else {
                         let fileUrl = `/sounds/${path}`;
                         fetch(fileUrl, {
                             method: "GET",
@@ -219,6 +380,7 @@
                                     resolve();
                                 })
                                 .catch(error => {
+                                    console.error(error);
                                     reject(error);
                                 });
                         })
@@ -243,6 +405,20 @@
                         source.buffer = audioBuffer;
                         let gainNode = audioContext.createGain();
                         gainNode.gain.value = audioEvent.volume;
+                        
+                        if(audioEvent.mod){
+                            // https://developer.mozilla.org/en-US/docs/Web/API/AudioBufferSourceNode/playbackRate
+                            var randomPlaybackRate = playbackRateMin + Math.random() * (playbackRateMax - playbackRateMin);
+                            randomPlaybackRate = randomPlaybackRate.toFixed(2);
+                            console.warn("mod playback-rate: " + randomPlaybackRate);
+                            source.playbackRate.value = randomPlaybackRate;
+
+                            // https://developer.mozilla.org/en-US/docs/Web/API/AudioBufferSourceNode/detune
+                            var randomDetune = Math.floor(Math.random() * (detuneMax - detuneMin + 1)) + detuneMin;
+                            console.warn("mod detune: " + randomDetune);
+                            source.detune.value = randomDetune;
+                        }
+                        
                         source.connect(gainNode);
                         gainNode.connect(audioContext.destination);
                         source.onended = () => {
@@ -307,12 +483,16 @@
             loading = state
             if(!loading){
                 lastCall.innerText = 'Waiting for throws ..';
-                buttonBan.style.visibility = 'visible';
-                buttonChange.style.visibility = 'visible';
+                if(banable){
+                    buttonBan.style.display = 'block';
+                }
+                if(!specific){
+                    buttonChange.style.display = 'block';
+                }
             }
             else{
-                buttonBan.style.visibility = 'hidden';
-                buttonChange.style.visibility = 'hidden';
+                buttonBan.style.display = 'none';
+                buttonChange.style.display = 'none';
             }
             callerName.innerText = caller_name;
         }
@@ -323,6 +503,7 @@
 
             state.innerText = "CONNECTED!";
             state.classList = "success";
+            buttonContainerModToggle.style.display='block';
 
             // ws.send('get');
             socket.send('hello');
@@ -344,7 +525,7 @@
                     file['name'] = extractFilename(unescape(file.path));
 
                     if(file.wait || previousWait) {
-                        audioQueue = audioQueue.then(() => processAudioEvent(file));
+                        audioQueue = audioQueue.then(() => processAudioEvent(file)).catch(err => console.error(err));
                     } else {
                         processAudioEvent(file).catch(err => console.error(err));
                     }
@@ -357,7 +538,7 @@
                 console.log(data.caller + " - " + data.files.length + " files");
 
                 callerName.innerText = data.caller
-                callerName.style.visibility = 'visible'; 
+                callerName.style.display = 'block'; 
                 // setLoading(false);
 
                 done = 0;
@@ -380,8 +561,11 @@
                 console.log('welcome by server');
 
                 caller_name = data.caller;
+                specific = data.specific;
+                banable = data.banable;
+
                 callerName.innerText = data.caller
-                callerName.style.visibility = 'visible'; 
+                callerName.style.display = 'block'; 
 
                 //db.open()
                  //   .then(async () => {
@@ -398,7 +582,7 @@
                         setLoading(true);
                         setTimeout(function() {
                             socket.send(JSON.stringify(data));
-                        }, 2000); 
+                        }, 1000); 
                     //})
                     //.catch(error => {
                     //    console.error(`Database error: ${error}`);
