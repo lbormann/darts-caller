@@ -1,7 +1,10 @@
-## 2.7.6
+## 2.8.0
 
-- enables: prevent app from start twice
-- add open-lobby command
+- prevent app from start twice
+- add sound-mods to web-caller: choose ranges for random playback-rate and detune
+- fix error that crashes web-calling
+- remove ban/change for web-caller if not available
+- add voice-packs 'en-US-Danielle-Female' and 'en-US-Kimberly-Female'
 
 
 ## 2.7.5

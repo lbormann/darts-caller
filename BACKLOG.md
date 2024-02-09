@@ -1,3 +1,4 @@
+- add open-lobby command
 - add bull-calling
 - add lobby-event broadcasts
 - add setshot for main-calling

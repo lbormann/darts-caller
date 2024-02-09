@@ -1,3 +1,16 @@
+button{
+    border-radius: 10px;
+    padding: 20px;
+    color: white;
+    height: auto;
+    background-color: royalblue;
+    width: 60%;  
+    font-size: 40pt;
+}
+span{
+    width:15%;
+}
+
 .fullscreen-overlay {
     position: fixed;
     top: 0;
@@ -19,16 +32,23 @@
 .failure{
     color: red;
 }
-button{
-    border-radius: 10px;
-    margin-top: 15px;
-    padding: 20px;
-    color: white;
-    height: auto;
-    background-color: royalblue;
-    width: 60%;  
-    font-size: 40pt;
+.ranger{
+    padding: 10px;
+    width: 65%;
 }
+.reset{
+    margin: 0 auto;
+    display: inline;
+    background: transparent;
+    border-radius: 20px;
+    width: auto;
+    height: auto;
+    color: red;
+    background: whitesmoke;
+    font-size: 20pt;
+    margin-bottom: 15px;
+}
+
 #caller-name{
     margin-top: 40px;
 }
@@ -46,4 +66,22 @@ button{
     outline: none;
     cursor: pointer;
     z-index: 999;
+}
+#button-container-mod-toggle{
+    display: none;
+    margin: 0 auto;
+    background-color: gray;
+    border-radius: 20px 20px 0 0;
+    color: white;
+    font-weight: bold;
+    font-size: 18pt;
+}
+#container-mod{
+    display: none;
+    margin: 0 auto;
+    padding: 5px;
+    border-radius: 20px;
+    width: 85%;
+    background-color: gray;
+    border: 2px solid darkgray;
 }

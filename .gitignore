@@ -2,7 +2,12 @@
 *.txt
 *.json
 *-custom.sh
+*-custom*.sh
 *-custom.bat
+*-custom*.bat
 *raw*.csv
 test.py
 __pycache__
+build
+dist
+*.spec

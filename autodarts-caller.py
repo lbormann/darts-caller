@@ -48,7 +48,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.7.6'
+VERSION = '2.8.0'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -145,6 +145,8 @@ CALLER_PROFILES = {
     'en-US-Joanna-Female': ('https://add.arnes-design.de/ADC/en-US-Joanna-Female-v4.zip', 4),
     'en-US-Gregory-Male': ('https://add.arnes-design.de/ADC/en-US-Gregory-Male.zip', 1),
     'en-US-Matthew-Male': ('https://add.arnes-design.de/ADC/en-US-Matthew-Male.zip', 1),
+    'en-US-Danielle-Female': ('https://add.arnes-design.de/ADC/en-US-Danielle-Female.zip', 1),
+    'en-US-Kimberly-Female': ('https://add.arnes-design.de/ADC/en-US-Kimberly-Female.zip', 1),
 
     
     # 'TODONAME': ('TODOLINK', TODOVERSION),  
@@ -273,9 +275,10 @@ def check_paths(main_directory, audio_media_path, audio_media_path_shared, black
     return errors
 
 def check_already_running():
-    max_count = 2
+    max_count = 3 # app uses 2 bins -> so max is 2 + 1 as this start counts also.
     count = 0
-    me, extension = os.path.splitext(os.path.basename(__file__))
+    # me, extension = os.path.splitext(os.path.basename(__file__))
+    me, extension = os.path.splitext(os.path.basename(sys.argv[0]))
     for proc in psutil.process_iter(['pid', 'name']):
         proc_name = proc.info['name'].lower()
         proc_name, extension = os.path.splitext(proc_name)
@@ -716,13 +719,15 @@ def setup_caller():
 
         welcome_event = {
             "event": "welcome",
-            "caller": caller_title_without_version
+            "caller": caller_title_without_version,
+            "specific": CALLER != DEFAULT_CALLER and CALLER != '',
+            "banable": BLACKLIST_PATH != DEFAULT_EMPTY_PATH
         }
         if server != None:
             broadcast(welcome_event)
 
 
-def play_sound(sound, wait_for_last, volume_mult):
+def play_sound(sound, wait_for_last, volume_mult, mod):
     volume = 1.0
     if AUDIO_CALLER_VOLUME is not None:
         volume = AUDIO_CALLER_VOLUME * volume_mult
@@ -735,7 +740,8 @@ def play_sound(sound, wait_for_last, volume_mult):
                     "caller": caller_title_without_version,
                     "path": quote(sound, safe=""),
                     "wait": wait_for_last,
-                    "volume": volume
+                    "volume": volume,
+                    "mod": mod
                 }
         mirror_files.append(mirror_file)
 
@@ -750,10 +756,10 @@ def play_sound(sound, wait_for_last, volume_mult):
 
     ppi('Playing: "' + sound + '"')
 
-def play_sound_effect(sound_file_key, wait_for_last = False, volume_mult = 1.0):
+def play_sound_effect(sound_file_key, wait_for_last = False, volume_mult = 1.0, mod = True):
     try:
         global caller
-        play_sound(random.choice(caller[sound_file_key]), wait_for_last, volume_mult)
+        play_sound(random.choice(caller[sound_file_key]), wait_for_last, volume_mult, mod)
         return True
     except Exception as e:
         ppe('Can not play sound for sound-file-key "' + sound_file_key + '" -> Ignore this or check existance; otherwise convert your file appropriate', e)
@@ -1214,7 +1220,7 @@ def process_match_x01(m):
                 
                 if not increase_checkout_counter(currentPlayerIndex, remainingPlayerScore):
                     if AMBIENT_SOUNDS != 0.0:
-                        play_sound_effect('ambient_checkout_call_limit', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                        play_sound_effect('ambient_checkout_call_limit', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
                 else:
                     if CALL_CURRENT_PLAYER:
                         play_sound_effect(currentPlayerName)
@@ -1235,7 +1241,7 @@ def process_match_x01(m):
 
             # Player-change
             if pcc_success == False and AMBIENT_SOUNDS != 0.0:
-                play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
                 
 
             ppi("Next player")
@@ -1391,14 +1397,14 @@ def process_match_x01(m):
         if CALL_CURRENT_PLAYER:
             callPlayerNameState = play_sound_effect(currentPlayerName)
 
-        if play_sound_effect('matchon', callPlayerNameState) == False:
-            play_sound_effect('gameon', callPlayerNameState)
+        if play_sound_effect('matchon', callPlayerNameState, mod = False) == False:
+            play_sound_effect('gameon', callPlayerNameState, mod = False)
 
         if AMBIENT_SOUNDS != 0.0:
-            state = play_sound_effect('ambient_matchon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
-            if state == False and play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
-                if play_sound_effect('ambient_gameon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
-                    play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+            state = play_sound_effect('ambient_matchon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
+            if state == False and play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False) == False:
+                if play_sound_effect('ambient_gameon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False) == False:
+                    play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
 
 
         ppi('Matchon')
@@ -1425,11 +1431,11 @@ def process_match_x01(m):
         if CALL_CURRENT_PLAYER:
             callPlayerNameState = play_sound_effect(currentPlayerName)
 
-        play_sound_effect('gameon', callPlayerNameState)
+        play_sound_effect('gameon', callPlayerNameState, mod = False)
 
         if AMBIENT_SOUNDS != 0.0:
-            if play_sound_effect('ambient_gameon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
-                play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+            if play_sound_effect('ambient_gameon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False) == False:
+                play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
 
         ppi('Gameon')
           
@@ -1447,10 +1453,10 @@ def process_match_x01(m):
                 }
         broadcast(busted)
 
-        play_sound_effect('busted')
+        play_sound_effect('busted', mod = False)
 
         if AMBIENT_SOUNDS != 0.0:
-            play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+            play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
 
         ppi('Busted')
     
@@ -1489,23 +1495,23 @@ def process_match_x01(m):
             # ppi(throw_combo)
 
             if turns['points'] != 0:
-                ambient_x_success = play_sound_effect('ambient_' + str(throw_combo), AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                ambient_x_success = play_sound_effect('ambient_' + str(throw_combo), AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
                 if ambient_x_success == False:
-                    ambient_x_success = play_sound_effect('ambient_' + str(turns['points']), AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                    ambient_x_success = play_sound_effect('ambient_' + str(turns['points']), AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
 
             if ambient_x_success == False:
                 if turns['points'] >= 150:
-                    play_sound_effect('ambient_150more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)   
+                    play_sound_effect('ambient_150more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)   
                 elif turns['points'] >= 120:
-                    play_sound_effect('ambient_120more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                    play_sound_effect('ambient_120more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
                 elif turns['points'] >= 100:
-                    play_sound_effect('ambient_100more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                    play_sound_effect('ambient_100more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
                 elif turns['points'] >= 50:
-                    play_sound_effect('ambient_50more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                    play_sound_effect('ambient_50more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
                 elif turns['points'] >= 1:
-                    play_sound_effect('ambient_1more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                    play_sound_effect('ambient_1more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
                 else:
-                    play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                    play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
 
             # Koordinaten der Pfeile
             coords = []
@@ -1554,15 +1560,15 @@ def process_match_x01(m):
                 # ppi("Group-score: " + str(group_score))
 
                 if group_score >= 98:
-                    play_sound_effect('ambient_group_legendary', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)   
+                    play_sound_effect('ambient_group_legendary', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)   
                 elif group_score >= 95:
-                    play_sound_effect('ambient_group_perfect', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                    play_sound_effect('ambient_group_perfect', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
                 elif group_score >= 92:
-                    play_sound_effect('ambient_group_very_nice', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                    play_sound_effect('ambient_group_very_nice', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
                 elif group_score >= 89:
-                    play_sound_effect('ambient_group_good', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                    play_sound_effect('ambient_group_good', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
                 elif group_score >= 86:
-                    play_sound_effect('ambient_group_normal', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                    play_sound_effect('ambient_group_normal', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
      
         ppi("Turn ended")
 
@@ -2293,7 +2299,9 @@ def on_message_client(client, server, message):
             elif message.startswith('hello'):
                 welcome_event = {
                     "event": "welcome",
-                    "caller": caller_title_without_version
+                    "caller": caller_title_without_version,
+                    "specific": CALLER != DEFAULT_CALLER and CALLER != '',
+                    "banable": BLACKLIST_PATH != DEFAULT_EMPTY_PATH
                 }
                 unicast(client, welcome_event)
 
@@ -2459,7 +2467,7 @@ def start_flask_app(host, port):
 
 
 if __name__ == "__main__":
-    # check_already_running()
+    check_already_running()
         
     ap = argparse.ArgumentParser()
     
