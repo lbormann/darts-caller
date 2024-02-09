@@ -22,6 +22,7 @@
 
     <button id="button-clear"></button>
     
+    <h4 id="app-info"> {{ app_version }} - {{ db_name }}</h4>
     <h3 id="status" style="display:none;">Disconnected!</h1>
 
     <button id="button-start">Click me to start calling!</button>
@@ -52,6 +53,7 @@
     
     <button id="button-ban" style="display:none;">Ban caller!</button>
     <button id="button-change" style="display:none;">Change caller!</button>
+
 
     <script>
         const localStorageAppKey = 'ADC';
@@ -397,6 +399,20 @@
             });
         }
 
+        function generateRandomPlaybackRate(baseValue, offsetMin, offsetMax) {
+            const randomOffset = (Math.random() * 0.1) - 0.05;
+            const clampedOffset = Math.max(Math.min(randomOffset, offsetMax), offsetMin);
+            const finalValue = parseFloat(baseValue + clampedOffset);
+            return finalValue;
+        }
+
+        function generateRandomDetune(baseValue, offsetMin, offsetMax) {
+            const randomOffset = Math.floor(Math.random() * 201) - 100;
+            const clampedOffset = Math.max(Math.min(randomOffset, offsetMax - baseValue), offsetMin - baseValue);
+            const finalValue = baseValue + clampedOffset;
+            return finalValue;
+        }
+
         function playAudio(audioBlob, audioEvent, fromCache) {
             return new Promise((resolve, reject) => {
                 audioContext.decodeAudioData(audioBlob)
@@ -406,17 +422,28 @@
                         let gainNode = audioContext.createGain();
                         gainNode.gain.value = audioEvent.volume;
                         
-                        if(audioEvent.mod){
+                        if('mod' in audioEvent && audioEvent.mod){
                             // https://developer.mozilla.org/en-US/docs/Web/API/AudioBufferSourceNode/playbackRate
-                            var randomPlaybackRate = playbackRateMin + Math.random() * (playbackRateMax - playbackRateMin);
-                            randomPlaybackRate = randomPlaybackRate.toFixed(2);
-                            console.warn("mod playback-rate: " + randomPlaybackRate);
+
+                            // simple variant:
+                            // var randomPlaybackRate = playbackRateMin + Math.random() * (playbackRateMax - playbackRateMin);
+                            // randomPlaybackRate = randomPlaybackRate.toFixed(2);
+                            
+                            // base variant:
+                            randomPlaybackRate = generateRandomPlaybackRate(audioEvent.modBasePlaybackRate, audioEvent.modOffsetPlaybackRateMin, audioEvent.modOffsetPlaybackRateMax);
                             source.playbackRate.value = randomPlaybackRate;
+                            console.warn("mod playback-rate: " + randomPlaybackRate);
+
 
                             // https://developer.mozilla.org/en-US/docs/Web/API/AudioBufferSourceNode/detune
-                            var randomDetune = Math.floor(Math.random() * (detuneMax - detuneMin + 1)) + detuneMin;
-                            console.warn("mod detune: " + randomDetune);
+
+                            // simple variant:
+                            // var randomDetune = Math.floor(Math.random() * (detuneMax - detuneMin + 1)) + detuneMin;
+
+                            // base-variant:
+                            randomDetune = generateRandomDetune(audioEvent.modBaseDetune, audioEvent.modOffsetDetuneMin, audioEvent.modOffsetDetuneMax);
                             source.detune.value = randomDetune;
+                            console.warn("mod detune: " + randomDetune);
                         }
                         
                         source.connect(gainNode);
@@ -521,8 +548,22 @@
 
             if(data.event === 'mirror'){
                 previousWait = true;
+
+                var modBasePlaybackRate = playbackRateMin + Math.random() * (playbackRateMax - playbackRateMin);
+                modBasePlaybackRate = modBasePlaybackRate.toFixed(2);
+                console.warn("mod base-playback-rate: " + modBasePlaybackRate);
+
+                var modBaseDetune = Math.floor(Math.random() * (detuneMax - detuneMin + 1)) + detuneMin;
+                console.warn("mod base-detune: " + modBaseDetune);
+
                 for(let file of data.files) {
                     file['name'] = extractFilename(unescape(file.path));
+                    file['modBasePlaybackRate'] = modBasePlaybackRate;
+                    file['modBaseDetune'] = modBaseDetune;
+                    file['modOffsetPlaybackRateMin'] = playbackRateMin;
+                    file['modOffsetPlaybackRateMax'] = playbackRateMax;
+                    file['modOffsetDetuneMin'] = detuneMin;
+                    file['modOffsetDetuneMax'] = detuneMax;
 
                     if(file.wait || previousWait) {
                         audioQueue = audioQueue.then(() => processAudioEvent(file)).catch(err => console.error(err));

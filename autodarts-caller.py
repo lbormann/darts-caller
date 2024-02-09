@@ -48,7 +48,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.8.0'
+VERSION = '2.8.1'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -480,14 +480,14 @@ def ban_caller(only_change):
         return
     
     if only_change:
-        ccc_success = play_sound_effect('control_change_caller', wait_for_last = False, volume_mult = 1.0)
+        ccc_success = play_sound_effect('control_change_caller', wait_for_last = False, volume_mult = 1.0, mod = False)
         if not ccc_success:
-            play_sound_effect('control', wait_for_last = False, volume_mult = 1.0)
+            play_sound_effect('control', wait_for_last = False, volume_mult = 1.0, mod = False)
         
     else:
-        cbc_success = play_sound_effect('control_ban_caller', wait_for_last = False, volume_mult = 1.0)
+        cbc_success = play_sound_effect('control_ban_caller', wait_for_last = False, volume_mult = 1.0, mod = False)
         if not cbc_success:
-            play_sound_effect('control', wait_for_last = False, volume_mult = 1.0)
+            play_sound_effect('control', wait_for_last = False, volume_mult = 1.0, mod = False)
 
         if BLACKLIST_PATH != DEFAULT_EMPTY_PATH:
             global caller_profiles_banned
@@ -844,8 +844,8 @@ def get_player_average(user_id, variant = 'x01', limit = '100'):
         return None
 
 def next_game():
-    if play_sound_effect('control_next_game', wait_for_last = False, volume_mult = 1.0) == False:
-        play_sound_effect('control', wait_for_last = False, volume_mult = 1.0)
+    if play_sound_effect('control_next_game', wait_for_last = False, volume_mult = 1.0, mod = False) == False:
+        play_sound_effect('control', wait_for_last = False, volume_mult = 1.0, mod = False)
     mirror_sounds()
 
     # post
@@ -859,8 +859,8 @@ def next_game():
         ppe('Next game failed', e)
 
 def next_throw():
-    if play_sound_effect('control_next', wait_for_last = False, volume_mult = 1.0) == False:
-        play_sound_effect('control', wait_for_last = False, volume_mult = 1.0)
+    if play_sound_effect('control_next', wait_for_last = False, volume_mult = 1.0, mod = False) == False:
+        play_sound_effect('control', wait_for_last = False, volume_mult = 1.0, mod = False)
     mirror_sounds()
 
     # post
@@ -874,8 +874,8 @@ def next_throw():
         ppe('Next throw failed', e)
 
 def undo_throw():
-    if play_sound_effect('control_undo', wait_for_last = False, volume_mult = 1.0) == False:
-        play_sound_effect('control', wait_for_last = False, volume_mult = 1.0)
+    if play_sound_effect('control_undo', wait_for_last = False, volume_mult = 1.0, mod = False) == False:
+        play_sound_effect('control', wait_for_last = False, volume_mult = 1.0, mod = False)
     mirror_sounds()
 
     # post
@@ -900,12 +900,12 @@ def correct_throw(throw_indices, score):
         wait = False
         if tii > 0 and cdcs_global == True:
             wait = True
-        cdcs_success = play_sound_effect(f'control_dart_correction_{(int(ti) + 1)}', wait_for_last = wait, volume_mult = 1.0)
+        cdcs_success = play_sound_effect(f'control_dart_correction_{(int(ti) + 1)}', wait_for_last = wait, volume_mult = 1.0, mod = False)
         if cdcs_success:
             cdcs_global = True
 
-    if cdcs_global == False and play_sound_effect('control_dart_correction', wait_for_last = False, volume_mult = 1.0) == False:
-        play_sound_effect('control', wait_for_last = False, volume_mult = 1.0)
+    if cdcs_global == False and play_sound_effect('control_dart_correction', wait_for_last = False, volume_mult = 1.0, mod = False) == False:
+        play_sound_effect('control', wait_for_last = False, volume_mult = 1.0, mod = False)
     mirror_sounds()
 
     # patch
@@ -1079,8 +1079,8 @@ def listen_to_match(m, ws):
             if play_sound_effect('matchon', callPlayerNameState) == False:
                 play_sound_effect('gameon', callPlayerNameState)
 
-            if AMBIENT_SOUNDS != 0.0 and play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
-                play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+            if AMBIENT_SOUNDS != 0.0 and play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False) == False:
+                play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
 
             mirror_sounds()
             ppi('Matchon')
@@ -1112,7 +1112,7 @@ def listen_to_match(m, ws):
         ws.send(json.dumps(paramsUnsubscribeMatchEvents))
 
         if m['event'] == 'delete':
-            play_sound_effect('matchcancel')
+            play_sound_effect('matchcancel', mod = False)
             mirror_sounds()
 
         # poll_lobbies(ws)
@@ -1210,33 +1210,35 @@ def process_match_x01(m):
         broadcast(dartsPulled)
 
         
-
         if gameon == False and isGameFinished == False:
 
             # Check for possible checkout
             if POSSIBLE_CHECKOUT_CALL and \
                     m['player'] == currentPlayerIndex and \
                     remainingPlayerScore <= 170 and \
-                    remainingPlayerScore not in BOGEY_NUMBERS and \
                     checkout_only_yourself(currentPlayer):
                 
                 if not increase_checkout_counter(currentPlayerIndex, remainingPlayerScore):
                     if AMBIENT_SOUNDS != 0.0:
                         play_sound_effect('ambient_checkout_call_limit', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
                 else:
-                    if CALL_CURRENT_PLAYER:
-                        play_sound_effect(currentPlayerName)
-
                     remaining = str(remainingPlayerScore)
+                    if remainingPlayerScore not in BOGEY_NUMBERS:
+                        if CALL_CURRENT_PLAYER:
+                            play_sound_effect(currentPlayerName)
 
-                    if POSSIBLE_CHECKOUT_CALL_SINGLE_FILE:
-                        pcc_success = play_sound_effect('yr_' + remaining, True)
-                        if pcc_success == False:
-                            pcc_success = play_sound_effect(remaining, True)
+                        if POSSIBLE_CHECKOUT_CALL_SINGLE_FILE:
+                            pcc_success = play_sound_effect('yr_' + remaining, True)
+                            if pcc_success == False:
+                                pcc_success = play_sound_effect(remaining, True)
+                        else:
+                            pcc_success = (play_sound_effect('you_require', True) and play_sound_effect(remaining, True))
+                        
+                        ppi('Checkout possible: ' + remaining)
                     else:
-                        pcc_success = (play_sound_effect('you_require', True) and play_sound_effect(remaining, True))
-                    
-                    ppi('Checkout possible: ' + remaining)
+                        if AMBIENT_SOUNDS != 0.0:
+                            play_sound_effect('ambient_bogey_number', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
+                        ppi('bogey-number: ' + remaining)
 
             if pcc_success == False and CALL_CURRENT_PLAYER and CALL_CURRENT_PLAYER_ALWAYS and numberOfPlayers > 1:
                 play_sound_effect(currentPlayerName)
@@ -1303,14 +1305,14 @@ def process_match_x01(m):
             play_sound_effect(currentPlayerName, True)
 
         if AMBIENT_SOUNDS != 0.0:
-            if play_sound_effect('ambient_matchshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+            if play_sound_effect('ambient_matchshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False):
                 pass
-            elif play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+            elif play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False):
                 pass
-            elif play_sound_effect('ambient_gameshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+            elif play_sound_effect('ambient_gameshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False):
                 pass
             else:
-                play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
             
 
         if RANDOM_CALLER_EACH_LEG:
@@ -1358,20 +1360,20 @@ def process_match_x01(m):
 
         if AMBIENT_SOUNDS != 0.0:
             if isSet == True:
-                if play_sound_effect('ambient_setshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+                if play_sound_effect('ambient_setshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False):
                     pass
-                elif play_sound_effect('ambient_setshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+                elif play_sound_effect('ambient_setshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False):
                     pass
-                elif play_sound_effect('ambient_gameshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+                elif play_sound_effect('ambient_gameshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False):
                     pass
                 else:
-                    play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                    play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
                     
             else:
-                if play_sound_effect('ambient_gameshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+                if play_sound_effect('ambient_gameshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False):
                     pass
                 else:
-                    play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                    play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
 
         if RANDOM_CALLER_EACH_LEG:
             setup_caller()
@@ -1641,14 +1643,14 @@ def process_match_cricket(m):
         play_sound_effect(currentPlayerName, True)
         
         if AMBIENT_SOUNDS != 0.0:
-            if play_sound_effect('ambient_matchshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+            if play_sound_effect('ambient_matchshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False):
                 pass
-            elif play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+            elif play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False):
                 pass
-            elif play_sound_effect('ambient_gameshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+            elif play_sound_effect('ambient_gameshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False):
                 pass
             else:
-                play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
         
         setup_caller()
         ppi('Gameshot and match')
@@ -1680,10 +1682,10 @@ def process_match_cricket(m):
         play_sound_effect(currentPlayerName, True)
         
         if AMBIENT_SOUNDS != 0.0:
-            if play_sound_effect('ambient_gameshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+            if play_sound_effect('ambient_gameshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False):
                 pass
             else:
-                play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
         
         if RANDOM_CALLER_EACH_LEG:
             setup_caller()
@@ -1714,10 +1716,10 @@ def process_match_cricket(m):
         #     if play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
         #         play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
         if AMBIENT_SOUNDS != 0.0:
-            state = play_sound_effect('ambient_matchon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
-            if state == False and play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
-                if play_sound_effect('ambient_gameon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
-                    play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)    
+            state = play_sound_effect('ambient_matchon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
+            if state == False and play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False) == False:
+                if play_sound_effect('ambient_gameon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False) == False:
+                    play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)    
         
         ppi('Matchon')
 
@@ -1741,8 +1743,8 @@ def process_match_cricket(m):
         play_sound_effect('gameon', True)
 
         if AMBIENT_SOUNDS != 0.0:
-            if play_sound_effect('ambient_gameon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
-                play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+            if play_sound_effect('ambient_gameon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False) == False:
+                play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
 
         ppi('Gameon')
 
@@ -1761,7 +1763,7 @@ def process_match_cricket(m):
 
         play_sound_effect('busted')
         if AMBIENT_SOUNDS != 0.0:
-            play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+            play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
         ppi('Busted')
 
     # Check for 1. Dart
@@ -1800,17 +1802,17 @@ def process_match_cricket(m):
         play_sound_effect(str(throwPoints))
         if AMBIENT_SOUNDS != 0.0:
             if throwPoints == 0:
-                play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
             elif throwPoints == 180:
-                play_sound_effect('ambient_180', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                play_sound_effect('ambient_180', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
             elif throwPoints >= 153:
-                play_sound_effect('ambient_150more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)   
+                play_sound_effect('ambient_150more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)   
             elif throwPoints >= 120:
-                play_sound_effect('ambient_120more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                play_sound_effect('ambient_120more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
             elif throwPoints >= 100:
-                play_sound_effect('ambient_100more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                play_sound_effect('ambient_100more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
             elif throwPoints >= 50:
-                play_sound_effect('ambient_50more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                play_sound_effect('ambient_50more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
 
         ppi("Turn ended")
     
@@ -1841,7 +1843,7 @@ def process_match_cricket(m):
             play_sound_effect(currentPlayerName)
 
         if AMBIENT_SOUNDS != 0.0:
-            play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+            play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
         
         ppi("Next player")
 
@@ -1916,14 +1918,14 @@ def process_match_atc(m):
             play_sound_effect(currentPlayerName, True)
 
         if AMBIENT_SOUNDS != 0.0:
-            if play_sound_effect('ambient_matchshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+            if play_sound_effect('ambient_matchshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False):
                 pass
-            elif play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+            elif play_sound_effect('ambient_matchshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False):
                 pass
-            elif play_sound_effect('ambient_gameshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS):
+            elif play_sound_effect('ambient_gameshot_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False):
                 pass
             else:
-                play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+                play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
 
         ppi('Gameshot and match')
 
@@ -1935,7 +1937,7 @@ def process_match_atc(m):
             play_sound_effect(str(m['state']['targets'][currentPlayerIndex][int(currentTargetsPlayer)]['number']), True)
 
     if turns['throws'] == []:
-        play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+        play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
         if CALL_CURRENT_PLAYER and CALL_CURRENT_PLAYER_ALWAYS and numberOfPlayers > 1:
             play_sound_effect(currentPlayerName, True)
     
@@ -2090,7 +2092,7 @@ def on_message_autodarts(ws, message):
                         ws.send(json.dumps(paramsSubscribeLobbyEvents))
                         lobbyPlayers = []
 
-                        if play_sound_effect("lobby_ambient_in", False):
+                        if play_sound_effect("lobby_ambient_in", False, mod = False):
                             mirror_sounds()
 
 
@@ -2114,7 +2116,7 @@ def on_message_autodarts(ws, message):
                         ws.send(json.dumps(paramsUnsubscribeLobbyEvents))
                         lobbyPlayers = []
 
-                        if play_sound_effect("lobby_ambient_out", False):
+                        if play_sound_effect("lobby_ambient_out", False, mod = False):
                             mirror_sounds()
 
             elif m['channel'] == 'autodarts.lobbies':
@@ -2139,7 +2141,7 @@ def on_message_autodarts(ws, message):
                             "topic": m['id'] + ".state"
                         }
                         ws.send(json.dumps(paramsUnsubscribeLobbyEvents))
-                        if play_sound_effect("lobby_ambient_out", False):
+                        if play_sound_effect("lobby_ambient_out", False, mod = False):
                             mirror_sounds()
   
                         # poll_lobbies(ws)

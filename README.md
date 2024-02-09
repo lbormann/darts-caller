@@ -177,6 +177,7 @@ Since Version 1.6.0 you can deposit multiple sounds for every ([sound-file-key](
 - ambient_setshot_{playername} [overrides: ambient_setshot] 
 - ambient_matchshot
 - ambient_matchshot_{playername} [overrides: ambient_matchshot]
+- ambient_bogey_number
 - ambient_noscore
 - ambient_1more
 - ambient_50more  
