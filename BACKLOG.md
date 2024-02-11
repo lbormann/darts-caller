@@ -1,6 +1,6 @@
-- add open-lobby command
 - add bull-calling
-- add lobby-event broadcasts
+- add lobby-event broadcasts (mainly for wled purpose)
+- add open-lobby command
 - add setshot for main-calling
 - stop grabbing every audio file if -M is /home
 - use userID instead of boardID

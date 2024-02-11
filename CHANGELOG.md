@@ -1,3 +1,10 @@
+## 2.8.3
+
+- add "say-something" to web-caller
+- add volume-mod to web-caller
+- add possibility to let the app randomly decide how to to mod a speaker (random speaker mod)
+
+
 ## 2.8.2
 
 - improved web-callers`s sync-performance by factor 3 to 5
