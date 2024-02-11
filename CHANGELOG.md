@@ -1,3 +1,9 @@
+## 2.8.2
+
+- improved web-callers`s sync-performance by factor 3 to 5
+- fix coords for field 14
+
+
 ## 2.8.1
 
 - improve sound-mods: prevent extreme differences in associated sounds

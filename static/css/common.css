@@ -1,4 +1,109 @@
+body{
+    /* background-image: url("/static/images/background.png"); */
+    background:
+    /* top, transparent black, faked with gradient */ 
+    linear-gradient(
+      rgba(0, 0, 0, 0.77), 
+      rgba(0, 0, 0, 0.77)
+    ),
+    /* bottom, image */
+    url("/static/images/background.png");
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: center;
+    background-color: black;
+}
+input[type=range] {
+    height: 25px;
+    -webkit-appearance: none;
+    margin: 10px 0;
+    width: 90%;
+}
+input[type=range]:focus {
+    outline: none;
+}
+input[type=range]::-webkit-slider-runnable-track {
+    width: 90%;
+    height: 5px;
+    cursor: pointer;
+    animate: 0.2s;
+    box-shadow: 0px 0px 0px #000000;
+    background: transparent;
+    border-radius: 10px;
+    border: 0px solid #000000;
+}
+input[type=range]::-webkit-slider-thumb {
+    box-shadow: 0px 0px 0px #000000;
+    border: 1px solid #2497E3;
+    height: 18px;
+    width: 18px;
+    border-radius: 25px;
+    background: royalblue;
+    cursor: pointer;
+    -webkit-appearance: none;
+    margin-top: -7px;
+}
+input[type=range]:focus::-webkit-slider-runnable-track {
+    background: transparent;
+}
+input[type=range]::-moz-range-track {
+    width: 90%;
+    height: 5px;
+    cursor: pointer;
+    animate: 0.2s;
+    box-shadow: 0px 0px 0px #000000;
+    background: royalblue;
+    border-radius: 10px;
+    border: 0px solid #000000;
+}
+input[type=range]::-moz-range-thumb {
+    box-shadow: 0px 0px 0px #000000;
+    border: 1px solid #2497E3;
+    height: 18px;
+    width: 18px;
+    border-radius: 25px;
+    background: royalblue;
+    cursor: pointer;
+}
+input[type=range]::-ms-track {
+    width: 90%;
+    height: 5px;
+    cursor: pointer;
+    animate: 0.2s;
+    background: royalblue;
+    border-color: transparent;
+    color: transparent;
+}
+input[type=range]::-ms-fill-lower {
+    background: transparent;
+    border: 0px solid #000000;
+    border-radius: 2px;
+    box-shadow: 0px 0px 0px #000000;
+}
+input[type=range]::-ms-fill-upper {
+    background: transparent;
+    border: 0px solid #000000;
+    border-radius: 2px;
+    box-shadow: 0px 0px 0px #000000;
+}
+input[type=range]::-ms-thumb {
+    margin-top: 1px;
+    box-shadow: 0px 0px 0px #000000;
+    border: 1px solid #2497E3;
+    height: 18px;
+    width: 18px;
+    border-radius: 25px;
+    background: royalblue;
+    cursor: pointer;
+}
+input[type=range]:focus::-ms-fill-lower {
+    background: transparent;
+}
+input[type=range]:focus::-ms-fill-upper {
+    background: transparent;
+}
 button{
+    opacity: 0.95;
     margin: 0 auto;
     border-radius: 10px;
     padding: 20px;
@@ -6,11 +111,8 @@ button{
     height: auto;
     background-color: royalblue;
     width: 65%;  
-    font-size: 40pt;
+    font-size: 30pt;
     margin-bottom: 15px;
-}
-span{
-    width:15%;
 }
 
 .fullscreen-overlay {
@@ -34,25 +136,32 @@ span{
 .failure{
     color: red;
 }
+.mod-value{
+    margin: 0 auto;
+    width: 100%;
+    font-size: 14pt;
+    vertical-align: sub;
+}
 .ranger{
-    padding: 10px;
-    width: 65%;
+    margin: 0 auto;
+    margin-bottom: 40px !important;
 }
 .reset{
-    background: transparent;
+    background: orangered;
+    border: 0px;
     border-radius: 20px;
     width: auto;
     height: auto;
-    color: red;
-    background: whitesmoke;
+    color: white;
     font-size: 20pt;
 }
 
 #app-info{
+    cursor: pointer;
     color: darkgoldenrod;
     position: fixed;
     font-weight: bold;
-    top: 0px;
+    top: 1px;
     right: 15px;
     background-color: transparent;
     border: none;
@@ -68,8 +177,9 @@ span{
 #button-start{
     margin-top: 50px;
     width: 80%;  
+    font-size: 33pt;
 }
-#button-clear{
+/* #button-clear{
     position: fixed;
     top: 15px;
     left: 15px;
@@ -80,22 +190,24 @@ span{
     outline: none;
     cursor: pointer;
     z-index: 999;
-}
+} */
 #button-container-mod-toggle{
     display: none;
-    background-color: gray;
-    border-radius: 20px 20px 0 0;
+    background-color: royalblue;;
+    border-radius: 20px 20px 20px 20px;
     color: white;
     font-weight: bold;
     font-size: 18pt;
     margin-bottom: 0px;
+    width: 100px;
 }
 #container-mod{
+    opacity: 0.95;
     display: none;
     margin: 0 auto;
     padding: 5px;
     border-radius: 20px;
-    width: 75%;
-    background-color: gray;
-    border: 2px solid darkgray;
+    width: 85%;
+    background-color: royalblue;;
+    /* border: 2px solid white; */
 }

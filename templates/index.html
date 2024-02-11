@@ -20,54 +20,57 @@
 <body>
     <audio id="audio" preload="auto"></audio>
 
-    <button id="button-clear"></button>
+    <!-- <button id="button-clear"></button> -->
     
     <h4 id="app-info"> {{ app_version }} - {{ db_name }}</h4>
-    <h3 id="status" style="display:none;">Disconnected!</h1>
+    <h3 id="status" style="display:none;">Disconnected!</h3>
 
-    <button id="button-start">Click me to start calling!</button>
+    <button id="button-start">Start Caller!</button>
+
+    <h2 id="caller-name" style="display:none;"></h2>
+    <h2 id="caller-call" style="display:none;"></h2>
+    
+    <button id="button-ban" style="display:none;">Ban caller!</button>
+    <button id="button-change" style="display:none;">Change caller!</button>
 
     <button id="button-container-mod-toggle">Mods</button>
     <div id="container-mod">
         <h2>Playback-Rate</h2>
         <p>
+            <div id="slider-playback-rate-min-value" class="mod-value"></div>
             <input id="slider-playback-rate-min" class="ranger" type="range" min="0.01" max="2.00" step="0.01" value="1.00">
-            <span id="slider-playback-rate-min-value"></span>
-            <input id="slider-playback-rate-max" class="ranger" type="range" min="0.01" max="2.00" step="0.01" value="1.00">
-            <span id="slider-playback-rate-max-value"></span>
+            <div id="slider-playback-rate-max-value" class="mod-value"></div>
+            <input id="slider-playback-rate-max" class="ranger" type="range" min="0.01" max="2.00" step="0.01" value="1.00">         
         </p>
         <button id="button-playback-rate-reset" class="reset">Reset</button>
 
         <h2>Detune</h2>
         <p>
+            <div id="slider-detune-min-value" class="mod-value"></div>
             <input id="slider-detune-min" class="ranger" type="range" min="-2000" max="2000" step="100" value="0">
-            <span id="slider-detune-min-value"></span>
-            <input id="slider-detune-max" class="ranger" type="range" min="-2000" max="2000" step="100" value="0">
-            <span id="slider-detune-max-value"></span>
+            <div id="slider-detune-max-value" class="mod-value"></div>
+            <input id="slider-detune-max" class="ranger" type="range" min="-2000" max="2000" step="100" value="0">  
         </p>
         <button id="button-detune-reset" class="reset">Reset</button>
     </div>
 
-    <h2 id="caller-name" style="display:none;"></h1>
-    <h1 id="caller-call" style="display:none;"></h1>
-    
-    <button id="button-ban" style="display:none;">Ban caller!</button>
-    <button id="button-change" style="display:none;">Change caller!</button>
+
 
 
     <script>
         const localStorageAppKey = 'ADC';
-        let db, socket, done, loading, caller_name, dexie, specific, banable, playbackRateMin, playbackRateMax, detuneMin, detuneMax;
+        let db, ws, done, loading, caller_name, dexie, specific, banable, playbackRateMin, playbackRateMax, detuneMin, detuneMax;
         let audioContext = new (window.AudioContext || window.webkitAudioContext)();
         let audioQueue = Promise.resolve();
         let previousWait = false;
+
 
         playbackRateDefault = 1.0;
         detuneDefault = 0;
 
         // misc stuff
         const audio = document.getElementById('audio');
-        const buttonClear = document.getElementById('button-clear'); 
+        const buttonClear = document.getElementById('app-info'); 
 
         // caller stuff
         const button = document.getElementById('button-start');
@@ -174,21 +177,22 @@
             }
         }
 
-        async function onButtonClick(){
+        function onButtonClick(){
             audio.load();
             caller_name = undefined;
             state.style.display='block'; 
             lastCall.style.display='block';
             button.remove();
-            socket = setupWebSocketConnection("{{ host }}", "{{ ws_port }}", onWsOpen, onWsClose, onWsData);
+
+            setupWebSocketConnection("{{ host }}", "{{ ws_port }}", onWsOpen, onWsClose, onWsData);
         }
 
         function onButtonChangeClick() {
-            socket.send('ban:change');            
+            ws.send('ban:change');            
         }
 
         function onButtonBanClick() {
-            socket.send('ban');            
+            ws.send('ban');            
         }
 
         function resetPlaybackRates(save = true) {
@@ -206,8 +210,8 @@
         function updatePlaybackRateSliders(save = true) {
             sliderPlaybackRateMin.value = playbackRateMin;
             sliderPlaybackRateMax.value = playbackRateMax;
-            sliderPlaybackRateMinValue.innerHTML = playbackRateMin + " (Min)";
-            sliderPlaybackRateMaxValue.innerHTML = playbackRateMax + " (Max)";
+            sliderPlaybackRateMinValue.innerHTML = playbackRateMin + " (MIN)";
+            sliderPlaybackRateMaxValue.innerHTML = playbackRateMax + " (MAX)";
             if(save){
                 saveValuesToLocalStorage();
             }
@@ -216,8 +220,8 @@
         function updateDetuneSliders(save = true) {
             sliderDetuneMin.value = detuneMin;
             sliderDetuneMax.value = detuneMax;
-            sliderDetuneMinValue.innerHTML = detuneMin + " (Min)";
-            sliderDetuneMaxValue.innerHTML = detuneMax + " (Max)";
+            sliderDetuneMinValue.innerHTML = detuneMin + " (MIN)";
+            sliderDetuneMaxValue.innerHTML = detuneMax + " (MAX)";
             if(save){
                 saveValuesToLocalStorage();
             }
@@ -261,9 +265,10 @@
             db.open().then(() => {
                         db.delete().then(() => {
                             console.log('Database cleared');
+                            callerName.innerText = "Database cleared. Sync.."
                             initializeDB();
-                            if(socket){
-                                socket.send('hello');
+                            if(ws){
+                                ws.send('hello');
                             }
                         }).catch(error => {
                             console.error('Failed to clear database', error);
@@ -293,18 +298,22 @@
             });
         }
 
-
-        async function decodeAndCacheSound(caller, new_file){
-            // Convert the Base64 string to a Blob
-            const blob = new Blob([new Uint8Array(atob(new_file.file).split('').map(char => char.charCodeAt(0)))], { type: 'audio/mpeg' });
-            const arrayBuffer = await blob.arrayBuffer()
-
-            await db.sounds.put({ caller: caller, name: new_file.name, path: new_file.path, file: arrayBuffer});
-
-            done += 1;
-            callerName.innerText = caller_name + " [Syncing .. " + done + "]";
-            console.log(`Caching successful for ${new_file.name} -> ${new_file.path}`); 
+        function base64ToArrayBuffer(base64) {
+            const binaryString = window.atob(base64);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
         }
+        
+        // async function decodeAndCacheSound(caller, new_file) {
+        //     const arrayBuffer = base64ToArrayBuffer(new_file.file);
+        //     await db.sounds.put({ caller: caller, name: new_file.name, path: new_file.path, file: arrayBuffer });
+        //     done += 1;
+        //     callerName.innerText = `${caller_name} [Syncing .. ${done}]`;
+        //     console.log(`Caching successful for ${new_file.name} -> ${new_file.path}`);
+        // }
         
         async function downloadAndCacheSound(caller, file) {
             if(!loading){
@@ -509,6 +518,7 @@
         function setLoading(state){
             loading = state
             if(!loading){
+                lastCall.style.display = 'block';
                 lastCall.innerText = 'Waiting for throws ..';
                 if(banable){
                     buttonBan.style.display = 'block';
@@ -521,31 +531,29 @@
                 buttonBan.style.display = 'none';
                 buttonChange.style.display = 'none';
             }
-            callerName.innerText = caller_name;
+            // callerName.innerText = caller_name;
         }
 
 
-        function onWsOpen(ws){
-            socket = ws;
+        function onWsOpen(wss){
+            ws = wss;
 
             state.innerText = "CONNECTED!";
             state.classList = "success";
             buttonContainerModToggle.style.display='block';
 
             // ws.send('get');
-            socket.send('hello');
+            ws.send('hello');
         }
         
         function onWsClose(ws){
-            socket = ws;
+            // socket = ws;
 
             state.innerText = "DISCONNECTED!";
             state.classList = "failure";
         }
 
         async function onWsData(ws, data){
-            socket = ws;
-
             if(data.event === 'mirror'){
                 previousWait = true;
 
@@ -574,6 +582,100 @@
                 }
             }
 
+            else if(data.event === 'welcome'){
+                console.log('welcome by server');
+
+                caller_name = data.caller;
+                specific = data.specific;
+                banable = data.banable;
+
+                // callerName.innerText = data.caller;
+                callerName.style.display = 'block'; 
+
+                const exists_db_entries = await db.sounds.where('caller').equals(data.caller).primaryKeys();
+                const exists = exists_db_entries.map(entry => entry[1]);
+                console.log(`${exists.length} cached files for ${data.caller}`);
+                callerName.innerText = `${caller_name} [${exists.length} sounds]`;
+                data['exists'] = exists;
+                data['event'] = 'sync';
+                setLoading(true);
+                ws.send(JSON.stringify(data));
+
+
+                // ws.send('sync|1.mp3');
+
+
+                // // db.open()
+                // //    .then(async () => {
+                // // db.open()
+                // //    .then(() => {
+                //         // const exists_db_entries = await db.sounds.where('caller').equals(data.caller).primaryKeys();
+
+                //         // .then(exists_db_entries => {
+                //         // .primaryKeys()
+
+                //         db.sounds.where('caller').equals(data.caller).toArray().then((exists_db_entries) => {
+                //             // const exists = exists_db_entries.map(entry => entry[1]);
+                //             const exists = exists_db_entries.map(entry => entry['name']);
+                //             const existsStr = exists.length > 0 ? 'sync|' + exists.join('|') : 'sync|';
+                //             // console.log(existsStr);
+
+                //             // const exists_entries = await db.sounds.where('caller').equals(data.caller).toArray();
+                //             // const exists = exists_entries.map(entry => entry['name']);
+
+                //             console.log(`${exists.length} cached files for ${data.caller}`);
+
+                //             data['exists'] = exists;
+                //             data['event'] = 'sync';
+                            
+                //             setLoading(true);
+
+                //             // setTimeout(function() {
+                //                 // lastCall.innerHTML = existsStr;
+
+                //                 // const encoder = new TextEncoder();
+                //                 // const utf8Bytes = encoder.encode(existsStr);
+                                
+                //                 // ws.send(removeInvalidUTF8Characters(existsStr));
+                //                 ws.send(existsStr);
+                //                 // ws.send(JSON.stringify(data));
+                //                 // ws.send(jsonFastStringify(data));
+
+                //                 // ws.send(data);
+      
+                //             // }, 5000); 
+
+                //         });
+                // // })
+                // // .catch(error => {
+                // //     console.error(`Database error: ${error}`);
+                // // });
+            }
+
+            else if(data.event === 'sync'){
+                done = 0;
+                
+                if(data.exists.length == 0){
+                    setLoading(false);
+                    return;
+                }
+
+                const new_files = data.exists.map(new_file => {
+                        const arrayBuffer = base64ToArrayBuffer(new_file.file);
+                        done += 1;
+                        //console.log(`decode successful for ${new_file.name} -> ${new_file.path}`);
+                        return { caller: data.caller, name: new_file.name, path: new_file.path, file: arrayBuffer };
+                    });
+                    
+                db.sounds.bulkPut(new_files).then(function(last_file) {
+                    callerName.innerText = `${caller_name} [Synced ${done} sounds]`;
+                    setLoading(false);
+                    console.log("last sounds's id was: " + last_file);
+                }).catch(Dexie.BulkError, function (e) {
+                    console.error("some sounds did not succeed. However, " + 100000-e.failures.length + " sounds was added successfully");
+                });
+            }
+
             /*
             else if(data.event === 'get') {
                 console.log(data.caller + " - " + data.files.length + " files");
@@ -597,60 +699,11 @@
                     });
             }
             */
-
-            else if(data.event === 'welcome'){
-                console.log('welcome by server');
-
-                caller_name = data.caller;
-                specific = data.specific;
-                banable = data.banable;
-
-                callerName.innerText = data.caller
-                callerName.style.display = 'block'; 
-
-                //db.open()
-                 //   .then(async () => {
-                        const exists_db_entries = await db.sounds.where('caller').equals(data.caller).primaryKeys();
-                        const exists = exists_db_entries.map(entry => entry[1]);
-                        // const exists_entries = await db.sounds.where('caller').equals(data.caller).toArray();
-                        // const exists = exists_entries.map(entry => entry['name']);
-
-                        console.log(`${exists.length} cached files for ${data.caller}`);
-
-                        data['exists'] = exists;
-                        data['event'] = 'sync';
-                        
-                        setLoading(true);
-                        setTimeout(function() {
-                            socket.send(JSON.stringify(data));
-                        }, 1000); 
-                    //})
-                    //.catch(error => {
-                    //    console.error(`Database error: ${error}`);
-                    //});
-            }
-
-            else if(data.event === 'sync'){
-                done = 0;
-                
-                //db.open()
-                    //.then(async () => {
-                        for(let new_file of data.exists) {
-                            await decodeAndCacheSound(data.caller, new_file);
-                        }
-                        setLoading(false);
-                    //})
-                    //.catch(error => {
-                    //    setLoading(false);
-                    //    console.error(`Database error: ${error}`);
-                    //});   
-            }
             
             else{
                 console.log("Unknown message");
             }
         }
-
 
     </script>
 </body>

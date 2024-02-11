@@ -48,7 +48,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.8.1'
+VERSION = '2.8.2'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -193,7 +193,7 @@ FIELD_COORDS = {
     "S13": {"x": 0.7244393208970865,"y": 0.24378536994340808}, 
     "D13": {"x": 0.917606371829805,"y": 0.308174386920981}, 
     "T13": {"x": 0.5634667784531546,"y": 0.18744498008803193},
-    "S14": {"x": 0.6278557954307273,"y": -0.46449381680989327}, 
+    "S14": {"x": -0.7223277562650692,"y": 0.2440637100898663}, 
     "D14": {"x": -0.9255292391532174,"y": 0.308174386920981}, 
     "T14": {"x": -0.5713896457765667,"y": 0.19549360721022835},
     "S15": {"x": 0.6278557954307273,"y": -0.46449381680989327}, 
@@ -2296,6 +2296,8 @@ def on_message_client(client, server, message):
             #     get_event = {
             #         "event": "get",
             #         "caller": caller_title_without_version,
+            #         "specific": CALLER != DEFAULT_CALLER and CALLER != '',
+            #         "banable": BLACKLIST_PATH != DEFAULT_EMPTY_PATH
             #         "files": files
             #     }
             #     unicast(client, get_event)
@@ -2309,6 +2311,38 @@ def on_message_client(client, server, message):
                 }
                 unicast(client, welcome_event)
 
+            elif message.startswith('sync|'): 
+                exists = message[len("sync|"):].split("|")
+
+                # new = []
+                # count_exists = 0
+                # count_new = 0
+                # caller_copied = caller.copy()
+                # for key, value in caller_copied.items():
+                #     for sound_file in value:
+                #         base_name = os.path.basename(sound_file)
+                #         if base_name not in exists:
+                #             count_new+=1
+                #             # ppi("exists: " + base_name)
+
+                #             with open(sound_file, 'rb') as file:
+                #                 encoded_file = (base64.b64encode(file.read())).decode('ascii')
+                #             # print(encoded_file)
+                                
+                #             new.append({"name": base_name, "path": quote(sound_file, safe=""), "file": encoded_file})
+                #         else:
+                #             count_exists+=1
+                #             # ppi("new: " + base_name)   
+                                
+                # ppi(f"Sync {count_new} new files")
+                new = [{"name": os.path.basename(sound_file), "path": quote(sound_file, safe=""), "file": (base64.b64encode(open(sound_file, 'rb').read())).decode('ascii')} for key, value in caller.items() for sound_file in value if os.path.basename(sound_file) not in exists]
+
+                res = {
+                    'caller': caller_title_without_version,
+                    'event': 'sync',
+                    'exists': new
+                }
+                unicast(client, res, dump=True)
 
             # else try to read json
             else: 
@@ -2316,41 +2350,34 @@ def on_message_client(client, server, message):
 
                 # client requests for sync
                 if 'event' in messageJson and messageJson['event'] == 'sync' and caller is not None:
-                    new = []
-                    count_exists = 0
-                    count_new = 0
-                    caller_copied = caller.copy()
-                    for key, value in caller_copied.items():
-                        for sound_file in value:
-                            base_name = os.path.basename(sound_file)
-                            if base_name not in messageJson['exists']:
-                                count_new+=1
-                                # ppi("exists: " + base_name)
+                    # new = []
+                    # count_exists = 0
+                    # count_new = 0
+                    # caller_copied = caller.copy()
+                    # for key, value in caller_copied.items():
+                    #     for sound_file in value:
+                    #         base_name = os.path.basename(sound_file)
+                    #         if base_name not in messageJson['exists']:
+                    #             count_new+=1
+                    #             # ppi("exists: " + base_name)
 
-                                with open(sound_file, 'rb') as file:
-                                    encoded_file = (base64.b64encode(file.read())).decode('ascii')
-                                # print(encoded_file)
+                    #             with open(sound_file, 'rb') as file:
+                    #                 encoded_file = (base64.b64encode(file.read())).decode('ascii')
+                    #             # print(encoded_file)
                                     
-                                new.append({"name": base_name, "path": quote(sound_file, safe=""), "file": encoded_file})
-                            else:
-                                count_exists+=1
-                                # ppi("new: " + base_name)   
+                    #             new.append({"name": base_name, "path": quote(sound_file, safe=""), "file": encoded_file})
+                    #         else:
+                    #             count_exists+=1
+                    #             # ppi("new: " + base_name)   
                                  
-                    ppi(f"Sync {count_new} new files")
+                    # ppi(f"Sync {count_new} new files")
 
+                    new = [{"name": os.path.basename(sound_file), "path": quote(sound_file, safe=""), "file": (base64.b64encode(open(sound_file, 'rb').read())).decode('ascii')} for key, value in caller.items() for sound_file in value if os.path.basename(sound_file) not in messageJson['exists']]
                     messageJson['exists'] = new
                     unicast(client, messageJson, dump=True)
 
         except Exception as e:
             ppe('WS-Client-Message failed.', e)
-            # if message.startswith("{\"event\":\"sync\""):
-            #     ppi("Sync 0 new files (FALLBACK)")
-            #     syncFallbackResponse = {
-            #         "event": "sync",
-            #         "caller": caller_title_without_version,
-            #         "exists": []
-            #     }
-            #     unicast(client, syncFallbackResponse, dump=True)
 
     t = threading.Thread(target=process).start()
 
