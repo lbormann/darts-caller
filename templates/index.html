@@ -28,6 +28,7 @@
     <button id="button-start">Start Caller!</button>
 
     <h2 id="caller-name" style="display:none;"></h2>
+    <image src="/static/images/say.png" id="button-say" style="display:none;"></image>
     <h2 id="caller-call" style="display:none;"></h2>
     
     <button id="button-ban" style="display:none;">Ban caller!</button>
@@ -35,6 +36,12 @@
 
     <button id="button-container-mod-toggle">Mods</button>
     <div id="container-mod">
+        <h2>Volume</h2>
+        <p>
+            <div id="slider-volume-value" class="mod-value"></div>
+            <input id="slider-volume" class="ranger" type="range" min="0.0" max="100.0" step="1" value="100.0">
+        </p>
+
         <h2>Playback-Rate</h2>
         <p>
             <div id="slider-playback-rate-min-value" class="mod-value"></div>
@@ -59,7 +66,7 @@
 
     <script>
         const localStorageAppKey = 'ADC';
-        let db, ws, done, loading, caller_name, dexie, specific, banable, playbackRateMin, playbackRateMax, detuneMin, detuneMax;
+        let db, ws, done, loading, caller_name, dexie, specific, banable, playbackRateMin, playbackRateMax, detuneMin, detuneMax, volume;
         let audioContext = new (window.AudioContext || window.webkitAudioContext)();
         let audioQueue = Promise.resolve();
         let previousWait = false;
@@ -67,6 +74,7 @@
 
         playbackRateDefault = 1.0;
         detuneDefault = 0;
+        volumeDefault = 100.0;
 
         // misc stuff
         const audio = document.getElementById('audio');
@@ -76,6 +84,7 @@
         const button = document.getElementById('button-start');
         const buttonChange = document.getElementById('button-change');
         const buttonBan = document.getElementById('button-ban');
+        const buttonSay = document.getElementById('button-say');
         const state = document.getElementById('status');
         const callerName = document.getElementById('caller-name');
         const lastCall = document.getElementById('caller-call');
@@ -96,12 +105,16 @@
         const sliderDetuneMaxValue = document.getElementById('slider-detune-max-value');
         const buttonDetuneReset = document.getElementById('button-detune-reset');
 
+        const sliderVolume = document.getElementById('slider-volume');
+        const sliderVolumeValue = document.getElementById('slider-volume-value');
+
 
         buttonContainerModToggle.addEventListener('click', onButtonContainerModToggleClick);
         buttonClear.addEventListener('click', onButtonClearClick);
         button.addEventListener('click', onButtonClick);
         buttonChange.addEventListener('click', onButtonChangeClick);
         buttonBan.addEventListener('click', onButtonBanClick);
+        buttonSay.addEventListener('click', onButtonSayClick);
 
         sliderPlaybackRateMin.addEventListener('input', function() {
             if(this.value <= playbackRateMax){
@@ -139,6 +152,10 @@
         });
         buttonDetuneReset.addEventListener('click', resetDetunes);
 
+        sliderVolume.addEventListener('input', function() {
+            volume = parseInt(this.value);
+            updateVolumeSlider();
+        });
     
 
         document.addEventListener("DOMContentLoaded", function() {
@@ -161,6 +178,7 @@
                 
                 resetPlaybackRates(false);
                 resetDetunes(false);
+                resetVolume(false);
                 loadValuesFromLocalStorage();
             }
         });
@@ -168,7 +186,7 @@
         function onButtonClearClick() {
             clearDatabase();          
         }
-
+        
         function onButtonContainerModToggleClick(){
             if(containerMod.style.display == 'block'){
                 containerMod.style.display = 'none';
@@ -195,6 +213,12 @@
             ws.send('ban');            
         }
 
+        function onButtonSayClick() {
+            ws.send('call:hi');            
+        }
+
+        
+
         function resetPlaybackRates(save = true) {
             playbackRateMin = playbackRateDefault;
             playbackRateMax = playbackRateDefault;
@@ -205,6 +229,11 @@
             detuneMin = detuneDefault;
             detuneMax = detuneDefault;
             updateDetuneSliders(save);
+        }
+
+        function resetVolume(save = true){
+            volume = volumeDefault;
+            updateVolumeSlider(save);
         }
 
         function updatePlaybackRateSliders(save = true) {
@@ -227,11 +256,21 @@
             }
         }
 
+        function updateVolumeSlider(save = true) {
+            sliderVolume.value = volume;
+            sliderVolumeValue.innerHTML = volume;
+            if(save){
+                saveValuesToLocalStorage();
+            }
+        }
+
+
         function saveValuesToLocalStorage() {
             localStorage.setItem('ADC_playbackRateMin', playbackRateMin);
             localStorage.setItem('ADC_playbackRateMax', playbackRateMax);
             localStorage.setItem('ADC_detuneMin', detuneMin);
             localStorage.setItem('ADC_detuneMax', detuneMax);
+            localStorage.setItem('ADC_volume', volume);
         }
 
         function loadValuesFromLocalStorage() {           
@@ -247,9 +286,13 @@
             if (localStorage.getItem('ADC_detuneMax') !== null) {
                 detuneMax = parseInt(localStorage.getItem('ADC_detuneMax'));
             }
+            if (localStorage.getItem('ADC_volume') !== null) {
+                volume = parseFloat(localStorage.getItem('ADC_volume'));
+            }
 
-            updatePlaybackRateSliders();
-            updateDetuneSliders();
+            updatePlaybackRateSliders(false);
+            updateDetuneSliders(false);
+            updateVolumeSlider(false);
         }
 
 
@@ -429,7 +472,9 @@
                         let source = audioContext.createBufferSource();
                         source.buffer = audioBuffer;
                         let gainNode = audioContext.createGain();
-                        gainNode.gain.value = audioEvent.volume;
+                        let vol = volume == 0 ? audioEvent.volume : audioEvent.volume  * volume / 100;
+                        console.warn('volume: ' + vol);
+                        gainNode.gain.value = vol;
                         
                         if('mod' in audioEvent && audioEvent.mod){
                             // https://developer.mozilla.org/en-US/docs/Web/API/AudioBufferSourceNode/playbackRate
@@ -590,7 +635,8 @@
                 banable = data.banable;
 
                 // callerName.innerText = data.caller;
-                callerName.style.display = 'block'; 
+                callerName.style.display = 'block';
+                buttonSay.style.display = 'inline';
 
                 const exists_db_entries = await db.sounds.where('caller').equals(data.caller).primaryKeys();
                 const exists = exists_db_entries.map(entry => entry[1]);

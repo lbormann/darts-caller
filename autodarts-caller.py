@@ -48,7 +48,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.8.2'
+VERSION = '2.8.3'
 
 
 DEFAULT_EMPTY_PATH = ''
