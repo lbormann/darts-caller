@@ -147,7 +147,7 @@ CALLER_PROFILES = {
     'en-US-Matthew-Male': ('https://add.arnes-design.de/ADC/en-US-Matthew-Male.zip', 1),
     'en-US-Danielle-Female': ('https://add.arnes-design.de/ADC/en-US-Danielle-Female.zip', 1),
     'en-US-Kimberly-Female': ('https://add.arnes-design.de/ADC/en-US-Kimberly-Female.zip', 1),
-
+    'en-US-Ruth-Female': ('https://add.arnes-design.de/ADC/en-US-Ruth-Female.zip', 1),
     
     # 'TODONAME': ('TODOLINK', TODOVERSION),  
     # 'TODONAME': ('TODOLINK', TODOVERSION), 

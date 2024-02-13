@@ -2,7 +2,8 @@
 
 - add "say-something" to web-caller
 - add volume-mod to web-caller
-- add possibility to let the app randomly decide how to to mod a speaker (random speaker mod)
+- add randomizer-mod to web-caller
+- add voice-pack 'en-US-Ruth-Female'
 
 
 ## 2.8.2

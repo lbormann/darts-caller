@@ -12,6 +12,9 @@ body{
     background-attachment: fixed;
     background-position: center;
     background-color: black;
+    text-align: center;
+    background-color: black;
+    color: white
 }
 input[type=range] {
     height: 25px;
@@ -113,6 +116,7 @@ button{
     width: 65%;  
     font-size: 30pt;
     margin-bottom: 15px;
+    cursor: pointer;
 }
 
 .fullscreen-overlay {
@@ -144,7 +148,7 @@ button{
 }
 .ranger{
     margin: 0 auto;
-    margin-bottom: 40px !important;
+    margin-bottom: 20px !important;
 }
 .reset{
     background: orangered;
@@ -155,13 +159,50 @@ button{
     color: white;
     font-size: 20pt;
 }
+.tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted white;
+}
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 120px;
+    background-color: white;
+    color: black;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 0;
 
+    /* Position the tooltip */
+    position: absolute;
+    z-index: 1;
+
+    top: -5px;
+    right: 105%;
+}
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+}
+.area-mod{
+    border-radius: 10px;
+    background: #003399;
+    margin: 35px auto;
+    padding: 10px;
+    width: 85%;
+}
+
+
+#loader{
+    margin: 0 auto;
+    width: 48px;
+    height: 48px;
+}
 #app-info{
     cursor: pointer;
     color: darkgoldenrod;
     position: fixed;
     font-weight: bold;
-    top: 1px;
+    top: 20px;
     right: 15px;
     background-color: transparent;
     border: none;
@@ -179,32 +220,18 @@ button{
     width: 80%;  
     font-size: 33pt;
 }
-/* #button-clear{
-    position: fixed;
-    top: 15px;
-    left: 15px;
-    width: 60px; 
-    height: 60px;
-    background-color: transparent;
-    border: none;
-    outline: none;
-    cursor: pointer;
-    z-index: 999;
-} */
 #button-say{
     width: 48px;
     height: 48px;
     margin-left: 10px;
+    cursor: pointer;
 }
 #button-container-mod-toggle{
+    margin: 20px auto;
+    width: 48px;
+    height: 48px;
     display: none;
-    background-color: royalblue;;
-    border-radius: 20px 20px 20px 20px;
-    color: white;
-    font-weight: bold;
-    font-size: 18pt;
-    margin-bottom: 0px;
-    width: 100px;
+    cursor: pointer;
 }
 #container-mod{
     opacity: 0.95;
@@ -214,5 +241,4 @@ button{
     border-radius: 20px;
     width: 85%;
     background-color: royalblue;;
-    /* border: 2px solid white; */
 }

@@ -1,3 +1,4 @@
+- remove scoreboard
 - add bull-calling
 - add lobby-event broadcasts (mainly for wled purpose)
 - add open-lobby command

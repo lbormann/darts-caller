@@ -1,28 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <title>web-caller</title>
+    <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- https://unpkg.com/dexie/dist/dexie.js -->
     <script type="text/javascript" src="/static/js/dexie-min-3.2.4.js"></script>
     <script type="text/javascript" src="/static/js/common.js?v=1.0.1"></script>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/static/css/common.css?v=1.0.0">
-    <style>
-        body{
-            text-align: center;
-            background-color: black;
-            color: white
-        }
-    </style>
-    <title>web-caller</title>
 </head>
 
 <body>
     <audio id="audio" preload="auto"></audio>
-
-    <!-- <button id="button-clear"></button> -->
     
-    <h4 id="app-info"> {{ app_version }} - {{ db_name }}</h4>
+    <div id="app-info" class="tooltip"> {{ app_version }} - {{ db_name }}
+        <span class="tooltiptext">Click to clear sound-database and modifications</span>
+    </div>
     <h3 id="status" style="display:none;">Disconnected!</h3>
 
     <button id="button-start">Start Caller!</button>
@@ -30,51 +24,90 @@
     <h2 id="caller-name" style="display:none;"></h2>
     <image src="/static/images/say.png" id="button-say" style="display:none;"></image>
     <h2 id="caller-call" style="display:none;"></h2>
+
+    <image src="/static/images/loading.gif" style="display:none;" id="loader"></image>
     
     <button id="button-ban" style="display:none;">Ban caller!</button>
     <button id="button-change" style="display:none;">Change caller!</button>
 
-    <button id="button-container-mod-toggle">Mods</button>
+    <image src="/static/images/mods.png" style="display:none;" id="button-container-mod-toggle"></image>
     <div id="container-mod">
-        <h2>Volume</h2>
-        <p>
-            <div id="slider-volume-value" class="mod-value"></div>
-            <input id="slider-volume" class="ranger" type="range" min="0.0" max="100.0" step="1" value="100.0">
-        </p>
+        <div class="area-mod">
+            <h2>Volume</h2>
+            <p>
+                <div id="slider-volume-value" class="mod-value"></div>
+                <input id="slider-volume" class="ranger" type="range" >
+            </p>
+            <button id="button-volume-reset" class="reset">Reset</button>
+        </div>
 
-        <h2>Playback-Rate</h2>
-        <p>
-            <div id="slider-playback-rate-min-value" class="mod-value"></div>
-            <input id="slider-playback-rate-min" class="ranger" type="range" min="0.01" max="2.00" step="0.01" value="1.00">
-            <div id="slider-playback-rate-max-value" class="mod-value"></div>
-            <input id="slider-playback-rate-max" class="ranger" type="range" min="0.01" max="2.00" step="0.01" value="1.00">         
-        </p>
-        <button id="button-playback-rate-reset" class="reset">Reset</button>
+        <div class="area-mod">
+            <h2>Auto-Randomizer</h2>
+            <p>
+                <div id="slider-randomizer-value" class="mod-value"></div>
+                <input id="slider-randomizer" class="ranger" type="range">
+            </p>
+            <button id="button-randomizer-reset" class="reset">Reset</button>
+        </div>
 
-        <h2>Detune</h2>
-        <p>
-            <div id="slider-detune-min-value" class="mod-value"></div>
-            <input id="slider-detune-min" class="ranger" type="range" min="-2000" max="2000" step="100" value="0">
-            <div id="slider-detune-max-value" class="mod-value"></div>
-            <input id="slider-detune-max" class="ranger" type="range" min="-2000" max="2000" step="100" value="0">  
-        </p>
-        <button id="button-detune-reset" class="reset">Reset</button>
+        <div class="area-mod">
+            <h2>Playback-Rate</h2>
+            <p>
+                <div id="slider-playback-rate-min-value" class="mod-value"></div>
+                <input id="slider-playback-rate-min" class="ranger" type="range">
+                <div id="slider-playback-rate-max-value" class="mod-value"></div>
+                <input id="slider-playback-rate-max" class="ranger" type="range">         
+            </p>
+            <button id="button-playback-rate-reset" class="reset">Reset</button>
+        </div>
+
+        <div class="area-mod">
+            <h2>Detune</h2>
+            <p>
+                <div id="slider-detune-min-value" class="mod-value"></div>
+                <input id="slider-detune-min" class="ranger" type="range">
+                <div id="slider-detune-max-value" class="mod-value"></div>
+                <input id="slider-detune-max" class="ranger" type="range">  
+            </p>
+            <button id="button-detune-reset" class="reset">Reset</button>
+        </div>
+       
     </div>
 
 
 
 
     <script>
+        // DB
         const localStorageAppKey = 'ADC';
-        let db, ws, done, loading, caller_name, dexie, specific, banable, playbackRateMin, playbackRateMax, detuneMin, detuneMax, volume;
-        let audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        let audioQueue = Promise.resolve();
-        let previousWait = false;
 
+        // playback-rate
+        const playbackRateDefault = 1.00;
+        const playbackRateMinMin = 0.01;
+        const playbackRateMinMax = 2.00;
+        const playbackRateMaxMin = 0.01;
+        const playbackRateMaxMax = 2.00;
+        const playbackRateStep = 0.01;
 
-        playbackRateDefault = 1.0;
-        detuneDefault = 0;
-        volumeDefault = 100.0;
+        // detune
+        const detuneDefault = 0.00;
+        const detuneMinMin = -2000.00;
+        const detuneMinMax = 2000.00;
+        const detuneMaxMin = -2000.00;
+        const detuneMaxMax = 2000.00;
+        const detuneStep = 1.00;
+        
+        // volume
+        const volumeDefault = 100.0;
+        const volumeMin = -0.00;
+        const volumeMax = 100.00;
+        const volumeStep = 1.00;
+
+        // randomizer
+        const randomizerDefault = 0.00;
+        const randomizerMin = -0.00;
+        const randomizerMax = 100.00;
+        const randomizerStep = 1.00;
 
         // misc stuff
         const audio = document.getElementById('audio');
@@ -88,6 +121,7 @@
         const state = document.getElementById('status');
         const callerName = document.getElementById('caller-name');
         const lastCall = document.getElementById('caller-call');
+        const loader = document.getElementById('loader');
 
         // mod stuff
         const buttonContainerModToggle = document.getElementById('button-container-mod-toggle');
@@ -107,56 +141,50 @@
 
         const sliderVolume = document.getElementById('slider-volume');
         const sliderVolumeValue = document.getElementById('slider-volume-value');
+        const buttonVolumeReset = document.getElementById('button-volume-reset');
 
+        const sliderRandomizer = document.getElementById('slider-randomizer');
+        const sliderRandomizerValue = document.getElementById('slider-randomizer-value');
+        const buttonRandomizerReset = document.getElementById('button-randomizer-reset');
 
-        buttonContainerModToggle.addEventListener('click', onButtonContainerModToggleClick);
-        buttonClear.addEventListener('click', onButtonClearClick);
-        button.addEventListener('click', onButtonClick);
-        buttonChange.addEventListener('click', onButtonChangeClick);
-        buttonBan.addEventListener('click', onButtonBanClick);
-        buttonSay.addEventListener('click', onButtonSayClick);
-
-        sliderPlaybackRateMin.addEventListener('input', function() {
-            if(this.value <= playbackRateMax){
-                playbackRateMin = parseFloat(this.value);
-            } else {
-                playbackRateMax = parseFloat(this.value);
-            }
-            updatePlaybackRateSliders();
-        });
-        sliderPlaybackRateMax.addEventListener('input', function() {
-            if(this.value >= playbackRateMin){
-                playbackRateMax = parseFloat(this.value);
-            } else {
-                playbackRateMin = parseFloat(this.value);
-            }
-            updatePlaybackRateSliders();
-        });
-        buttonPlaybackRateReset.addEventListener('click', resetPlaybackRates);
         
-        sliderDetuneMin.addEventListener('input', function() {
-            if(this.value <= detuneMax){
-                detuneMin = parseInt(this.value);
-            } else {
-                detuneMax = parseInt(this.value);
-            }
-            updateDetuneSliders();
-        });
-        sliderDetuneMax.addEventListener('input', function() {
-            if(this.value >= detuneMin){
-                detuneMax = parseInt(this.value);
-            } else {
-                detuneMin = parseInt(this.value);
-            }
-            updateDetuneSliders();
-        });
-        buttonDetuneReset.addEventListener('click', resetDetunes);
+        // vars
+        let db, ws, done, loading, caller_name, dexie, specific, banable, playbackRateMin, playbackRateMax, detuneMin, detuneMax, volume, randomizer;
+        let audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let audioQueue = Promise.resolve();
+        let previousWait = false;
 
-        sliderVolume.addEventListener('input', function() {
-            volume = parseInt(this.value);
-            updateVolumeSlider();
-        });
-    
+        // volume
+        sliderVolume.min = volumeMin;
+        sliderVolume.max = volumeMax;
+        sliderVolume.step = volumeStep;
+
+        // playbackrate min
+        sliderPlaybackRateMin.min = playbackRateMinMin;
+        sliderPlaybackRateMin.max = playbackRateMinMax;
+        sliderPlaybackRateMin.step = playbackRateStep;
+
+        // playbackrate max
+        sliderPlaybackRateMax.min = playbackRateMaxMin;
+        sliderPlaybackRateMax.max = playbackRateMaxMax;
+        sliderPlaybackRateMax.step = playbackRateStep;
+
+        // detune min
+        sliderDetuneMin.min = detuneMinMin;
+        sliderDetuneMin.max = detuneMinMax;
+        sliderDetuneMin.step = detuneStep;
+
+        // detune max
+        sliderDetuneMax.min = detuneMaxMin;
+        sliderDetuneMax.max = detuneMaxMax;
+        sliderDetuneMax.step = detuneStep;
+
+        // randomizer
+        sliderRandomizer.min = randomizerMin;
+        sliderRandomizer.max = randomizerMax;
+        sliderRandomizer.step = randomizerStep;
+
+
 
         document.addEventListener("DOMContentLoaded", function() {
             console.log("APP-Version: '{{ app_version }}'");
@@ -173,29 +201,42 @@
 
                 const urlParams = new URLSearchParams(window.location.search);
                 if (urlParams.has('clear')) {
-                    clearDatabase();
+                    clearPreferences();
                 } 
                 
-                resetPlaybackRates(false);
-                resetDetunes(false);
-                resetVolume(false);
-                loadValuesFromLocalStorage();
+                loadPreferences();
             }
         });
 
-        function onButtonClearClick() {
-            clearDatabase();          
+        function randomize(){
+            if(randomizer.toFixed(2) != 0.00){
+                var playbackRateRandomized = Math.random() * (randomizer - 0.01) + 0.01;
+                console.warn("randomizer: playback-rate " + playbackRateRandomized + "%");
+
+                var detuneRandomized = Math.random() * (randomizer - 0.01) + 0.01;
+                console.warn("randomizer: detune " + detuneRandomized + "%");
+
+                playbackRateMin = (playbackRateDefault - (playbackRateDefault * playbackRateRandomized / 100.00)).toFixed(2);
+                playbackRateMax = (playbackRateDefault + (playbackRateDefault * playbackRateRandomized / 100.00)).toFixed(2);
+                detuneMin = (detuneMinMin * detuneRandomized / 100.00).toFixed(2);
+                detuneMax = (detuneMinMax * detuneRandomized / 100.00).toFixed(2);
+
+                updatePlaybackRateSliders(false);
+                updateDetuneSliders(false);
+            }      
         }
-        
-        function onButtonContainerModToggleClick(){
+
+        buttonContainerModToggle.addEventListener('click', function(){
             if(containerMod.style.display == 'block'){
                 containerMod.style.display = 'none';
             }else{
                 containerMod.style.display = 'block';
             }
-        }
-
-        function onButtonClick(){
+        });
+        buttonClear.addEventListener('click', function() {
+            clearPreferences();          
+        });
+        button.addEventListener('click', function(){
             audio.load();
             caller_name = undefined;
             state.style.display='block'; 
@@ -203,104 +244,150 @@
             button.remove();
 
             setupWebSocketConnection("{{ host }}", "{{ ws_port }}", onWsOpen, onWsClose, onWsData);
-        }
-
-        function onButtonChangeClick() {
+        });
+        buttonChange.addEventListener('click', function() {
             ws.send('ban:change');            
-        }
-
-        function onButtonBanClick() {
+        });
+        buttonBan.addEventListener('click', function() {
             ws.send('ban');            
-        }
-
-        function onButtonSayClick() {
+        });
+        buttonSay.addEventListener('click', function() {
             ws.send('call:hi');            
-        }
-
+        });
         
-
-        function resetPlaybackRates(save = true) {
+        sliderPlaybackRateMin.addEventListener('input', function() {
+            if(this.value <= playbackRateMax){
+                playbackRateMin = parseFloat(this.value);
+            } else {
+                playbackRateMax = parseFloat(this.value);
+            }
+            updatePlaybackRateSliders();
+        });
+        sliderPlaybackRateMax.addEventListener('input', function() {
+            if(this.value >= playbackRateMin){
+                playbackRateMax = parseFloat(this.value);
+            } else {
+                playbackRateMin = parseFloat(this.value);
+            }
+            updatePlaybackRateSliders();
+        });
+        buttonPlaybackRateReset.addEventListener('click', function() {
             playbackRateMin = playbackRateDefault;
             playbackRateMax = playbackRateDefault;
-            updatePlaybackRateSliders(save);
-        }
-
-        function resetDetunes(save = true) {
+            updatePlaybackRateSliders();
+        });
+        
+        sliderDetuneMin.addEventListener('input', function() {
+            if(this.value <= detuneMax){
+                detuneMin = parseInt(this.value);
+            } else {
+                detuneMax = parseFloat(this.value);
+            }
+            updateDetuneSliders();
+        });
+        sliderDetuneMax.addEventListener('input', function() {
+            if(this.value >= detuneMin){
+                detuneMax = parseFloat(this.value);
+            } else {
+                detuneMin = parseFloat(this.value);
+            }
+            updateDetuneSliders();
+        });
+        buttonDetuneReset.addEventListener('click', function() {
             detuneMin = detuneDefault;
             detuneMax = detuneDefault;
-            updateDetuneSliders(save);
-        }
+            updateDetuneSliders();
+        });
 
-        function resetVolume(save = true){
+        sliderVolume.addEventListener('input', function() {
+            volume = parseFloat(this.value);
+            updateVolumeSlider();
+        });
+        buttonVolumeReset.addEventListener('click', function(){
             volume = volumeDefault;
-            updateVolumeSlider(save);
-        }
-
+            updateVolumeSlider();
+        });
+        
+        sliderRandomizer.addEventListener('input', function() {
+            randomizer = parseFloat(this.value);
+            updateRandomizerSlider();
+        });
+        buttonRandomizerReset.addEventListener('click', function(){
+            randomizer = randomizerDefault;
+            updateRandomizerSlider();
+        });
+        
         function updatePlaybackRateSliders(save = true) {
             sliderPlaybackRateMin.value = playbackRateMin;
             sliderPlaybackRateMax.value = playbackRateMax;
             sliderPlaybackRateMinValue.innerHTML = playbackRateMin + " (MIN)";
             sliderPlaybackRateMaxValue.innerHTML = playbackRateMax + " (MAX)";
             if(save){
-                saveValuesToLocalStorage();
+                savePreferences();
             }
-        }
-        
+        } 
         function updateDetuneSliders(save = true) {
             sliderDetuneMin.value = detuneMin;
             sliderDetuneMax.value = detuneMax;
             sliderDetuneMinValue.innerHTML = detuneMin + " (MIN)";
             sliderDetuneMaxValue.innerHTML = detuneMax + " (MAX)";
             if(save){
-                saveValuesToLocalStorage();
+                savePreferences();
             }
         }
-
         function updateVolumeSlider(save = true) {
             sliderVolume.value = volume;
             sliderVolumeValue.innerHTML = volume;
             if(save){
-                saveValuesToLocalStorage();
+                savePreferences();
+            }
+        }
+        function updateRandomizerSlider(save = true) {
+            sliderRandomizer.value = randomizer;
+            sliderRandomizerValue.innerHTML = "MAX " + randomizer + "%";
+            randomize();
+            if(save){
+                savePreferences();
             }
         }
 
+        function loadPreferences() {        
+            let lsADC_playbackRateMin = localStorage.getItem('ADC_playbackRateMin');
+            let lsADC_playbackRateMax = localStorage.getItem('ADC_playbackRateMax');
+            let lsADC_detuneMin = localStorage.getItem('ADC_detuneMin');
+            let lsADC_detuneMax = localStorage.getItem('ADC_detuneMax');
+            let lsADC_volume = localStorage.getItem('ADC_volume');
+            let lsADC_randomizer = localStorage.getItem('ADC_randomizer');
 
-        function saveValuesToLocalStorage() {
+            playbackRateMin = (lsADC_playbackRateMin !== null) ? parseFloat(lsADC_playbackRateMin) : playbackRateDefault;
+            playbackRateMax = (lsADC_playbackRateMax !== null) ? parseFloat(lsADC_playbackRateMax) : playbackRateDefault;
+            detuneMin = (lsADC_detuneMin !== null) ? parseFloat(lsADC_detuneMin): detuneDefault;
+            detuneMax = (lsADC_detuneMax !== null) ? parseFloat(lsADC_detuneMax) : detuneDefault;
+            volume = (lsADC_volume !== null) ? parseFloat(lsADC_volume) : volumeDefault;
+            randomizer = (lsADC_randomizer !== null) ? parseFloat(lsADC_randomizer) : randomizerDefault;
+
+            updatePlaybackRateSliders(false);
+            updateDetuneSliders(false);
+            updateVolumeSlider(false);
+            updateRandomizerSlider(false);
+        }
+        function savePreferences() {
             localStorage.setItem('ADC_playbackRateMin', playbackRateMin);
             localStorage.setItem('ADC_playbackRateMax', playbackRateMax);
             localStorage.setItem('ADC_detuneMin', detuneMin);
             localStorage.setItem('ADC_detuneMax', detuneMax);
             localStorage.setItem('ADC_volume', volume);
+            localStorage.setItem('ADC_randomizer', randomizer);
         }
-
-        function loadValuesFromLocalStorage() {           
-            if (localStorage.getItem('ADC_playbackRateMin') !== null) {
-                playbackRateMin = parseFloat(localStorage.getItem('ADC_playbackRateMin'));
-            }
-            if (localStorage.getItem('ADC_playbackRateMax') !== null) {
-                playbackRateMax = parseFloat(localStorage.getItem('ADC_playbackRateMax'));
-            }
-            if (localStorage.getItem('ADC_detuneMin') !== null) {
-                detuneMin = parseInt(localStorage.getItem('ADC_detuneMin'));
-            }
-            if (localStorage.getItem('ADC_detuneMax') !== null) {
-                detuneMax = parseInt(localStorage.getItem('ADC_detuneMax'));
-            }
-            if (localStorage.getItem('ADC_volume') !== null) {
-                volume = parseFloat(localStorage.getItem('ADC_volume'));
-            }
-
-            updatePlaybackRateSliders(false);
-            updateDetuneSliders(false);
-            updateVolumeSlider(false);
-        }
-
-
-        function wait(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
-
-        function clearDatabase(){
+        function clearPreferences(){
+            localStorage.removeItem('ADC_playbackRateMin');
+            localStorage.removeItem('ADC_playbackRateMax');
+            localStorage.removeItem('ADC_detuneMin');
+            localStorage.removeItem('ADC_detuneMax');
+            localStorage.removeItem('ADC_volume');
+            localStorage.removeItem('ADC_randomizer');
+            loadPreferences();
+            
             if(!checkDBCompatibility){
                 return;
             }
@@ -321,6 +408,11 @@
                     });
         }
 
+
+        function wait(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        
         function checkDBCompatibility () {
             if (!('indexedDB' in window)) {
                 console.log("This browser doesn't support IndexedDB");
@@ -451,19 +543,19 @@
             });
         }
 
-        function generateRandomPlaybackRate(baseValue, offsetMin, offsetMax) {
+        function generateRandomOffset(baseValue, offsetMin, offsetMax) {
             const randomOffset = (Math.random() * 0.1) - 0.05;
             const clampedOffset = Math.max(Math.min(randomOffset, offsetMax), offsetMin);
             const finalValue = parseFloat(baseValue + clampedOffset);
             return finalValue;
         }
 
-        function generateRandomDetune(baseValue, offsetMin, offsetMax) {
-            const randomOffset = Math.floor(Math.random() * 201) - 100;
-            const clampedOffset = Math.max(Math.min(randomOffset, offsetMax - baseValue), offsetMin - baseValue);
-            const finalValue = baseValue + clampedOffset;
-            return finalValue;
-        }
+        // function generateRandomDetune(baseValue, offsetMin, offsetMax) {
+        //     const randomOffset = Math.floor(Math.random() * 201) - 100;
+        //     const clampedOffset = Math.max(Math.min(randomOffset, offsetMax - baseValue), offsetMin - baseValue);
+        //     const finalValue = baseValue + clampedOffset;
+        //     return finalValue;
+        // }
 
         function playAudio(audioBlob, audioEvent, fromCache) {
             return new Promise((resolve, reject) => {
@@ -484,7 +576,7 @@
                             // randomPlaybackRate = randomPlaybackRate.toFixed(2);
                             
                             // base variant:
-                            randomPlaybackRate = generateRandomPlaybackRate(audioEvent.modBasePlaybackRate, audioEvent.modOffsetPlaybackRateMin, audioEvent.modOffsetPlaybackRateMax);
+                            randomPlaybackRate = generateRandomOffset(audioEvent.modBasePlaybackRate, audioEvent.modOffsetPlaybackRateMin, audioEvent.modOffsetPlaybackRateMax);
                             source.playbackRate.value = randomPlaybackRate;
                             console.warn("mod playback-rate: " + randomPlaybackRate);
 
@@ -495,7 +587,7 @@
                             // var randomDetune = Math.floor(Math.random() * (detuneMax - detuneMin + 1)) + detuneMin;
 
                             // base-variant:
-                            randomDetune = generateRandomDetune(audioEvent.modBaseDetune, audioEvent.modOffsetDetuneMin, audioEvent.modOffsetDetuneMax);
+                            randomDetune = generateRandomOffset(audioEvent.modBaseDetune, audioEvent.modOffsetDetuneMin, audioEvent.modOffsetDetuneMax);
                             source.detune.value = randomDetune;
                             console.warn("mod detune: " + randomDetune);
                         }
@@ -563,20 +655,25 @@
         function setLoading(state){
             loading = state
             if(!loading){
+                loader.style.display = 'none';
                 lastCall.style.display = 'block';
                 lastCall.innerText = 'Waiting for throws ..';
-                if(banable){
+                if(!specific && banable){
                     buttonBan.style.display = 'block';
                 }
                 if(!specific){
                     buttonChange.style.display = 'block';
                 }
+                buttonSay.style.display = 'inline';
+                buttonContainerModToggle.style.display = 'inline';
             }
             else{
+                loader.style.display = 'block';
                 buttonBan.style.display = 'none';
                 buttonChange.style.display = 'none';
+                buttonSay.style.display = 'none';
+                buttonContainerModToggle.style.display = 'none';
             }
-            // callerName.innerText = caller_name;
         }
 
 
@@ -602,11 +699,11 @@
             if(data.event === 'mirror'){
                 previousWait = true;
 
-                var modBasePlaybackRate = playbackRateMin + Math.random() * (playbackRateMax - playbackRateMin);
-                modBasePlaybackRate = modBasePlaybackRate.toFixed(2);
+                let modBasePlaybackRate = parseFloat(playbackRateMin + Math.random() * (playbackRateMax - playbackRateMin)).toFixed(2);
+                // modBasePlaybackRate = modBasePlaybackRate.toFixed(2);
                 console.warn("mod base-playback-rate: " + modBasePlaybackRate);
 
-                var modBaseDetune = Math.floor(Math.random() * (detuneMax - detuneMin + 1)) + detuneMin;
+                let modBaseDetune = Math.floor(Math.random() * (detuneMax - detuneMin + 1.0)) + detuneMin;
                 console.warn("mod base-detune: " + modBaseDetune);
 
                 for(let file of data.files) {
@@ -634,9 +731,10 @@
                 specific = data.specific;
                 banable = data.banable;
 
+                randomize();
+
                 // callerName.innerText = data.caller;
                 callerName.style.display = 'block';
-                buttonSay.style.display = 'inline';
 
                 const exists_db_entries = await db.sounds.where('caller').equals(data.caller).primaryKeys();
                 const exists = exists_db_entries.map(entry => entry[1]);
