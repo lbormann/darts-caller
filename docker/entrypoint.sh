@@ -11,9 +11,11 @@ if [ -n "$AUTODARTS_BOARD_ID" ]; then
 fi
 if [ -n "$MEDIA_PATH" ]; then
   args="$args -M $MEDIA_PATH"
+  mkdir -p $MEDIA_PATH
 fi
 if [ -n "$MEDIA_PATH_SHARED" ]; then
   args="$args -MS $MEDIA_PATH_SHARED"
+  mkdir -p $MEDIA_PATH_SHARED
 fi
 if [ -n "$CALLER_VOLUME" ]; then
   args="$args -V $CALLER_VOLUME"

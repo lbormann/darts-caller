@@ -62,7 +62,10 @@ COPY --from=build /autodarts-caller* ./autodarts-caller
 COPY ./entrypoint.sh ./entrypoint.sh
 RUN chmod +x autodarts-caller && \
     chmod +x entrypoint.sh && \
-    apk add glib
+    apt update && \
+    apt install -y libglib2.0-0 alsa-utils && \
+    rm -rf /var/lib/apt/lists/*
+
 EXPOSE 5000 8079
 
 CMD ./entrypoint.sh
