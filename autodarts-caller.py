@@ -49,7 +49,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.8.4'
+VERSION = '2.8.5'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -2267,7 +2267,7 @@ def on_open_client(client, server):
     global webCallerSyncs
     ppi('NEW CLIENT CONNECTED: ' + str(client))
     cid = str(client['id'])
-    if cid not in webCallerSyncs or webCallerSyncs[cid] == None:
+    if cid not in webCallerSyncs or webCallerSyncs[cid] is None:
         webCallerSyncs[cid] = queue.Queue()
 
 def on_message_client(client, server, message):
@@ -2444,7 +2444,7 @@ def on_message_client(client, server, message):
                         # new = [{"name": os.path.basename(sound_file), "path": quote(sound_file, safe=""), "file": (base64.b64encode(open(sound_file, 'rb').read())).decode('ascii')} for key, value in caller.items() for sound_file in value if os.path.basename(sound_file) not in webCallerSyncs[cid]]  
                         messageJson['exists'] = new
                         unicast(client, messageJson, dump=True)
-                        webCallerSyncs[cid] = None
+                        webCallerSyncs[cid] = queue.Queue()
                     else:
                         # ppi("client already cached: " + str(len(messageJson['exists'])))
                         new = [{"name": os.path.basename(sound_file), "path": quote(sound_file, safe=""), "file": (base64.b64encode(open(sound_file, 'rb').read())).decode('ascii')} for key, value in caller.items() for sound_file in value if os.path.basename(sound_file) not in messageJson['exists']]
@@ -2458,6 +2458,8 @@ def on_message_client(client, server, message):
 
 def on_left_client(client, server):
     ppi('CLIENT DISCONNECTED: ' + str(client))
+    cid = str(client['id'])
+    webCallerSyncs[cid] = None
 
 def broadcast(data):
     def process(*args):

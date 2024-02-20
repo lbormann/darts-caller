@@ -1,6 +1,6 @@
-- remove scoreboard
 - add bull-calling
 - add lobby-event broadcasts (mainly for wled purpose)
+- remove scoreboard
 - add open-lobby command
 - add setshot for main-calling
 - stop grabbing every audio file if -M is /home
