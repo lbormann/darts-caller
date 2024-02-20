@@ -21,6 +21,7 @@ import math
 import ssl
 import certifi
 import psutil
+import queue
 from mask import mask
 import re
 from urllib.parse import quote, unquote
@@ -48,7 +49,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.8.3'
+VERSION = '2.8.4'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -148,6 +149,8 @@ CALLER_PROFILES = {
     'en-US-Danielle-Female': ('https://add.arnes-design.de/ADC/en-US-Danielle-Female.zip', 1),
     'en-US-Kimberly-Female': ('https://add.arnes-design.de/ADC/en-US-Kimberly-Female.zip', 1),
     'en-US-Ruth-Female': ('https://add.arnes-design.de/ADC/en-US-Ruth-Female.zip', 1),
+    'en-US-Salli-Female': ('https://add.arnes-design.de/ADC/en-US-Salli-Female.zip', 1),
+    'en-US-Kevin-Male': ('https://add.arnes-design.de/ADC/en-US-Kevin-Male.zip', 1),
     
     # 'TODONAME': ('TODOLINK', TODOVERSION),  
     # 'TODONAME': ('TODOLINK', TODOVERSION), 
@@ -232,12 +235,23 @@ def ppe(message, error_object):
     if DEBUG:
         logger.exception("\r\n" + str(error_object))
 
-def check_paths(main_directory, audio_media_path, audio_media_path_shared, blacklist_path):
-    errors = None
+def get_executable_directory():
+    if getattr(sys, 'frozen', False):
+        return os.path.dirname(sys.executable)
+    elif __file__:
+        return os.path.dirname(os.path.realpath(__file__))
+    else:
+        raise RuntimeError("Unable to determine executable directory.")
 
+def same_drive(path1, path2):
+    drive1 = os.path.splitdrive(path1)[0]
+    drive2 = os.path.splitdrive(path2)[0]
+    return drive1 == drive2
+
+def check_paths(main_directory, audio_media_path, audio_media_path_shared, blacklist_path):
     try:
-        main_directory = os.path.normpath(os.path.dirname(os.path.realpath(main_directory)))
-        os.chdir(main_directory)  # Set the working directory to main_directory
+        main_directory = get_executable_directory()
+        errors = None
 
         audio_media_path = os.path.normpath(audio_media_path)
         
@@ -246,27 +260,27 @@ def check_paths(main_directory, audio_media_path, audio_media_path_shared, black
         if blacklist_path != DEFAULT_EMPTY_PATH:
             blacklist_path = os.path.normpath(blacklist_path)
 
-        if os.path.relpath(audio_media_path, main_directory)[:2] != '..':
-            errors = 'AUDIO_MEDIA_PATH resides inside MAIN-DIRECTORY! It is not allowed!'
+        if same_drive(audio_media_path, main_directory) == True and os.path.commonpath([audio_media_path, main_directory]) == main_directory:
+            errors = 'AUDIO_MEDIA_PATH (-M) is a subdirectory of MAIN_DIRECTORY.'
 
         if audio_media_path_shared != '':
-            if os.path.relpath(audio_media_path_shared, main_directory)[:2] != '..':
-                errors = 'AUDIO_MEDIA_PATH_SHARED resides inside MAIN-DIRECTORY! It is not allowed!'
-            elif os.path.relpath(audio_media_path_shared, audio_media_path)[:2] != '..':
-                errors = 'AUDIO_MEDIA_PATH_SHARED resides inside AUDIO_MEDIA_PATH! It is not allowed!'
-            elif os.path.relpath(audio_media_path, audio_media_path_shared)[:2] != '..':
-                errors = 'AUDIO_MEDIA_PATH resides inside AUDIO_MEDIA_SHARED! It is not allowed!'
-            elif audio_media_path == audio_media_path_shared:
-                errors = 'AUDIO_MEDIA_PATH is equal to AUDIO_MEDIA_SHARED! It is not allowed!'
+            if same_drive(audio_media_path_shared, main_directory) == True and os.path.commonpath([audio_media_path_shared, main_directory]) == main_directory:
+                errors = 'AUDIO_MEDIA_PATH_SHARED (-MS) is a subdirectory of MAIN_DIRECTORY. This is NOT allowed.'
+            elif same_drive(audio_media_path_shared, audio_media_path) == True and os.path.commonpath([audio_media_path_shared, audio_media_path]) == audio_media_path:
+                errors = 'AUDIO_MEDIA_PATH_SHARED (-MS) is a subdirectory of AUDIO_MEDIA_PATH. This is NOT allowed.'
+            elif same_drive(audio_media_path, audio_media_path_shared) == True and os.path.commonpath([audio_media_path, audio_media_path_shared]) == audio_media_path_shared:
+                errors = 'AUDIO_MEDIA_PATH (-M) is a subdirectory of AUDIO_MEDIA_SHARED (-MS). This is NOT allowed.'
+            elif same_drive(audio_media_path, audio_media_path_shared) == True and audio_media_path == audio_media_path_shared:
+                errors = 'AUDIO_MEDIA_PATH (-M) is equal to AUDIO_MEDIA_SHARED (-MS). This is NOT allowed.'
 
         if blacklist_path != '':
-            if os.path.relpath(blacklist_path, main_directory)[:2] != '..':
-                errors = 'BLACKLIST_FILE_PATH resides inside MAIN-DIRECTORY! It is not allowed!'
+            if same_drive(blacklist_path, main_directory) == True and os.path.commonpath([blacklist_path, main_directory]) == main_directory:
+                errors = 'BLACKLIST_FILE_PATH (-BLP) is a subdirectory of MAIN_DIRECTORY. This is NOT allowed.'
 
     except Exception as e:
         errors = f'Path validation failed: {e}'
 
-    if errors != None:
+    if errors is not None:
         ppi("main_directory: " + main_directory)
         ppi("audio_media_path: " + str(audio_media_path))
         ppi("audio_media_path_shared: " + str(audio_media_path_shared))
@@ -277,7 +291,6 @@ def check_paths(main_directory, audio_media_path, audio_media_path_shared, black
 def check_already_running():
     max_count = 3 # app (binary) uses 2 processes => max is (2 + 1) as this one here counts also.
     count = 0
-    # me, extension = os.path.splitext(os.path.basename(__file__))
     me, extension = os.path.splitext(os.path.basename(sys.argv[0]))
     ppi("Process is " + me)
     for proc in psutil.process_iter(['pid', 'name']):
@@ -959,7 +972,7 @@ def receive_local_board_address():
         boardManagerAddress = None
         ppe('Fetching local-board-address failed', e)
 
-
+# deprecated
 def poll_lobbies(ws):
     def process(*args):
         global currentMatch
@@ -2013,6 +2026,7 @@ def on_open_autodarts(ws):
     except Exception as e:
         ppe('WS-Open-boards failed: ', e)
 
+
     try:
         paramsSubscribeUserEvents = {
             "channel": "autodarts.users",
@@ -2148,6 +2162,36 @@ def on_message_autodarts(ws, message):
 
 
                 elif 'players' in data:
+                    # did I left the lobby?
+                    me = False
+                    for p in data['players']:
+                        if 'boardId' in p and p['boardId'] == AUTODART_USER_BOARD_ID:
+                            me = True
+                            break
+                    if me == False:
+                        
+                        lobby_id = data['id']
+                        ppi("HAHAHAHAHHAHAHAHHA " + str(lobby_id))
+
+                        ppi('Stop Listen to lobby: ' + lobby_id)
+                        paramsUnsubscribeLobbyEvents = {
+                                "channel": "autodarts.lobbies",
+                                "type": "unsubscribe",
+                                "topic": lobby_id + ".state"
+                            }
+                        ws.send(json.dumps(paramsUnsubscribeLobbyEvents))
+                        paramsUnsubscribeLobbyEvents = {
+                                "channel": "autodarts.lobbies",
+                                "type": "unsubscribe",
+                                "topic": lobby_id + ".events"
+                            }
+                        ws.send(json.dumps(paramsUnsubscribeLobbyEvents))
+                        if play_sound_effect("lobby_ambient_out", False, mod = False):
+                            mirror_sounds()
+                        lobbyPlayers = []
+                        return
+                        
+
                     # check for left players
                     lobbyPlayersLeft = []
                     for lp in lobbyPlayers:
@@ -2220,7 +2264,11 @@ def on_error_autodarts(ws, error):
 
 
 def on_open_client(client, server):
+    global webCallerSyncs
     ppi('NEW CLIENT CONNECTED: ' + str(client))
+    cid = str(client['id'])
+    if cid not in webCallerSyncs or webCallerSyncs[cid] == None:
+        webCallerSyncs[cid] = queue.Queue()
 
 def on_message_client(client, server, message):
     def process(*args):
@@ -2349,32 +2397,59 @@ def on_message_client(client, server, message):
                 messageJson = json.loads(message)
 
                 # client requests for sync
-                if 'event' in messageJson and messageJson['event'] == 'sync' and caller is not None:
-                    # new = []
-                    # count_exists = 0
-                    # count_new = 0
-                    # caller_copied = caller.copy()
-                    # for key, value in caller_copied.items():
-                    #     for sound_file in value:
-                    #         base_name = os.path.basename(sound_file)
-                    #         if base_name not in messageJson['exists']:
-                    #             count_new+=1
-                    #             # ppi("exists: " + base_name)
+                if 'event' in messageJson and messageJson['event'] == 'sync' and caller is not None:                    
+                    if 'parted' in messageJson:
+                        cid = str(client['id'])
 
-                    #             with open(sound_file, 'rb') as file:
-                    #                 encoded_file = (base64.b64encode(file.read())).decode('ascii')
-                    #             # print(encoded_file)
-                                    
-                    #             new.append({"name": base_name, "path": quote(sound_file, safe=""), "file": encoded_file})
-                    #         else:
-                    #             count_exists+=1
-                    #             # ppi("new: " + base_name)   
-                                 
-                    # ppi(f"Sync {count_new} new files")
+                        # ppi("client-id: " + cid)
+                        # ppi("client parted " + str(messageJson['parted']) + " - " + str(messageJson['exists']))   
+                        # ppi("client already cached: " + str(len(webCallerSyncs[cid])))             
+                    
+                        webCallerSyncs[cid].put(messageJson['exists'])
 
-                    new = [{"name": os.path.basename(sound_file), "path": quote(sound_file, safe=""), "file": (base64.b64encode(open(sound_file, 'rb').read())).decode('ascii')} for key, value in caller.items() for sound_file in value if os.path.basename(sound_file) not in messageJson['exists']]
-                    messageJson['exists'] = new
-                    unicast(client, messageJson, dump=True)
+                        partsNeeded = messageJson['parted']
+                        # ppi("Sync chunks. parts needed: " + str(partsNeeded))
+                        
+                        existing = []
+                        if webCallerSyncs[cid].qsize() == partsNeeded:
+                            while partsNeeded > 0:
+                                partsNeeded -= 1
+                                existing += webCallerSyncs[cid].get()
+                            webCallerSyncs[cid].task_done()
+                        else:
+                            return
+                        
+                        new = []
+                        count_exists = 0
+                        count_new = 0
+                        caller_copied = caller.copy()
+                        for key, value in caller_copied.items():
+                            for sound_file in value:
+                                base_name = os.path.basename(sound_file)
+                                if base_name not in existing:
+                                    count_new += 1
+                                    # ppi("new: " + base_name)
+
+                                    with open(sound_file, 'rb') as file:
+                                        encoded_file = (base64.b64encode(file.read())).decode('ascii')
+                                    # print(encoded_file)
+                                        
+                                    new.append({"name": base_name, "path": quote(sound_file, safe=""), "file": encoded_file})
+                                else:
+                                    count_exists+=1
+                                    # ppi("exists: " + base_name)   
+                                        
+                        ppi(f"Sync chunks. {count_new} new files")
+
+                        # new = [{"name": os.path.basename(sound_file), "path": quote(sound_file, safe=""), "file": (base64.b64encode(open(sound_file, 'rb').read())).decode('ascii')} for key, value in caller.items() for sound_file in value if os.path.basename(sound_file) not in webCallerSyncs[cid]]  
+                        messageJson['exists'] = new
+                        unicast(client, messageJson, dump=True)
+                        webCallerSyncs[cid] = None
+                    else:
+                        # ppi("client already cached: " + str(len(messageJson['exists'])))
+                        new = [{"name": os.path.basename(sound_file), "path": quote(sound_file, safe=""), "file": (base64.b64encode(open(sound_file, 'rb').read())).decode('ascii')} for key, value in caller.items() for sound_file in value if os.path.basename(sound_file) not in messageJson['exists']]
+                        messageJson['exists'] = new
+                        unicast(client, messageJson, dump=True)
 
         except Exception as e:
             ppe('WS-Client-Message failed.', e)
@@ -2647,6 +2722,9 @@ if __name__ == "__main__":
 
     global checkoutsCounter
     checkoutsCounter = {}
+
+    global webCallerSyncs
+    webCallerSyncs = {}
 
     global lobbyPlayers
     lobbyPlayers = []

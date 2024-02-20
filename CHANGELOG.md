@@ -1,3 +1,12 @@
+## 2.8.4
+
+- rework path-validation
+- add voice-pack 'en-US-Kevin-Male'
+- add voice-pack 'en-US-Salli-Female'
+- fix reconnect-loop for chrome android
+- fix left lobby-sounds
+
+
 ## 2.8.3
 
 - add "say-something" to web-caller
