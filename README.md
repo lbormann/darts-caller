@@ -64,7 +64,8 @@ services:
     ports:
     - 5000:5000 #Web Caller Port
     - 8079:8079 #Host Port
-    privileged: true
+    devices:
+    - /dev/snd:/dev/snd
     environment:
       #required settings
       AUTODARTS_EMAIL:    '' #Your autodarts mail adress
@@ -108,7 +109,8 @@ services:
     ports:
     - 5000:5000 #Web Caller Port
     - 8079:8079 #Host Port
-    privileged: true
+    devices:
+    - /dev/snd:/dev/snd
     env_files:
     - .env
 
