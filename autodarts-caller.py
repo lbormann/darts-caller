@@ -2804,7 +2804,7 @@ if __name__ == "__main__":
         kc.start()
 
         if WEB > 0 or WEB_SCOREBOARD:
-            WEB_HOST = get_local_ip_address()
+            # WEB_HOST = get_local_ip_address()
             flask_app_thread = threading.Thread(target=start_flask_app, args=(DEFAULT_HOST_IP, WEB_PORT))
             flask_app_thread.start()
 
