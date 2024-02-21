@@ -504,27 +504,6 @@ AUTODARTS_BOARD_ID=123-456-789
 
 ```
 
-docker-compose.yml:
-```yml
-version: '3.3'
-
-services:
-  autodarts:
-    image: lbormann/autodarts-caller
-    container_name: autodarts-caller
-    restart: unless-stopped
-    ports:
-    - 5000:5000 #Web Caller Port
-    - 8079:8079 #Host Port
-    privileged: true
-    env_files:
-    - .env
-
-    volumes:
-    - ./autodarts-caller/media:/usr/share/autodarts-caller/media
-```
-
-
 
 ## FAQ
 
