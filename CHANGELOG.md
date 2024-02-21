@@ -1,3 +1,8 @@
+## 2.8.6
+
+- fix web-host
+
+
 ## 2.8.5
 
 - fix web-caller queue
