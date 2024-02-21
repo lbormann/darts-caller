@@ -49,7 +49,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.8.5'
+VERSION = '2.8.6'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -303,15 +303,15 @@ def check_already_running():
                 sys.exit()  
     # ppi("Start info: " + str(count))
 
-def get_local_ip_address(target='8.8.8.8'):
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect((target, 80))
-        ip_address = s.getsockname()[0]
-        s.close()
-    except:
-        ip_address = DEFAULT_HOST_IP
-    return ip_address
+# def get_local_ip_address(target='8.8.8.8'):
+#     try:
+#         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+#         s.connect((target, 80))
+#         ip_address = s.getsockname()[0]
+#         s.close()
+#     except:
+#         ip_address = DEFAULT_HOST_IP
+#     return ip_address
 
 
 def versionize_speaker(speaker_name, speaker_version):
@@ -2543,7 +2543,7 @@ def mute_background(mute_vol):
 
 @app.route('/')
 def index():
-    return render_template('index.html', host=WEB_HOST, app_version=VERSION, db_name=WEB_DB_NAME, ws_port=HOST_PORT, state=WEB)
+    return render_template('index.html', host=DEFAULT_HOST_IP, app_version=VERSION, db_name=WEB_DB_NAME, ws_port=HOST_PORT, state=WEB)
 
 @app.route('/sounds/<path:file_id>', methods=['GET'])
 def sound(file_id):
@@ -2558,7 +2558,7 @@ def sound(file_id):
 
 @app.route('/scoreboard')
 def scoreboard():
-    return render_template('scoreboard.html', host=WEB_HOST, ws_port=HOST_PORT, state=WEB_SCOREBOARD)
+    return render_template('scoreboard.html', host=DEFAULT_HOST_IP, ws_port=HOST_PORT, state=WEB_SCOREBOARD)
 
 
 
