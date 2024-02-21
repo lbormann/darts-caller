@@ -181,7 +181,7 @@
                 showFullscreenOverlay("To use web-scoreboard set -WEBSB (--web_caller_scoreboard) to 1");
                 return;
             }
-            setupWebSocketConnection("{{ host }}", "{{ ws_port }}", onWsOpen, onWsClose, onWsData);   
+            setupWebSocketConnection(window.location.hostname, "{{ ws_port }}", onWsOpen, onWsClose, onWsData);   
         });
     </script>
 

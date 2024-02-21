@@ -242,8 +242,7 @@
             state.style.display='block'; 
             lastCall.style.display='block';
             button.remove();
-
-            setupWebSocketConnection("{{ host }}", "{{ ws_port }}", onWsOpen, onWsClose, onWsData);
+            setupWebSocketConnection(window.location.hostname, "{{ ws_port }}", onWsOpen, onWsClose, onWsData);
         });
         buttonChange.addEventListener('click', function() {
             ws.send('ban:change');            
