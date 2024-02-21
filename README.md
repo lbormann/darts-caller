@@ -51,70 +51,7 @@ Optional for Linux: If you encounter problems with playing sound:
 
     sudo apt-get install python3-sdl2
 
-### Docker:
-To install the caller inside a docker container, use a compose file that looks like this:
-```yml
-version: '3.3'
 
-services:
-  autodarts-caller:
-    image: lbormann/autodarts-caller
-    container_name: autodarts-caller
-    restart: unless-stopped
-    ports:
-    - 5000:5000 #Web Caller Port
-    - 8079:8079 #Host Port
-    privileged: true
-    environment:
-      #required settings
-      AUTODARTS_EMAIL:    '' #Your autodarts mail adress
-      AUTODARTS_PASSWORD: '' #Your autodarts password
-      AUTODARTS_BOARD_ID: '' #Your autodarts board id
-      
-    volumes:
-    - ./autodarts-caller/media:/usr/share/autodarts-caller/media
-    - ./autodarts-caller/media-shared:/usr/share/autodarts-caller/media-shared
-    - ./autodarts-caller:/usr/share/autodarts-caller
-```
-If you want additional parameters, add them as environment variables:
-
-```yml
-environment:
-  AUTODARTS_EMAIL:    '' #Your autodarts mail adress
-  AUTODARTS_PASSWORD: '' #Your autodarts password
-  AUTODARTS_BOARD_ID: '' #Your autodarts board id
-  CALLER_VOLUME: 0.5
-```
-
-If you wish to no paste your password, consider storing it in a separate .env file. Make sure to secure your env-file (`chmod 600 .env` should be enough)
-
-.env:
-```
-AUTODARTS_EMAIL=my@email.com
-AUTODARTS_PASSWORD=VERYSTRONG
-AUTODARTS_BOARD_ID=123-456-789
-
-```
-
-docker-compose.yml:
-```yml
-version: '3.3'
-
-services:
-  autodarts:
-    image: lbormann/autodarts-caller
-    container_name: autodarts-caller
-    restart: unless-stopped
-    ports:
-    - 5000:5000 #Web Caller Port
-    - 8079:8079 #Host Port
-    privileged: true
-    env_files:
-    - .env
-
-    volumes:
-    - ./autodarts-caller/media:/usr/share/autodarts-caller/media
-```
 
 ## SETUP
 
@@ -472,6 +409,8 @@ Check log:
 
 
 
+
+
 #### Using a desktop-start-task (linux with gui only)
 
 if you are facing problems with the crontab-solution try this:
@@ -517,6 +456,73 @@ Reboot your system:
 Check log:
 
     tail /home/USER/autodarts-caller.log
+
+
+
+## Docker:
+To install the caller inside a docker container, use a compose file that looks like this:
+```yml
+version: '3.3'
+
+services:
+  autodarts-caller:
+    image: lbormann/autodarts-caller
+    container_name: autodarts-caller
+    restart: unless-stopped
+    ports:
+    - 5000:5000 #Web Caller Port
+    - 8079:8079 #Host Port
+    privileged: true
+    environment:
+      #required settings
+      AUTODARTS_EMAIL:    '' #Your autodarts mail adress
+      AUTODARTS_PASSWORD: '' #Your autodarts password
+      AUTODARTS_BOARD_ID: '' #Your autodarts board id
+      
+    volumes:
+    - ./autodarts-caller/media:/usr/share/autodarts-caller/media
+    - ./autodarts-caller/media-shared:/usr/share/autodarts-caller/media-shared
+    - ./autodarts-caller:/usr/share/autodarts-caller
+```
+If you want additional parameters, add them as environment variables:
+
+```yml
+environment:
+  AUTODARTS_EMAIL:    '' #Your autodarts mail adress
+  AUTODARTS_PASSWORD: '' #Your autodarts password
+  AUTODARTS_BOARD_ID: '' #Your autodarts board id
+  CALLER_VOLUME: 0.5
+```
+
+If you wish to no paste your password, consider storing it in a separate .env file. Make sure to secure your env-file (`chmod 600 .env` should be enough)
+
+.env:
+```
+AUTODARTS_EMAIL=my@email.com
+AUTODARTS_PASSWORD=VERYSTRONG
+AUTODARTS_BOARD_ID=123-456-789
+
+```
+
+docker-compose.yml:
+```yml
+version: '3.3'
+
+services:
+  autodarts:
+    image: lbormann/autodarts-caller
+    container_name: autodarts-caller
+    restart: unless-stopped
+    ports:
+    - 5000:5000 #Web Caller Port
+    - 8079:8079 #Host Port
+    privileged: true
+    env_files:
+    - .env
+
+    volumes:
+    - ./autodarts-caller/media:/usr/share/autodarts-caller/media
+```
 
 
 
