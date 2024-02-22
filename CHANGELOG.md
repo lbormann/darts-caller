@@ -1,3 +1,9 @@
+## 2.8.7
+
+- fix blacklist-file-creation
+- update voice-pack 'en-US-Kendra-Female'
+
+
 ## 2.8.6
 
 - fix web-host
