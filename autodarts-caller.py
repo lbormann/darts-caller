@@ -49,7 +49,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.8.6'
+VERSION = '2.8.7'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -141,7 +141,7 @@ CALLER_PROFILES = {
     'en-US-Ivy-Female': ('https://add.arnes-design.de/ADC/en-US-Ivy-Female-v4.zip', 4),
     'de-DE-Vicki-Female': ('https://add.arnes-design.de/ADC/de-DE-Vicki-Female-v3.zip', 3),  
     'de-DE-Daniel-Male': ('https://add.arnes-design.de/ADC/de-DE-Daniel-Male-v3.zip', 3),
-    'en-US-Kendra-Female': ('https://add.arnes-design.de/ADC/en-US-Kendra-Female-v4.zip', 4),
+    'en-US-Kendra-Female': ('https://add.arnes-design.de/ADC/en-US-Kendra-Female-v5.zip', 5),
     'en-US-Joey-Male': ('https://add.arnes-design.de/ADC/en-US-Joey-Male-v4.zip', 4),
     'en-US-Joanna-Female': ('https://add.arnes-design.de/ADC/en-US-Joanna-Female-v4.zip', 4),
     'en-US-Gregory-Male': ('https://add.arnes-design.de/ADC/en-US-Gregory-Male.zip', 1),
@@ -518,7 +518,7 @@ def ban_caller(only_change):
     
 
 
-def load_callers_banned(preview = False):
+def load_callers_banned(preview=False):
     global caller_profiles_banned
     caller_profiles_banned = []
     
@@ -526,18 +526,27 @@ def load_callers_banned(preview = False):
         return
     
     path_to_callers_banned_file = os.path.join(BLACKLIST_PATH, DEFAULT_CALLERS_BANNED_FILE)
+    
     if os.path.exists(path_to_callers_banned_file):
-        with open(path_to_callers_banned_file, 'r') as bcf:
-            caller_profiles_banned = list(set(line.strip() for line in bcf))
-            if preview:
-                banned_info = f"Banned voice-packs: {len(caller_profiles_banned)} [ - "
-                for cpb in caller_profiles_banned:
-                    banned_info += cpb + " - "
-                banned_info += "]"
-                ppi(banned_info)
+        try:
+            with open(path_to_callers_banned_file, 'r') as bcf:
+                caller_profiles_banned = list(set(line.strip() for line in bcf))
+                if preview:
+                    banned_info = f"Banned voice-packs: {len(caller_profiles_banned)} [ - "
+                    for cpb in caller_profiles_banned:
+                        banned_info += cpb + " - "
+                    banned_info += "]"
+                    ppi(banned_info)
+        except FileExistsError:
+            pass
     else:
-        with open(path_to_callers_banned_file, 'x'):
-            ppi(f"'{path_to_callers_banned_file}' created successfully.")
+        # directory = os.path.dirname(path_to_callers_banned_file)
+        # os.makedirs(directory, exist_ok=True)
+        try:
+            with open(path_to_callers_banned_file, 'x'):
+                ppi(f"'{path_to_callers_banned_file}' created successfully.")
+        except Exception as e:
+            ppe(f"Failed to create '{path_to_callers_banned_file}'", e)
 
 def load_callers():
     # load shared-sounds
