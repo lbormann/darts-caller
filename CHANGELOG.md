@@ -1,3 +1,11 @@
+## 2.8.8
+
+- add lobby-event broadcasts
+- improve custom-event`s data structure
+- update voice-pack 'de-DE-Vicki-Female'
+- update voice-pack 'en-US-Gregory-Male'
+
+
 ## 2.8.7
 
 - fix blacklist-file-creation

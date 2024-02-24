@@ -1,5 +1,5 @@
 - add bull-calling
-- add lobby-event broadcasts (mainly for wled purpose)
+- rework custom-event`s data-types without stringfication
 - remove scoreboard
 - add open-lobby command
 - add setshot for main-calling
