@@ -49,7 +49,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.8.7'
+VERSION = '2.8.8'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -139,12 +139,12 @@ CALLER_PROFILES = {
     # amazon
     'en-US-Stephen-Male': ('https://add.arnes-design.de/ADC/en-US-Stephen-Male-v4.zip', 4),  
     'en-US-Ivy-Female': ('https://add.arnes-design.de/ADC/en-US-Ivy-Female-v4.zip', 4),
-    'de-DE-Vicki-Female': ('https://add.arnes-design.de/ADC/de-DE-Vicki-Female-v3.zip', 3),  
+    'de-DE-Vicki-Female': ('https://add.arnes-design.de/ADC/de-DE-Vicki-Female-v4.zip', 4),  
     'de-DE-Daniel-Male': ('https://add.arnes-design.de/ADC/de-DE-Daniel-Male-v3.zip', 3),
     'en-US-Kendra-Female': ('https://add.arnes-design.de/ADC/en-US-Kendra-Female-v5.zip', 5),
     'en-US-Joey-Male': ('https://add.arnes-design.de/ADC/en-US-Joey-Male-v4.zip', 4),
     'en-US-Joanna-Female': ('https://add.arnes-design.de/ADC/en-US-Joanna-Female-v4.zip', 4),
-    'en-US-Gregory-Male': ('https://add.arnes-design.de/ADC/en-US-Gregory-Male.zip', 1),
+    'en-US-Gregory-Male': ('https://add.arnes-design.de/ADC/en-US-Gregory-Male-v2.zip', 2),
     'en-US-Matthew-Male': ('https://add.arnes-design.de/ADC/en-US-Matthew-Male.zip', 1),
     'en-US-Danielle-Female': ('https://add.arnes-design.de/ADC/en-US-Danielle-Female.zip', 1),
     'en-US-Kimberly-Female': ('https://add.arnes-design.de/ADC/en-US-Kimberly-Female.zip', 1),
@@ -1174,6 +1174,7 @@ def process_match_x01(m):
     currentPlayerIndex = m['player']
     currentPlayer = m['players'][currentPlayerIndex]
     currentPlayerName = str(currentPlayer['name']).lower()
+    currentPlayerIsBot = (m['players'][currentPlayerIndex]['cpuPPR'] is not None)
     remainingPlayerScore = m['gameScores'][currentPlayerIndex]
     numberOfPlayers = len(m['players'])
 
@@ -1473,6 +1474,7 @@ def process_match_x01(m):
         busted = { 
                     "event": "busted",
                     "player": currentPlayerName,
+                    "playerIsBot": str(currentPlayerIsBot),
                     "game": {
                         "mode": variant
                     }       
@@ -1501,6 +1503,7 @@ def process_match_x01(m):
         dartsThrown = {
             "event": "darts-thrown",
             "player": currentPlayerName,
+            "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
                 "pointsLeft": str(remainingPlayerScore),
@@ -1607,6 +1610,7 @@ def process_match_cricket(m):
     currentPlayerIndex = m['player']
     currentPlayer = m['players'][currentPlayerIndex]
     currentPlayerName = str(currentPlayer['name']).lower()
+    currentPlayerIsBot = (m['players'][currentPlayerIndex]['cpuPPR'] is not None)
     turns = m['turns'][0]
     variant = m['variant']
 
@@ -1777,6 +1781,7 @@ def process_match_cricket(m):
         busted = { 
                     "event": "busted",
                     "player": currentPlayerName,
+                    "playerIsBot": str(currentPlayerIsBot),
                     "game": {
                         "mode": variant
                     }       
@@ -1812,6 +1817,7 @@ def process_match_cricket(m):
         dartsThrown = {
             "event": "darts-thrown",
             "player": currentPlayerName,
+            "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
                 "dartNumber": "3",
@@ -1966,7 +1972,7 @@ def process_match_atc(m):
     mirror_sounds()
 
 def process_common(m):
-    broadcast(m)
+    broadcast(m, False)
 
 
 def connect_autodarts():
@@ -2178,9 +2184,7 @@ def on_message_autodarts(ws, message):
                             me = True
                             break
                     if me == False:
-                        
                         lobby_id = data['id']
-                        ppi("HAHAHAHAHHAHAHAHHA " + str(lobby_id))
 
                         ppi('Stop Listen to lobby: ' + lobby_id)
                         paramsUnsubscribeLobbyEvents = {
@@ -2221,6 +2225,13 @@ def on_message_autodarts(ws, message):
                             state = play_sound_effect('player', True)
                         play_sound_effect('left', True)
 
+                        playerLeft = {
+                            "event": "lobby",
+                            "action": "player-left",
+                            "player": player_name
+                        }
+                        broadcast(playerLeft)
+
 
                     # check for joined players
                     for p in data['players']:
@@ -2242,6 +2253,14 @@ def on_message_autodarts(ws, message):
                             if player_avg != None:
                                 play_sound_effect('average', True)
                                 play_sound_effect(player_avg, True)
+
+                            playerJoined = {
+                                "event": "lobby",
+                                "action": "player-joined",
+                                "player": player_name,
+                                "average": player_avg
+                            }
+                            broadcast(playerJoined)
                                     
                             # play_sound_effect('joined', state, True)
                             break
@@ -2470,9 +2489,14 @@ def on_left_client(client, server):
     cid = str(client['id'])
     webCallerSyncs[cid] = None
 
-def broadcast(data):
+def broadcast(data, is_custom = True):
     def process(*args):
         global server
+        # TODO types without stringfication
+        if is_custom:
+            data['custom'] = 'True'
+        else:
+            data['custom'] = 'False'
         server.send_message_to_all(json.dumps(data, indent=2).encode('utf-8'))
     t = threading.Thread(target=process)
     t.start()
