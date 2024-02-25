@@ -49,7 +49,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.8.8'
+VERSION = '2.8.9'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -1064,6 +1064,15 @@ def listen_to_match(m, ws):
             
             mode = m['variant']
 
+
+            if mode == 'Bull-off':
+                bullingStart = {
+                    "event": "bulling-start"
+                }
+                broadcast(bullingStart)
+
+                play_sound_effect('bulling_start')
+
             if mode == 'X01':
                 # Determine "baseScore"-Key
                 base = 'baseScore'
@@ -1094,15 +1103,16 @@ def listen_to_match(m, ws):
                     }
                 broadcast(matchStarted)
 
-            callPlayerNameState = False
-            if CALL_CURRENT_PLAYER and currentPlayerName != None:
-                callPlayerNameState = play_sound_effect(currentPlayerName)
+            if mode != 'Bull-off':
+                callPlayerNameState = False
+                if CALL_CURRENT_PLAYER and currentPlayerName != None:
+                    callPlayerNameState = play_sound_effect(currentPlayerName)
 
-            if play_sound_effect('matchon', callPlayerNameState) == False:
-                play_sound_effect('gameon', callPlayerNameState)
+                if play_sound_effect('matchon', callPlayerNameState) == False:
+                    play_sound_effect('gameon', callPlayerNameState)
 
-            if AMBIENT_SOUNDS != 0.0 and play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False) == False:
-                play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
+                if AMBIENT_SOUNDS != 0.0 and play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False) == False:
+                    play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
 
             mirror_sounds()
             ppi('Matchon')
@@ -1971,6 +1981,37 @@ def process_match_atc(m):
     
     mirror_sounds()
 
+def process_bulling(m):
+    currentPlayerIndex = m['player']
+    currentPlayer = m['players'][currentPlayerIndex]
+    currentPlayerName = str(currentPlayer['name']).lower()
+    currentPlayerIsBot = (m['players'][currentPlayerIndex]['cpuPPR'] is not None)
+    gameshot = m['gameWinner'] != -1
+
+    if gameshot == True:
+        bullingEnd = {
+            "event": "bulling-end",
+            "player": currentPlayerName,
+            "playerIsBot": str(currentPlayerIsBot)
+        }
+        broadcast(bullingEnd)
+
+        name = play_sound_effect((m['players'][m['gameWinner']]['name']).lower())
+        if name:
+            play_sound_effect('bulling_end', wait_for_last=True)
+    else:
+        if m['round'] == 1 and m['gameScores'] is None:  
+            bullingStart = {
+                "event": "bulling-start",
+                "player": currentPlayerName,
+                "playerIsBot": str(currentPlayerIsBot)
+            }
+            broadcast(bullingStart)
+
+            play_sound_effect('bulling_start')
+        
+    mirror_sounds()
+
 def process_common(m):
     broadcast(m, False)
 
@@ -2082,7 +2123,11 @@ def on_message_autodarts(ws, message):
                     process_common(data)
 
                     variant = data['variant']
-                    if variant == 'X01' or variant == 'Random Checkout':
+                    
+                    if variant == 'Bull-off':
+                        process_bulling(data)
+
+                    elif variant == 'X01' or variant == 'Random Checkout':
                         process_match_x01(data)
                         
                     elif variant == 'Cricket':
@@ -2123,7 +2168,6 @@ def on_message_autodarts(ws, message):
 
                         if play_sound_effect("lobby_ambient_in", False, mod = False):
                             mirror_sounds()
-
 
                     elif data['event'] == 'lobby-leave':
                         # ppi("lobby-leave", data)
@@ -2265,6 +2309,7 @@ def on_message_autodarts(ws, message):
                             # play_sound_effect('joined', state, True)
                             break
                     mirror_sounds()
+            
             else:
                 ppi('INFO: unexpected ws-message')
                 # ppi(json.dumps(m, indent = 4, sort_keys = True))
