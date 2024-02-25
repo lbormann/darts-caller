@@ -305,7 +305,7 @@ If you set this to '1' the application will call playernames on every playerchan
 
 *`-E / --call_every_dart`*
 
-If you set this to '1' the application calls every thrown dart. Setup sounds 's1'-'t20', single, double and others. This is pretty handy if you want to play sound-effects. Note: the third dart will only considered if argument '-ESF' is set to '1'.
+If you set this to '1' the application calls every thrown dart. Setup sounds 's1'-'t20', single, double and others. This is pretty handy if you want to play sound-effects. Note: the third dart will only considered if argument '-ESF' is set to '1'. By default this is not activated.
 
 *`-ESF / --call_every_dart_single_files`*
 
