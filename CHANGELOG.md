@@ -1,3 +1,8 @@
+## 2.8.10
+
+- fix call-repetitions
+
+
 ## 2.8.9
 
 - add bull-off-calling

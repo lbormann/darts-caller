@@ -49,7 +49,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.8.9'
+VERSION = '2.8.10'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -2013,7 +2013,7 @@ def process_bulling(m):
     mirror_sounds()
 
 def process_common(m):
-    broadcast(m, False)
+    broadcast(m)
 
 
 def connect_autodarts():
@@ -2294,8 +2294,7 @@ def on_message_autodarts(ws, message):
                             if state == False:
                                 state = play_sound_effect('player', True)
                                 
-                            if player_avg != None:
-                                play_sound_effect('average', True)
+                            if player_avg != None and play_sound_effect('average', True):
                                 play_sound_effect(player_avg, True)
 
                             playerJoined = {
@@ -2534,14 +2533,9 @@ def on_left_client(client, server):
     cid = str(client['id'])
     webCallerSyncs[cid] = None
 
-def broadcast(data, is_custom = True):
+def broadcast(data):
     def process(*args):
         global server
-        # TODO types without stringfication
-        if is_custom:
-            data['custom'] = 'True'
-        else:
-            data['custom'] = 'False'
         server.send_message_to_all(json.dumps(data, indent=2).encode('utf-8'))
     t = threading.Thread(target=process)
     t.start()
