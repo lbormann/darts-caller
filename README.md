@@ -79,6 +79,8 @@ Since Version 1.6.0 you can deposit multiple sounds for every ([sound-file-key](
 - gameshot
 - matchshot
 - matchcancel
+- bulling_start
+- bulling_end
 - leg_{x}
 - set_{x}
 - busted

@@ -1,4 +1,3 @@
-- add bull-calling
 - rework custom-event`s data-types without stringfication
 - remove scoreboard
 - add open-lobby command
