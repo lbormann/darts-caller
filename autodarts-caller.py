@@ -49,7 +49,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.8.10'
+VERSION = '2.8.11'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -140,13 +140,13 @@ CALLER_PROFILES = {
     'en-US-Stephen-Male': ('https://add.arnes-design.de/ADC/en-US-Stephen-Male-v4.zip', 4),  
     'en-US-Ivy-Female': ('https://add.arnes-design.de/ADC/en-US-Ivy-Female-v4.zip', 4),
     'de-DE-Vicki-Female': ('https://add.arnes-design.de/ADC/de-DE-Vicki-Female-v4.zip', 4),  
-    'de-DE-Daniel-Male': ('https://add.arnes-design.de/ADC/de-DE-Daniel-Male-v3.zip', 3),
+    'de-DE-Daniel-Male': ('https://add.arnes-design.de/ADC/de-DE-Daniel-Male-v4.zip', 4),
     'en-US-Kendra-Female': ('https://add.arnes-design.de/ADC/en-US-Kendra-Female-v5.zip', 5),
-    'en-US-Joey-Male': ('https://add.arnes-design.de/ADC/en-US-Joey-Male-v4.zip', 4),
-    'en-US-Joanna-Female': ('https://add.arnes-design.de/ADC/en-US-Joanna-Female-v4.zip', 4),
+    'en-US-Joey-Male': ('https://add.arnes-design.de/ADC/en-US-Joey-Male-v5.zip', 5),
+    'en-US-Joanna-Female': ('https://add.arnes-design.de/ADC/en-US-Joanna-Female-v5.zip', 5),
     'en-US-Gregory-Male': ('https://add.arnes-design.de/ADC/en-US-Gregory-Male-v2.zip', 2),
-    'en-US-Matthew-Male': ('https://add.arnes-design.de/ADC/en-US-Matthew-Male.zip', 1),
-    'en-US-Danielle-Female': ('https://add.arnes-design.de/ADC/en-US-Danielle-Female.zip', 1),
+    'en-US-Matthew-Male': ('https://add.arnes-design.de/ADC/en-US-Matthew-Male-v2.zip', 2),
+    'en-US-Danielle-Female': ('https://add.arnes-design.de/ADC/en-US-Danielle-Female-v2.zip', 2),
     'en-US-Kimberly-Female': ('https://add.arnes-design.de/ADC/en-US-Kimberly-Female.zip', 1),
     'en-US-Ruth-Female': ('https://add.arnes-design.de/ADC/en-US-Ruth-Female.zip', 1),
     'en-US-Salli-Female': ('https://add.arnes-design.de/ADC/en-US-Salli-Female.zip', 1),

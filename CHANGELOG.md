@@ -1,3 +1,12 @@
+## 2.8.11
+
+- update voice-pack 'de-DE-Daniel-Male'
+- update voice-pack 'en-US-Joey-Male'
+- update voice-pack 'en-US-Joanna-Female'
+- update voice-pack 'en-US-Matthew-Male'
+- update voice-pack 'en-US-Danielle-Female'
+
+
 ## 2.8.10
 
 - fix call-repetitions
