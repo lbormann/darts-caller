@@ -105,7 +105,8 @@ input[type=range]:focus::-ms-fill-lower {
 input[type=range]:focus::-ms-fill-upper {
     background: transparent;
 }
-button{
+button, select{
+    width: 50%;
     opacity: 0.95;
     margin: 0 auto;
     border-radius: 10px;
@@ -113,11 +114,14 @@ button{
     color: white;
     height: auto;
     background-color: royalblue;
-    width: 65%;  
     font-size: 30pt;
     margin-bottom: 15px;
     cursor: pointer;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
+
 
 .fullscreen-overlay {
     position: fixed;

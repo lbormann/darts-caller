@@ -27,8 +27,29 @@
 
     <image src="/static/images/loading.gif" style="display:none;" id="loader"></image>
     
+
+    <div id="select-language" style="display:none;">
+        <select name="language" id="language">
+            <option value="0"{% if key == language %}selected{% endif %}>All languages</option>
+            {% for key, value in languages.items() %}
+                <option value="{{ key }}" {% if key == language %}selected{% endif %}>{{ value[0] }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div id="select-gender" style="display:none;">
+        <select name="gender" id="gender">
+            <option value="0"{% if key == gender %}selected{% endif %}>All genders</option>
+            {% for key, value in genders.items() %}
+                <option value="{{ key }}" {% if key == gender %}selected{% endif %}>{{ value[0] }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
     <button id="button-ban" style="display:none;">Ban caller!</button>
     <button id="button-change" style="display:none;">Change caller!</button>
+    
+
 
     <image src="/static/images/mods.png" style="display:none;" id="button-container-mod-toggle"></image>
     <div id="container-mod">
@@ -122,6 +143,10 @@
         const callerName = document.getElementById('caller-name');
         const lastCall = document.getElementById('caller-call');
         const loader = document.getElementById('loader');
+        const languageSelect = document.getElementById('select-language');
+        const genderSelect = document.getElementById('select-gender');
+        const language = document.getElementById('language');
+        const gender = document.getElementById('gender');
 
         // mod stuff
         const buttonContainerModToggle = document.getElementById('button-container-mod-toggle');
@@ -316,6 +341,16 @@
             updateRandomizerSlider();
         });
         
+        language.addEventListener('change', function() {
+            ws.send(`language:${language.value}`);
+        });
+        gender.addEventListener('change', function() {
+            ws.send(`gender:${gender.value}`);
+        });
+        
+
+
+
         function updatePlaybackRateSliders(save = true) {
             sliderPlaybackRateMin.value = playbackRateMin;
             sliderPlaybackRateMax.value = playbackRateMax;
@@ -655,6 +690,8 @@
                 }
                 if(!specific){
                     buttonChange.style.display = 'block';
+                    languageSelect.style.display = 'block';
+                    genderSelect.style.display = 'block';
                 }
                 buttonSay.style.display = 'inline';
                 buttonContainerModToggle.style.display = 'inline';
@@ -663,6 +700,8 @@
                 loader.style.display = 'block';
                 buttonBan.style.display = 'none';
                 buttonChange.style.display = 'none';
+                languageSelect.style.display = 'none';
+                genderSelect.style.display = 'none';
                 buttonSay.style.display = 'none';
                 buttonContainerModToggle.style.display = 'none';
             }

@@ -49,7 +49,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.8.12'
+VERSION = '2.9.0'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -153,6 +153,7 @@ CALLER_PROFILES = {
     'en-US-Kevin-Male': ('https://add.arnes-design.de/ADC/en-US-Kevin-Male.zip', 1),
     'nl-NL-Laura-Female': ('https://add.arnes-design.de/ADC/nl-NL-Laura-Female.zip', 1),  
     'de-AT-Hannah-Female': ('https://add.arnes-design.de/ADC/de-AT-Hannah-Female.zip', 1),  
+    'en-US-Justin-Male': ('https://add.arnes-design.de/ADC/en-US-Justin-Male.zip', 1),
     
     # 'TODONAME': ('TODOLINK', TODOVERSION),  
     # 'TODONAME': ('TODOLINK', TODOVERSION), 
@@ -2347,6 +2348,8 @@ def on_open_client(client, server):
 def on_message_client(client, server, message):
     def process(*args):
         try:
+            global RANDOM_CALLER_LANGUAGE
+            global RANDOM_CALLER_GENDER
 
             if message.startswith('board'):
                 receive_local_board_address()
@@ -2400,7 +2403,22 @@ def on_message_client(client, server, message):
                     ban_caller(True)
                 else:
                     ban_caller(False)
-                # unicast_get(client)
+
+            elif message.startswith('language'):
+                msg_splitted = message.split(':')
+                if len(msg_splitted) > 1:
+                    RANDOM_CALLER_LANGUAGE = int(msg_splitted[1])
+                    setup_caller()
+                    if play_sound_effect('hi', wait_for_last = False):
+                        mirror_sounds()
+
+            elif message.startswith('gender'):
+                msg_splitted = message.split(':')
+                if len(msg_splitted) > 1:
+                    RANDOM_CALLER_GENDER = int(msg_splitted[1])
+                    setup_caller()
+                    if play_sound_effect('hi', wait_for_last = False):
+                        mirror_sounds()
 
             elif message.startswith('call'):
                 msg_splitted = message.split(':')
@@ -2617,7 +2635,16 @@ def mute_background(mute_vol):
 
 @app.route('/')
 def index():
-    return render_template('index.html', host=DEFAULT_HOST_IP, app_version=VERSION, db_name=WEB_DB_NAME, ws_port=HOST_PORT, state=WEB)
+    return render_template('index.html', host=DEFAULT_HOST_IP, 
+                           app_version=VERSION, 
+                           db_name=WEB_DB_NAME, 
+                           ws_port=HOST_PORT, 
+                           state=WEB, 
+                           languages=CALLER_LANGUAGES, 
+                           genders=CALLER_GENDERS,
+                           language=RANDOM_CALLER_LANGUAGE,
+                           gender=RANDOM_CALLER_GENDER
+                           )
 
 @app.route('/sounds/<path:file_id>', methods=['GET'])
 def sound(file_id):
@@ -2692,6 +2719,8 @@ if __name__ == "__main__":
     
     args = vars(ap.parse_args())
 
+    global RANDOM_CALLER_GENDER
+    global RANDOM_CALLER_LANGUAGE
     
     AUTODART_USER_EMAIL = args['autodarts_email']                          
     AUTODART_USER_PASSWORD = args['autodarts_password']              
