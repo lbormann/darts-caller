@@ -1,3 +1,9 @@
+## 2.9.0
+
+- add language and gender selection to web-caller
+- add voice-pack 'en-US-Justin-Male'
+
+
 ## 2.8.12
 
 - add voice-pack 'nl-NL-Laura-Female'
