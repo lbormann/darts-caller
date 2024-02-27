@@ -1,3 +1,9 @@
+## 2.8.12
+
+- add voice-pack 'nl-NL-Laura-Female'
+- add voice-pack 'de-AT-Hannah-Female'
+
+
 ## 2.8.11
 
 - update voice-pack 'de-DE-Daniel-Male'

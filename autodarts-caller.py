@@ -49,7 +49,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.8.11'
+VERSION = '2.8.12'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -151,6 +151,8 @@ CALLER_PROFILES = {
     'en-US-Ruth-Female': ('https://add.arnes-design.de/ADC/en-US-Ruth-Female.zip', 1),
     'en-US-Salli-Female': ('https://add.arnes-design.de/ADC/en-US-Salli-Female.zip', 1),
     'en-US-Kevin-Male': ('https://add.arnes-design.de/ADC/en-US-Kevin-Male.zip', 1),
+    'nl-NL-Laura-Female': ('https://add.arnes-design.de/ADC/nl-NL-Laura-Female.zip', 1),  
+    'de-AT-Hannah-Female': ('https://add.arnes-design.de/ADC/de-AT-Hannah-Female.zip', 1),  
     
     # 'TODONAME': ('TODOLINK', TODOVERSION),  
     # 'TODONAME': ('TODOLINK', TODOVERSION), 
