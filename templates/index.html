@@ -204,7 +204,7 @@
         let audioContext = new (window.AudioContext || window.webkitAudioContext)();
         let audioQueue = Promise.resolve();
         let previousWait = false;
-        let match, opponent;
+        let match, me, opponent;
         let peer, connOut;
         let connEstablished = false;
         let chat = [];
@@ -263,7 +263,9 @@
                 
                 loadPreferences();
 
-                createPeer("{{id}}", "{{me}}", "{{opponent}}");
+                setTimeout(function() {
+                    createPeer("{{id}}", "{{me}}", "{{opponent}}");
+                }, 1000);
             }
         });
 
@@ -281,9 +283,6 @@
             setupWebSocketConnection(window.location.hostname, "{{ ws_port }}", onWsOpen, onWsClose, onWsData);
         });
         
-        webRtcChatSendMessage.addEventListener("click", function(event) {
-            webRtcChatSendMessage({ behavior: "smooth", block: "center" });
-        });
         webRtcChatSendMessage.addEventListener("keydown", function(event) {
             if (event.keyCode === 13) {
                 if(webRtcChatSendMessage.value != ''){
@@ -463,7 +462,7 @@
             }
         }
 
-        function loadPreferences() {  
+        function loadPreferences(){  
             let lsADC_webRtcInstants = localStorage.getItem(localStorageAppKey + '_webRtcInstants');     
             let lsADC_playbackRateMin = localStorage.getItem(localStorageAppKey + '_playbackRateMin');
             let lsADC_playbackRateMax = localStorage.getItem(localStorageAppKey + '_playbackRateMax');
@@ -486,7 +485,7 @@
             updateVolumeSlider(false);
             updateRandomizerSlider(false);
         }
-        function savePreferences() {
+        function savePreferences(){
             localStorage.setItem(localStorageAppKey + '_webRtcInstants', JSON.stringify(instants));
             localStorage.setItem(localStorageAppKey + '_playbackRateMin', playbackRateMin);
             localStorage.setItem(localStorageAppKey + '_playbackRateMax', playbackRateMax);
@@ -820,9 +819,10 @@
 
 
         function createPeer(matchId, meId, opponentId){
-            if(matchId === 'None' || meId === 'None' || opponentId === 'None') return;
+            if(matchId == 'None' || meId == 'None' || opponentId == 'None') return;
 
             match = matchId;
+            me = meId;
             opponent = opponentId;
 
             console.log('Match-ID: ' + matchId);
@@ -833,18 +833,23 @@
 
             peer.on('open', function(id) {
                 console.log('My peer ID is:' + id);
-                connectOpponent();
+                connectOpponent(true);
             });
             peer.on('connection', function(conn) {
                 addWebRtcChat('Opponent joined', 3);
                 webRtcContainer.style.display = 'block';
                 webRtcChat.style.display = 'block';
                 webRtcChatSendMessage.style.display = 'block';
+                // if(!connEstablished){
+                //     connEstablished = true;
+                //     connOut = conn;
+                // }
                 conn.on('data', function(data){
                     if(data != ''){
                         addWebRtcChat(data, 1);
                         console.log(data);
                         audio.play();
+                        connectOpponent(false);
                     }
                 });
             });
@@ -860,7 +865,7 @@
             });        
         }
         
-        function connectOpponent(){
+        function connectOpponent(once){
             if(connEstablished) return;
 
             var opponentPeerId = match + "-" + opponent;
@@ -869,25 +874,38 @@
             connOut = peer.connect(opponentPeerId);
             connOut.on('open', function(){
                 connEstablished = true;
+                webRtcContainer.style.display = 'block';
+                webRtcChat.style.display = 'block';
                 webRtcChatSendMessage.style.display = 'block';
                 addWebRtcChat('Connected to opponent', 3);
                 while (chatOffline.length > 0) {
                     connOut.send(chatOffline.pop());
                 }
             });
+            connOut.on('data', function(data){
+                    if(data != ''){
+                        addWebRtcChat(data, 1);
+                        console.log(data);
+                        audio.play();
+                    }
+            });
             connOut.on('close', function(){
                 connEstablished = false;
                 addWebRtcChat('Disconnected from opponent', 4);
-                setTimeout(function() {
-                    connectOpponent();
-                }, 2000);
+                if(!once){
+                    setTimeout(function() {
+                        connectOpponent(once);
+                    }, 2000);
+                }
             });
             connOut.on('error', function(){
                 connEstablished = false;
                 addWebRtcChat('Error on connection', 4);
-                setTimeout(function() {
-                    connectOpponent();
-                }, 2000);
+                if(!once){
+                    setTimeout(function() {
+                        connectOpponent(once);
+                    }, 2000);
+                }
             });   
         }
                    
@@ -923,11 +941,12 @@
                 }
                 webRtcChat.appendChild(text);
             });
-            if(chat.length > 0){
-                webRtcChat.style.display = 'block';
-            }else{
-                webRtcChat.style.display = 'none';
-            }  
+            webRtcChat.style.display = 'block';
+            // if(chat.length > 0){
+            //     webRtcChat.style.display = 'block';
+            // }else{
+            //     webRtcChat.style.display = 'none';
+            // }  
             webRtcChat.scrollTop = webRtcChat.scrollHeight;   
         }
 
@@ -1047,9 +1066,7 @@
             else if(data.event === 'match-started'){
                 if(match === undefined || match !== data.id){
                     clearWebRtcChat();
-                    match = data.id;
-                    opponent = data.opponent;
-                    createPeer(match, data.me, opponent);
+                    createPeer(data.id, data.me, data.opponent);
                 }
             }
             

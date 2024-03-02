@@ -17,10 +17,10 @@ body{
     color: white;
 }
 hr{
-    margin: 20px;
+    margin: 25px;
     margin-top: 40px;
     clear: both;
-    color: dimgray;
+    border: 1px solid dimgray;
 }
 input[type=range] {
     height: 25px;
@@ -317,8 +317,12 @@ button, select{
     height: auto;
     padding: 20px;
 }
+#web-rtc-chat-instants{
+    width: 95%;
+    margin: 0 auto;
+}
 #web-rtc-chat{
-    width: 94%;
+    width: 95%;
     margin: 0 auto;
     margin-top: 20px;
     padding: 12px;
