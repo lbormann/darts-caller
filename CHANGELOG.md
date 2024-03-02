@@ -1,3 +1,8 @@
+## 2.10.0
+
+- add realtime p2p-match-chat to web-caller
+
+
 ## 2.9.0
 
 - add language and gender selection to web-caller
