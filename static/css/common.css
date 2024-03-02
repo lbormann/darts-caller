@@ -14,7 +14,13 @@ body{
     background-color: black;
     text-align: center;
     background-color: black;
-    color: white
+    color: white;
+}
+hr{
+    margin: 20px;
+    margin-top: 40px;
+    clear: both;
+    color: dimgray;
 }
 input[type=range] {
     height: 25px;
@@ -106,7 +112,7 @@ input[type=range]:focus::-ms-fill-upper {
     background: transparent;
 }
 button, select{
-    width: 50%;
+    width: auto;
     opacity: 0.95;
     margin: 0 auto;
     border-radius: 10px;
@@ -204,7 +210,7 @@ button, select{
 #app-info{
     cursor: pointer;
     color: darkgoldenrod;
-    position: fixed;
+    position: absolute;
     font-weight: bold;
     top: 20px;
     right: 15px;
@@ -245,4 +251,104 @@ button, select{
     border-radius: 20px;
     width: 85%;
     background-color: royalblue;;
+}
+
+
+
+/* WebRTC */
+::placeholder {
+    color: lightgrey;
+}
+.web-rtc-chat-message-in{
+    display: block;
+    float: left;
+    clear: both;
+    margin-top: 10px;
+    background-color: white;
+    color: black;
+    padding: 10px;
+    border-radius: 10px;
+}
+.web-rtc-chat-message-out, .web-rtc-chat-instant{
+    display: block;
+    float: right;
+    clear: both;
+    margin-top: 10px;
+    background-color: greenyellow;
+    color: black;
+    padding: 10px;
+    border-radius: 10px;
+}
+.web-rtc-chat-instant{
+    clear: none;
+    cursor: pointer;
+    margin: 5px;
+    font-size: 16pt;
+}
+.web-rtc-chat-message-status-good{
+    display: block;
+    margin: 0 auto;
+    text-align: center;
+    font-weight: bold;
+    margin-top: 10px;
+    background-color: gray;
+    color: yellow;
+    padding: 10px;
+    border-radius: 10px;
+    clear: both;
+    font-size: 17pt;
+}
+.web-rtc-chat-message-status-bad{
+    display: block;
+    margin: 0 auto;
+    text-align: center;
+    font-weight: bold;
+    margin-top: 10px;
+    background-color: gray;
+    color: red;
+    padding: 10px;
+    border-radius: 10px;
+    clear: both;
+    font-size: 17pt;
+}
+#web-rtc-container{
+    width: 90%;
+    margin: 0 auto;
+    height: auto;
+    padding: 20px;
+}
+#web-rtc-chat{
+    width: 94%;
+    margin: 0 auto;
+    margin-top: 20px;
+    padding: 12px;
+    font-size: 20pt;
+    opacity: 90%;
+    background-color: #EBDFCE;
+    border: 3px solid black;
+    height: 270px;
+    max-height: 270px; 
+    overflow-y: auto;
+    border-radius: 15px;
+}
+#web-rtc-chat-add-instant, #web-rtc-chat-clear-instants{
+    position: relative;
+    float: none;
+    background-color: green;
+    color: white;
+    padding: 3px;
+    font-size: 16pt;
+    margin: 0 auto;
+    margin-top: 10px;
+}
+#web-rtc-chat-send-message{
+    width: 94%;
+    font-size: 26pt;
+    height: auto;
+    margin: 0 auto;
+    margin-top: 5px;
+    padding: 5px;
+    background-color: white;
+    color: black;
+    border-radius: 15px;
 }

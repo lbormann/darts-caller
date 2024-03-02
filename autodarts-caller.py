@@ -49,7 +49,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.9.0'
+VERSION = '2.10.0'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -305,16 +305,6 @@ def check_already_running():
                 ppi(f"{me} is already running. Exit")
                 sys.exit()  
     # ppi("Start info: " + str(count))
-
-# def get_local_ip_address(target='8.8.8.8'):
-#     try:
-#         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-#         s.connect((target, 80))
-#         ip_address = s.getsockname()[0]
-#         s.close()
-#     except:
-#         ip_address = DEFAULT_HOST_IP
-#     return ip_address
 
 
 def versionize_speaker(speaker_name, speaker_version):
@@ -1046,6 +1036,7 @@ def listen_to_match(m, ws):
         currentMatch = m['id']
         ppi('Listen to match: ' + currentMatch)
 
+
         try:
             setup_caller()
         except Exception as e:
@@ -1057,10 +1048,12 @@ def listen_to_match(m, ws):
             # ppi(json.dumps(m, indent = 4, sort_keys = True))
 
             currentPlayerName = None
+            players = []
 
             if 'players' in m:
                 currentPlayer = m['players'][0]
                 currentPlayerName = str(currentPlayer['name']).lower()
+                players = m['players']
 
             if 'variant' not in m:
                 return
@@ -1077,6 +1070,16 @@ def listen_to_match(m, ws):
                 play_sound_effect('bulling_start')
 
             if mode == 'X01':
+                global currentMatchOpponent
+
+                if players != []:
+                    for p in players:
+                        if 'boardId' in p and p['boardId'] != AUTODART_USER_BOARD_ID:
+                            currentMatchOpponent = p['boardId']
+                            break
+                
+
+
                 # Determine "baseScore"-Key
                 base = 'baseScore'
                 if 'target' in m['settings']:
@@ -1084,6 +1087,9 @@ def listen_to_match(m, ws):
 
                 matchStarted = {
                     "event": "match-started",
+                    "id": currentMatch,
+                    "me": AUTODART_USER_BOARD_ID,
+                    "opponent": currentMatchOpponent,
                     "player": currentPlayerName,
                     "game": {
                         "mode": mode,
@@ -2640,6 +2646,9 @@ def index():
                            db_name=WEB_DB_NAME, 
                            ws_port=HOST_PORT, 
                            state=WEB, 
+                           id=currentMatch,
+                           me=AUTODART_USER_BOARD_ID,
+                           opponent=currentMatchOpponent,
                            languages=CALLER_LANGUAGES, 
                            genders=CALLER_GENDERS,
                            language=RANDOM_CALLER_LANGUAGE,
@@ -2800,6 +2809,9 @@ if __name__ == "__main__":
 
     global currentMatch
     currentMatch = None
+
+    global currentMatchOpponent
+    currentMatchOpponent = None
 
     global caller
     caller = None

@@ -136,9 +136,9 @@ Since Version 1.6.0 you can deposit multiple sounds for every ([sound-file-key](
 
 - lobby_ambient_in
 - lobby_ambient_out
-- lobby_player
-- lobby_average
-- lobby_left
+- player
+- average
+- left
 
 **ATC (Around the clock)**
 
@@ -367,6 +367,8 @@ You can not hear any calls as your music is way too loud? Try to set this to '0.
 
 If you set this '1' or '2' the application will host a web-server to mirror call-events. A value '1' will play sounds only on the website. Value '2' will play sounds on the application (locally) and on the website; Use your smartphone, tablet or other device and visit http://{machine-ip-address}:{web-caller-port}. For a continuous calling experience make sure your device display stays on while you are playing. For faster processing the web-caller caches sound-files which results in fast response times; Internet Explorer, non-chromium Edge and Safari > v10 is mandantory as caching is realized by indexeddb.
 If you're using an ios device, you probably need to open the page twice and confirm audio-playing by pressing the displayed button. In case that doesn't solve problems try to use another browser like firefox. 
+There is more to say: you can switch language, gender, change to a random caller or ban a caller on-the-fly. Use the modification area to randomize caller-voices.
+If your opponent is also using the web-caller, you both will be able to communicate in realtime.
 
 *`-WEBSB / --web_caller_scoreboard`*
 
@@ -514,11 +516,6 @@ AUTODARTS_BOARD_ID=123-456-789
 - Enable debug ('-DEB "1"') to display more information about a problem.
 - If you don't know how to solve a problem, have a look below.
 
-### Failed to process voice-pack 'X'
-
-All voice-packs are hosted on dropbox. There is a chance that you encounter this error as dropbox allows only a certain download count in unknown time window.
-Just be patient, wait a few hours and restart the application. It could be helpful to restart your router or use a vpn to bypass.
-
 ### failed keycloakauthentication Error (401 invalid_grant)
 
 - Disable Two-Factor-Auth (2FA).
@@ -581,8 +578,6 @@ Try https://www.audacity.de/ to modify your sound-files.
 3) Sent me a your link by PM on Discord - Wait for a new release :) 
 
 
-## LAST WORDS
+## RESOURCES
 
-Make sure your speakers are turned on ;)
-Thanks to Timo for awesome https://autodarts.io. It will be huge!
-
+- Icon by <a href="https://zapsplat.com">zapsplat.com</a>
