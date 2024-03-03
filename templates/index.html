@@ -1008,9 +1008,13 @@
                     } 
 
                 }else if(cm.type === 3){
+                    message = document.createElement("div");
+                    message.innerText = cm.text;
                     message.classList.add("web-rtc-chat-message-status-good");
 
                 }else if(cm.type === 4){
+                    message = document.createElement("div");
+                    message.innerText = cm.text;
                     message.classList.add("web-rtc-chat-message-status-bad");
                 }
                 
