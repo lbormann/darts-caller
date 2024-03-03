@@ -309,15 +309,17 @@
         });
         webRtcChatFile.onchange = function(event) {
             if(event.target.files.length > 0) {
+                const file = event.target.files[0];
+                const blob = new Blob(event.target.files, { type: file.type });
+                const fileObj = {
+                    file: blob,
+                    filename: file.name,
+                    filetype: file.type
+                };
                 if(connEstablished){
-                    const blob = new Blob(event.target.files, { type: file.type });
-                    connOut.send({
-                        file: blob,
-                        filename: file.name,
-                        filetype: file.type
-                    });
+                    connOut.send(fileObj);
                 }else{
-                    // chatOffline.push(webRtcChatSendMessage.value);
+                    chatOffline.push(fileObj);
                 }
                 addWebRtcChat(event.target.files[0], 2); 
                 // webRtcChatSendMessage.value = "";
