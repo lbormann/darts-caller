@@ -275,6 +275,7 @@ button, select{
     float: left;
     clear: both;
     margin-top: 10px;
+    margin-bottom: 10px;
     background-color: white;
     color: black;
     padding: 10px;
@@ -293,6 +294,7 @@ button, select{
     float: right;
     clear: both;
     margin-top: 10px;
+    margin-bottom: 10px;
     background-color: #9AF489;
     color: black;
     padding: 10px;
