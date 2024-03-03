@@ -857,6 +857,7 @@
                 webRtcContainer.style.display = 'block';
                 webRtcChat.style.display = 'block';
                 webRtcChatSendMessage.style.display = 'block';
+                connEstablished = false;
                 conn.on('data', function(data){
                     if(data != ''){
                         addWebRtcChat(data, 1);
