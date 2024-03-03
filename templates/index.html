@@ -31,7 +31,7 @@
         <!-- style="display:none;" -->
         <div id="web-rtc-chat" class=""></div>
         <label for="web-rtc-chat-file" class="custom-file-input"></label>
-        <input id="web-rtc-chat-file" type="file" accept="image/*" />
+        <input id="web-rtc-chat-file" type="file" accept="image/*" capture="camera" />
         <button id="web-rtc-chat-add-instant" class="">Remember!</button>
         <button id="web-rtc-chat-clear-instants" class="">Clear!</button>
         <!-- style="display:none;" -->
@@ -929,6 +929,7 @@
         function clearWebRtcChat(){
             chatOffline = [];
             chat = [];
+            webRtcChat.innerHTML = "";
             renderWebRtcChat();
         }
         
@@ -936,6 +937,7 @@
             let msgObject = {
                 text: message,
                 type: type,
+                timestamp: parseInt(Date.now()).toString()
             }
             chat.push(msgObject);
             renderWebRtcChat();
@@ -973,18 +975,22 @@
             }
 
         function renderWebRtcChat(){
-            webRtcChat.innerHTML = "";
             chat.forEach(function(cm) {
+                var childElement = mainElement.querySelector(cm.timestamp);
+                if(childElement) return;
+
                 let message;
                 
                 // MSG IN
                 if(cm.type === 1){
                     if(typeof(cm.text) === "string"){
                         message = document.createElement("div");
+                        message.id = cm.timestamp;
                         message.innerText = cm.text;
                         message.classList.add("web-rtc-chat-message-in");
                     }else{
                         message = document.createElement("img");
+                        message.id = cm.timestamp;
                         if (cm.text.filetype.includes('image')) {
                             const bytes = new Uint8Array(cm.text.file);
                             message.src = 'data:image/png;base64,' + encode(bytes);
@@ -997,10 +1003,12 @@
                 }else if(cm.type === 2){
                     if(typeof(cm.text) === "string"){
                         message = document.createElement("div");
+                        message.id = cm.timestamp;
                         message.innerText = cm.text;
                         message.classList.add("web-rtc-chat-message-out");
                     }else{
                         message = document.createElement("img");
+                        message.id = cm.timestamp;
                         var reader = new FileReader();
                         reader.onload = function (e) { 
                             message.setAttribute('src', e.target.result);
@@ -1011,11 +1019,13 @@
 
                 }else if(cm.type === 3){
                     message = document.createElement("div");
+                    message.id = cm.timestamp;
                     message.innerText = cm.text;
                     message.classList.add("web-rtc-chat-message-status-good");
 
                 }else if(cm.type === 4){
                     message = document.createElement("div");
+                    message.id = cm.timestamp;
                     message.innerText = cm.text;
                     message.classList.add("web-rtc-chat-message-status-bad");
                 }
