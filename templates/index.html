@@ -866,7 +866,7 @@
                         addWebRtcChat(data, 1);
                         // console.log(data);   
                         connectOpponent(false);
-                        // audio.play();
+                        audio.play();
                     }
                 });
             });
@@ -903,7 +903,7 @@
                 if(data != ''){
                     addWebRtcChat(data, 1);
                     // console.log(data);
-                    // audio.play();
+                    audio.play();
                 }
             });
             connOut.on('close', function(){
