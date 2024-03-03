@@ -580,4 +580,5 @@ Try https://www.audacity.de/ to modify your sound-files.
 
 ## RESOURCES
 
-- Icon by <a href="https://zapsplat.com">zapsplat.com</a>
+- Sounds by <a href="https://zapsplat.com">zapsplat.com</a>
+- Icon by <a href="https://freeicons.io/user-interface-and-electronics/camera-cam-photo-pic-shoot-image-ui-f-ef-ec-icon-841">icon king1</a>

@@ -259,7 +259,7 @@ button, select{
 ::placeholder {
     color: lightgrey;
 }
-.web-rtc-chat-message-in{
+.web-rtc-chat-message-in, .web-rtc-chat-message-file-in{
     display: block;
     float: left;
     clear: both;
@@ -269,7 +269,11 @@ button, select{
     padding: 10px;
     border-radius: 10px;
 }
-.web-rtc-chat-message-out, .web-rtc-chat-instant{
+.web-rtc-chat-message-file-in, .web-rtc-chat-message-file-out{
+    width: auto;
+    height: 98%;
+}
+.web-rtc-chat-message-out, .web-rtc-chat-message-file-out, .web-rtc-chat-instant{
     display: block;
     float: right;
     clear: both;
@@ -344,6 +348,20 @@ button, select{
     font-size: 16pt;
     margin: 0 auto;
     margin-top: 10px;
+}
+#web-rtc-chat-file {
+    display: none;
+}
+.custom-file-input {
+    display: inline-block; 
+    background-image: url('/static/images/upload.png'); 
+    background-size: cover;
+    background-position: center;
+    background-color: transparent;
+    /* padding: 10px; */
+    width: 48px;
+    height: 48px;
+    cursor: pointer;
 }
 #web-rtc-chat-send-message{
     width: 94%;

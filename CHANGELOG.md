@@ -1,3 +1,8 @@
+## 2.11.0
+
+- add photo-transfer to match-chat
+
+
 ## 2.10.1
 
 - fix connection-bug on match-chat
