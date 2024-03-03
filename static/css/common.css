@@ -259,6 +259,17 @@ button, select{
 ::placeholder {
     color: lightgrey;
 }
+.web-rtc-chat-message-time{
+    /* padding-top: 10px; */
+    margin-left: 10px;
+    font-size: 8pt;
+    color: #8F8F8F;
+    width: auto;
+    text-align: right;
+    user-select: none;
+    float: right;
+    clear: both; */
+}
 .web-rtc-chat-message-in, .web-rtc-chat-message-file-in{
     display: block;
     float: left;
@@ -270,15 +281,19 @@ button, select{
     border-radius: 10px;
 }
 .web-rtc-chat-message-file-in, .web-rtc-chat-message-file-out{
+    height: 96%;
     width: auto;
-    height: 98%;
+}
+.web-rtc-chat-message-file-in > img, .web-rtc-chat-message-file-out > img{
+    width: auto;
+    height: 96%;
 }
 .web-rtc-chat-message-out, .web-rtc-chat-message-file-out, .web-rtc-chat-instant{
     display: block;
     float: right;
     clear: both;
     margin-top: 10px;
-    background-color: greenyellow;
+    background-color: #9AF489;
     color: black;
     padding: 10px;
     border-radius: 10px;
@@ -295,8 +310,8 @@ button, select{
     text-align: center;
     font-weight: bold;
     margin-top: 10px;
-    background-color: gray;
-    color: yellow;
+    background-color: whitesmoke;
+    color: royalblue;
     padding: 10px;
     border-radius: 10px;
     clear: both;
@@ -308,7 +323,7 @@ button, select{
     text-align: center;
     font-weight: bold;
     margin-top: 10px;
-    background-color: gray;
+    background-color: whitesmoke;
     color: red;
     padding: 10px;
     border-radius: 10px;
@@ -316,17 +331,16 @@ button, select{
     font-size: 17pt;
 }
 #web-rtc-container{
-    width: 90%;
+    width: 100%;
     margin: 0 auto;
     height: auto;
-    padding: 20px;
 }
 #web-rtc-chat-instants{
-    width: 95%;
+    width: 100%;
     margin: 0 auto;
 }
 #web-rtc-chat{
-    width: 95%;
+    width: 100%;
     margin: 0 auto;
     margin-top: 20px;
     padding: 12px;
@@ -353,7 +367,7 @@ button, select{
     display: none;
 }
 .custom-file-input {
-    display: inline-block; 
+    display: block; 
     background-image: url('/static/images/upload.png'); 
     background-size: cover;
     background-position: center;
@@ -364,10 +378,10 @@ button, select{
     cursor: pointer;
 }
 #web-rtc-chat-send-message{
-    width: 94%;
+    width: 100%;
     font-size: 26pt;
     height: auto;
-    margin: 0 auto;
+    /* margin: 0 auto; */
     margin-top: 5px;
     padding: 5px;
     background-color: white;

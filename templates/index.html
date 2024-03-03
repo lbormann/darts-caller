@@ -30,10 +30,10 @@
     <div id="web-rtc-container">
         <!-- style="display:none;" -->
         <div id="web-rtc-chat" class=""></div>
-        <label for="web-rtc-chat-file" class="custom-file-input"></label>
-        <input id="web-rtc-chat-file" type="file" accept="image/*" capture="camera" />
         <button id="web-rtc-chat-add-instant" class="">Remember!</button>
         <button id="web-rtc-chat-clear-instants" class="">Clear!</button>
+        <label for="web-rtc-chat-file" class="custom-file-input"></label>
+        <input id="web-rtc-chat-file" type="file" accept="image/*" capture="camera" />
         <!-- style="display:none;" -->
         <input id="web-rtc-chat-send-message" type="text" placeholder="write a message" class=""></input>
         <div id="web-rtc-chat-instants" class=""></div> 
@@ -850,17 +850,13 @@
 
             peer.on('open', function(id) {
                 console.log('My peer ID is:' + id);
-                connectOpponent(true);
+                connectOpponent(false);
             });
             peer.on('connection', function(conn) {
                 addWebRtcChat('Opponent joined', 3);
                 webRtcContainer.style.display = 'block';
                 webRtcChat.style.display = 'block';
                 webRtcChatSendMessage.style.display = 'block';
-                // if(!connEstablished){
-                //     connEstablished = true;
-                //     connOut = conn;
-                // }
                 conn.on('data', function(data){
                     if(data != ''){
                         addWebRtcChat(data, 1);
@@ -934,11 +930,19 @@
             renderWebRtcChat();
         }
         
+        function currentTime() {
+            let date = new Date();
+            let hours = ('0' + date.getHours()).slice(-2);
+            let minutes = ('0' + date.getMinutes()).slice(-2);
+            return `${hours}:${minutes}`;
+        }
+
         function addWebRtcChat(message, type){
             let msgObject = {
                 text: message,
                 type: type,
-                timestamp: parseInt(Date.now()).toString()
+                timestamp: parseInt(Date.now()).toString(),
+                time: currentTime()
             }
             chat.push(msgObject);
             renderWebRtcChat();
@@ -979,56 +983,52 @@
             chat.forEach(function(cm) {
                 if(document.getElementById(cm.timestamp)) return;
 
-                let message;
+                let message = document.createElement("div");
+                message.id = cm.timestamp;
                 
                 // MSG IN
                 if(cm.type === 1){
                     if(typeof(cm.text) === "string"){
-                        message = document.createElement("div");
-                        message.id = cm.timestamp;
-                        message.innerText = cm.text;
                         message.classList.add("web-rtc-chat-message-in");
+                        message.innerText = cm.text; 
                     }else{
-                        message = document.createElement("img");
-                        message.id = cm.timestamp;
+                        message.classList.add("web-rtc-chat-message-file-in");
+                        let image = document.createElement("img");
                         if (cm.text.filetype.includes('image')) {
                             const bytes = new Uint8Array(cm.text.file);
-                            message.src = 'data:image/png;base64,' + encode(bytes);
-                            // document.querySelector('div').prepend(img);
+                            image.src = 'data:image/png;base64,' + encode(bytes);
+                            message.appendChild(image);
                         }
-                        message.classList.add("web-rtc-chat-message-file-in");
                     } 
 
                 // MSG OUT
                 }else if(cm.type === 2){
                     if(typeof(cm.text) === "string"){
-                        message = document.createElement("div");
-                        message.id = cm.timestamp;
-                        message.innerText = cm.text;
                         message.classList.add("web-rtc-chat-message-out");
+                        message.innerText = cm.text;    
                     }else{
-                        message = document.createElement("img");
-                        message.id = cm.timestamp;
+                        message.classList.add("web-rtc-chat-message-file-out");
+                        let image = document.createElement("img");
                         var reader = new FileReader();
                         reader.onload = function (e) { 
-                            message.setAttribute('src', e.target.result);
+                            image.setAttribute('src', e.target.result);
+                            message.appendChild(image); 
                         };
-                        reader.readAsDataURL(cm.text); 
-                        message.classList.add("web-rtc-chat-message-file-out");
+                        reader.readAsDataURL(cm.text);  
                     } 
 
                 }else if(cm.type === 3){
-                    message = document.createElement("div");
-                    message.id = cm.timestamp;
-                    message.innerText = cm.text;
                     message.classList.add("web-rtc-chat-message-status-good");
-
-                }else if(cm.type === 4){
-                    message = document.createElement("div");
-                    message.id = cm.timestamp;
                     message.innerText = cm.text;
+                }else if(cm.type === 4){
                     message.classList.add("web-rtc-chat-message-status-bad");
+                    message.innerText = cm.text; 
                 }
+
+                const time = document.createElement("span");
+                time.classList.add("web-rtc-chat-message-time");
+                time.innerText = cm.time;
+                message.appendChild(time);
                 
                 webRtcChat.appendChild(message);
             });
