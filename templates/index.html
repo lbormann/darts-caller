@@ -976,8 +976,7 @@
 
         function renderWebRtcChat(){
             chat.forEach(function(cm) {
-                var childElement = webRtcChat.querySelector("#" + cm.timestamp);
-                if(childElement) return;
+                if(document.getElementById(cm.timestamp)) return;
 
                 let message;
                 
