@@ -842,12 +842,10 @@
             opponent = players[0].boardId;
 
             let meHost = false;
-            players.some(p => {
-                if (p.boardId === me) {
-                    meHost = true;
-                    return true;
-                }
-            });
+            const foundPlayer = players.find(p => p.boardId === me);
+            if (foundPlayer) {
+                meHost = true;
+            }
 
             console.log('Match-ID: ' + matchId);
             console.log('My-ID: ' + meId);
