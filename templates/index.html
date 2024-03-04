@@ -268,7 +268,7 @@
                 loadPreferences();
 
                 setTimeout(function() {
-                    createPeer("{{id}}", "{{me}}", "{{players}}");
+                    createPeer("{{id}}", "{{me}}", "{{meHost}}", "{{players}}");
                 }, 1000);
             }
         });
@@ -834,18 +834,12 @@
 
 
 
-        function createPeer(matchId, meId, players){
-            if(matchId == 'None' || meId == 'None' || players == '[]') return;
-
+        function createPeer(matchId, meId, meHost, players){
+            if(matchId === 'None' || meId === 'None' || players === '[]') return;
+            console.log(players);
             match = matchId;
             me = meId;
-            opponent = players[0].boardId;
-
-            let meHost = false;
-            const foundPlayer = players.find(p => p.boardId === me);
-            if (foundPlayer) {
-                meHost = true;
-            }
+            opponent = players;
 
             console.log('Match-ID: ' + matchId);
             console.log('My-ID: ' + meId);
@@ -859,7 +853,7 @@
 
             peer.on('open', function(id) {
                 console.log('My peer ID is:' + id + ' - Host: ' + meHost);
-                if(meHost){
+                if(meHost === 'True'){
                     connectOpponent(false);
                 }else{
                     peer.on('connection', function(conn) {
@@ -1191,7 +1185,7 @@
             else if(data.event === 'match-started'){
                 if(match === undefined || match !== data.id){
                     clearWebRtcChat();
-                    createPeer(data.id, data.me, data.players);
+                    createPeer(data.id, data.me, data.meHost, data.players);
                 }
             }
             

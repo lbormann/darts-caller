@@ -1069,17 +1069,24 @@ def listen_to_match(m, ws):
 
                 play_sound_effect('bulling_start')
 
+
+
             if mode == 'X01':
+                global currentMatchHost
                 global currentMatchPlayers
-                currentMatchPlayers = []
+                # currentMatchPlayers = []
+                currentMatchHost = None
 
                 if players != []:
                     for p in players:
-                        # and p['boardId'] != AUTODART_USER_BOARD_ID
                         if 'boardId' in p:
-                            currentMatchPlayers = currentMatchPlayers.append(p)
+                            if currentMatchHost is None and m['host']['id'] == p['userId'] and p['boardId'] == AUTODART_USER_BOARD_ID:
+                                currentMatchHost = True
+                            else:
+                                currentMatchPlayers = p['boardId']  
+                                # currentMatchPlayers.append(p['boardId'])
 
-            
+
                 # Determine "baseScore"-Key
                 base = 'baseScore'
                 if 'target' in m['settings']:
@@ -1089,6 +1096,7 @@ def listen_to_match(m, ws):
                     "event": "match-started",
                     "id": currentMatch,
                     "me": AUTODART_USER_BOARD_ID,
+                    "meHost": currentMatchHost,
                     "players": currentMatchPlayers,
                     "player": currentPlayerName,
                     "game": {
@@ -2648,6 +2656,7 @@ def index():
                            state=WEB, 
                            id=currentMatch,
                            me=AUTODART_USER_BOARD_ID,
+                           meHost=currentMatchHost,
                            players=currentMatchPlayers,
                            languages=CALLER_LANGUAGES, 
                            genders=CALLER_GENDERS,
@@ -2812,6 +2821,9 @@ if __name__ == "__main__":
 
     global currentMatchPlayers
     currentMatchPlayers = []
+
+    global currentMatchHost
+    currentMatchHost = None
 
     global caller
     caller = None
