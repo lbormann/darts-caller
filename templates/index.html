@@ -893,9 +893,7 @@
                 webRtcChat.style.display = 'block';
                 webRtcChatSendMessage.style.display = 'block';
                 addWebRtcChat('Connected to opponent', 3);
-
-                connOut.send(webRtcChatSendMessage.value);
-                addWebRtcChat('Hi I am back!', 1);
+                connOut.send('Hi I am back!');
 
                 while (chatOffline.length > 0) {
                     connOut.send(chatOffline.pop());
