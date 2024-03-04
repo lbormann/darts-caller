@@ -842,13 +842,14 @@
             opponent = opponentId;
 
             console.log('Match-ID: ' + matchId);
-            console.log('Me-ID: ' + meId);
+            console.log('My-ID: ' + meId);
             console.log('Opponent-ID: ' + opponentId);
 
+            var mePeerId = match + "-" + me;
+            var opponentPeerId = match + "-" + opponent;
+
             let config = { 'iceServers': [{ 'urls': ['stun:stun.l.google.com:19302'] }], 'debug': 2 };
-            peer = new Peer(matchId + "-" + meId, config);
-
-
+            peer = new Peer(mePeerId, config);
 
             peer.on('open', function(id) {
                 console.log('My peer ID is:' + id);
@@ -860,7 +861,7 @@
                 webRtcChat.style.display = 'block';
                 webRtcChatSendMessage.style.display = 'block';
                 conn.on('data', function(data){
-                    if(data != ''){
+                    if(data != '' && data != opponentPeerId){
                         addWebRtcChat(data, 1);
                         // console.log(data);   
                         connectOpponent(false);
@@ -883,6 +884,7 @@
         function connectOpponent(once){
             if(connEstablished) return;
 
+            var mePeerId = match + "-" + me;
             var opponentPeerId = match + "-" + opponent;
 
             console.log('Trying to connect to opponent ' + opponentPeerId);
@@ -893,14 +895,14 @@
                 webRtcChat.style.display = 'block';
                 webRtcChatSendMessage.style.display = 'block';
                 addWebRtcChat('Connected to opponent', 3);
-                connOut.send('Hi I am back!');
+                connOut.send(mePeerId);
 
                 while (chatOffline.length > 0) {
                     connOut.send(chatOffline.pop());
                 }
             });
             connOut.on('data', function(data){
-                if(data != ''){
+                if(data != '' && data != opponentPeerId){
                     addWebRtcChat(data, 1);
                     // console.log(data);
                     audio.play();
