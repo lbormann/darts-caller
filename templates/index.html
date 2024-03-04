@@ -835,7 +835,8 @@
 
 
         function createPeer(matchId, meId, meHost, players){
-            if(matchId === 'None' || meId === 'None' || players === '[]') return;
+            // players === '[]'
+            if(matchId === 'None' || meId === 'None' || players === 'None') return;
 
             match = matchId;
             me = meId;

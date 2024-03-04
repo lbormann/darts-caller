@@ -1198,10 +1198,13 @@ def checkout_only_yourself(currentPlayer):
 
 def process_match_x01(m):
     global currentMatch
+    global currentMatchHost
+    global currentMatchPlayers
     global isGameFinished
     global lastPoints
     
     variant = m['variant']
+    players = m['players']
     currentPlayerIndex = m['player']
     currentPlayer = m['players'][currentPlayerIndex]
     currentPlayerName = str(currentPlayer['name']).lower()
@@ -1439,8 +1442,24 @@ def process_match_x01(m):
 
         reset_checkouts_counter()
 
+
+        # currentMatchPlayers = []
+        currentMatchHost = None
+        if players != []:
+            for p in players:
+                if 'boardId' in p:
+                    if currentMatchHost is None and m['host']['id'] == p['userId'] and p['boardId'] == AUTODART_USER_BOARD_ID:
+                        currentMatchHost = True
+                    else:
+                        currentMatchPlayers = p['boardId']  
+                        # currentMatchPlayers.append(p['boardId'])
+
         matchStarted = {
             "event": "match-started",
+            "id": currentMatch,
+            "me": AUTODART_USER_BOARD_ID,
+            "meHost": currentMatchHost,
+            "players": currentMatchPlayers,
             "player": currentPlayerName,
             "game": {
                 "mode": variant,
