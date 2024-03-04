@@ -1082,8 +1082,7 @@ def listen_to_match(m, ws):
                         if 'boardId' in p:
                             if currentMatchHost is None and m['host']['id'] == p['userId'] and p['boardId'] == AUTODART_USER_BOARD_ID:
                                 currentMatchHost = True
-                            else:
-                                # currentMatchPlayers = p['boardId']  
+                            else: 
                                 currentMatchPlayers.append(p)
 
                 # Determine "baseScore"-Key
@@ -1450,7 +1449,6 @@ def process_match_x01(m):
                     if currentMatchHost is None and m['host']['id'] == p['userId'] and p['boardId'] == AUTODART_USER_BOARD_ID:
                         currentMatchHost = True
                     else:
-                        # currentMatchPlayers = p['boardId']  
                         currentMatchPlayers.append(p)
 
         matchStarted = {

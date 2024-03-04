@@ -272,7 +272,10 @@
                     const id = JSON.parse('{{ id | tojson | safe}}');
                     const me = JSON.parse('{{ me | tojson | safe}}');
                     const meHost = JSON.parse('{{ meHost | tojson | safe}}');
-                    const players = JSON.parse('{{ players | tojson | safe}}');
+                    let players = JSON.parse('{{ players | tojson | safe}}');
+                    if(players == false || players == null || players == undefined || players == ''){
+                        players = null;
+                    }
                     createPeer(id, me, meHost, players);
                 }, 1000);
             }
@@ -840,12 +843,12 @@
 
 
         function createPeer(matchId, meId, meHost, players){
+            if(matchId === null || meId === null || players === null) return;
+
             console.log('Match-ID: ' + matchId);
             console.log('My-ID: ' + meId);
             console.log('Me-Host: ' + meHost);
             console.log('Players: ' + players);
-
-            if(matchId === null || meId === null || players === '' || players == []) return;
 
             if(peer){
                 peer.destroy();
