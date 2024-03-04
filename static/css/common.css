@@ -268,7 +268,7 @@ button, select{
     text-align: right;
     user-select: none;
     float: right;
-    clear: both; */
+    clear: both;
 }
 .web-rtc-chat-message-in, .web-rtc-chat-message-file-in{
     display: block;
