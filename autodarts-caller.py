@@ -1070,16 +1070,16 @@ def listen_to_match(m, ws):
                 play_sound_effect('bulling_start')
 
             if mode == 'X01':
-                global currentMatchOpponent
+                global currentMatchPlayers
+                currentMatchPlayers = []
 
                 if players != []:
                     for p in players:
-                        if 'boardId' in p and p['boardId'] != AUTODART_USER_BOARD_ID:
-                            currentMatchOpponent = p['boardId']
-                            break
-                
+                        # and p['boardId'] != AUTODART_USER_BOARD_ID
+                        if 'boardId' in p:
+                            currentMatchPlayers = currentMatchPlayers.append(p)
 
-
+            
                 # Determine "baseScore"-Key
                 base = 'baseScore'
                 if 'target' in m['settings']:
@@ -1089,7 +1089,7 @@ def listen_to_match(m, ws):
                     "event": "match-started",
                     "id": currentMatch,
                     "me": AUTODART_USER_BOARD_ID,
-                    "opponent": currentMatchOpponent,
+                    "players": currentMatchPlayers,
                     "player": currentPlayerName,
                     "game": {
                         "mode": mode,
@@ -2648,7 +2648,7 @@ def index():
                            state=WEB, 
                            id=currentMatch,
                            me=AUTODART_USER_BOARD_ID,
-                           opponent=currentMatchOpponent,
+                           players=currentMatchPlayers,
                            languages=CALLER_LANGUAGES, 
                            genders=CALLER_GENDERS,
                            language=RANDOM_CALLER_LANGUAGE,
@@ -2810,8 +2810,8 @@ if __name__ == "__main__":
     global currentMatch
     currentMatch = None
 
-    global currentMatchOpponent
-    currentMatchOpponent = None
+    global currentMatchPlayers
+    currentMatchPlayers = []
 
     global caller
     caller = None
