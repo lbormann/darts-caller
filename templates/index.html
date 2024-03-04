@@ -855,6 +855,10 @@
                 console.log('My peer ID is:' + id + ' - Host: ' + meHost);
                 if(meHost === 'True'){
                     peer.on('error', function(err) {
+                        // connOut = peer.connect(opponentPeerId);
+                        // setTimeout(function() {
+                        //       connectOpponent(once);
+                        // }, 2000);
                         connectOpponent(false);
                         console.log(err);
                     });  
@@ -907,9 +911,9 @@
             peer.on('close', function() {
                 console.log('Peer connection destroyed.');
             });
-            peer.on('error', function(err) {
-                console.log(err);
-            });  
+            // peer.on('error', function(err) {
+            //     console.log(err);
+            // });  
      
         }
         
@@ -947,7 +951,8 @@
                     addWebRtcChat('Disconnected from opponent', 4);
                     if(once == false){
                         setTimeout(function() {
-                            connectOpponent(once)
+                            connectOpponent(once);
+                            // connOut = peer.connect(opponentPeerId);
                         }, 2000);
                     }
                 });
@@ -956,7 +961,8 @@
                     addWebRtcChat('Error on connection', 4);
                     if(once == false){
                         setTimeout(function() {
-                            connectOpponent(once)
+                            connectOpponent(once);
+                            // connOut = peer.connect(opponentPeerId);
                         }, 2000);
                     }
                 });  
