@@ -838,6 +838,10 @@
             // players === '[]'
             if(matchId === 'None' || meId === 'None' || players === 'None') return;
 
+            if(peer){
+                peer.destroy();
+            }
+
             match = matchId;
             me = meId;
             opponent = players;
@@ -853,13 +857,9 @@
             peer = new Peer(mePeerId, config);
 
             peer.on('open', function(id) {
-                console.log('My peer ID is:' + id + ' - Host: ' + meHost);
-                if(meHost === 'True'){
+                console.log('My peer ID is: ' + id + ' - Host: ' + meHost);
+                if(meHost === 'True' || meHost == true){
                     peer.on('error', function(err) {
-                        // connOut = peer.connect(opponentPeerId);
-                        // setTimeout(function() {
-                        //       connectOpponent(once);
-                        // }, 2000);
                         connectOpponent(false);
                         console.log(err);
                     });  
