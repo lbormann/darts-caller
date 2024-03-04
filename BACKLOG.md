@@ -1,3 +1,4 @@
+- rework autodarts-caller code
 - rework custom-event`s data-types without stringfication
 - remove scoreboard
 - add open-lobby command

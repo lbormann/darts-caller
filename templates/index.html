@@ -5,11 +5,11 @@
     <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script type="text/javascript" src="/static/js/common.js?v=1.0.1"></script>
     <!-- https://unpkg.com/dexie/dist/dexie.js -->
     <script type="text/javascript" src="/static/js/dexie-min-3.2.4.js"></script>
-    <script type="text/javascript" src="/static/js/common.js?v=1.0.1"></script>
-    <script src='https://meet.jit.si/external_api.js'></script>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <!-- https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js -->
+    <script type="text/javascript" src="/static/js/peerjs.min-1.5.2.js"></script>
     <link rel="stylesheet" href="/static/css/common.css?v=1.0.0">
 </head>
 
@@ -27,11 +27,12 @@
 
     <!-- webrtc -->
     <div id="web-rtc-container" style="display:none;">
-        <div id="web-rtc-opponent" class=""></div>
-        <div id="web-rtc-chat" style="display:none;" class=""></div>
+        <div id="web-rtc-chat" class=""></div>
         <button id="web-rtc-chat-add-instant" class="">Remember!</button>
         <button id="web-rtc-chat-clear-instants" class="">Clear!</button>
-        <input id="web-rtc-chat-send-message" type="text" placeholder="write a message" class="" style="display:none;"></input>
+        <label for="web-rtc-chat-file" class="custom-file-input"></label>
+        <input id="web-rtc-chat-file" type="file" accept="image/*" capture="camera" />
+        <input id="web-rtc-chat-send-message" type="text" placeholder="write a message" class=""></input>
         <div id="web-rtc-chat-instants" class=""></div> 
     </div>
     
@@ -152,11 +153,11 @@
 
         // WebRTC Stuff
         const webRtcContainer = document.getElementById('web-rtc-container');
-        const webRtcOpponent = document.getElementById('web-rtc-opponent');
         const webRtcChat = document.getElementById('web-rtc-chat');
         const webRtcChatAddInstant = document.getElementById('web-rtc-chat-add-instant');
         const webRtcChatClearInstants = document.getElementById('web-rtc-chat-clear-instants');
         const webRtcChatSendMessage = document.getElementById('web-rtc-chat-send-message');
+        const webRtcChatFile = document.getElementById('web-rtc-chat-file');
         const webRtcChatInstants = document.getElementById('web-rtc-chat-instants');
         
         // caller stuff
@@ -205,6 +206,7 @@
         let audioQueue = Promise.resolve();
         let previousWait = false;
         let match, me, opponent;
+        let opponentName, oppoenentAvatar;
         let peer, connOut;
         let connEstablished = false;
         let chat = [];
@@ -264,7 +266,14 @@
                 loadPreferences();
 
                 setTimeout(function() {
-                    createPeer("{{id}}", "{{me}}", "{{opponent}}");
+                    const id = JSON.parse('{{ id | tojson | safe}}');
+                    const me = JSON.parse('{{ me | tojson | safe}}');
+                    const meHost = JSON.parse('{{ meHost | tojson | safe}}');
+                    let players = JSON.parse('{{ players | tojson | safe}}');
+                    if(players == false || players == null || players == undefined || players == ''){
+                        players = null;
+                    }
+                    createPeer(id, me, meHost, players);
                 }, 1000);
             }
         });
@@ -298,23 +307,34 @@
         });
         webRtcChatAddInstant.addEventListener('click', function() {
             if(webRtcChatSendMessage.value != ''){
-                // if(connEstablished){
-                //         connOut.send(webRtcChatSendMessage.value);
-                // }else{
-                //     chatOffline.push(webRtcChatSendMessage.value);
-                // }
-                // addWebRtcChat(webRtcChatSendMessage.value, 2);
                 instants.push(webRtcChatSendMessage.value);
                 updateInstants();
                 webRtcChatSendMessage.value = "";
             }         
         });
+        webRtcChatFile.onchange = function(event) {
+            if(event.target.files.length > 0) {
+                const file = event.target.files[0];
+                const blob = new Blob(event.target.files, { type: file.type });
+                const fileObj = {
+                    file: blob,
+                    filename: file.name,
+                    filetype: file.type
+                };
+                if(connEstablished){
+                    connOut.send(fileObj);
+                }else{
+                    chatOffline.push(fileObj);
+                }
+                addWebRtcChat(event.target.files[0], 2); 
+                // webRtcChatSendMessage.value = "";
+            }
+        }
         webRtcChatClearInstants.addEventListener('click', function() {
             instants = [];
             updateInstants();
             savePreferences();    
         });
-
 
         buttonChange.addEventListener('click', function() {
             ws.send('ban:change');            
@@ -818,41 +838,75 @@
         }
 
 
-        function createPeer(matchId, meId, opponentId){
-            if(matchId == 'None' || meId == 'None' || opponentId == 'None') return;
+
+        function createPeer(matchId, meId, meHost, players){
+            if(matchId === null || meId === null || players === null) return;
+
+            console.log('Match-ID: ' + matchId);
+            console.log('My-ID: ' + meId);
+            console.log('Me-Host: ' + meHost);
+            console.log('Players: ' + players);
+
+            if(peer){
+                peer.destroy();
+            }
 
             match = matchId;
             me = meId;
-            opponent = opponentId;
+            opponent = players[0]['boardId'];
+            opponentName = players[0]['name'];
+            oppoenentAvatar = players[0]['avatarUrl'];
 
-            console.log('Match-ID: ' + matchId);
-            console.log('Me-ID: ' + meId);
-            console.log('Opponent-ID: ' + opponentId);
+            console.log('Opponent-ID: ' + opponent);
 
-            peer = new Peer(matchId + "-" + meId, {debug: 2});
+            var mePeerId = match + "-" + me;
+            var opponentPeerId = match + "-" + opponent;
+
+            let config = { 'iceServers': [{ 'urls': ['stun:stun.l.google.com:19302'] }], 'debug': 2 };
+            peer = new Peer(mePeerId, config);
 
             peer.on('open', function(id) {
-                console.log('My peer ID is:' + id);
-                connectOpponent(true);
-            });
-            peer.on('connection', function(conn) {
-                addWebRtcChat('Opponent joined', 3);
-                webRtcContainer.style.display = 'block';
-                webRtcChat.style.display = 'block';
-                webRtcChatSendMessage.style.display = 'block';
-                // if(!connEstablished){
-                //     connEstablished = true;
-                //     connOut = conn;
-                // }
-                conn.on('data', function(data){
-                    if(data != ''){
-                        addWebRtcChat(data, 1);
-                        console.log(data);
-                        audio.play();
+                console.log('My peer ID is: ' + id + ' - Host: ' + meHost);
+
+                if(meHost === 'True' || meHost == true){
+                    peer.on('error', function(err) {
                         connectOpponent(false);
-                    }
-                });
+                        console.log(err);
+                    });  
+                    connectOpponent(false);
+                }else{
+                    peer.on('connection', function(conn) {
+                        connOut = conn;
+                        webRtcContainer.style.display = 'block';
+
+                        conn.on('open', function(){
+                            connEstablished = true;
+                            webRtcContainer.style.display = 'block';
+                            addWebRtcChat('Connected to ' + opponentName, 3);
+
+                            while (chatOffline.length > 0) {
+                                conn.send(chatOffline.pop());
+                            }
+                        });
+                        conn.on('data', function(data){
+                            if(data != ''){
+                                addWebRtcChat(data, 1);
+                                audio.play();
+                            }
+                        });
+                        conn.on('close', function(){
+                            connEstablished = false;
+                            addWebRtcChat('Disconnected from ' + opponentName, 4);
+                        });
+                        conn.on('error', function(){
+                            connEstablished = false;
+                            addWebRtcChat('Disconnected from ' + opponentName, 4);
+                        });   
+
+                    }); 
+                }
             });
+
             peer.on('disconnected', function() {
                 console.log('Peer connection lost.');
                 peer.reconnect();
@@ -860,93 +914,175 @@
             peer.on('close', function() {
                 console.log('Peer connection destroyed.');
             });
-            peer.on('error', function(err) {
-                console.log(err);
-            });        
+            // peer.on('error', function(err) {
+            //     console.log(err);
+            // });  
         }
         
         function connectOpponent(once){
             if(connEstablished) return;
 
+            var mePeerId = match + "-" + me;
             var opponentPeerId = match + "-" + opponent;
 
             console.log('Trying to connect to opponent ' + opponentPeerId);
+
             connOut = peer.connect(opponentPeerId);
             connOut.on('open', function(){
                 connEstablished = true;
                 webRtcContainer.style.display = 'block';
-                webRtcChat.style.display = 'block';
-                webRtcChatSendMessage.style.display = 'block';
-                addWebRtcChat('Connected to opponent', 3);
+                addWebRtcChat('Connected to ' + opponentName, 3);
+
                 while (chatOffline.length > 0) {
                     connOut.send(chatOffline.pop());
                 }
             });
             connOut.on('data', function(data){
-                    if(data != ''){
-                        addWebRtcChat(data, 1);
-                        console.log(data);
-                        audio.play();
-                    }
+                if(data != ''){
+                    addWebRtcChat(data, 1);
+                    // console.log(data);
+                    audio.play();
+                }
             });
             connOut.on('close', function(){
                 connEstablished = false;
-                addWebRtcChat('Disconnected from opponent', 4);
-                if(!once){
+                addWebRtcChat('Disconnected from ' + opponentName, 4);
+                if(once == false){
                     setTimeout(function() {
                         connectOpponent(once);
+                        // connOut = peer.connect(opponentPeerId);
                     }, 2000);
                 }
             });
             connOut.on('error', function(){
                 connEstablished = false;
                 addWebRtcChat('Error on connection', 4);
-                if(!once){
+                if(once == false){
                     setTimeout(function() {
                         connectOpponent(once);
                     }, 2000);
                 }
-            });   
-        }
+            });  
+    }
                    
 
         function clearWebRtcChat(){
+            chatOffline = [];
             chat = [];
+            webRtcChat.innerHTML = "";
             renderWebRtcChat();
         }
         
+        function currentTime() {
+            let date = new Date();
+            let hours = ('0' + date.getHours()).slice(-2);
+            let minutes = ('0' + date.getMinutes()).slice(-2);
+            return `${hours}:${minutes}`;
+        }
+
         function addWebRtcChat(message, type){
             let msgObject = {
                 text: message,
                 type: type,
+                timestamp: parseInt(Date.now()).toString(),
+                time: currentTime()
             }
             chat.push(msgObject);
             renderWebRtcChat();
         }
         
-        function renderWebRtcChat(){
-            webRtcChat.innerHTML = "";
-            chat.forEach(function(obj) {
-                let text = document.createElement("div");
+        const encode = input => {
+            const keyStr =
+                'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='
+            let output = ''
+            let chr1, chr2, chr3, enc1, enc2, enc3, enc4
+            let i = 0
 
-                text.innerText = obj.text;
-                if(obj.type === 1){
-                    text.classList.add("web-rtc-chat-message-in");
-                }else if(obj.type === 2){
-                    text.classList.add("web-rtc-chat-message-out");
-                }else if(obj.type === 3){
-                    text.classList.add("web-rtc-chat-message-status-good");
-                }else if(obj.type === 4){
-                    text.classList.add("web-rtc-chat-message-status-bad");
+            while (i < input.length) {
+                chr1 = input[i++]
+                chr2 = i < input.length ? input[i++] : Number.NaN // Not sure if the index
+                chr3 = i < input.length ? input[i++] : Number.NaN // checks are needed here
+
+                enc1 = chr1 >> 2
+                enc2 = ((chr1 & 3) << 4) | (chr2 >> 4)
+                enc3 = ((chr2 & 15) << 2) | (chr3 >> 6)
+                enc4 = chr3 & 63
+
+                if (isNaN(chr2)) {
+                enc3 = enc4 = 64
+                } else if (isNaN(chr3)) {
+                enc4 = 64
                 }
-                webRtcChat.appendChild(text);
+                output +=
+                keyStr.charAt(enc1) +
+                keyStr.charAt(enc2) +
+                keyStr.charAt(enc3) +
+                keyStr.charAt(enc4)
+            }
+            return output
+            }
+
+        function renderWebRtcChat(){
+            chat.forEach(function(cm) {
+                if(document.getElementById(cm.timestamp)) return;
+
+                let message = document.createElement("div");
+                message.id = cm.timestamp;
+                
+                // MSG IN
+                if(cm.type === 1){
+                    if(oppoenentAvatar){
+                        const avatar = document.createElement("img");
+                        avatar.classList.add("web-rtc-chat-message-avatar");
+                        avatar.src = oppoenentAvatar;
+                        message.appendChild(avatar);
+                    }
+
+                    if(typeof(cm.text) === "string"){
+                        message.classList.add("web-rtc-chat-message-in");
+                        message.innerText = cm.text; 
+                    }else{
+                        message.classList.add("web-rtc-chat-message-file-in");
+                        let image = document.createElement("img");
+                        if (cm.text.filetype.includes('image')) {
+                            const bytes = new Uint8Array(cm.text.file);
+                            image.src = 'data:image/png;base64,' + encode(bytes);
+                            message.appendChild(image);
+                        }
+                    } 
+
+                // MSG OUT
+                }else if(cm.type === 2){
+                    if(typeof(cm.text) === "string"){
+                        message.classList.add("web-rtc-chat-message-out");
+                        message.innerText = cm.text;    
+                    }else{
+                        message.classList.add("web-rtc-chat-message-file-out");
+                        let image = document.createElement("img");
+                        var reader = new FileReader();
+                        reader.onload = function (e) { 
+                            image.setAttribute('src', e.target.result);
+                            message.appendChild(image); 
+                        };
+                        reader.readAsDataURL(cm.text);  
+                    } 
+
+                }else if(cm.type === 3){
+                    message.classList.add("web-rtc-chat-message-status-good");
+                    message.innerText = cm.text;
+                }else if(cm.type === 4){
+                    message.classList.add("web-rtc-chat-message-status-bad");
+                    message.innerText = cm.text; 
+                }
+
+                const time = document.createElement("span");
+                time.classList.add("web-rtc-chat-message-time");
+                time.innerText = cm.time;
+                message.appendChild(time);
+                
+                webRtcChat.appendChild(message);
             });
             webRtcChat.style.display = 'block';
-            // if(chat.length > 0){
-            //     webRtcChat.style.display = 'block';
-            // }else{
-            //     webRtcChat.style.display = 'none';
-            // }  
             webRtcChat.scrollTop = webRtcChat.scrollHeight;   
         }
 
@@ -1066,7 +1202,7 @@
             else if(data.event === 'match-started'){
                 if(match === undefined || match !== data.id){
                     clearWebRtcChat();
-                    createPeer(data.id, data.me, data.opponent);
+                    createPeer(data.id, data.me, data.meHost, data.players);
                 }
             }
             

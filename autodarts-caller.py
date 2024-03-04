@@ -49,7 +49,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.10.1'
+VERSION = '2.10.2'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -1018,6 +1018,8 @@ def poll_lobbies(ws):
 
 def listen_to_match(m, ws):
     global currentMatch
+    global currentMatchHost
+    global currentMatchPlayers
 
     # EXAMPLE
     # {
@@ -1069,16 +1071,19 @@ def listen_to_match(m, ws):
 
                 play_sound_effect('bulling_start')
 
+
+
             if mode == 'X01':
-                global currentMatchOpponent
+                currentMatchPlayers = []
+                currentMatchHost = None
 
                 if players != []:
                     for p in players:
-                        if 'boardId' in p and p['boardId'] != AUTODART_USER_BOARD_ID:
-                            currentMatchOpponent = p['boardId']
-                            break
-                
-
+                        if 'boardId' in p:
+                            if currentMatchHost is None and m['host']['id'] == p['userId'] and p['boardId'] == AUTODART_USER_BOARD_ID:
+                                currentMatchHost = True
+                            else: 
+                                currentMatchPlayers.append(p)
 
                 # Determine "baseScore"-Key
                 base = 'baseScore'
@@ -1089,7 +1094,8 @@ def listen_to_match(m, ws):
                     "event": "match-started",
                     "id": currentMatch,
                     "me": AUTODART_USER_BOARD_ID,
-                    "opponent": currentMatchOpponent,
+                    "meHost": currentMatchHost,
+                    "players": currentMatchPlayers,
                     "player": currentPlayerName,
                     "game": {
                         "mode": mode,
@@ -1145,6 +1151,10 @@ def listen_to_match(m, ws):
     elif m['event'] == 'finish' or m['event'] == 'delete':
         ppi('Stop listening to match: ' + m['id'])
 
+        currentMatchHost = None
+        # currentMatchPlayers = None
+        currentMatchPlayers = []
+
         paramsUnsubscribeMatchEvents = {
             "type": "unsubscribe",
             "channel": "autodarts.matches",
@@ -1186,10 +1196,13 @@ def checkout_only_yourself(currentPlayer):
 
 def process_match_x01(m):
     global currentMatch
+    global currentMatchHost
+    global currentMatchPlayers
     global isGameFinished
     global lastPoints
     
     variant = m['variant']
+    players = m['players']
     currentPlayerIndex = m['player']
     currentPlayer = m['players'][currentPlayerIndex]
     currentPlayerName = str(currentPlayer['name']).lower()
@@ -1427,8 +1440,23 @@ def process_match_x01(m):
 
         reset_checkouts_counter()
 
+
+        currentMatchPlayers = []
+        currentMatchHost = None
+        if players != []:
+            for p in players:
+                if 'boardId' in p:
+                    if currentMatchHost is None and m['host']['id'] == p['userId'] and p['boardId'] == AUTODART_USER_BOARD_ID:
+                        currentMatchHost = True
+                    else:
+                        currentMatchPlayers.append(p)
+
         matchStarted = {
             "event": "match-started",
+            "id": currentMatch,
+            "me": AUTODART_USER_BOARD_ID,
+            "meHost": currentMatchHost,
+            "players": currentMatchPlayers,
             "player": currentPlayerName,
             "game": {
                 "mode": variant,
@@ -2648,7 +2676,8 @@ def index():
                            state=WEB, 
                            id=currentMatch,
                            me=AUTODART_USER_BOARD_ID,
-                           opponent=currentMatchOpponent,
+                           meHost=currentMatchHost,
+                           players=currentMatchPlayers,
                            languages=CALLER_LANGUAGES, 
                            genders=CALLER_GENDERS,
                            language=RANDOM_CALLER_LANGUAGE,
@@ -2810,8 +2839,11 @@ if __name__ == "__main__":
     global currentMatch
     currentMatch = None
 
-    global currentMatchOpponent
-    currentMatchOpponent = None
+    global currentMatchPlayers
+    currentMatchPlayers = []
+
+    global currentMatchHost
+    currentMatchHost = None
 
     global caller
     caller = None
