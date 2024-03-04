@@ -856,15 +856,19 @@
                 connectOpponent(true);
             });
             peer.on('connection', function(conn) {
+                connEstablished = true;
                 // addWebRtcChat('Opponent joined', 3);
+                
                 webRtcContainer.style.display = 'block';
                 webRtcChat.style.display = 'block';
                 webRtcChatSendMessage.style.display = 'block';
                 conn.on('data', function(data){
-                    if(data != '' && data != opponentPeerId){
+                    if(data === opponentPeerId){
+                        connectOpponent(false);
+                    }
+                    else if(data != ''){
                         addWebRtcChat(data, 1);
                         // console.log(data);   
-                        connectOpponent(false);
                         audio.play();
                     }
                 });
@@ -902,7 +906,7 @@
                 }
             });
             connOut.on('data', function(data){
-                if(data != '' && data != opponentPeerId){
+                if(data != ''){
                     addWebRtcChat(data, 1);
                     // console.log(data);
                     audio.play();
