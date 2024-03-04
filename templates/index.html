@@ -905,20 +905,20 @@
             connOut.on('close', function(){
                 connEstablished = false;
                 addWebRtcChat('Disconnected from opponent', 4);
-                if(once == false){
-                    setTimeout(function() {
-                        connectOpponent(once);
-                    }, 2000);
-                }
+                // if(once == false){
+                //     setTimeout(function() {
+                //         connectOpponent(once);
+                //     }, 2000);
+                // }
             });
             connOut.on('error', function(){
                 connEstablished = false;
                 addWebRtcChat('Error on connection', 4);
-                if(once == false){
-                    setTimeout(function() {
-                        connectOpponent(once);
-                    }, 2000);
-                }
+                // if(once == false){
+                //     setTimeout(function() {
+                //         connectOpponent(once);
+                //     }, 2000);
+                // }
             });   
         }
                    
