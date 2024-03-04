@@ -259,6 +259,18 @@ button, select{
 ::placeholder {
     color: lightgrey;
 }
+.web-rtc-chat-message-avatar{
+    width: 48px;
+    height: 48px;
+    max-width: 48px;
+    max-height: 48px;
+    margin-right: 10px;
+    float: left;
+    clear: both;
+    text-align: right;
+    user-select: none;
+    border-radius: 5px;
+}
 .web-rtc-chat-message-time{
     /* padding-top: 10px; */
     margin-left: 10px;

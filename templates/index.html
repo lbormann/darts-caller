@@ -26,15 +26,12 @@
 
 
     <!-- webrtc -->
-    <!-- style="display:none;" -->
-    <div id="web-rtc-container">
-        <!-- style="display:none;" -->
+    <div id="web-rtc-container" style="display:none;">
         <div id="web-rtc-chat" class=""></div>
         <button id="web-rtc-chat-add-instant" class="">Remember!</button>
         <button id="web-rtc-chat-clear-instants" class="">Clear!</button>
         <label for="web-rtc-chat-file" class="custom-file-input"></label>
         <input id="web-rtc-chat-file" type="file" accept="image/*" capture="camera" />
-        <!-- style="display:none;" -->
         <input id="web-rtc-chat-send-message" type="text" placeholder="write a message" class=""></input>
         <div id="web-rtc-chat-instants" class=""></div> 
     </div>
@@ -881,14 +878,10 @@
                     peer.on('connection', function(conn) {
                         connOut = conn;
                         webRtcContainer.style.display = 'block';
-                        webRtcChat.style.display = 'block';
-                        webRtcChatSendMessage.style.display = 'block';
 
                         conn.on('open', function(){
                             connEstablished = true;
                             webRtcContainer.style.display = 'block';
-                            webRtcChat.style.display = 'block';
-                            webRtcChatSendMessage.style.display = 'block';
                             addWebRtcChat('Connected to ' + opponentName, 3);
 
                             while (chatOffline.length > 0) {
@@ -924,7 +917,6 @@
             // peer.on('error', function(err) {
             //     console.log(err);
             // });  
-     
         }
         
         function connectOpponent(once){
@@ -939,8 +931,6 @@
             connOut.on('open', function(){
                 connEstablished = true;
                 webRtcContainer.style.display = 'block';
-                webRtcChat.style.display = 'block';
-                webRtcChatSendMessage.style.display = 'block';
                 addWebRtcChat('Connected to ' + opponentName, 3);
 
                 while (chatOffline.length > 0) {
@@ -1041,10 +1031,12 @@
                 
                 // MSG IN
                 if(cm.type === 1){
-                    const avatar = document.createElement("img");
-                    avatar.classList.add("web-rtc-chat-message-avatar");
-                    avatar.src = oppoenentAvatar;
-                    message.appendChild(avatar);
+                    if(oppoenentAvatar){
+                        const avatar = document.createElement("img");
+                        avatar.classList.add("web-rtc-chat-message-avatar");
+                        avatar.src = oppoenentAvatar;
+                        message.appendChild(avatar);
+                    }
 
                     if(typeof(cm.text) === "string"){
                         message.classList.add("web-rtc-chat-message-in");
