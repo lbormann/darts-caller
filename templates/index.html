@@ -860,7 +860,6 @@
                     });  
                     connectOpponent(false);
                 }else{
-                    console.log('WHAT?');
                     peer.on('connection', function(conn) {
                         connOut = conn;
                         // addWebRtcChat('Opponent joined', 3);
@@ -893,7 +892,8 @@
                         });
                         conn.on('error', function(){
                             connEstablished = false;
-                            addWebRtcChat('Error on connection', 4);
+                            // addWebRtcChat('Error on connection', 4);
+                            addWebRtcChat('Disconnected from opponent', 4);
                         });   
 
                     }); 
