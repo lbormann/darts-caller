@@ -209,7 +209,7 @@
         let audioQueue = Promise.resolve();
         let previousWait = false;
         let match, me, opponent;
-        let opponentName;
+        let opponentName, oppoenentAvatar;
         let peer, connOut;
         let connEstablished = false;
         let chat = [];
@@ -858,6 +858,7 @@
             me = meId;
             opponent = players[0]['boardId'];
             opponentName = players[0]['name'];
+            oppoenentAvatar = players[0]['avatarUrl'];
 
             console.log('Opponent-ID: ' + opponent);
 
@@ -1040,6 +1041,11 @@
                 
                 // MSG IN
                 if(cm.type === 1){
+                    const avatar = document.createElement("img");
+                    avatar.classList.add("web-rtc-chat-message-avatar");
+                    avatar.src = oppoenentAvatar;
+                    message.appendChild(avatar);
+
                     if(typeof(cm.text) === "string"){
                         message.classList.add("web-rtc-chat-message-in");
                         message.innerText = cm.text; 
