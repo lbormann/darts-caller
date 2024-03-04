@@ -848,12 +848,14 @@
             let config = { 'iceServers': [{ 'urls': ['stun:stun.l.google.com:19302'] }], 'debug': 2 };
             peer = new Peer(matchId + "-" + meId, config);
 
+
+
             peer.on('open', function(id) {
                 console.log('My peer ID is:' + id);
                 connectOpponent(true);
             });
             peer.on('connection', function(conn) {
-                addWebRtcChat('Opponent joined', 3);
+                // addWebRtcChat('Opponent joined', 3);
                 webRtcContainer.style.display = 'block';
                 webRtcChat.style.display = 'block';
                 webRtcChatSendMessage.style.display = 'block';
@@ -891,6 +893,10 @@
                 webRtcChat.style.display = 'block';
                 webRtcChatSendMessage.style.display = 'block';
                 addWebRtcChat('Connected to opponent', 3);
+
+                connOut.send(webRtcChatSendMessage.value);
+                addWebRtcChat('Hi I am back!', 1);
+
                 while (chatOffline.length > 0) {
                     connOut.send(chatOffline.pop());
                 }
@@ -905,20 +911,20 @@
             connOut.on('close', function(){
                 connEstablished = false;
                 addWebRtcChat('Disconnected from opponent', 4);
-                if(once == false){
-                    setTimeout(function() {
-                        connectOpponent(once);
-                    }, 2000);
-                }
+                // if(once == false){
+                //     setTimeout(function() {
+                //         connectOpponent(once);
+                //     }, 2000);
+                // }
             });
             connOut.on('error', function(){
                 connEstablished = false;
                 addWebRtcChat('Error on connection', 4);
-                if(once == false){
-                    setTimeout(function() {
-                        connectOpponent(once);
-                    }, 2000);
-                }
+                // if(once == false){
+                //     setTimeout(function() {
+                //         connectOpponent(once);
+                //     }, 2000);
+                // }
             });   
         }
                    
