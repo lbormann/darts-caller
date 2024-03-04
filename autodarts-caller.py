@@ -1018,6 +1018,8 @@ def poll_lobbies(ws):
 
 def listen_to_match(m, ws):
     global currentMatch
+    global currentMatchHost
+    global currentMatchPlayers
 
     # EXAMPLE
     # {
@@ -1072,8 +1074,6 @@ def listen_to_match(m, ws):
 
 
             if mode == 'X01':
-                global currentMatchHost
-                global currentMatchPlayers
                 # currentMatchPlayers = []
                 currentMatchHost = None
 
@@ -1152,6 +1152,10 @@ def listen_to_match(m, ws):
         
     elif m['event'] == 'finish' or m['event'] == 'delete':
         ppi('Stop listening to match: ' + m['id'])
+
+        currentMatchHost = None
+        currentMatchPlayers = None
+        # currentMatchPlayers = []
 
         paramsUnsubscribeMatchEvents = {
             "type": "unsubscribe",

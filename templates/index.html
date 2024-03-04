@@ -836,7 +836,7 @@
 
         function createPeer(matchId, meId, meHost, players){
             if(matchId === 'None' || meId === 'None' || players === '[]') return;
-            console.log(players);
+
             match = matchId;
             me = meId;
             opponent = players;
@@ -866,7 +866,6 @@
                 }else{
                     peer.on('connection', function(conn) {
                         connOut = conn;
-                        // addWebRtcChat('Opponent joined', 3);
                         webRtcContainer.style.display = 'block';
                         webRtcChat.style.display = 'block';
                         webRtcChatSendMessage.style.display = 'block';
@@ -877,7 +876,6 @@
                             webRtcChat.style.display = 'block';
                             webRtcChatSendMessage.style.display = 'block';
                             addWebRtcChat('Connected to opponent', 3);
-                            // conn.send(mePeerId);
 
                             while (chatOffline.length > 0) {
                                 conn.send(chatOffline.pop());
@@ -886,7 +884,6 @@
                         conn.on('data', function(data){
                             if(data != ''){
                                 addWebRtcChat(data, 1);
-                                // console.log(data);   
                                 audio.play();
                             }
                         });
@@ -933,7 +930,6 @@
                     webRtcChat.style.display = 'block';
                     webRtcChatSendMessage.style.display = 'block';
                     addWebRtcChat('Connected to opponent', 3);
-                    // connOut.send(mePeerId);
 
                     while (chatOffline.length > 0) {
                         connOut.send(chatOffline.pop());
