@@ -209,6 +209,7 @@
         let audioQueue = Promise.resolve();
         let previousWait = false;
         let match, me, opponent;
+        let opponentName;
         let peer, connOut;
         let connEstablished = false;
         let chat = [];
@@ -268,7 +269,11 @@
                 loadPreferences();
 
                 setTimeout(function() {
-                    createPeer("{{id}}", "{{me}}", "{{meHost}}", "{{players}}");
+                    const id = JSON.parse('{{ id | tojson | safe}}');
+                    const me = JSON.parse('{{ me | tojson | safe}}');
+                    const meHost = JSON.parse('{{ meHost | tojson | safe}}');
+                    const players = JSON.parse('{{ players | tojson | safe}}');
+                    createPeer(id, me, meHost, players);
                 }, 1000);
             }
         });
@@ -835,8 +840,12 @@
 
 
         function createPeer(matchId, meId, meHost, players){
-            // players === '[]'
-            if(matchId === 'None' || meId === 'None' || players === 'None') return;
+            console.log('Match-ID: ' + matchId);
+            console.log('My-ID: ' + meId);
+            console.log('Me-Host: ' + meHost);
+            console.log('Players: ' + players);
+
+            if(matchId === null || meId === null || players === '' || players == []) return;
 
             if(peer){
                 peer.destroy();
@@ -844,10 +853,9 @@
 
             match = matchId;
             me = meId;
-            opponent = players;
+            opponent = players[0]['boardId'];
+            opponentName = players[0]['name'];
 
-            console.log('Match-ID: ' + matchId);
-            console.log('My-ID: ' + meId);
             console.log('Opponent-ID: ' + opponent);
 
             var mePeerId = match + "-" + me;
@@ -858,6 +866,7 @@
 
             peer.on('open', function(id) {
                 console.log('My peer ID is: ' + id + ' - Host: ' + meHost);
+
                 if(meHost === 'True' || meHost == true){
                     peer.on('error', function(err) {
                         connectOpponent(false);
@@ -876,7 +885,7 @@
                             webRtcContainer.style.display = 'block';
                             webRtcChat.style.display = 'block';
                             webRtcChatSendMessage.style.display = 'block';
-                            addWebRtcChat('Connected to opponent', 3);
+                            addWebRtcChat('Connected to ' + opponentName, 3);
 
                             while (chatOffline.length > 0) {
                                 conn.send(chatOffline.pop());
@@ -890,12 +899,11 @@
                         });
                         conn.on('close', function(){
                             connEstablished = false;
-                            addWebRtcChat('Disconnected from opponent', 4);
+                            addWebRtcChat('Disconnected from ' + opponentName, 4);
                         });
                         conn.on('error', function(){
                             connEstablished = false;
-                            // addWebRtcChat('Error on connection', 4);
-                            addWebRtcChat('Disconnected from opponent', 4);
+                            addWebRtcChat('Disconnected from ' + opponentName, 4);
                         });   
 
                     }); 
@@ -923,52 +931,45 @@
 
             console.log('Trying to connect to opponent ' + opponentPeerId);
 
-            // try {
-                connOut = peer.connect(opponentPeerId);
-                connOut.on('open', function(){
-                    connEstablished = true;
-                    webRtcContainer.style.display = 'block';
-                    webRtcChat.style.display = 'block';
-                    webRtcChatSendMessage.style.display = 'block';
-                    addWebRtcChat('Connected to opponent', 3);
+            connOut = peer.connect(opponentPeerId);
+            connOut.on('open', function(){
+                connEstablished = true;
+                webRtcContainer.style.display = 'block';
+                webRtcChat.style.display = 'block';
+                webRtcChatSendMessage.style.display = 'block';
+                addWebRtcChat('Connected to ' + opponentName, 3);
 
-                    while (chatOffline.length > 0) {
-                        connOut.send(chatOffline.pop());
-                    }
-                });
-                connOut.on('data', function(data){
-                    if(data != ''){
-                        addWebRtcChat(data, 1);
-                        // console.log(data);
-                        audio.play();
-                    }
-                });
-                connOut.on('close', function(){
-                    connEstablished = false;
-                    addWebRtcChat('Disconnected from opponent', 4);
-                    if(once == false){
-                        setTimeout(function() {
-                            connectOpponent(once);
-                            // connOut = peer.connect(opponentPeerId);
-                        }, 2000);
-                    }
-                });
-                connOut.on('error', function(){
-                    connEstablished = false;
-                    addWebRtcChat('Error on connection', 4);
-                    if(once == false){
-                        setTimeout(function() {
-                            connectOpponent(once);
-                            // connOut = peer.connect(opponentPeerId);
-                        }, 2000);
-                    }
-                });  
-            // }catch(error) {
-            //     setTimeout(function() {
-            //         connectOpponent(once)
-            //     }, 2000);
-            // }
-        }
+                while (chatOffline.length > 0) {
+                    connOut.send(chatOffline.pop());
+                }
+            });
+            connOut.on('data', function(data){
+                if(data != ''){
+                    addWebRtcChat(data, 1);
+                    // console.log(data);
+                    audio.play();
+                }
+            });
+            connOut.on('close', function(){
+                connEstablished = false;
+                addWebRtcChat('Disconnected from ' + opponentName, 4);
+                if(once == false){
+                    setTimeout(function() {
+                        connectOpponent(once);
+                        // connOut = peer.connect(opponentPeerId);
+                    }, 2000);
+                }
+            });
+            connOut.on('error', function(){
+                connEstablished = false;
+                addWebRtcChat('Error on connection', 4);
+                if(once == false){
+                    setTimeout(function() {
+                        connectOpponent(once);
+                    }, 2000);
+                }
+            });  
+    }
                    
 
         function clearWebRtcChat(){

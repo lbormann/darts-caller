@@ -1,6 +1,6 @@
 ## 2.11.0
 
-- add photo-transfer to match-chat
+- add image-transfer to match-chat
 - fix bugs match-chat
 
 

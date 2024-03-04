@@ -1074,7 +1074,7 @@ def listen_to_match(m, ws):
 
 
             if mode == 'X01':
-                # currentMatchPlayers = []
+                currentMatchPlayers = []
                 currentMatchHost = None
 
                 if players != []:
@@ -1083,9 +1083,8 @@ def listen_to_match(m, ws):
                             if currentMatchHost is None and m['host']['id'] == p['userId'] and p['boardId'] == AUTODART_USER_BOARD_ID:
                                 currentMatchHost = True
                             else:
-                                currentMatchPlayers = p['boardId']  
-                                # currentMatchPlayers.append(p['boardId'])
-
+                                # currentMatchPlayers = p['boardId']  
+                                currentMatchPlayers.append(p)
 
                 # Determine "baseScore"-Key
                 base = 'baseScore'
@@ -1154,8 +1153,8 @@ def listen_to_match(m, ws):
         ppi('Stop listening to match: ' + m['id'])
 
         currentMatchHost = None
-        currentMatchPlayers = None
-        # currentMatchPlayers = []
+        # currentMatchPlayers = None
+        currentMatchPlayers = []
 
         paramsUnsubscribeMatchEvents = {
             "type": "unsubscribe",
@@ -1443,7 +1442,7 @@ def process_match_x01(m):
         reset_checkouts_counter()
 
 
-        # currentMatchPlayers = []
+        currentMatchPlayers = []
         currentMatchHost = None
         if players != []:
             for p in players:
@@ -1451,8 +1450,8 @@ def process_match_x01(m):
                     if currentMatchHost is None and m['host']['id'] == p['userId'] and p['boardId'] == AUTODART_USER_BOARD_ID:
                         currentMatchHost = True
                     else:
-                        currentMatchPlayers = p['boardId']  
-                        # currentMatchPlayers.append(p['boardId'])
+                        # currentMatchPlayers = p['boardId']  
+                        currentMatchPlayers.append(p)
 
         matchStarted = {
             "event": "match-started",
