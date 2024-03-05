@@ -1,4 +1,12 @@
-## 2.11.0
+## 2.10.3
+
+- improve chat UX
+- add chat settings (DC-Name)
+- add chat link ability
+- update all amazon voice-pack
+
+
+## 2.10.2
 
 - add image-transfer to match-chat
 - fix bugs match-chat

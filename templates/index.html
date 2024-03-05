@@ -26,92 +26,99 @@
 
 
     <!-- webrtc -->
-    <div id="web-rtc-container" style="display:none;">
-        <div id="web-rtc-chat" class=""></div>
-        <button id="web-rtc-chat-add-instant" class="">Remember!</button>
-        <button id="web-rtc-chat-clear-instants" class="">Clear!</button>
+    <!-- style="display:none;" -->
+    <div id="web-rtc-container">
+        <div id="web-rtc-chat"></div>
+        <button id="web-rtc-chat-add-instant">Remember!</button>
+        <button id="web-rtc-chat-clear-instants">Clear!</button>
         <label for="web-rtc-chat-file" class="custom-file-input"></label>
         <input id="web-rtc-chat-file" type="file" accept="image/*" capture="camera" />
-        <input id="web-rtc-chat-send-message" type="text" placeholder="write a message" class=""></input>
-        <div id="web-rtc-chat-instants" class=""></div> 
+        <label id="web-rtc-chat-settings-toggle"></label>
+        <div id="web-rtc-chat-settings-container" style="display:none;">
+            <label for="web-rtc-chat-settings-discord">Your Discord id / username:</label>
+            <input id="web-rtc-chat-settings-discord" type="text" placeholder="your discord id or username" />
+        </div>
+        <input id="web-rtc-chat-send-message" type="text" placeholder="write a message"></input>
+        <div id="web-rtc-chat-instants"></div> 
     </div>
     
     <hr>
 
     <!-- caller -->
-    <h2 id="caller-name" style="display:none;"></h2>
-    <image src="/static/images/say.png" id="button-say" style="display:none;"></image>
-    <h2 id="caller-call" style="display:none;"></h2>
+    <div id="caller-container">
+        <h2 id="caller-name" style="display:none;"></h2>
+        <image src="/static/images/say.png" id="button-say" style="display:none;"></image>
+        <h2 id="caller-call" style="display:none;"></h2>
 
-    <image src="/static/images/loading.gif" style="display:none;" id="loader"></image>
-    
-    <button id="button-change" style="display:none;">Change caller!</button>
+        <image src="/static/images/loading.gif" style="display:none;" id="loader"></image>
+        
+        <button id="button-change" style="display:none;">Change caller!</button>
 
-    <div id="select-language" style="display:none;">
-        <select name="language" id="language" tabindex="-1">
-            <option value="0"{% if key == language %}selected{% endif %}>All languages</option>
-            {% for key, value in languages.items() %}
-                <option value="{{ key }}" {% if key == language %}selected{% endif %}>{{ value[0] }}</option>
-            {% endfor %}
-        </select>
+        <div id="select-language" style="display:none;">
+            <select name="language" id="language" tabindex="-1">
+                <option value="0"{% if key == language %}selected{% endif %}>All languages</option>
+                {% for key, value in languages.items() %}
+                    <option value="{{ key }}" {% if key == language %}selected{% endif %}>{{ value[0] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div id="select-gender" style="display:none;">
+            <select name="gender" id="gender" tabindex="-1">
+                <option value="0"{% if key == gender %}selected{% endif %}>All genders</option>
+                {% for key, value in genders.items() %}
+                    <option value="{{ key }}" {% if key == gender %}selected{% endif %}>{{ value[0] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button id="button-ban" style="display:none;">Ban caller!</button>
+        
+
+        <!-- mods -->    
+        <image id="button-container-mod-toggle" src="/static/images/mods.png" style="display:none;"></image>
+        <div id="container-mod">   
+            <div class="area-mod">
+                <h2>Volume</h2>
+                <p>
+                    <div id="slider-volume-value" class="mod-value"></div>
+                    <input id="slider-volume" class="ranger" type="range" >
+                </p>
+                <button id="button-volume-reset" class="reset">Reset</button>
+            </div>
+
+            <div class="area-mod">
+                <h2>Auto-Randomizer</h2>
+                <p>
+                    <div id="slider-randomizer-value" class="mod-value"></div>
+                    <input id="slider-randomizer" class="ranger" type="range">
+                </p>
+                <button id="button-randomizer-reset" class="reset">Reset</button>
+            </div>
+
+            <div class="area-mod">
+                <h2>Playback-Rate</h2>
+                <p>
+                    <div id="slider-playback-rate-min-value" class="mod-value"></div>
+                    <input id="slider-playback-rate-min" class="ranger" type="range">
+                    <div id="slider-playback-rate-max-value" class="mod-value"></div>
+                    <input id="slider-playback-rate-max" class="ranger" type="range">         
+                </p>
+                <button id="button-playback-rate-reset" class="reset">Reset</button>
+            </div>
+
+            <div class="area-mod">
+                <h2>Detune</h2>
+                <p>
+                    <div id="slider-detune-min-value" class="mod-value"></div>
+                    <input id="slider-detune-min" class="ranger" type="range">
+                    <div id="slider-detune-max-value" class="mod-value"></div>
+                    <input id="slider-detune-max" class="ranger" type="range">  
+                </p>
+                <button id="button-detune-reset" class="reset">Reset</button>
+            </div>
+        </div>
     </div>
-
-    <div id="select-gender" style="display:none;">
-        <select name="gender" id="gender" tabindex="-1">
-            <option value="0"{% if key == gender %}selected{% endif %}>All genders</option>
-            {% for key, value in genders.items() %}
-                <option value="{{ key }}" {% if key == gender %}selected{% endif %}>{{ value[0] }}</option>
-            {% endfor %}
-        </select>
-    </div>
-
-    <button id="button-ban" style="display:none;">Ban caller!</button>
-    
-
-    <!-- mods -->    
-    <image id="button-container-mod-toggle" src="/static/images/mods.png" style="display:none;"></image>
-    <div id="container-mod">   
-        <div class="area-mod">
-            <h2>Volume</h2>
-            <p>
-                <div id="slider-volume-value" class="mod-value"></div>
-                <input id="slider-volume" class="ranger" type="range" >
-            </p>
-            <button id="button-volume-reset" class="reset">Reset</button>
-        </div>
-
-        <div class="area-mod">
-            <h2>Auto-Randomizer</h2>
-            <p>
-                <div id="slider-randomizer-value" class="mod-value"></div>
-                <input id="slider-randomizer" class="ranger" type="range">
-            </p>
-            <button id="button-randomizer-reset" class="reset">Reset</button>
-        </div>
-
-        <div class="area-mod">
-            <h2>Playback-Rate</h2>
-            <p>
-                <div id="slider-playback-rate-min-value" class="mod-value"></div>
-                <input id="slider-playback-rate-min" class="ranger" type="range">
-                <div id="slider-playback-rate-max-value" class="mod-value"></div>
-                <input id="slider-playback-rate-max" class="ranger" type="range">         
-            </p>
-            <button id="button-playback-rate-reset" class="reset">Reset</button>
-        </div>
-
-        <div class="area-mod">
-            <h2>Detune</h2>
-            <p>
-                <div id="slider-detune-min-value" class="mod-value"></div>
-                <input id="slider-detune-min" class="ranger" type="range">
-                <div id="slider-detune-max-value" class="mod-value"></div>
-                <input id="slider-detune-max" class="ranger" type="range">  
-            </p>
-            <button id="button-detune-reset" class="reset">Reset</button>
-        </div>
-    </div>
-    
 
 
 
@@ -151,16 +158,20 @@
         const audio = document.getElementById('audio');
         const buttonClear = document.getElementById('app-info'); 
 
-        // WebRTC Stuff
+        // webRTC Stuff
         const webRtcContainer = document.getElementById('web-rtc-container');
         const webRtcChat = document.getElementById('web-rtc-chat');
         const webRtcChatAddInstant = document.getElementById('web-rtc-chat-add-instant');
         const webRtcChatClearInstants = document.getElementById('web-rtc-chat-clear-instants');
         const webRtcChatSendMessage = document.getElementById('web-rtc-chat-send-message');
         const webRtcChatFile = document.getElementById('web-rtc-chat-file');
+        const webRtcChatSettingsToggle = document.getElementById('web-rtc-chat-settings-toggle');
+        const webRtcChatSettingsContainer = document.getElementById('web-rtc-chat-settings-container');
+        const webRtcChatSettingsDiscord = document.getElementById('web-rtc-chat-settings-discord');
         const webRtcChatInstants = document.getElementById('web-rtc-chat-instants');
         
         // caller stuff
+        const callerContainer = document.getElementById('caller-container');
         const button = document.getElementById('button-start');
         const buttonChange = document.getElementById('button-change');
         const buttonBan = document.getElementById('button-ban');
@@ -200,11 +211,16 @@
 
 
     
-        // vars
+        // VARS
+
+        // caller
         let db, ws, done, loading, caller_name, dexie, specific, banable, playbackRateMin, playbackRateMax, detuneMin, detuneMax, volume, randomizer;
         let audioContext = new (window.AudioContext || window.webkitAudioContext)();
         let audioQueue = Promise.resolve();
         let previousWait = false;
+
+        // webRtc
+        const discordUrl = 'https://discordapp.com/users/';
         let match, me, opponent;
         let opponentName, oppoenentAvatar;
         let peer, connOut;
@@ -212,6 +228,7 @@
         let chat = [];
         let chatOffline = [];
         let instants = [];
+        let settingDiscord = "";
 
         // volume
         sliderVolume.min = volumeMin;
@@ -279,7 +296,6 @@
         });
 
 
-
         buttonClear.addEventListener('click', function() {
             clearPreferences();          
         });
@@ -292,7 +308,38 @@
             setupWebSocketConnection(window.location.hostname, "{{ ws_port }}", onWsOpen, onWsClose, onWsData);
         });
         
-        webRtcChatSendMessage.addEventListener("keydown", function(event) {
+        webRtcChatSettingsToggle.addEventListener("click", function(){
+            if(webRtcChatSettingsContainer.style.display == 'block'){
+                webRtcChatSettingsContainer.style.display = 'none';
+            }else{
+                webRtcChatSettingsContainer.style.display = 'block';
+            }
+        });
+        webRtcChatSettingsDiscord.addEventListener("keydown", function() {  
+            if (event.keyCode === 13) {
+                settingDiscord = this.value;
+                updateWebRtcSettings();
+                sendDiscord();
+            }
+        });
+        webRtcChatSettingsDiscord.addEventListener("blur", function() {  
+            settingDiscord = this.value;
+            updateWebRtcSettings();
+            sendDiscord();
+        });
+        webRtcChatSendMessage.addEventListener("focus", function() {
+            callerContainer.style.display = 'none';
+            webRtcContainer.classList.add("fix-bottom");
+        });
+        webRtcChatSendMessage.addEventListener("click", function() {
+            callerContainer.style.display = 'none';
+            webRtcContainer.classList.add("fix-bottom");
+        });
+        webRtcChat.addEventListener("click", function() {
+            callerContainer.style.display = 'block';
+            webRtcContainer.classList.remove("fix-bottom");   
+        });
+        webRtcChatSendMessage.addEventListener("keydown", function(event) {  
             if (event.keyCode === 13) {
                 if(webRtcChatSendMessage.value != ''){
                     if(connEstablished){
@@ -424,7 +471,12 @@
         });
         
 
-
+        function updateWebRtcSettings(save = true){
+            webRtcChatSettingsDiscord.value = settingDiscord;
+            if(save){
+                savePreferences();
+            }
+        }
         function updateInstants(save = true){
             webRtcChatInstants.innerHTML = "";
 
@@ -483,6 +535,7 @@
         }
 
         function loadPreferences(){  
+            let lsADC_webRtcSettingsDiscord = localStorage.getItem(localStorageAppKey + '_webRtcSettingsDiscord');  
             let lsADC_webRtcInstants = localStorage.getItem(localStorageAppKey + '_webRtcInstants');     
             let lsADC_playbackRateMin = localStorage.getItem(localStorageAppKey + '_playbackRateMin');
             let lsADC_playbackRateMax = localStorage.getItem(localStorageAppKey + '_playbackRateMax');
@@ -491,6 +544,7 @@
             let lsADC_volume = localStorage.getItem(localStorageAppKey + '_volume');
             let lsADC_randomizer = localStorage.getItem(localStorageAppKey + '_randomizer');
 
+            settingDiscord = (lsADC_webRtcSettingsDiscord !== null) ? lsADC_webRtcSettingsDiscord : "";
             instants = (lsADC_webRtcInstants !== null) ? JSON.parse(lsADC_webRtcInstants) : [];
             playbackRateMin = (lsADC_playbackRateMin !== null) ? parseFloat(lsADC_playbackRateMin) : playbackRateDefault;
             playbackRateMax = (lsADC_playbackRateMax !== null) ? parseFloat(lsADC_playbackRateMax) : playbackRateDefault;
@@ -499,6 +553,7 @@
             volume = (lsADC_volume !== null) ? parseFloat(lsADC_volume) : volumeDefault;
             randomizer = (lsADC_randomizer !== null) ? parseFloat(lsADC_randomizer) : randomizerDefault;
 
+            updateWebRtcSettings(false);
             updateInstants(false);
             updatePlaybackRateSliders(false);
             updateDetuneSliders(false);
@@ -506,6 +561,7 @@
             updateRandomizerSlider(false);
         }
         function savePreferences(){
+            localStorage.setItem(localStorageAppKey + '_webRtcSettingsDiscord', settingDiscord);
             localStorage.setItem(localStorageAppKey + '_webRtcInstants', JSON.stringify(instants));
             localStorage.setItem(localStorageAppKey + '_playbackRateMin', playbackRateMin);
             localStorage.setItem(localStorageAppKey + '_playbackRateMax', playbackRateMax);
@@ -515,6 +571,7 @@
             localStorage.setItem(localStorageAppKey + '_randomizer', randomizer);      
         }
         function clearPreferences(){
+            localStorage.removeItem(localStorageAppKey + '_webRtcSettingsDiscord');  
             localStorage.removeItem(localStorageAppKey + '_webRtcInstants');            
             localStorage.removeItem(localStorageAppKey + '_playbackRateMin');
             localStorage.removeItem(localStorageAppKey + '_playbackRateMax');
@@ -839,6 +896,12 @@
 
 
 
+        function sendDiscord(){
+            if(connEstablished && settingDiscord != ''){
+                addWebRtcChat(discordUrl + settingDiscord, 2);
+            }
+        }
+
         function createPeer(matchId, meId, meHost, players){
             if(matchId === null || meId === null || players === null) return;
 
@@ -883,7 +946,8 @@
                             connEstablished = true;
                             webRtcContainer.style.display = 'block';
                             addWebRtcChat('Connected to ' + opponentName, 3);
-
+                            sendDiscord();
+                            
                             while (chatOffline.length > 0) {
                                 conn.send(chatOffline.pop());
                             }
@@ -932,7 +996,7 @@
                 connEstablished = true;
                 webRtcContainer.style.display = 'block';
                 addWebRtcChat('Connected to ' + opponentName, 3);
-
+                sendDiscord();
                 while (chatOffline.length > 0) {
                     connOut.send(chatOffline.pop());
                 }
@@ -1022,6 +1086,16 @@
             return output
             }
 
+        function isURL(str) {
+            var urlPattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
+            '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
+            '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
+            '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
+            '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
+            '(\\#[-a-z\\d_]*)?$','i'); // fragment locator
+            return urlPattern.test(str);
+        }
+
         function renderWebRtcChat(){
             chat.forEach(function(cm) {
                 if(document.getElementById(cm.timestamp)) return;
@@ -1037,10 +1111,17 @@
                         avatar.src = oppoenentAvatar;
                         message.appendChild(avatar);
                     }
-
                     if(typeof(cm.text) === "string"){
                         message.classList.add("web-rtc-chat-message-in");
-                        message.innerText = cm.text; 
+                        if(isURL(cm.text)){
+                            const link = document.createElement("a");
+                            link.href = cm.text;
+                            link.innerText = cm.text;
+                            link.setAttribute("target", "_blank");
+                            message.appendChild(link);
+                        }else{
+                            message.innerText = cm.text; 
+                        } 
                     }else{
                         message.classList.add("web-rtc-chat-message-file-in");
                         let image = document.createElement("img");
@@ -1055,7 +1136,15 @@
                 }else if(cm.type === 2){
                     if(typeof(cm.text) === "string"){
                         message.classList.add("web-rtc-chat-message-out");
-                        message.innerText = cm.text;    
+                        if(isURL(cm.text)){
+                            const link = document.createElement("a");
+                            link.href = cm.text;
+                            link.innerText = cm.text;
+                            link.setAttribute("target", "_blank");
+                            message.appendChild(link);
+                        }else{
+                            message.innerText = cm.text; 
+                        }    
                     }else{
                         message.classList.add("web-rtc-chat-message-file-out");
                         let image = document.createElement("img");

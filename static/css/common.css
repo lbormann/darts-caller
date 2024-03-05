@@ -15,6 +15,9 @@ body{
     text-align: center;
     background-color: black;
     color: white;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow-x: hidden;
 }
 hr{
     margin: 25px;
@@ -182,11 +185,8 @@ button, select{
     text-align: center;
     border-radius: 6px;
     padding: 5px 0;
-
-    /* Position the tooltip */
     position: absolute;
     z-index: 1;
-
     top: -5px;
     right: 105%;
 }
@@ -233,23 +233,21 @@ button, select{
 #button-say{
     width: 48px;
     height: 48px;
-    margin-left: 10px;
     cursor: pointer;
 }
 #button-container-mod-toggle{
-    margin: 20px auto;
     width: 48px;
     height: 48px;
     display: none;
     cursor: pointer;
 }
 #container-mod{
+    width: 85%;
+    margin: 0 auto;
     opacity: 0.95;
     display: none;
-    margin: 0 auto;
     padding: 5px;
     border-radius: 20px;
-    width: 85%;
     background-color: royalblue;;
 }
 
@@ -272,7 +270,6 @@ button, select{
     border-radius: 5px;
 }
 .web-rtc-chat-message-time{
-    /* padding-top: 10px; */
     margin-left: 10px;
     font-size: 8pt;
     color: #8F8F8F;
@@ -348,6 +345,7 @@ button, select{
     width: 100%;
     margin: 0 auto;
     height: auto;
+    padding: 0 !important;
 }
 #web-rtc-chat-instants{
     width: 100%;
@@ -355,15 +353,14 @@ button, select{
 }
 #web-rtc-chat{
     width: 100%;
-    margin: 0 auto;
     margin-top: 20px;
     padding: 12px;
     font-size: 20pt;
     opacity: 90%;
     background-color: #EBDFCE;
     border: 3px solid black;
-    height: 270px;
-    max-height: 270px; 
+    height: 350px;
+    max-height: 350px; 
     overflow-y: auto;
     border-radius: 15px;
 }
@@ -386,7 +383,18 @@ button, select{
     background-size: cover;
     background-position: center;
     background-color: transparent;
-    /* padding: 10px; */
+    width: 48px;
+    height: 48px;
+    cursor: pointer;
+    float: left;
+}
+#web-rtc-chat-settings-toggle{
+    /* display: inline-block;  */
+    float: right;
+    background-image: url('/static/images/mods.png'); 
+    background-size: cover;
+    background-position: center;
+    background-color: transparent;
     width: 48px;
     height: 48px;
     cursor: pointer;
@@ -395,10 +403,14 @@ button, select{
     width: 100%;
     font-size: 26pt;
     height: auto;
-    /* margin: 0 auto; */
     margin-top: 5px;
     padding: 5px;
     background-color: white;
     color: black;
     border-radius: 10px;
+}
+.fix-bottom{
+    position: fixed;
+    bottom: 0;
+    left: 0;  
 }

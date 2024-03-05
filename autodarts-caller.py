@@ -49,7 +49,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.10.2'
+VERSION = '2.10.3'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -118,7 +118,25 @@ CALLER_GENDERS = {
     2: ['male', 'm'],
 }
 CALLER_PROFILES = {
-    # google
+    #------------------------------------------------------------------------------------------------
+    # GOOGLE / Cloud TTS
+    #------------------------------------------------------------------------------------------------
+    # -- fr-FR --
+    'fr-FR-Wavenet-E-FEMALE': ('https://add.arnes-design.de/ADC/fr-FR-Wavenet-E-FEMALE-v3.zip', 3),
+    'fr-FR-Wavenet-B-MALE': ('https://add.arnes-design.de/ADC/fr-FR-Wavenet-B-MALE-v3.zip', 3),
+    # -- ru-RU --
+    'ru-RU-Wavenet-E-FEMALE': ('https://add.arnes-design.de/ADC/ru-RU-Wavenet-E-FEMALE-v3.zip', 3),
+    'ru-RU-Wavenet-B-MALE': ('https://add.arnes-design.de/ADC/ru-RU-Wavenet-B-MALE-v3.zip', 3),
+    # -- de-DE --
+    'de-DE-Wavenet-F-FEMALE': ('https://add.arnes-design.de/ADC/de-DE-Wavenet-F-FEMALE-v3.zip', 3),  
+    'de-DE-Wavenet-B-MALE': ('https://add.arnes-design.de/ADC/de-DE-Wavenet-B-MALE-v3.zip', 3),
+    # -- es-ES --
+    'es-ES-Wavenet-C-FEMALE': ('https://add.arnes-design.de/ADC/es-ES-Wavenet-C-FEMALE-v3.zip', 3),  
+    'es-ES-Wavenet-B-MALE': ('https://add.arnes-design.de/ADC/es-ES-Wavenet-B-MALE-v3.zip', 3),
+    # -- nl-NL --
+    'nl-NL-Wavenet-B-MALE': ('https://add.arnes-design.de/ADC/nl-NL-Wavenet-B-MALE-v3.zip', 3),  
+    'nl-NL-Wavenet-D-FEMALE': ('https://add.arnes-design.de/ADC/nl-NL-Wavenet-D-FEMALE-v3.zip', 3),
+    # -- en-US --
     'en-US-Wavenet-E-FEMALE': ('https://add.arnes-design.de/ADC/en-US-Wavenet-E-FEMALE-v4.zip', 4),
     'en-US-Wavenet-G-FEMALE': ('https://add.arnes-design.de/ADC/en-US-Wavenet-G-FEMALE-v4.zip', 4),
     'en-US-Wavenet-A-MALE': ('https://add.arnes-design.de/ADC/en-US-Wavenet-A-MALE-v4.zip', 4),
@@ -126,37 +144,33 @@ CALLER_PROFILES = {
     'en-US-Wavenet-I-MALE': ('https://add.arnes-design.de/ADC/en-US-Wavenet-I-MALE-v4.zip', 4),
     'en-US-Wavenet-J-MALE': ('https://add.arnes-design.de/ADC/en-US-Wavenet-J-MALE-v4.zip', 4),
     'en-US-Wavenet-F-FEMALE': ('https://add.arnes-design.de/ADC/en-US-Wavenet-F-FEMALE-v4.zip', 4),
-    'fr-FR-Wavenet-E-FEMALE': ('https://add.arnes-design.de/ADC/fr-FR-Wavenet-E-FEMALE-v3.zip', 3),
-    'fr-FR-Wavenet-B-MALE': ('https://add.arnes-design.de/ADC/fr-FR-Wavenet-B-MALE-v3.zip', 3),
-    'ru-RU-Wavenet-E-FEMALE': ('https://add.arnes-design.de/ADC/ru-RU-Wavenet-E-FEMALE-v3.zip', 3),
-    'ru-RU-Wavenet-B-MALE': ('https://add.arnes-design.de/ADC/ru-RU-Wavenet-B-MALE-v3.zip', 3),
-    'de-DE-Wavenet-F-FEMALE': ('https://add.arnes-design.de/ADC/de-DE-Wavenet-F-FEMALE-v3.zip', 3),  
-    'de-DE-Wavenet-B-MALE': ('https://add.arnes-design.de/ADC/de-DE-Wavenet-B-MALE-v3.zip', 3),
-    'es-ES-Wavenet-C-FEMALE': ('https://add.arnes-design.de/ADC/es-ES-Wavenet-C-FEMALE-v3.zip', 3),  
-    'es-ES-Wavenet-B-MALE': ('https://add.arnes-design.de/ADC/es-ES-Wavenet-B-MALE-v3.zip', 3),
-    'nl-NL-Wavenet-B-MALE': ('https://add.arnes-design.de/ADC/nl-NL-Wavenet-B-MALE-v3.zip', 3),  
-    'nl-NL-Wavenet-D-FEMALE': ('https://add.arnes-design.de/ADC/nl-NL-Wavenet-D-FEMALE-v3.zip', 3),
-    # amazon
-    'en-US-Stephen-Male': ('https://add.arnes-design.de/ADC/en-US-Stephen-Male-v4.zip', 4),  
-    'en-US-Ivy-Female': ('https://add.arnes-design.de/ADC/en-US-Ivy-Female-v4.zip', 4),
-    'de-DE-Vicki-Female': ('https://add.arnes-design.de/ADC/de-DE-Vicki-Female-v4.zip', 4),  
-    'de-DE-Daniel-Male': ('https://add.arnes-design.de/ADC/de-DE-Daniel-Male-v4.zip', 4),
-    'en-US-Kendra-Female': ('https://add.arnes-design.de/ADC/en-US-Kendra-Female-v5.zip', 5),
-    'en-US-Joey-Male': ('https://add.arnes-design.de/ADC/en-US-Joey-Male-v5.zip', 5),
-    'en-US-Joanna-Female': ('https://add.arnes-design.de/ADC/en-US-Joanna-Female-v5.zip', 5),
-    'en-US-Gregory-Male': ('https://add.arnes-design.de/ADC/en-US-Gregory-Male-v2.zip', 2),
-    'en-US-Matthew-Male': ('https://add.arnes-design.de/ADC/en-US-Matthew-Male-v2.zip', 2),
-    'en-US-Danielle-Female': ('https://add.arnes-design.de/ADC/en-US-Danielle-Female-v2.zip', 2),
-    'en-US-Kimberly-Female': ('https://add.arnes-design.de/ADC/en-US-Kimberly-Female.zip', 1),
-    'en-US-Ruth-Female': ('https://add.arnes-design.de/ADC/en-US-Ruth-Female.zip', 1),
-    'en-US-Salli-Female': ('https://add.arnes-design.de/ADC/en-US-Salli-Female.zip', 1),
-    'en-US-Kevin-Male': ('https://add.arnes-design.de/ADC/en-US-Kevin-Male.zip', 1),
-    'nl-NL-Laura-Female': ('https://add.arnes-design.de/ADC/nl-NL-Laura-Female.zip', 1),  
-    'de-AT-Hannah-Female': ('https://add.arnes-design.de/ADC/de-AT-Hannah-Female.zip', 1),  
-    'en-US-Justin-Male': ('https://add.arnes-design.de/ADC/en-US-Justin-Male.zip', 1),
+
+    #------------------------------------------------------------------------------------------------
+    # AMAZON / AWS Polly
+    #------------------------------------------------------------------------------------------------
+    # -- nl-NL --
+    'nl-NL-Laura-Female': ('https://add.arnes-design.de/ADC/nl-NL-Laura-Female-v2.zip', 2),
+    # -- de-AT --
+    'de-AT-Hannah-Female': ('https://add.arnes-design.de/ADC/de-AT-Hannah-Female-v2.zip', 2),
+    # -- de-DE --
+    'de-DE-Vicki-Female': ('https://add.arnes-design.de/ADC/de-DE-Vicki-Female-v5.zip', 5),  
+    'de-DE-Daniel-Male': ('https://add.arnes-design.de/ADC/de-DE-Daniel-Male-v5.zip', 5),
+    # -- en-US --
+    'en-US-Ivy-Female': ('https://add.arnes-design.de/ADC/en-US-Ivy-Female-v5.zip', 5),
+    'en-US-Joey-Male': ('https://add.arnes-design.de/ADC/en-US-Joey-Male-v6.zip', 6),
+    'en-US-Joanna-Female': ('https://add.arnes-design.de/ADC/en-US-Joanna-Female-v6.zip', 6),
+    'en-US-Matthew-Male': ('https://add.arnes-design.de/ADC/en-US-Matthew-Male-v3.zip', 3),
+    'en-US-Danielle-Female': ('https://add.arnes-design.de/ADC/en-US-Danielle-Female-v3.zip', 3),
+    'en-US-Kimberly-Female': ('https://add.arnes-design.de/ADC/en-US-Kimberly-Female-v2.zip', 2),
+    'en-US-Ruth-Female': ('https://add.arnes-design.de/ADC/en-US-Ruth-Female-v2.zip', 2),
+    'en-US-Salli-Female': ('https://add.arnes-design.de/ADC/en-US-Salli-Female-v2.zip', 2),
+    'en-US-Kevin-Male': ('https://add.arnes-design.de/ADC/en-US-Kevin-Male-v2.zip', 2),
+    'en-US-Justin-Male': ('https://add.arnes-design.de/ADC/en-US-Justin-Male-v2.zip', 2),
+    'en-US-Stephen-Male': ('https://add.arnes-design.de/ADC/en-US-Stephen-Male-v5.zip', 5),  
+    'en-US-Kendra-Female': ('https://add.arnes-design.de/ADC/en-US-Kendra-Female-v6.zip', 6),
+    'en-US-Gregory-Male': ('https://add.arnes-design.de/ADC/en-US-Gregory-Male-v3.zip', 3),
     
     # 'TODONAME': ('TODOLINK', TODOVERSION),  
-    # 'TODONAME': ('TODOLINK', TODOVERSION), 
 }
 FIELD_COORDS = {
     "0": {"x": 0.016160134143785285,"y": 1.1049884720184449},
