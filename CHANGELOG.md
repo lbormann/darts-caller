@@ -1,9 +1,9 @@
 ## 2.10.3
 
 - improve chat UX
-- add chat settings (DC-Name)
-- add chat link ability
-- update all amazon voice-pack
+- add chat settings (DC-id/username)
+- add chat link functionality
+- update all amazon/aws voice-packs
 
 
 ## 2.10.2

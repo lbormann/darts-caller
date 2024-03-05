@@ -26,8 +26,7 @@
 
 
     <!-- webrtc -->
-    <!-- style="display:none;" -->
-    <div id="web-rtc-container">
+    <div id="web-rtc-container" style="display:none;">
         <div id="web-rtc-chat"></div>
         <button id="web-rtc-chat-add-instant">Remember!</button>
         <button id="web-rtc-chat-clear-instants">Clear!</button>
@@ -35,10 +34,10 @@
         <input id="web-rtc-chat-file" type="file" accept="image/*" capture="camera" />
         <label id="web-rtc-chat-settings-toggle"></label>
         <div id="web-rtc-chat-settings-container" style="display:none;">
-            <label for="web-rtc-chat-settings-discord">Your Discord id / username:</label>
+            <label for="web-rtc-chat-settings-discord">Discord id / username:</label>
             <input id="web-rtc-chat-settings-discord" type="text" placeholder="your discord id or username" />
         </div>
-        <input id="web-rtc-chat-send-message" type="text" placeholder="write a message"></input>
+        <input id="web-rtc-chat-send-message" type="text" placeholder="write a message" tabindex="-1"></input>
         <div id="web-rtc-chat-instants"></div> 
     </div>
     
@@ -262,6 +261,7 @@
 
 
 
+        // meta
         document.addEventListener("DOMContentLoaded", function() {
             console.log("APP-Version: '{{ app_version }}'");
 
@@ -294,8 +294,6 @@
                 }, 1000);
             }
         });
-
-
         buttonClear.addEventListener('click', function() {
             clearPreferences();          
         });
@@ -308,6 +306,7 @@
             setupWebSocketConnection(window.location.hostname, "{{ ws_port }}", onWsOpen, onWsClose, onWsData);
         });
         
+        // webRtc
         webRtcChatSettingsToggle.addEventListener("click", function(){
             if(webRtcChatSettingsContainer.style.display == 'block'){
                 webRtcChatSettingsContainer.style.display = 'none';
@@ -319,13 +318,13 @@
             if (event.keyCode === 13) {
                 settingDiscord = this.value;
                 updateWebRtcSettings();
+                webRtcChatSettingsContainer.style.display = 'none';
                 sendDiscord();
             }
         });
         webRtcChatSettingsDiscord.addEventListener("blur", function() {  
             settingDiscord = this.value;
             updateWebRtcSettings();
-            sendDiscord();
         });
         webRtcChatSendMessage.addEventListener("focus", function() {
             callerContainer.style.display = 'none';
@@ -383,6 +382,7 @@
             savePreferences();    
         });
 
+        // caller
         buttonChange.addEventListener('click', function() {
             ws.send('ban:change');            
         });
@@ -399,7 +399,7 @@
             ws.send(`gender:${gender.value}`);
         });
         
-
+        // mods
         buttonContainerModToggle.addEventListener('click', function(){
             if(containerMod.style.display == 'block'){
                 containerMod.style.display = 'none';
@@ -407,7 +407,6 @@
                 containerMod.style.display = 'block';
             }
         });
-
         sliderPlaybackRateMin.addEventListener('input', function() {
             if(this.value <= playbackRateMax){
                 playbackRateMin = parseFloat(this.value);
@@ -428,8 +427,7 @@
             playbackRateMin = playbackRateDefault;
             playbackRateMax = playbackRateDefault;
             updatePlaybackRateSliders();
-        });
-        
+        });  
         sliderDetuneMin.addEventListener('input', function() {
             if(this.value <= detuneMax){
                 detuneMin = parseInt(this.value);
@@ -451,7 +449,6 @@
             detuneMax = detuneDefault;
             updateDetuneSliders();
         });
-
         sliderVolume.addEventListener('input', function() {
             volume = parseFloat(this.value);
             updateVolumeSlider();
@@ -459,8 +456,7 @@
         buttonVolumeReset.addEventListener('click', function(){
             volume = volumeDefault;
             updateVolumeSlider();
-        });
-        
+        });  
         sliderRandomizer.addEventListener('input', function() {
             randomizer = parseFloat(this.value);
             updateRandomizerSlider();
@@ -896,16 +892,6 @@
 
 
 
-        function sendDiscord(){
-            if(settingDiscord != ''){
-                let dc = discordUrl + settingDiscord;
-                addWebRtcChat(dc, 2);
-                if(connEstablished){
-                    connOut.send(dc);
-                }
-            }
-        }
-
         function createPeer(matchId, meId, meHost, players){
             if(matchId === null || meId === null || players === null) return;
 
@@ -1033,7 +1019,6 @@
             });  
     }
                    
-
         function clearWebRtcChat(){
             chatOffline = [];
             chat = [];
@@ -1041,6 +1026,16 @@
             renderWebRtcChat();
         }
         
+        function sendDiscord(){
+            if(settingDiscord != ''){
+                let dc = discordUrl + settingDiscord;
+                addWebRtcChat(dc, 2);
+                if(connEstablished){
+                    connOut.send(dc);
+                }
+            }
+        }
+
         function currentTime() {
             let date = new Date();
             let hours = ('0' + date.getHours()).slice(-2);
@@ -1048,17 +1043,6 @@
             return `${hours}:${minutes}`;
         }
 
-        function addWebRtcChat(message, type){
-            let msgObject = {
-                text: message,
-                type: type,
-                timestamp: parseInt(Date.now()).toString(),
-                time: currentTime()
-            }
-            chat.push(msgObject);
-            renderWebRtcChat();
-        }
-        
         const encode = input => {
             const keyStr =
                 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='
@@ -1098,6 +1082,17 @@
             '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
             '(\\#[-a-z\\d_]*)?$','i'); // fragment locator
             return urlPattern.test(str);
+        }
+
+        function addWebRtcChat(message, type){
+            let msgObject = {
+                text: message,
+                type: type,
+                timestamp: parseInt(Date.now()).toString(),
+                time: currentTime()
+            }
+            chat.push(msgObject);
+            renderWebRtcChat();
         }
 
         function renderWebRtcChat(){
@@ -1178,6 +1173,7 @@
             webRtcChat.style.display = 'block';
             webRtcChat.scrollTop = webRtcChat.scrollHeight;   
         }
+
 
 
         function onWsOpen(wss){

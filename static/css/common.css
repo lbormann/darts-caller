@@ -289,6 +289,7 @@ button, select{
     color: black;
     padding: 10px;
     border-radius: 10px;
+    max-width: 96%;
 }
 .web-rtc-chat-message-file-in, .web-rtc-chat-message-file-out{
     height: 96%;
@@ -308,6 +309,7 @@ button, select{
     color: black;
     padding: 10px;
     border-radius: 10px;
+    max-width: 96%;
 }
 .web-rtc-chat-instant{
     clear: none;
@@ -342,7 +344,7 @@ button, select{
     font-size: 17pt;
 }
 #web-rtc-container{
-    width: 100%;
+    width: 95%;
     margin: 0 auto;
     height: auto;
     padding: 0 !important;
@@ -363,6 +365,7 @@ button, select{
     max-height: 350px; 
     overflow-y: auto;
     border-radius: 15px;
+    word-wrap: break-word;
 }
 #web-rtc-chat-add-instant, #web-rtc-chat-clear-instants{
     position: relative;
@@ -412,5 +415,5 @@ button, select{
 .fix-bottom{
     position: fixed;
     bottom: 0;
-    left: 0;  
+    left: 2%;  
 }
