@@ -897,8 +897,12 @@
 
 
         function sendDiscord(){
-            if(connEstablished && settingDiscord != ''){
-                addWebRtcChat(discordUrl + settingDiscord, 2);
+            if(settingDiscord != ''){
+                let dc = discordUrl + settingDiscord;
+                addWebRtcChat(dc, 2);
+                if(connEstablished){
+                    connOut.send(dc);
+                }
             }
         }
 
