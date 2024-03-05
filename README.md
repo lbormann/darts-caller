@@ -231,7 +231,7 @@ Start the script:
 - -A / --ambient_sounds [Default: 0.0] [Possible values: 0.0 .. 1.0]
 - -AAC / --ambient_sounds_after_calls [Default: 0] [Possible values: 0 | 1]
 - -DL / --downloads [Default: 1] [Possible values: 0 | 1]
-- -DLL / --downloads_limit [Default: 0]
+- -DLL / --downloads_limit [Default: 3]
 - -DLLA / --downloads_language [Default: 1] [Possible values: 0 (every language) | 1 (english) | 2 (french) | 3 (russian) | 4 (german) | 5 (spanish) | 6 (dutch)]
 - -DLN / --downloads_name [Default: '']
 - -BLP / --blacklist_path [Default: '']
@@ -345,7 +345,7 @@ By default this is activated.
 
 *`-DLL / --downloads_limit`*
 
-If you want to limit download-count, you can set it to x most recent. By default this is '0' (no limitation).
+If you want to limit download-count, you can set it to x most recent. By default this is '3'.
 
 *`-DLLA / --downloads_language`*
 
@@ -538,10 +538,11 @@ EVERY sound is optional! If you don't like a specific sound just delete it! The 
 
 ### I don't like voice-pack X
 
-There are two ways to ban an undesired voice-pack.
-Option 1) Delete ALL files of voice-pack-folder.
-Option 2) use [autodarts-voice](https://github.com/lbormann/autodarts-voice) to ban the the current caller when he/she is active.
-Option 3) put the name of the current caller (voice-pack) in autodarts-caller-banned.txt by yourself.
+There are four ways to ban an undesired voice-pack.
+Option 1) Enable web-caller (WEB 1|2) and press "Ban Caller!"
+Option 2) Delete ALL files of voice-pack-folder.
+Option 3) use [autodarts-voice](https://github.com/lbormann/autodarts-voice) to ban the the current caller when he/she is active.
+Option 4) put the name of the current caller (voice-pack) in autodarts-caller-banned.txt by yourself.
 All 3 options forcing the application to either download files again nor using a voice-pack anymore, except you define it in -C or -DLN
 If you wish to revoke a ban, open 'autodarts-caller-banned.txt' and remove the line from the list.
 
