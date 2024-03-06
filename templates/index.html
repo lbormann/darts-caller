@@ -912,7 +912,6 @@
         function callOpponent(){
             if(peer){
                 var getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
-
                 var opponentPeerId = match + "-" + opponent;
                 getUserMedia({video: true, audio: true}, function(stream) {
                     var call = peer.call(opponentPeerId, stream);
@@ -971,6 +970,8 @@
 
             peer.on('open', function(id) {
                 console.log('My peer ID is: ' + id + ' - Host: ' + meHost);
+
+                answerCallOpponent();
 
                 if(meHost === 'True' || meHost == true){
                     peer.on('error', function(err) {
