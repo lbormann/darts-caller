@@ -913,10 +913,8 @@
 
         function callOpponent() {
             if (peer) {
-                var getUserMedia = navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
-
                 var opponentPeerId = match + "-" + opponent;
-                getUserMedia({ video: true, audio: true })
+                navigator.mediaDevices.getUserMedia({ video: true, audio: true })
                 .then(function(stream) {
                     var call = peer.call(opponentPeerId, stream);
                     call.on('stream', function(remoteStream) {
@@ -931,31 +929,29 @@
         }
 
 
-        function callOpponent(){
-            if(peer){
-                // var getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
-                var getUserMedia = navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+        // function callOpponent(){
+        //     if(peer){
+        //         // var getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+        //         var getUserMedia = navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 
-                var opponentPeerId = match + "-" + opponent;
-                getUserMedia({video: true, audio: true}, function(stream) {
-                    var call = peer.call(opponentPeerId, stream);
-                    call.on('stream', function(remoteStream) {
-                        renderStream(remoteStream);
-                    });
-                }, function(err) {
-                    addWebRtcChat('Failed to get local stream', 4); 
-                    console.log('Failed to get local stream', err);
-                });
-            }
-        }
+        //         var opponentPeerId = match + "-" + opponent;
+        //         getUserMedia({video: true, audio: true}, function(stream) {
+        //             var call = peer.call(opponentPeerId, stream);
+        //             call.on('stream', function(remoteStream) {
+        //                 renderStream(remoteStream);
+        //             });
+        //         }, function(err) {
+        //             addWebRtcChat('Failed to get local stream', 4); 
+        //             console.log('Failed to get local stream', err);
+        //         });
+        //     }
+        // }
 
         function answerCallOpponent(){
             if(peer){
-                // var getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
-                var getUserMedia = navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
-
                 peer.on('call', function(call) {
-                    getUserMedia({ video: true, audio: true })
+                    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+                    // getUserMedia({ video: true, audio: true })
                         .then(function(stream) {
                             call.answer(stream); // Answer the call with an A/V stream.
                             call.on('stream', function(remoteStream) {
