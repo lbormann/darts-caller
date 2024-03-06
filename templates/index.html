@@ -899,19 +899,43 @@
         }
 
 
-        function renderStream(remoteStream){
+        function renderStream(stream){
             var ctx = webRtcStreamDisplay.getContext('2d');
 
             // Set the dimensions of the canvas to match the video stream
-            webRtcStreamDisplay.width = remoteStream.getVideoTracks()[0].getSettings().width;
-            webRtcStreamDisplay.height = remoteStream.getVideoTracks()[0].getSettings().height;
+            webRtcStreamDisplay.width = stream.getVideoTracks()[0].getSettings().width;
+            webRtcStreamDisplay.height = stream.getVideoTracks()[0].getSettings().height;
 
             // Draw the remote stream onto the canvas
-            ctx.drawImage(remoteStream, 0, 0, webRtcStreamDisplay.width, webRtcStreamDisplay.height);
+            ctx.drawImage(stream, 0, 0, webRtcStreamDisplay.width, webRtcStreamDisplay.height);
         }
+
+
+        function callOpponent() {
+            if (peer) {
+                var getUserMedia = navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+
+                var opponentPeerId = match + "-" + opponent;
+                getUserMedia({ video: true, audio: true })
+                .then(function(stream) {
+                    var call = peer.call(opponentPeerId, stream);
+                    call.on('stream', function(remoteStream) {
+                       renderStream(remoteStream);
+                    });
+                })
+                .catch(function(err) {
+                    addWebRtcChat('Failed to get local stream', 4);
+                    console.log('Failed to get local stream', err);
+                });
+            }
+        }
+
+
         function callOpponent(){
             if(peer){
-                var getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+                // var getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+                var getUserMedia = navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+
                 var opponentPeerId = match + "-" + opponent;
                 getUserMedia({video: true, audio: true}, function(stream) {
                     var call = peer.call(opponentPeerId, stream);
@@ -927,17 +951,21 @@
 
         function answerCallOpponent(){
             if(peer){
-                var getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+                // var getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+                var getUserMedia = navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+
                 peer.on('call', function(call) {
-                    getUserMedia({video: true, audio: true}, function(stream) {
-                        call.answer(stream); // Answer the call with an A/V stream.
-                        call.on('stream', function(remoteStream) {
-                            renderStream(stream);
+                    getUserMedia({ video: true, audio: true })
+                        .then(function(stream) {
+                            call.answer(stream); // Answer the call with an A/V stream.
+                            call.on('stream', function(remoteStream) {
+                                renderStream(remoteStream);
+                            });
+                        })
+                        .catch(function(err) {
+                            addWebRtcChat('Failed to get local stream', 4);
+                            console.log('Failed to get local stream', err);
                         });
-                    }, function(err) {
-                        addWebRtcChat('Failed to get local stream', 4); 
-                        console.log('Failed to get local stream', err);
-                    });
                 });
             }
         }
