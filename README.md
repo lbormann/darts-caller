@@ -19,9 +19,9 @@ Autodarts-caller plays back sound-files accordingly to the state of a https://au
 | Count Up | |
 | Segment Training | |
 
-<img src="https://github.com/lbormann/autodarts-caller/blob/develop/images/chat.jpg" alt="chat preview 1" style="width:300px;"/>
-<img src="https://github.com/lbormann/autodarts-caller/blob/develop/images/chat2.jpg" alt="chat preview 2" style="width:300px;"/>
-<img src="https://github.com/lbormann/autodarts-caller/blob/develop/images/chat3.jpg" alt="chat preview 3" style="width:300px;"/>
+<img src="https://github.com/lbormann/autodarts-caller/blob/develop/images/chat.jpg" alt="chat preview 1" style="width:300px;display:inline-block;"/>
+<img src="https://github.com/lbormann/autodarts-caller/blob/develop/images/chat2.jpg" alt="chat preview 2" style="width:300px;display:inline-block;"/>
+<img src="https://github.com/lbormann/autodarts-caller/blob/develop/images/chat3.jpg" alt="chat preview 3" style="width:300px;display:inline-block;"/>
 
 
 
