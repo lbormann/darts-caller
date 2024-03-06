@@ -45,6 +45,8 @@ logger.setLevel(logging.INFO)
 logger.addHandler(sh)
 
 app = Flask(__name__)
+
+
 main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
@@ -2724,8 +2726,17 @@ def start_websocket_server(host, port):
     server.run_forever()
 
 def start_flask_app(host, port):
-    app.run(host=host, port=port, debug=False)
+    # context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+    # # context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 
+    # context.check_hostname = False
+    # context.verify_mode = ssl.CERT_NONE
+    # # context.verify_mode = ssl.CERT_REQUIRED
+    # # context.load_cert_chain('localhost.crt', 'localhost.key')  # Pfade zu deinem Zertifikat und Schlüssel
+
+    # app.run(ssl_context=context, host=host, port=port, debug=False)
+    # app.run(ssl_context=(, ), host=host, port=port, debug=False)
+    app.run(ssl_context='adhoc', host=host, port=port, debug=False)
 
 if __name__ == "__main__":
     check_already_running()

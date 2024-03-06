@@ -914,7 +914,7 @@
         function callOpponent() {
             if (peer) {
                 var opponentPeerId = match + "-" + opponent;
-                navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+                navigator.mediaDevices.getUserMedia({ video: false, audio: true })
                 .then(function(stream) {
                     var call = peer.call(opponentPeerId, stream);
                     call.on('stream', function(remoteStream) {
