@@ -590,3 +590,4 @@ Try https://www.audacity.de/ to modify your sound-files.
 
 - Sounds by <a href="https://zapsplat.com">zapsplat.com</a>
 - Icon by <a href="https://freeicons.io/user-interface-and-electronics/camera-cam-photo-pic-shoot-image-ui-f-ef-ec-icon-841">icon king1</a>
+- Icon by <a href="https://freeicons.io/office-and-workstation-icons-6/video-call-icon-19057">Free Preloaders</a>

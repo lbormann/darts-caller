@@ -367,6 +367,19 @@ button, select{
     border-radius: 15px;
     word-wrap: break-word;
 }
+#web-rtc-chat-stream-display{
+    width: 100%;
+    margin-top: 20px;
+    padding: 12px;
+    font-size: 20pt;
+    opacity: 100%;
+    background-color: #EBDFCE;
+    border: 3px solid black;
+    height: 350px;
+    max-height: 350px; 
+    overflow-y: auto;
+    border-radius: 15px;
+}
 #web-rtc-chat-add-instant, #web-rtc-chat-clear-instants{
     position: relative;
     float: none;
@@ -392,9 +405,18 @@ button, select{
     float: left;
 }
 #web-rtc-chat-settings-toggle{
-    /* display: inline-block;  */
     float: right;
     background-image: url('/static/images/mods.png'); 
+    background-size: cover;
+    background-position: center;
+    background-color: transparent;
+    width: 48px;
+    height: 48px;
+    cursor: pointer;
+}
+#web-rtc-chat-stream{
+    float: left;
+    background-image: url('/static/images/stream.png'); 
     background-size: cover;
     background-position: center;
     background-color: transparent;
