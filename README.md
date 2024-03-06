@@ -20,7 +20,7 @@ Autodarts-caller plays back sound-files accordingly to the state of a https://au
 | Segment Training | |
 
 
-![alt text](https://github.com/lbormann/autodarts-caller/blob/develop/images/chat.jpg?raw=true)
+![alt text](https://github.com/lbormann/autodarts-caller/blob/develop/images/chat.jpg)
 
 
 ## INSTALL INSTRUCTION
