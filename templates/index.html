@@ -28,7 +28,8 @@
     <!-- webrtc -->
     <!-- style="display:none;" -->
     <div id="web-rtc-container">
-        <canvas id="web-rtc-chat-stream-display" style="display:none;"></canvas>
+        <!-- <canvas id="web-rtc-chat-stream-display" style="display:none;"></canvas> -->
+        <video id="web-rtc-chat-stream-display" style="display:none;"></video>
         <div id="web-rtc-chat"></div>
         <button id="web-rtc-chat-add-instant">Remember!</button>
         <button id="web-rtc-chat-clear-instants">Clear!</button>
@@ -899,15 +900,23 @@
         }
 
 
-        function renderStream(stream){
-            var ctx = webRtcStreamDisplay.getContext('2d');
+        // function renderStream(stream){
+        //     var ctx = webRtcStreamDisplay.getContext('2d');
 
-            // Set the dimensions of the canvas to match the video stream
-            webRtcStreamDisplay.width = stream.getVideoTracks()[0].getSettings().width;
-            webRtcStreamDisplay.height = stream.getVideoTracks()[0].getSettings().height;
+        //     // Set the dimensions of the canvas to match the video stream
+        //     webRtcStreamDisplay.width = stream.getVideoTracks()[0].getSettings().width;
+        //     webRtcStreamDisplay.height = stream.getVideoTracks()[0].getSettings().height;
 
-            // Draw the remote stream onto the canvas
-            ctx.drawImage(stream, 0, 0, webRtcStreamDisplay.width, webRtcStreamDisplay.height);
+        //     // Draw the remote stream onto the canvas
+        //     ctx.drawImage(stream, 0, 0, webRtcStreamDisplay.width, webRtcStreamDisplay.height);
+        // }
+
+        function renderStream(stream) {
+            webRtcStreamDisplay.style.display = 'block';
+            webRtcStreamDisplay.srcObject = stream;
+            webRtcStreamDisplay.addEventListener('loadedmetadata', () => {
+                webRtcStreamDisplay.play()
+            });
         }
 
 
