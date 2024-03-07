@@ -27,6 +27,9 @@ import re
 from urllib.parse import quote, unquote
 from flask import Flask, render_template, send_from_directory
 from autodarts_keycloak_client import AutodartsKeycloakClient
+from werkzeug.serving import make_ssl_devcert
+
+# from app import server
 
 os.environ['SSL_CERT_FILE'] = certifi.where()
 
@@ -51,7 +54,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.10.4'
+VERSION = '2.11.0'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -2725,7 +2728,7 @@ def start_websocket_server(host, port):
     server.set_fn_message_received(on_message_client)
     server.run_forever()
 
-def start_flask_app(host, port):
+def start_flask_app(ssl_context, host, port):
     # context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
     # # context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 
@@ -2737,7 +2740,11 @@ def start_flask_app(host, port):
     # app.run(ssl_context=context, host=host, port=port, debug=False)
     # app.run(ssl_context=(, ), host=host, port=port, debug=False)
     # app.run(ssl_context='adhoc', host=host, port=port, debug=False)
-    app.run(host=host, port=port, debug=False)
+
+
+    app.run(ssl_context=ssl_context, host=host, port=port, debug=True)
+
+    # app.run(host=host, port=port, debug=False)
 
 if __name__ == "__main__":
     check_already_running()
@@ -2976,16 +2983,28 @@ if __name__ == "__main__":
                                      )
         kc.start()
 
-        if WEB > 0 or WEB_SCOREBOARD:
-            flask_app_thread = threading.Thread(target=start_flask_app, args=(DEFAULT_HOST_IP, WEB_PORT))
-            flask_app_thread.start()
-
         connect_autodarts()
+
+        if WEB > 0 or WEB_SCOREBOARD:
+            cert_path = Path(__file__).parent / "cert"
+            cert_file = cert_path / "dev.crt"
+            key_file = cert_path / "dev.key"
+
+            if cert_file.exists() and key_file.exists():
+                ssl_context = (cert_file, key_file)
+            else:
+                ssl_context = make_ssl_devcert(str(cert_path / "dev"), host=DEFAULT_HOST_IP)
+
+            start_flask_app(ssl_context, DEFAULT_HOST_IP, WEB_PORT)
+            # flask_app_thread = threading.Thread(target=start_flask_app, args=(ssl_context, DEFAULT_HOST_IP, WEB_PORT))
+            # flask_app_thread.start()
+
+        
 
         websocket_server_thread.join()
 
-        if WEB > 0 or WEB_SCOREBOARD:
-            flask_app_thread.join() 
+        # if WEB > 0 or WEB_SCOREBOARD:
+        #     flask_app_thread.join() 
 
         kc.stop()
     except Exception as e:
