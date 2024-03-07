@@ -423,9 +423,8 @@ button, select{
     height: 48px;
     cursor: pointer;
     position: absolute;
-    left: 0;
-    top: 0;
-    /* margin: 0 auto; */
+    left: 10px;
+    top: 10px;
 }
 #web-rtc-chat-send-message{
     width: 100%;

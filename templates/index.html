@@ -904,12 +904,13 @@
         }
 
 
-        function getStreamConstraints(){
+        async function getStreamConstraints(){
             let videoinput = false;
             let audioinput = false;
 
             if (!navigator.mediaDevices?.enumerateDevices) {
                 console.log("enumerateDevices() not supported.");
+                return Promise.reject("enumerateDevices() not supported.");
             } else {
                 navigator.mediaDevices
                     .enumerateDevices()
@@ -919,12 +920,14 @@
                             if(!videoinput && device.kind === 'videoinput' && device.id != '') videoinput = true;
                             if(!audioinput && device.kind === 'audioinput' && device.id != '') audioinput = true;
                         });
+                        return { video: videoinput, audio: audioinput };
                     })
                     .catch((err) => {
                         console.error(`${err.name}: ${err.message}`);
+                        return Promise.reject(err);
                     });
             }
-            return { video: videoinput, audio: audioinput };
+            
         }
 
         function renderStream(stream) {
@@ -936,9 +939,9 @@
             });
         }
 
-        function callOpponent(){
+        async function callOpponent(){
             var opponentPeerId = match + "-" + opponent;
-            navigator.mediaDevices.getUserMedia(getStreamConstraints())
+            navigator.mediaDevices.getUserMedia(await getStreamConstraints())
             .then(function(stream) {
                 call = peer.call(opponentPeerId, stream);
                 call.on('stream', function(remoteStream) {
