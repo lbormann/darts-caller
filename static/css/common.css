@@ -375,8 +375,8 @@ button, select{
     opacity: 100%;
     background-color: #EBDFCE;
     border: 3px solid black;
-    height: 350px;
-    max-height: 350px; 
+    height: auto;
+    max-height: auto; 
     overflow-y: auto;
     border-radius: 15px;
 }
@@ -415,7 +415,6 @@ button, select{
     cursor: pointer;
 }
 #web-rtc-chat-stream{
-    float: left;
     background-image: url('/static/images/stream.png'); 
     background-size: cover;
     background-position: center;
@@ -423,6 +422,10 @@ button, select{
     width: 48px;
     height: 48px;
     cursor: pointer;
+    position: absolute;
+    left: 0;
+    top: 0;
+    /* margin: 0 auto; */
 }
 #web-rtc-chat-send-message{
     width: 100%;

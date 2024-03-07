@@ -26,8 +26,8 @@
 
 
     <!-- webrtc -->
+    <label for="web-rtc-chat-stream-display" id="web-rtc-chat-stream" style="display:none;"></label>
     <video id="web-rtc-chat-stream-display" style="display:none;"></video>
-    <label id="web-rtc-chat-stream"></label>
 
     <!-- style="display:none;" -->
     <div id="web-rtc-container">
@@ -914,68 +914,63 @@
             });
         }
 
-
         function callOpponent(){
-            if (peer) {
-                var opponentPeerId = match + "-" + opponent;
-                navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-                .then(function(stream) {
-                    call = peer.call(opponentPeerId, stream);
-                    call.on('stream', function(remoteStream) {
-                       callOut = call;
-                       renderStream(remoteStream);
-                    });
-                    call.on('close', function() {
-                        callOut = null;
-                        webRtcContainer.style.display = 'block';
-                        webRtcStreamDisplay.style.display = 'none';                        
-                        addWebRtcChat('Call finished', 3);
-                    });
-                    call.on('error', function(error) {
-                        callOut = null;
-                        webRtcContainer.style.display = 'block';
-                        webRtcStreamDisplay.style.display = 'none';   
-                        addWebRtcChat('Call error', 4);
-                    });
-                })
-                .catch(function(err) {
-                    webRtcContainer.style.display = 'block';
-                    addWebRtcChat('Failed to get local stream', 4);
-                    console.log('Failed to get local stream', err);
+            var opponentPeerId = match + "-" + opponent;
+            navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+            .then(function(stream) {
+                call = peer.call(opponentPeerId, stream);
+                call.on('stream', function(remoteStream) {
+                    callOut = call;
+                    renderStream(remoteStream);
                 });
-            }
+                call.on('close', function() {
+                    callOut = null;
+                    webRtcContainer.style.display = 'block';
+                    webRtcStreamDisplay.style.display = 'none';                        
+                    addWebRtcChat('Stream finished', 3);
+                });
+                call.on('error', function(error) {
+                    callOut = null;
+                    webRtcContainer.style.display = 'block';
+                    webRtcStreamDisplay.style.display = 'none';   
+                    addWebRtcChat('Stream error', 4);
+                });
+            })
+            .catch(function(err) {
+                webRtcContainer.style.display = 'block';
+                addWebRtcChat('Can not access cam/mic', 4);
+                console.log('Failed to get local stream', err);
+            });
         }
 
         function answerCallOpponent(){
-            if(peer){
-                peer.on('call', function(call) {
-                    navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-                        .then(function(stream) {
-                            callOut = call;
-                            call.answer(stream);
-                            call.on('stream', function(remoteStream) {
-                                renderStream(remoteStream);
-                            });
-                            call.on('close', function() {
-                                callOut = null;
-                                webRtcContainer.style.display = 'block';
-                                webRtcStreamDisplay.style.display = 'none';   
-                                addWebRtcChat('Call finished', 3);
-                            });
-                            call.on('error', function(error) {
-                                callOut = null;
-                                webRtcContainer.style.display = 'block';
-                                webRtcStreamDisplay.style.display = 'none';   
-                                addWebRtcChat('Call error', 4);
-                            });
-                        })
-                        .catch(function(err) {
-                            webRtcContainer.style.display = 'block';
-                            addWebRtcChat('Failed to get local stream', 4);
-                            console.log('Failed to get local stream', err);
+            peer.on('call', function(call) {
+                navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+                    .then(function(stream) {
+                        callOut = call;
+                        call.answer(stream);
+                        call.on('stream', function(remoteStream) {
+                            renderStream(remoteStream);
                         });
-                });
-            }
+                        call.on('close', function() {
+                            callOut = null;
+                            webRtcContainer.style.display = 'block';
+                            webRtcStreamDisplay.style.display = 'none';   
+                            addWebRtcChat('Stream finished', 3);
+                        });
+                        call.on('error', function(error) {
+                            callOut = null;
+                            webRtcContainer.style.display = 'block';
+                            webRtcStreamDisplay.style.display = 'none';   
+                            addWebRtcChat('Stream error', 4);
+                        });
+                    })
+                    .catch(function(err) {
+                        webRtcContainer.style.display = 'block';
+                        addWebRtcChat('Can not access cam/mic', 4);
+                        console.log('Failed to get local stream', err);
+                    });
+            });
         }
 
         function createPeer(matchId, meId, meHost, players){
@@ -1021,6 +1016,7 @@
                         conn.on('open', function(){
                             connEstablished = true;
                             webRtcContainer.style.display = 'block';
+                            webRtcChatStream.style.display = 'block';
                             addWebRtcChat('Connected to ' + opponentName, 3);
                             sendDiscord();
                             
@@ -1072,6 +1068,7 @@
             connOut.on('open', function(){
                 connEstablished = true;
                 webRtcContainer.style.display = 'block';
+                webRtcChatStream.style.display = 'block';
                 addWebRtcChat('Connected to ' + opponentName, 3);
                 sendDiscord();
                 while (chatOffline.length > 0) {
