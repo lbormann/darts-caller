@@ -2736,7 +2736,8 @@ def start_flask_app(host, port):
 
     # app.run(ssl_context=context, host=host, port=port, debug=False)
     # app.run(ssl_context=(, ), host=host, port=port, debug=False)
-    app.run(ssl_context='adhoc', host=host, port=port, debug=False)
+    # app.run(ssl_context='adhoc', host=host, port=port, debug=False)
+    app.run(host=host, port=port, debug=False)
 
 if __name__ == "__main__":
     check_already_running()

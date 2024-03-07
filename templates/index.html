@@ -911,7 +911,7 @@
         }
 
 
-        function callOpponent() {
+        function callOpponent(){
             if (peer) {
                 var opponentPeerId = match + "-" + opponent;
                 navigator.mediaDevices.getUserMedia({ video: true, audio: false })
@@ -975,8 +975,6 @@
             peer.on('open', function(id) {
                 console.log('My peer ID is: ' + id + ' - Host: ' + meHost);
 
-                answerCallOpponent();
-
                 if(meHost === 'True' || meHost == true){
                     peer.on('error', function(err) {
                         connectOpponent(false);
@@ -1015,6 +1013,7 @@
 
                     }); 
                 }
+                answerCallOpponent();
             });
 
             peer.on('disconnected', function() {
