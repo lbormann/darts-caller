@@ -2603,8 +2603,10 @@ def on_message_client(client, server, message):
 
 def on_left_client(client, server):
     ppi('CLIENT DISCONNECTED: ' + str(client))
-    cid = str(client['id'])
-    webCallerSyncs[cid] = None
+    if client is not None:
+        cid = str(client['id'])
+        if cid in webCallerSyncs:
+            webCallerSyncs[cid] = None
 
 def broadcast(data):
     def process(*args):
@@ -2720,9 +2722,9 @@ def scoreboard():
 
 
 
-def start_websocket_server(host, port):
+def start_websocket_server(host, port, key, cert):
     global server
-    server = WebsocketServer(host=host, port=port, loglevel=logging.ERROR)
+    server = WebsocketServer(host=host, port=port, key=key, cert=cert, loglevel=logging.ERROR)
     server.set_fn_new_client(on_open_client)
     server.set_fn_client_left(on_left_client)
     server.set_fn_message_received(on_message_client)
@@ -2972,7 +2974,16 @@ if __name__ == "__main__":
         sys.exit()  
 
     try:  
-        websocket_server_thread = threading.Thread(target=start_websocket_server, args=(DEFAULT_HOST_IP, HOST_PORT))
+        cert_path = Path(__file__).parent / "cert"
+        cert_file = cert_path / "dev.crt"
+        key_file = cert_path / "dev.key"
+
+        if cert_file.exists() and key_file.exists():
+            ssl_context = (cert_file, key_file)
+        else:
+            ssl_context = make_ssl_devcert(str(cert_path / "dev"), host=DEFAULT_HOST_IP)
+
+        websocket_server_thread = threading.Thread(target=start_websocket_server, args=(DEFAULT_HOST_IP, HOST_PORT, key_file, cert_file))
         websocket_server_thread.start()
 
         kc = AutodartsKeycloakClient(username=AUTODART_USER_EMAIL, 
@@ -2986,15 +2997,6 @@ if __name__ == "__main__":
         connect_autodarts()
 
         if WEB > 0 or WEB_SCOREBOARD:
-            cert_path = Path(__file__).parent / "cert"
-            cert_file = cert_path / "dev.crt"
-            key_file = cert_path / "dev.key"
-
-            if cert_file.exists() and key_file.exists():
-                ssl_context = (cert_file, key_file)
-            else:
-                ssl_context = make_ssl_devcert(str(cert_path / "dev"), host=DEFAULT_HOST_IP)
-
             start_flask_app(ssl_context, DEFAULT_HOST_IP, WEB_PORT)
             # flask_app_thread = threading.Thread(target=start_flask_app, args=(ssl_context, DEFAULT_HOST_IP, WEB_PORT))
             # flask_app_thread.start()

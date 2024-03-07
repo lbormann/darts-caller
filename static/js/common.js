@@ -12,7 +12,7 @@ function getRandomInterval(min, max) {
 
 
 function setupWebSocketConnection(host, port, onOpenHandle, onCloseHandle, onMessageHandle, maxReconnectAttempts = 3, reconnectInterval = 1000) {
-    const socket = new WebSocket(`ws://${host}:${port}`);
+    const socket = new WebSocket(`wss://${host}:${port}`);
 
     socket.onopen = function() {
         console.log("Socket: connected!");
