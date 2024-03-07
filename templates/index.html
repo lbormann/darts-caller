@@ -916,8 +916,8 @@
                     .then((devices) => {
                         devices.forEach((device) => {
                             console.log(`${device.kind}: ${device.label} id = ${device.deviceId}`);
-                            if(!videoinput && device.kind === 'videoinput') videoinput = true;
-                            if(!audioinput && device.kind === 'audioinput') audioinput = true;
+                            if(!videoinput && device.kind === 'videoinput' && device.id != '') videoinput = true;
+                            if(!audioinput && device.kind === 'audioinput' && device.id != '') audioinput = true;
                         });
                     })
                     .catch((err) => {
