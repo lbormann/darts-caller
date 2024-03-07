@@ -904,6 +904,28 @@
         }
 
 
+        function getStreamConstraints(){
+            let videoinput = false;
+            let audioinput = false;
+
+            if (!navigator.mediaDevices?.enumerateDevices) {
+                console.log("enumerateDevices() not supported.");
+            } else {
+                navigator.mediaDevices
+                    .enumerateDevices()
+                    .then((devices) => {
+                        devices.forEach((device) => {
+                            console.log(`${device.kind}: ${device.label} id = ${device.deviceId}`);
+                            if(!videoinput && device.kind === 'videoinput') videoinput = true;
+                            if(!audioinput && device.kind === 'audioinput') audioinput = true;
+                        });
+                    })
+                    .catch((err) => {
+                        console.error(`${err.name}: ${err.message}`);
+                    });
+            }
+            return { video: videoinput, audio: audioinput };
+        }
 
         function renderStream(stream) {
             webRtcContainer.style.display = 'none';
@@ -916,7 +938,7 @@
 
         function callOpponent(){
             var opponentPeerId = match + "-" + opponent;
-            navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+            navigator.mediaDevices.getUserMedia(getStreamConstraints())
             .then(function(stream) {
                 call = peer.call(opponentPeerId, stream);
                 call.on('stream', function(remoteStream) {
@@ -945,7 +967,7 @@
 
         function answerCallOpponent(){
             peer.on('call', function(call) {
-                navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+                navigator.mediaDevices.getUserMedia(getStreamConstraints())
                     .then(function(stream) {
                         callOut = call;
                         call.answer(stream);
@@ -970,6 +992,7 @@
                         addWebRtcChat('Can not access cam/mic', 4);
                         console.log('Failed to get local stream', err);
                     });
+      
             });
         }
 
