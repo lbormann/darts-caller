@@ -912,7 +912,7 @@
                 console.log("enumerateDevices() not supported.");
                 return Promise.reject("enumerateDevices() not supported.");
             } else {
-                navigator.mediaDevices
+                return navigator.mediaDevices
                     .enumerateDevices()
                     .then((devices) => {
                         devices.forEach((device) => {
@@ -920,7 +920,7 @@
                             if(!videoinput && device.kind === 'videoinput' && device.id != '') videoinput = true;
                             if(!audioinput && device.kind === 'audioinput' && device.id != '') audioinput = true;
                         });
-                        return { video: videoinput, audio: audioinput };
+                        return Promise.resolve({ video: videoinput, audio: audioinput });
                     })
                     .catch((err) => {
                         console.error(`${err.name}: ${err.message}`);
