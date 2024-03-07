@@ -969,8 +969,8 @@
         }
 
         function answerCallOpponent(){
-            peer.on('call', function(call) {
-                navigator.mediaDevices.getUserMedia(getStreamConstraints())
+            peer.on('call', async function(call) {
+                navigator.mediaDevices.getUserMedia(await getStreamConstraints())
                     .then(function(stream) {
                         callOut = call;
                         call.answer(stream);
