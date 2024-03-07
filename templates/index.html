@@ -26,16 +26,16 @@
 
 
     <!-- webrtc -->
+    <video id="web-rtc-chat-stream-display" style="display:none;"></video>
+    <label id="web-rtc-chat-stream"></label>
+
     <!-- style="display:none;" -->
     <div id="web-rtc-container">
-        <!-- <canvas id="web-rtc-chat-stream-display" style="display:none;"></canvas> -->
-        <video id="web-rtc-chat-stream-display" style="display:none;"></video>
         <div id="web-rtc-chat"></div>
         <button id="web-rtc-chat-add-instant">Remember!</button>
         <button id="web-rtc-chat-clear-instants">Clear!</button>
         <label for="web-rtc-chat-file" class="custom-file-input"></label>
         <input id="web-rtc-chat-file" type="file" accept="image/*" capture="camera" />
-        <label id="web-rtc-chat-stream"></label>
         <label id="web-rtc-chat-settings-toggle"></label>
         <div id="web-rtc-chat-settings-container" style="display:none;">
             <label for="web-rtc-chat-settings-discord">Discord id / username:</label>
@@ -228,7 +228,7 @@
         const discordUrl = 'https://discordapp.com/users/';
         let match, me, opponent;
         let opponentName, oppoenentAvatar;
-        let peer, connOut;
+        let peer, connOut, callOut;
         let connEstablished = false;
         let chat = [];
         let chatOffline = [];
@@ -314,7 +314,11 @@
         
         // webRtc
         webRtcChatStream.addEventListener("click", function(){
-            callOpponent();
+            if(callOut == null){
+                callOut.close();
+            }else{
+                callOpponent();
+            }
         });
         webRtcChatSettingsToggle.addEventListener("click", function(){
             if(webRtcChatSettingsContainer.style.display == 'block'){
@@ -900,18 +904,9 @@
         }
 
 
-        // function renderStream(stream){
-        //     var ctx = webRtcStreamDisplay.getContext('2d');
-
-        //     // Set the dimensions of the canvas to match the video stream
-        //     webRtcStreamDisplay.width = stream.getVideoTracks()[0].getSettings().width;
-        //     webRtcStreamDisplay.height = stream.getVideoTracks()[0].getSettings().height;
-
-        //     // Draw the remote stream onto the canvas
-        //     ctx.drawImage(stream, 0, 0, webRtcStreamDisplay.width, webRtcStreamDisplay.height);
-        // }
 
         function renderStream(stream) {
+            webRtcContainer.style.display = 'none';
             webRtcStreamDisplay.style.display = 'block';
             webRtcStreamDisplay.srcObject = stream;
             webRtcStreamDisplay.addEventListener('loadedmetadata', () => {
@@ -925,12 +920,26 @@
                 var opponentPeerId = match + "-" + opponent;
                 navigator.mediaDevices.getUserMedia({ video: true, audio: false })
                 .then(function(stream) {
-                    var call = peer.call(opponentPeerId, stream);
+                    call = peer.call(opponentPeerId, stream);
                     call.on('stream', function(remoteStream) {
+                       callOut = call;
                        renderStream(remoteStream);
+                    });
+                    call.on('close', function() {
+                        callOut = null;
+                        webRtcContainer.style.display = 'block';
+                        webRtcStreamDisplay.style.display = 'none';                        
+                        addWebRtcChat('Call finished', 3);
+                    });
+                    call.on('error', function(error) {
+                        callOut = null;
+                        webRtcContainer.style.display = 'block';
+                        webRtcStreamDisplay.style.display = 'none';   
+                        addWebRtcChat('Call error', 4);
                     });
                 })
                 .catch(function(err) {
+                    webRtcContainer.style.display = 'block';
                     addWebRtcChat('Failed to get local stream', 4);
                     console.log('Failed to get local stream', err);
                 });
@@ -942,12 +951,26 @@
                 peer.on('call', function(call) {
                     navigator.mediaDevices.getUserMedia({ video: true, audio: false })
                         .then(function(stream) {
-                            call.answer(stream); // Answer the call with an A/V stream.
+                            callOut = call;
+                            call.answer(stream);
                             call.on('stream', function(remoteStream) {
                                 renderStream(remoteStream);
                             });
+                            call.on('close', function() {
+                                callOut = null;
+                                webRtcContainer.style.display = 'block';
+                                webRtcStreamDisplay.style.display = 'none';   
+                                addWebRtcChat('Call finished', 3);
+                            });
+                            call.on('error', function(error) {
+                                callOut = null;
+                                webRtcContainer.style.display = 'block';
+                                webRtcStreamDisplay.style.display = 'none';   
+                                addWebRtcChat('Call error', 4);
+                            });
                         })
                         .catch(function(err) {
+                            webRtcContainer.style.display = 'block';
                             addWebRtcChat('Failed to get local stream', 4);
                             console.log('Failed to get local stream', err);
                         });
