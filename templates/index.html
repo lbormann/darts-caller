@@ -315,9 +315,9 @@
         // webRtc
         webRtcChatStream.addEventListener("click", function(){
             if(callOut == null){
-                callOut.close();
-            }else{
                 callOpponent();
+            }else{
+                callOut.close();      
             }
         });
         webRtcChatSettingsToggle.addEventListener("click", function(){
