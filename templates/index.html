@@ -905,7 +905,7 @@
 
 
         
-        async function getStreamConstraints(){
+        async function getStreamConstraints(videoinputRequested = false, audioinputRequested = false){
             let videoinput = false;
             let audioinput = false;
 
@@ -921,8 +921,8 @@
                             if(!videoinput && device.kind === 'videoinput' && device.id != '') videoinput = true;
                             if(!audioinput && device.kind === 'audioinput' && device.id != '') audioinput = true;
                         });
-                        if(videoinput && !confirm('Do you want to use your camera?')) videoinput = false; 
-                        if(audioinput && !confirm('Do you want to use your microphone?')) audioinput = false;
+                        if(videoinputRequested && videoinput && !confirm('Do you want to use your camera?')) videoinput = false; 
+                        if(audioinputRequested && audioinput && !confirm('Do you want to use your microphone?')) audioinput = false;
                         return Promise.resolve({ video: videoinput, audio: audioinput });
                     })
                     .catch((err) => {
@@ -930,20 +930,19 @@
                         return Promise.reject(err);
                     });
             }
-            
         }
 
         function checkStreamOptions(stream){
-            var streamOptions = { hasVideo: false, hasAudio: false };
-            if(stream.getAudioTracks().length) streamOptions.hasAudio = true;
-            if(stream.getVideoTracks().length) streamOptions.hasVideo = true;
+            var streamOptions = { video: false, audio: false };
+            if(stream.getAudioTracks().length) streamOptions.audio = true;
+            if(stream.getVideoTracks().length) streamOptions.video = true;
             return streamOptions; 
         }
 
         function startStream(stream, call) {
             callOut = call;
             const streamOptions = checkStreamOptions(stream);
-            if(streamOptions.hasVideo){
+            if(streamOptions.video){
                 webRtcContainer.style.display = 'none';
                 webRtcStreamDisplay.style.display = 'block';
             }
@@ -964,12 +963,13 @@
         async function callOpponent(){
             var opponentPeerId = match + "-" + opponent;
 
-            navigator.mediaDevices.getUserMedia(await getStreamConstraints())
+            navigator.mediaDevices.getUserMedia(await getStreamConstraints(true, true))
             .then(function(stream) {
-                // const myStreamOptions = checkStreamOptions(stream);
-                // call = peer.call(opponentPeerId, stream, myStreamOptions);
-                call = peer.call(opponentPeerId, stream);
-                addWebRtcChat('Waiting for stream', 3);
+                const myStreamOptions = checkStreamOptions(stream);
+                call = peer.call(opponentPeerId, stream, myStreamOptions);
+                // call = peer.call(opponentPeerId, stream);
+
+                // addWebRtcChat('Waiting for stream', 3);
 
                 call.on('stream', function(remoteStream) {
                     startStream(remoteStream, call);
@@ -986,18 +986,25 @@
             })
             .catch(function(err) {
                 endStream();
-                addWebRtcChat('Can not access cam/mic', 4);
+                addWebRtcChat('No communication device available', 4);
                 console.log('Failed to get local stream', err);
             });
         }
 
         function answerCallOpponent(){
             peer.on('call', async function(call) {
-                navigator.mediaDevices.getUserMedia(await getStreamConstraints())
+
+                let streamOptionsOpponent = { video: false, audio: false};
+                if(call.options){
+                    streamOptionsOpponent = call.options;
+                    console.log(call.options);
+                }
+
+                navigator.mediaDevices.getUserMedia(await getStreamConstraints(streamOptionsOpponent))
                     .then(function(stream) {
-                        // const myStreamOptions = checkStreamOptions(stream);
-                        // call.answer(stream, myStreamOptions);
-                        call.answer(stream);
+                        const myStreamOptions = checkStreamOptions(stream);
+                        call.answer(stream, myStreamOptions);
+                        // call.answer(stream);
                         
                         call.on('stream', function(remoteStream) {
                             startStream(remoteStream, call);
@@ -1014,7 +1021,7 @@
                     })
                     .catch(function(err) {
                         endStream();
-                        addWebRtcChat('Can not access cam/mic', 4);
+                        addWebRtcChat('No communication device available', 4);
                         console.log('Failed to get local stream', err);
                     });
             });
