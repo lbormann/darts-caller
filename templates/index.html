@@ -903,9 +903,7 @@
             return chunks;
         }
 
-        const confirmAction = (confirmText) => {
-                return confirm(confirmText);
-        }
+
         
         async function getStreamConstraints(){
             let videoinput = false;
@@ -942,7 +940,8 @@
             return streamOptions; 
         }
 
-        function startStream(stream) {
+        function startStream(stream, call) {
+            callOut = call;
             const streamOptions = checkStreamOptions(stream);
             if(streamOptions.hasVideo){
                 webRtcContainer.style.display = 'none';
@@ -972,8 +971,7 @@
                 call = peer.call(opponentPeerId, stream);
 
                 call.on('stream', function(remoteStream) {
-                    callOut = call;
-                    startStream(remoteStream);
+                    startStream(remoteStream, call);
                     addWebRtcChat('Stream started', 3);
                 });
                 call.on('close', function() {
@@ -999,12 +997,11 @@
                 navigator.mediaDevices.getUserMedia(await getStreamConstraints())
                     .then(function(stream) {
                         // const myStreamOptions = checkStreamOptions(stream);
-                        callOut = call;
                         // call.answer(stream, myStreamOptions);
                         call.answer(stream);
                         
                         call.on('stream', function(remoteStream) {
-                            startStream(remoteStream);
+                            startStream(remoteStream, call);
                             addWebRtcChat('Stream started', 3);
                         });
                         call.on('close', function() {
