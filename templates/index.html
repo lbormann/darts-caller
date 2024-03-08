@@ -923,12 +923,8 @@
                             if(!videoinput && device.kind === 'videoinput' && device.id != '') videoinput = true;
                             if(!audioinput && device.kind === 'audioinput' && device.id != '') audioinput = true;
                         });
-                        if(videoinput && !confirm('Do you want to use your camera?')){
-                            videoinput = false;
-                        }
-                        if(audioinput && !confirm('Do you want to use your microphone?')){
-                            audioinput = false;
-                        }
+                        if(videoinput && !confirm('Do you want to use your camera?')) videoinput = false; 
+                        if(audioinput && !confirm('Do you want to use your microphone?')) audioinput = false;
                         return Promise.resolve({ video: videoinput, audio: audioinput });
                     })
                     .catch((err) => {
@@ -949,11 +945,9 @@
         }
 
         async function callOpponent(){
-            let streamConstraints = await getStreamConstraints();
-
             var opponentPeerId = match + "-" + opponent;
 
-            navigator.mediaDevices.getUserMedia()
+            navigator.mediaDevices.getUserMedia(await getStreamConstraints())
             .then(function(stream) {
                 call = peer.call(opponentPeerId, stream);
                 call.on('stream', function(remoteStream) {
