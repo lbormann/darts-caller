@@ -969,6 +969,7 @@
                 // const myStreamOptions = checkStreamOptions(stream);
                 // call = peer.call(opponentPeerId, stream, myStreamOptions);
                 call = peer.call(opponentPeerId, stream);
+                addWebRtcChat('Waiting for stream', 3);
 
                 call.on('stream', function(remoteStream) {
                     startStream(remoteStream, call);
@@ -992,8 +993,6 @@
 
         function answerCallOpponent(){
             peer.on('call', async function(call) {
-                // if(!confirm('Opponent would like to start a video-call.')) return;
-
                 navigator.mediaDevices.getUserMedia(await getStreamConstraints())
                     .then(function(stream) {
                         // const myStreamOptions = checkStreamOptions(stream);
