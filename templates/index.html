@@ -918,11 +918,11 @@
                     .then((devices) => {
                         devices.forEach((device) => {
                             console.log(`${device.kind}: ${device.label} id = ${device.deviceId}`);
-                            if(!videoinput && device.kind === 'videoinput' && device.id != '') videoinput = true;
-                            if(!audioinput && device.kind === 'audioinput' && device.id != '') audioinput = true;
+                            if(videoinputRequested && !videoinput && device.kind === 'videoinput' && device.id != '') videoinput = true;
+                            if(audioinputRequested && !audioinput && device.kind === 'audioinput' && device.id != '') audioinput = true;
                         });
-                        if(videoinputRequested && videoinput && !confirm('Do you want to communicate with your camera?')) videoinput = false; 
-                        if(audioinputRequested && audioinput && !confirm('Do you want to communicate with your microphone?')) audioinput = false;
+                        if(videoinput && !confirm('Do you want to communicate with your camera?')) videoinput = false; 
+                        if(audioinput && !confirm('Do you want to communicate with your microphone?')) audioinput = false;
                         return Promise.resolve({ video: videoinput, audio: audioinput });
                     })
                     .catch((err) => {
@@ -933,16 +933,17 @@
         }
 
         function checkStreamOptions(stream){
-            var streamOptions = { video: false, audio: false };
-            if(stream.getAudioTracks().length) streamOptions.audio = true;
-            if(stream.getVideoTracks().length) streamOptions.video = true;
-            return streamOptions; 
+            let video = false;
+            let audio = true; 
+            if(stream.getAudioTracks().length) audio = true;
+            if(stream.getVideoTracks().length) video = true;
+            return {metadata: {"video": video, "audio": audio}};
         }
 
         function startStream(stream, call) {
             callOut = call;
             const streamOptions = checkStreamOptions(stream);
-            if(streamOptions.video){
+            if(streamOptions.metadata.video){
                 webRtcContainer.style.display = 'none';
                 webRtcStreamDisplay.style.display = 'block';
             }
@@ -996,8 +997,9 @@
 
                 let audioRequested = false;
                 let videoRequested = false;
+
+                console.log(call.metadata);
                 if(call.metadata){
-                    console.log(call.metadata);
                     audioRequested = call.metadata.audio;
                     videoRequested = call.metadata.video;   
                 }
