@@ -935,20 +935,15 @@
             
         }
 
-        function checkStream(stream){
-            var hasMedia = { hasVideo: false, hasAudio: false };
-
-            if(stream.getAudioTracks().length)
-            hasMedia.hasAudio = true;
-
-            if(stream.getVideoTracks().length)
-            hasMedia.hasVideo = true;
-
-            return hasMedia; 
+        function checkStreamOptions(stream){
+            var streamOptions = { hasVideo: false, hasAudio: false };
+            if(stream.getAudioTracks().length) streamOptions.hasAudio = true;
+            if(stream.getVideoTracks().length) streamOptions.hasVideo = true;
+            return streamOptions; 
         }
 
         function startStream(stream) {
-            const streamOptions = checkStream(stream);
+            const streamOptions = checkStreamOptions(stream);
             if(streamOptions.hasVideo){
                 webRtcContainer.style.display = 'none';
                 webRtcStreamDisplay.style.display = 'block';
@@ -972,12 +967,14 @@
 
             navigator.mediaDevices.getUserMedia(await getStreamConstraints())
             .then(function(stream) {
-                const myStreamOptions = checkStream(stream);
+                // const myStreamOptions = checkStreamOptions(stream);
+                // call = peer.call(opponentPeerId, stream, myStreamOptions);
+                call = peer.call(opponentPeerId, stream);
 
-                call = peer.call(opponentPeerId, stream, myStreamOptions);
                 call.on('stream', function(remoteStream) {
                     callOut = call;
                     startStream(remoteStream);
+                    addWebRtcChat('Stream started', 3);
                 });
                 call.on('close', function() {
                     endStream();                      
@@ -1001,13 +998,14 @@
 
                 navigator.mediaDevices.getUserMedia(await getStreamConstraints())
                     .then(function(stream) {
-
-                        const myStreamOptions = checkStream(stream);
+                        // const myStreamOptions = checkStreamOptions(stream);
                         callOut = call;
-                        call.answer(stream, myStreamOptions);
+                        // call.answer(stream, myStreamOptions);
+                        call.answer(stream);
                         
                         call.on('stream', function(remoteStream) {
                             startStream(remoteStream);
+                            addWebRtcChat('Stream started', 3);
                         });
                         call.on('close', function() {
                             endStream();  
