@@ -903,7 +903,9 @@
             return chunks;
         }
 
-
+        const confirmAction = (confirmText) => {
+                return confirm(confirmText);
+        }
         
         async function getStreamConstraints(){
             let videoinput = false;
@@ -921,6 +923,12 @@
                             if(!videoinput && device.kind === 'videoinput' && device.id != '') videoinput = true;
                             if(!audioinput && device.kind === 'audioinput' && device.id != '') audioinput = true;
                         });
+                        if(videoinput && !confirm('Do you want to use your camera?')){
+                            videoinput = false;
+                        }
+                        if(audioinput && !confirm('Do you want to use your microphone?')){
+                            audioinput = false;
+                        }
                         return Promise.resolve({ video: videoinput, audio: audioinput });
                     })
                     .catch((err) => {
@@ -941,8 +949,11 @@
         }
 
         async function callOpponent(){
+            let streamConstraints = await getStreamConstraints();
+
             var opponentPeerId = match + "-" + opponent;
-            navigator.mediaDevices.getUserMedia(await getStreamConstraints())
+
+            navigator.mediaDevices.getUserMedia()
             .then(function(stream) {
                 call = peer.call(opponentPeerId, stream);
                 call.on('stream', function(remoteStream) {
@@ -971,10 +982,13 @@
 
         function answerCallOpponent(){
             peer.on('call', async function(call) {
+                // if(!confirm('Opponent would like to start a video-call.')) return;
+
                 navigator.mediaDevices.getUserMedia(await getStreamConstraints())
                     .then(function(stream) {
                         callOut = call;
                         call.answer(stream);
+                        
                         call.on('stream', function(remoteStream) {
                             renderStream(remoteStream);
                         });
