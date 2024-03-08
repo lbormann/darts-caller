@@ -1,6 +1,6 @@
 ## 2.11.0
 
-- add video-calls to match-chat
+- add voice-/video-calls to match-chat
 
 
 ## 2.10.3

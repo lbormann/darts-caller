@@ -959,8 +959,6 @@
             webRtcStreamDisplay.style.display = 'none';     
         }
 
-
-
         async function callOpponent(){
             var opponentPeerId = match + "-" + opponent;
 
@@ -1008,8 +1006,6 @@
                     .then(function(stream) {
                         const myStreamOptions = checkStreamOptions(stream);
                         call.answer(stream, myStreamOptions);
-                        // call.answer(stream);
-                        
                         call.on('stream', function(remoteStream) {
                             startStream(remoteStream, call);
                             addWebRtcChat('Stream started', 3);
@@ -1031,47 +1027,7 @@
                     });
             });
         }
-
-
-        // function answerCallOpponent(){
-        //     peer.on('call', async function(call) {
-
-        //     call.on('stream', function(remoteStream) {
-        //         renderStream(remoteStream);
-        //     });
-        //     call.on('close', function() {
-        //         callOut = null;
-        //         webRtcContainer.style.display = 'block';
-        //         webRtcStreamDisplay.style.display = 'none';   
-        //         addWebRtcChat('Stream finished', 3);
-        //     });
-        //     call.on('error', function(error) {
-        //         callOut = null;
-        //         webRtcContainer.style.display = 'block';
-        //         webRtcStreamDisplay.style.display = 'none';   
-        //         addWebRtcChat('Stream error', 4);
-        //     });
-
-        //         // if(!confirm('Opponent would like to start a video-call.')) return;
-
-        //         navigator.mediaDevices.getUserMedia(await getStreamConstraints())
-        //             .then(function(stream) {
-        //                 callOut = call;
-        //                 call.answer(stream);
-                        
-                      
-        //             })
-        //             .catch(function(err) {
-        //                 webRtcContainer.style.display = 'block';
-        //                 addWebRtcChat('Can not access cam/mic', 4);
-        //                 console.log('Failed to get local stream', err);
-        //             });
-      
-        //     });
-        // }
-
-       
-
+  
         function createPeer(matchId, meId, meHost, players){
             if(matchId === null || meId === null || players === null) return;
 
