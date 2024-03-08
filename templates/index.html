@@ -921,8 +921,8 @@
                             if(!videoinput && device.kind === 'videoinput' && device.id != '') videoinput = true;
                             if(!audioinput && device.kind === 'audioinput' && device.id != '') audioinput = true;
                         });
-                        if(videoinputRequested && videoinput && !confirm('Do you want to use your camera?')) videoinput = false; 
-                        if(audioinputRequested && audioinput && !confirm('Do you want to use your microphone?')) audioinput = false;
+                        if(videoinputRequested && videoinput && !confirm('Do you want to communicate with your camera?')) videoinput = false; 
+                        if(audioinputRequested && audioinput && !confirm('Do you want to communicate with your microphone?')) audioinput = false;
                         return Promise.resolve({ video: videoinput, audio: audioinput });
                     })
                     .catch((err) => {
@@ -994,13 +994,15 @@
         function answerCallOpponent(){
             peer.on('call', async function(call) {
 
-                let streamOptionsOpponent = { video: false, audio: false};
-                if(call.options){
-                    streamOptionsOpponent = call.options;
-                    console.log(call.options);
+                let audioRequested = false;
+                let videoRequested = false;
+                if(call.metadata){
+                    console.log(call.metadata);
+                    audioRequested = call.metadata.audio;
+                    videoRequested = call.metadata.video;   
                 }
 
-                navigator.mediaDevices.getUserMedia(await getStreamConstraints(streamOptionsOpponent))
+                navigator.mediaDevices.getUserMedia(await getStreamConstraints(videoRequested, audioRequested))
                     .then(function(stream) {
                         const myStreamOptions = checkStreamOptions(stream);
                         call.answer(stream, myStreamOptions);
