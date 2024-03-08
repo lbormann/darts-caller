@@ -934,7 +934,7 @@
 
         function checkStreamOptions(stream){
             let video = false;
-            let audio = true; 
+            let audio = false; 
             if(stream.getAudioTracks().length) audio = true;
             if(stream.getVideoTracks().length) video = true;
             return {metadata: {"video": video, "audio": audio}};
