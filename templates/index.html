@@ -935,40 +935,61 @@
             
         }
 
-        function renderStream(stream) {
-            webRtcContainer.style.display = 'none';
-            webRtcStreamDisplay.style.display = 'block';
+        function checkStream(stream){
+            var hasMedia = { hasVideo: false, hasAudio: false };
+
+            if(stream.getAudioTracks().length)
+            hasMedia.hasAudio = true;
+
+            if(stream.getVideoTracks().length)
+            hasMedia.hasVideo = true;
+
+            return hasMedia; 
+        }
+
+        function startStream(stream) {
+            const streamOptions = checkStream(stream);
+            if(streamOptions.hasVideo){
+                webRtcContainer.style.display = 'none';
+                webRtcStreamDisplay.style.display = 'block';
+            }
             webRtcStreamDisplay.srcObject = stream;
             webRtcStreamDisplay.addEventListener('loadedmetadata', () => {
                 webRtcStreamDisplay.play()
             });
         }
 
+        function endStream(){
+            callOut = null;
+            webRtcContainer.style.display = 'block';
+            webRtcStreamDisplay.style.display = 'none';     
+        }
+
+
+
         async function callOpponent(){
             var opponentPeerId = match + "-" + opponent;
 
             navigator.mediaDevices.getUserMedia(await getStreamConstraints())
             .then(function(stream) {
-                call = peer.call(opponentPeerId, stream);
+                const myStreamOptions = checkStream(stream);
+
+                call = peer.call(opponentPeerId, stream, myStreamOptions);
                 call.on('stream', function(remoteStream) {
                     callOut = call;
-                    renderStream(remoteStream);
+                    startStream(remoteStream);
                 });
                 call.on('close', function() {
-                    callOut = null;
-                    webRtcContainer.style.display = 'block';
-                    webRtcStreamDisplay.style.display = 'none';                        
+                    endStream();                      
                     addWebRtcChat('Stream finished', 3);
                 });
                 call.on('error', function(error) {
-                    callOut = null;
-                    webRtcContainer.style.display = 'block';
-                    webRtcStreamDisplay.style.display = 'none';   
+                    endStream();      
                     addWebRtcChat('Stream error', 4);
                 });
             })
             .catch(function(err) {
-                webRtcContainer.style.display = 'block';
+                endStream();
                 addWebRtcChat('Can not access cam/mic', 4);
                 console.log('Failed to get local stream', err);
             });
@@ -980,33 +1001,70 @@
 
                 navigator.mediaDevices.getUserMedia(await getStreamConstraints())
                     .then(function(stream) {
+
+                        const myStreamOptions = checkStream(stream);
                         callOut = call;
-                        call.answer(stream);
+                        call.answer(stream, myStreamOptions);
                         
                         call.on('stream', function(remoteStream) {
-                            renderStream(remoteStream);
+                            startStream(remoteStream);
                         });
                         call.on('close', function() {
-                            callOut = null;
-                            webRtcContainer.style.display = 'block';
-                            webRtcStreamDisplay.style.display = 'none';   
+                            endStream();  
                             addWebRtcChat('Stream finished', 3);
                         });
                         call.on('error', function(error) {
-                            callOut = null;
-                            webRtcContainer.style.display = 'block';
-                            webRtcStreamDisplay.style.display = 'none';   
+                            endStream();  
                             addWebRtcChat('Stream error', 4);
                         });
                     })
                     .catch(function(err) {
-                        webRtcContainer.style.display = 'block';
+                        endStream();
                         addWebRtcChat('Can not access cam/mic', 4);
                         console.log('Failed to get local stream', err);
                     });
-      
             });
         }
+
+
+        // function answerCallOpponent(){
+        //     peer.on('call', async function(call) {
+
+        //     call.on('stream', function(remoteStream) {
+        //         renderStream(remoteStream);
+        //     });
+        //     call.on('close', function() {
+        //         callOut = null;
+        //         webRtcContainer.style.display = 'block';
+        //         webRtcStreamDisplay.style.display = 'none';   
+        //         addWebRtcChat('Stream finished', 3);
+        //     });
+        //     call.on('error', function(error) {
+        //         callOut = null;
+        //         webRtcContainer.style.display = 'block';
+        //         webRtcStreamDisplay.style.display = 'none';   
+        //         addWebRtcChat('Stream error', 4);
+        //     });
+
+        //         // if(!confirm('Opponent would like to start a video-call.')) return;
+
+        //         navigator.mediaDevices.getUserMedia(await getStreamConstraints())
+        //             .then(function(stream) {
+        //                 callOut = call;
+        //                 call.answer(stream);
+                        
+                      
+        //             })
+        //             .catch(function(err) {
+        //                 webRtcContainer.style.display = 'block';
+        //                 addWebRtcChat('Can not access cam/mic', 4);
+        //                 console.log('Failed to get local stream', err);
+        //             });
+      
+        //     });
+        // }
+
+       
 
         function createPeer(matchId, meId, meHost, players){
             if(matchId === null || meId === null || players === null) return;
