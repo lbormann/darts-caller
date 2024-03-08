@@ -1026,6 +1026,7 @@
                     .catch(function(err) {
                         endStream();
                         addWebRtcChat('No communication device available', 4);
+                        connOut.send('Sorry, the requested communication device is not available from my side.', 2);
                         console.log('Failed to get local stream', err);
                     });
             });
