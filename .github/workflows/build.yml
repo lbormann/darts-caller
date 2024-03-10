@@ -38,33 +38,39 @@ jobs:
     strategy:
       matrix:
         include:
+          # - os: macos-latest
+          #   TARGET: macos
+          #   CMD_BUILD: pyinstaller -F -n autodarts-caller-mac -i resources/autodarts-caller.icns --add-data "templates:templates" --add-data "static:static" --collect-all certifi autodarts-caller.py 
+          #   OUT_FILE_NAME: autodarts-caller-mac
+          #   ASSET_MIME: application/zip
+
           - os: macos-latest
-            TARGET: macos
+            TARGET: macos-arm64
             CMD_BUILD: pyinstaller -F -n autodarts-caller-mac -i resources/autodarts-caller.icns --add-data "templates:templates" --add-data "static:static" --collect-all certifi autodarts-caller.py 
             OUT_FILE_NAME: autodarts-caller-mac
             ASSET_MIME: application/zip
 
-          - os: ubuntu-20.04
-            TARGET: ubuntu
-            CMD_BUILD: pyinstaller -F -n autodarts-caller -i resources/autodarts-caller.svg --add-data "templates:templates" --add-data "static:static" --collect-all certifi autodarts-caller.py
-            OUT_FILE_NAME: autodarts-caller
-            ASSET_MIME: application/octet-stream
+          # - os: ubuntu-20.04
+          #   TARGET: ubuntu
+          #   CMD_BUILD: pyinstaller -F -n autodarts-caller -i resources/autodarts-caller.svg --add-data "templates:templates" --add-data "static:static" --collect-all certifi autodarts-caller.py
+          #   OUT_FILE_NAME: autodarts-caller
+          #   ASSET_MIME: application/octet-stream
 
-          - os: windows-latest
-            TARGET: windows
-            CMD_BUILD: pyinstaller -F -n autodarts-caller -i resources/autodarts-caller.ico --add-data "templates;templates" --add-data "static;static" --collect-all certifi autodarts-caller.py
-            OUT_FILE_NAME: autodarts-caller.exe
-            ASSET_MIME: application/vnd.microsoft.portable-executable
+          # - os: windows-latest
+          #   TARGET: windows
+          #   CMD_BUILD: pyinstaller -F -n autodarts-caller -i resources/autodarts-caller.ico --add-data "templates;templates" --add-data "static;static" --collect-all certifi autodarts-caller.py
+          #   OUT_FILE_NAME: autodarts-caller.exe
+          #   ASSET_MIME: application/vnd.microsoft.portable-executable
 
-          - os: ubuntu-20.04
-            TARGET: linux-arm64
-            CMD_BUILD: |
-              sudo apt-get update
-              sudo apt-get install -y qemu-user-static binfmt-support
-              docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-              docker run --rm -v /usr/bin/qemu-arm-static:/usr/bin/qemu-arm-static --platform linux/arm64/v8 -v $(pwd):/workdir -w /workdir arm64v8/ubuntu:20.04 bash -c "apt-get update -y && apt-get install -y python3-pip && pip install -r requirements.txt && pyinstaller -F -n autodarts-caller-arm64 -i resources/autodarts-caller.svg --add-data 'templates:templates' --add-data 'static:static' --collect-all certifi autodarts-caller.py"
-            OUT_FILE_NAME: autodarts-caller-arm64
-            ASSET_MIME: application/octet-stream
+          # - os: ubuntu-20.04
+          #   TARGET: linux-arm64
+          #   CMD_BUILD: |
+          #     sudo apt-get update
+          #     sudo apt-get install -y qemu-user-static binfmt-support
+          #     docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+          #     docker run --rm -v /usr/bin/qemu-arm-static:/usr/bin/qemu-arm-static --platform linux/arm64/v8 -v $(pwd):/workdir -w /workdir arm64v8/ubuntu:20.04 bash -c "apt-get update -y && apt-get install -y python3-pip && pip install -r requirements.txt && pyinstaller -F -n autodarts-caller-arm64 -i resources/autodarts-caller.svg --add-data 'templates:templates' --add-data 'static:static' --collect-all certifi autodarts-caller.py"
+          #   OUT_FILE_NAME: autodarts-caller-arm64
+          #   ASSET_MIME: application/octet-stream
 
 
 

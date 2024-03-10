@@ -10,7 +10,6 @@ import argparse
 import requests
 from pygame import mixer
 import websocket
-import socket
 from websocket_server import WebsocketServer
 import threading
 import logging
@@ -27,6 +26,9 @@ import re
 from urllib.parse import quote, unquote
 from flask import Flask, render_template, send_from_directory
 from autodarts_keycloak_client import AutodartsKeycloakClient
+from werkzeug.serving import make_ssl_devcert
+
+
 
 os.environ['SSL_CERT_FILE'] = certifi.where()
 
@@ -45,11 +47,13 @@ logger.setLevel(logging.INFO)
 logger.addHandler(sh)
 
 app = Flask(__name__)
+
+
 main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.10.3'
+VERSION = '2.11.0'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -757,6 +761,16 @@ def setup_caller():
         if server != None:
             broadcast(welcome_event)
 
+
+def check_sounds(sounds_list):
+    global caller
+    all_sounds_available = True
+    try:
+        for s in sounds_list:
+            caller[s]
+    except Exception as e:
+        all_sounds_available = False
+    return all_sounds_available
 
 def play_sound(sound, wait_for_last, volume_mult, mod):
     volume = 1.0
@@ -2315,11 +2329,13 @@ def on_message_autodarts(ws, message):
                         lobbyPlayers.remove(lpl)
                         player_name = str(lpl['name']).lower()
                         ppi(player_name + " left the lobby")
-                        state = play_sound_effect(player_name, True)
-                        if state == False:
-                            state = play_sound_effect('player', True)
-                        play_sound_effect('left', True)
 
+                        play_sound_effect('lobby_ambient_out', False, mod = False)
+
+                        if check_sounds([player_name, 'left']):
+                            play_sound_effect(player_name, True)
+                            play_sound_effect('left', True)
+                        
                         playerLeft = {
                             "event": "lobby",
                             "action": "player-left",
@@ -2334,20 +2350,20 @@ def on_message_autodarts(ws, message):
                         if 'boardId' in p and p['boardId'] != AUTODART_USER_BOARD_ID and not any(lobbyPlayer['userId'] == player_id for lobbyPlayer in lobbyPlayers):
                             lobbyPlayers.append(p)
                             player_name = str(p['name']).lower()
-                            # data['variant'].lower()
                             player_avg = get_player_average(player_id)
                             if player_avg != None:
                                 player_avg = str(math.ceil(player_avg))
+
                             ppi(player_name + " (" + player_avg + " average) joined the lobby")
 
-                            state = False
-                            state = play_sound_effect(player_name, True)
-                            if state == False:
-                                state = play_sound_effect('player', True)
-                                
-                            if player_avg != None and play_sound_effect('average', True):
-                                play_sound_effect(player_avg, True)
+                            play_sound_effect('lobby_ambient_in', False, mod = False)
 
+                            if check_sounds([player_name, 'average', player_avg]):
+                                play_sound_effect(player_name, True)
+                                if player_avg != None:
+                                    play_sound_effect('average', True)
+                                    play_sound_effect(player_avg, True)
+                            
                             playerJoined = {
                                 "event": "lobby",
                                 "action": "player-joined",
@@ -2355,8 +2371,6 @@ def on_message_autodarts(ws, message):
                                 "average": player_avg
                             }
                             broadcast(playerJoined)
-                                    
-                            # play_sound_effect('joined', state, True)
                             break
                     mirror_sounds()
             
@@ -2598,8 +2612,10 @@ def on_message_client(client, server, message):
 
 def on_left_client(client, server):
     ppi('CLIENT DISCONNECTED: ' + str(client))
-    cid = str(client['id'])
-    webCallerSyncs[cid] = None
+    if client is not None:
+        cid = str(client['id'])
+        if cid in webCallerSyncs:
+            webCallerSyncs[cid] = None
 
 def broadcast(data):
     def process(*args):
@@ -2681,23 +2697,25 @@ def mute_background(mute_vol):
 
 
 
+
 @app.route('/')
 def index():
     return render_template('index.html', host=DEFAULT_HOST_IP, 
-                           app_version=VERSION, 
-                           db_name=WEB_DB_NAME, 
-                           ws_port=HOST_PORT, 
-                           state=WEB, 
-                           id=currentMatch,
-                           me=AUTODART_USER_BOARD_ID,
-                           meHost=currentMatchHost,
-                           players=currentMatchPlayers,
-                           languages=CALLER_LANGUAGES, 
-                           genders=CALLER_GENDERS,
-                           language=RANDOM_CALLER_LANGUAGE,
-                           gender=RANDOM_CALLER_GENDER
-                           )
+                        app_version=VERSION, 
+                        db_name=WEB_DB_NAME, 
+                        ws_port=HOST_PORT, 
+                        state=WEB, 
+                        id=currentMatch,
+                        me=AUTODART_USER_BOARD_ID,
+                        meHost=currentMatchHost,
+                        players=currentMatchPlayers,
+                        languages=CALLER_LANGUAGES, 
+                        genders=CALLER_GENDERS,
+                        language=RANDOM_CALLER_LANGUAGE,
+                        gender=RANDOM_CALLER_GENDER
+                        )
 
+    
 @app.route('/sounds/<path:file_id>', methods=['GET'])
 def sound(file_id):
     file_id = unquote(file_id)
@@ -2715,17 +2733,20 @@ def scoreboard():
 
 
 
-def start_websocket_server(host, port):
+
+def start_websocket_server(host, port, key, cert):
     global server
-    server = WebsocketServer(host=host, port=port, loglevel=logging.ERROR)
+    server = WebsocketServer(host=host, port=port, key=key, cert=cert, loglevel=logging.ERROR)
     server.set_fn_new_client(on_open_client)
     server.set_fn_client_left(on_left_client)
     server.set_fn_message_received(on_message_client)
     server.run_forever()
 
-def start_flask_app(host, port):
+def start_flask_app_http(host, port):
     app.run(host=host, port=port, debug=False)
 
+def start_flask_app(ssl_context, host, port):
+    app.run(ssl_context=ssl_context, host=host, port=port, debug=False)
 
 if __name__ == "__main__":
     check_already_running()
@@ -2953,7 +2974,14 @@ if __name__ == "__main__":
         sys.exit()  
 
     try:  
-        websocket_server_thread = threading.Thread(target=start_websocket_server, args=(DEFAULT_HOST_IP, HOST_PORT))
+        path_to_crt = os.path.join(AUDIO_MEDIA_PATH, "dummy.crt")
+        path_to_key = os.path.join(AUDIO_MEDIA_PATH, "dummy.key")
+        if os.path.exists(path_to_crt) and os.path.exists(path_to_key):
+            ssl_context = (path_to_crt, path_to_key)
+        else:
+            ssl_context = make_ssl_devcert(str(AUDIO_MEDIA_PATH / "dummy"), host=DEFAULT_HOST_IP)
+
+        websocket_server_thread = threading.Thread(target=start_websocket_server, args=(DEFAULT_HOST_IP, HOST_PORT, path_to_key, path_to_crt))
         websocket_server_thread.start()
 
         kc = AutodartsKeycloakClient(username=AUTODART_USER_EMAIL, 
@@ -2964,17 +2992,24 @@ if __name__ == "__main__":
                                      )
         kc.start()
 
-        if WEB > 0 or WEB_SCOREBOARD:
-            # WEB_HOST = get_local_ip_address()
-            flask_app_thread = threading.Thread(target=start_flask_app, args=(DEFAULT_HOST_IP, WEB_PORT))
-            flask_app_thread.start()
-
         connect_autodarts()
+
+        if WEB > 0 or WEB_SCOREBOARD:
+            # flask_app_http_thread = threading.Thread(target=start_flask_app_http, args=(DEFAULT_HOST_IP, WEB_PORT))
+            # flask_app_http_thread.start()
+
+            flask_app_https_thread = threading.Thread(target=start_flask_app, args=(ssl_context, DEFAULT_HOST_IP, WEB_PORT))
+            flask_app_https_thread.start()
+
+            # start_flask_app(ssl_context, DEFAULT_HOST_IP, WEB_PORT)
+
+
 
         websocket_server_thread.join()
 
         if WEB > 0 or WEB_SCOREBOARD:
-            flask_app_thread.join() 
+            flask_app_https_thread.join() 
+            # flask_app_http_thread.join() 
 
         kc.stop()
     except Exception as e:

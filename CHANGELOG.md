@@ -1,3 +1,8 @@
+## 2.11.0
+
+- add voice-/video-calls to match-chat
+
+
 ## 2.10.3
 
 - improve chat UX

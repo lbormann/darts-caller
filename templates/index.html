@@ -26,6 +26,9 @@
 
 
     <!-- webrtc -->
+    <label for="web-rtc-chat-stream-display" id="web-rtc-chat-stream" style="display:none;"></label>
+    <video id="web-rtc-chat-stream-display" style="display:none;"></video>
+
     <div id="web-rtc-container" style="display:none;">
         <div id="web-rtc-chat"></div>
         <button id="web-rtc-chat-add-instant">Remember!</button>
@@ -159,11 +162,13 @@
 
         // webRTC Stuff
         const webRtcContainer = document.getElementById('web-rtc-container');
+        const webRtcStreamDisplay = document.getElementById('web-rtc-chat-stream-display');
         const webRtcChat = document.getElementById('web-rtc-chat');
         const webRtcChatAddInstant = document.getElementById('web-rtc-chat-add-instant');
         const webRtcChatClearInstants = document.getElementById('web-rtc-chat-clear-instants');
         const webRtcChatSendMessage = document.getElementById('web-rtc-chat-send-message');
         const webRtcChatFile = document.getElementById('web-rtc-chat-file');
+        const webRtcChatStream = document.getElementById('web-rtc-chat-stream');
         const webRtcChatSettingsToggle = document.getElementById('web-rtc-chat-settings-toggle');
         const webRtcChatSettingsContainer = document.getElementById('web-rtc-chat-settings-container');
         const webRtcChatSettingsDiscord = document.getElementById('web-rtc-chat-settings-discord');
@@ -222,7 +227,7 @@
         const discordUrl = 'https://discordapp.com/users/';
         let match, me, opponent;
         let opponentName, oppoenentAvatar;
-        let peer, connOut;
+        let peer, connOut, callOut;
         let connEstablished = false;
         let chat = [];
         let chatOffline = [];
@@ -307,6 +312,13 @@
         });
         
         // webRtc
+        webRtcChatStream.addEventListener("click", function(){
+            if(callOut == null){
+                callOpponent();
+            }else{
+                callOut.close();      
+            }
+        });
         webRtcChatSettingsToggle.addEventListener("click", function(){
             if(webRtcChatSettingsContainer.style.display == 'block'){
                 webRtcChatSettingsContainer.style.display = 'none';
@@ -373,7 +385,6 @@
                     chatOffline.push(fileObj);
                 }
                 addWebRtcChat(event.target.files[0], 2); 
-                // webRtcChatSendMessage.value = "";
             }
         }
         webRtcChatClearInstants.addEventListener('click', function() {
@@ -516,7 +527,7 @@
         }
         function updateVolumeSlider(save = true) {
             sliderVolume.value = volume;
-            sliderVolumeValue.innerHTML = volume;
+            sliderVolumeValue.innerHTML = volume + " %";
             if(save){
                 savePreferences();
             }
@@ -891,7 +902,126 @@
         }
 
 
+        
+        async function getStreamConstraints(videoinputRequested = false, audioinputRequested = false){
+            let videoinput = false;
+            let audioinput = false;
 
+            if (!navigator.mediaDevices?.enumerateDevices) {
+                console.log("enumerateDevices() not supported.");
+                return Promise.reject("enumerateDevices() not supported.");
+            } else {
+                return navigator.mediaDevices
+                    .enumerateDevices()
+                    .then((devices) => {
+                        devices.forEach((device) => {
+                            console.log(`${device.kind}: ${device.label} id = ${device.deviceId}`);
+                            if(videoinputRequested && !videoinput && device.kind === 'videoinput' && device.id != '') videoinput = true;
+                            if(audioinputRequested && !audioinput && device.kind === 'audioinput' && device.id != '') audioinput = true;
+                        });
+                        if(videoinput && !confirm('Do you want to communicate with your camera?')) videoinput = false; 
+                        if(audioinput && !confirm('Do you want to communicate with your microphone?')) audioinput = false;
+                        return Promise.resolve({ video: videoinput, audio: audioinput });
+                    })
+                    .catch((err) => {
+                        console.error(`${err.name}: ${err.message}`);
+                        return Promise.reject(err);
+                    });
+            }
+        }
+
+        function checkStreamOptions(stream){
+            let video = false;
+            let audio = false; 
+            if(stream.getAudioTracks().length) audio = true;
+            if(stream.getVideoTracks().length) video = true;
+            return {metadata: {"video": video, "audio": audio}};
+        }
+
+        function startStream(stream, call) {
+            callOut = call;
+            const streamOptions = checkStreamOptions(stream);
+            if(streamOptions.metadata.video){
+                webRtcContainer.style.display = 'none';
+                webRtcStreamDisplay.style.display = 'block';
+            }
+            webRtcStreamDisplay.srcObject = stream;
+            webRtcStreamDisplay.addEventListener('loadedmetadata', () => {
+                webRtcStreamDisplay.play()
+            });
+        }
+
+        function endStream(){
+            callOut = null;
+            webRtcContainer.style.display = 'block';
+            webRtcStreamDisplay.style.display = 'none';     
+        }
+
+        async function callOpponent(){
+            var opponentPeerId = match + "-" + opponent;
+
+            navigator.mediaDevices.getUserMedia(await getStreamConstraints(true, true))
+            .then(function(stream) {
+                const myStreamOptions = checkStreamOptions(stream);
+                call = peer.call(opponentPeerId, stream, myStreamOptions);
+
+                call.on('stream', function(remoteStream) {
+                    startStream(remoteStream, call);
+                    addWebRtcChat('Stream started', 3);
+                });
+                call.on('close', function() {
+                    endStream();                      
+                    addWebRtcChat('Stream finished', 3);
+                });
+                call.on('error', function(error) {
+                    endStream();      
+                    addWebRtcChat('Stream error', 4);
+                });
+            })
+            .catch(function(err) {
+                endStream();
+                addWebRtcChat('No communication device available', 4);
+                console.log('Failed to get local stream', err);
+            });
+        }
+
+        function answerCallOpponent(){
+            peer.on('call', async function(call) {
+                let audioRequested = false;
+                let videoRequested = false;
+
+                console.log(call.metadata);
+                if(call.metadata){
+                    audioRequested = call.metadata.audio;
+                    videoRequested = call.metadata.video;   
+                }
+
+                navigator.mediaDevices.getUserMedia(await getStreamConstraints(videoRequested, audioRequested))
+                    .then(function(stream) {
+                        const myStreamOptions = checkStreamOptions(stream);
+                        call.answer(stream, myStreamOptions);
+                        call.on('stream', function(remoteStream) {
+                            startStream(remoteStream, call);
+                            addWebRtcChat('Stream started', 3);
+                        });
+                        call.on('close', function() {
+                            endStream();  
+                            addWebRtcChat('Stream finished', 3);
+                        });
+                        call.on('error', function(error) {
+                            endStream();  
+                            addWebRtcChat('Stream error', 4);
+                        });
+                    })
+                    .catch(function(err) {
+                        endStream();
+                        addWebRtcChat('No communication device available', 4);
+                        connOut.send('Sorry, the requested communication device is not available on my side.', 2);
+                        console.log('Failed to get local stream', err);
+                    });
+            });
+        }
+  
         function createPeer(matchId, meId, meHost, players){
             if(matchId === null || meId === null || players === null) return;
 
@@ -935,6 +1065,7 @@
                         conn.on('open', function(){
                             connEstablished = true;
                             webRtcContainer.style.display = 'block';
+                            webRtcChatStream.style.display = 'block';
                             addWebRtcChat('Connected to ' + opponentName, 3);
                             sendDiscord();
                             
@@ -959,8 +1090,8 @@
 
                     }); 
                 }
+                answerCallOpponent();
             });
-
             peer.on('disconnected', function() {
                 console.log('Peer connection lost.');
                 peer.reconnect();
@@ -985,6 +1116,7 @@
             connOut.on('open', function(){
                 connEstablished = true;
                 webRtcContainer.style.display = 'block';
+                webRtcChatStream.style.display = 'block';
                 addWebRtcChat('Connected to ' + opponentName, 3);
                 sendDiscord();
                 while (chatOffline.length > 0) {
@@ -1019,13 +1151,6 @@
             });  
     }
                    
-        function clearWebRtcChat(){
-            chatOffline = [];
-            chat = [];
-            webRtcChat.innerHTML = "";
-            renderWebRtcChat();
-        }
-        
         function sendDiscord(){
             if(settingDiscord != ''){
                 let dc = discordUrl + settingDiscord;
@@ -1082,6 +1207,13 @@
             '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
             '(\\#[-a-z\\d_]*)?$','i'); // fragment locator
             return urlPattern.test(str);
+        }
+
+        function clearWebRtcChat(){
+            chatOffline = [];
+            chat = [];
+            webRtcChat.innerHTML = "";
+            renderWebRtcChat();
         }
 
         function addWebRtcChat(message, type){
@@ -1175,21 +1307,16 @@
         }
 
 
-
         function onWsOpen(wss){
             ws = wss;
 
             state.innerText = "CONNECTED!";
             state.classList = "success";
-            // buttonContainerModToggle.style.display='block';
 
-            // ws.send('get');
             ws.send('hello');
         }
         
         function onWsClose(ws){
-            // socket = ws;
-
             state.innerText = "DISCONNECTED!";
             state.classList = "failure";
         }

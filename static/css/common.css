@@ -367,6 +367,22 @@ button, select{
     border-radius: 15px;
     word-wrap: break-word;
 }
+#web-rtc-chat-stream-display{
+    width: auto;
+    max-width: 90%;
+    height: auto;
+    max-height: 90%; 
+    margin: 0 auto;
+    margin-top: 20px;
+    padding: 12px;
+    font-size: 20pt;
+    opacity: 100%;
+    background-color: #EBDFCE;
+    border: 3px solid black;
+
+    overflow-y: auto;
+    border-radius: 15px;
+}
 #web-rtc-chat-add-instant, #web-rtc-chat-clear-instants{
     position: relative;
     float: none;
@@ -392,7 +408,6 @@ button, select{
     float: left;
 }
 #web-rtc-chat-settings-toggle{
-    /* display: inline-block;  */
     float: right;
     background-image: url('/static/images/mods.png'); 
     background-size: cover;
@@ -401,6 +416,18 @@ button, select{
     width: 48px;
     height: 48px;
     cursor: pointer;
+}
+#web-rtc-chat-stream{
+    background-image: url('/static/images/stream.png'); 
+    background-size: cover;
+    background-position: center;
+    background-color: transparent;
+    width: 48px;
+    height: 48px;
+    cursor: pointer;
+    position: absolute;
+    left: 5px;
+    top: 10px;
 }
 #web-rtc-chat-send-message{
     width: 100%;
