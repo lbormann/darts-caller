@@ -29,8 +29,7 @@
     <label for="web-rtc-chat-stream-display" id="web-rtc-chat-stream" style="display:none;"></label>
     <video id="web-rtc-chat-stream-display" style="display:none;"></video>
 
-    <!-- style="display:none;" -->
-    <div id="web-rtc-container">
+    <div id="web-rtc-container" style="display:none;">
         <div id="web-rtc-chat"></div>
         <button id="web-rtc-chat-add-instant">Remember!</button>
         <button id="web-rtc-chat-clear-instants">Clear!</button>
@@ -386,7 +385,6 @@
                     chatOffline.push(fileObj);
                 }
                 addWebRtcChat(event.target.files[0], 2); 
-                // webRtcChatSendMessage.value = "";
             }
         }
         webRtcChatClearInstants.addEventListener('click', function() {
@@ -966,9 +964,6 @@
             .then(function(stream) {
                 const myStreamOptions = checkStreamOptions(stream);
                 call = peer.call(opponentPeerId, stream, myStreamOptions);
-                // call = peer.call(opponentPeerId, stream);
-
-                // addWebRtcChat('Waiting for stream', 3);
 
                 call.on('stream', function(remoteStream) {
                     startStream(remoteStream, call);
@@ -992,7 +987,6 @@
 
         function answerCallOpponent(){
             peer.on('call', async function(call) {
-
                 let audioRequested = false;
                 let videoRequested = false;
 
@@ -1022,7 +1016,7 @@
                     .catch(function(err) {
                         endStream();
                         addWebRtcChat('No communication device available', 4);
-                        connOut.send('Sorry, the requested communication device is not available from my side.', 2);
+                        connOut.send('Sorry, the requested communication device is not available on my side.', 2);
                         console.log('Failed to get local stream', err);
                     });
             });
@@ -1098,7 +1092,6 @@
                 }
                 answerCallOpponent();
             });
-
             peer.on('disconnected', function() {
                 console.log('Peer connection lost.');
                 peer.reconnect();
@@ -1158,13 +1151,6 @@
             });  
     }
                    
-        function clearWebRtcChat(){
-            chatOffline = [];
-            chat = [];
-            webRtcChat.innerHTML = "";
-            renderWebRtcChat();
-        }
-        
         function sendDiscord(){
             if(settingDiscord != ''){
                 let dc = discordUrl + settingDiscord;
@@ -1221,6 +1207,13 @@
             '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
             '(\\#[-a-z\\d_]*)?$','i'); // fragment locator
             return urlPattern.test(str);
+        }
+
+        function clearWebRtcChat(){
+            chatOffline = [];
+            chat = [];
+            webRtcChat.innerHTML = "";
+            renderWebRtcChat();
         }
 
         function addWebRtcChat(message, type){
@@ -1314,21 +1307,16 @@
         }
 
 
-
         function onWsOpen(wss){
             ws = wss;
 
             state.innerText = "CONNECTED!";
             state.classList = "success";
-            // buttonContainerModToggle.style.display='block';
 
-            // ws.send('get');
             ws.send('hello');
         }
         
         function onWsClose(ws){
-            // socket = ws;
-
             state.innerText = "DISCONNECTED!";
             state.classList = "failure";
         }

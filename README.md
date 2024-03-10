@@ -143,8 +143,9 @@ Since Version 1.6.0 you can deposit multiple sounds for every ([sound-file-key](
 
 - lobby_ambient_in
 - lobby_ambient_out
-- player
+- {playername}
 - average
+- 0-180
 - left
 
 **ATC (Around the clock)**
@@ -372,14 +373,14 @@ You can not hear any calls as your music is way too loud? Try to set this to '0.
 
 *`-WEB / --web_caller`*
 
-If you set this '1' or '2' the application will host a web-server to mirror call-events. A value '1' will play sounds only on the website. Value '2' will play sounds on the application (locally) and on the website; Use your smartphone, tablet or other device and visit http://{machine-ip-address}:{web-caller-port}. For a continuous calling experience make sure your device display stays on while you are playing. For faster processing the web-caller caches sound-files which results in fast response times; Internet Explorer, non-chromium Edge and Safari > v10 is mandantory as caching is realized by indexeddb.
+If you set this '1' or '2' the application will host a web-server to mirror call-events. A value '1' will play sounds only on the website. Value '2' will play sounds on the application (locally) and on the website; Use your smartphone, tablet or other device and visit https://{machine-ip-address}:{web-caller-port}. For a continuous calling experience make sure your device display stays on while you are playing. For faster processing the web-caller caches sound-files which results in fast response times; Internet Explorer, non-chromium Edge and Safari > v10 is mandantory as caching is realized by indexeddb.
 If you're using an ios device, you probably need to open the page twice and confirm audio-playing by pressing the displayed button. In case that doesn't solve problems try to use another browser like firefox. 
 There is more to say: you can switch language, gender, change to a random caller or ban a caller on-the-fly. Use the modification area to randomize caller-voices.
 If your opponent is also using the web-caller, you both will be able to communicate in realtime.
 
 *`-WEBSB / --web_caller_scoreboard`*
 
-If you set this to a '1' the application will host a web-endpoint to display an alternative scoreboard. Visit http://{machine-ip-address}:{web-caller-port}/scoreboard in browser.
+If you set this to a '1' the application will host a web-endpoint to display an alternative scoreboard. Visit https://{machine-ip-address}:{web-caller-port}/scoreboard in browser.
 
 *`-WEBP / --web_caller_port`*
 

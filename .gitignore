@@ -12,4 +12,3 @@ build
 dist
 *.spec
 caller-downloads-temp
-cert
