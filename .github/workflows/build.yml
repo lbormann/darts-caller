@@ -46,7 +46,7 @@ jobs:
 
           - os: macos-latest
             TARGET: macos-arm64
-            CMD_BUILD: pyinstaller -F -n autodarts-caller-mac-arm64 -i resources/autodarts-caller.icns --add-data "templates:templates" --add-data "static:static" --collect-all certifi autodarts-caller.py 
+            CMD_BUILD: pyinstaller -F -n autodarts-caller-mac-arm64 -i resources/autodarts-caller.icns --target-arch "arm64" --add-data "templates:templates" --add-data "static:static" --collect-all certifi autodarts-caller.py 
             OUT_FILE_NAME: autodarts-caller-mac-arm64
             ASSET_MIME: application/zip
 
