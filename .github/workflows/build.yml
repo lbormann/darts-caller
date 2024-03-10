@@ -38,16 +38,16 @@ jobs:
     strategy:
       matrix:
         include:
-          # - os: macos-latest
-          #   TARGET: macos
-          #   CMD_BUILD: pyinstaller -F -n autodarts-caller-mac -i resources/autodarts-caller.icns --add-data "templates:templates" --add-data "static:static" --collect-all certifi autodarts-caller.py 
-          #   OUT_FILE_NAME: autodarts-caller-mac
-          #   ASSET_MIME: application/zip
+          - os: macos-latest
+            TARGET: macos
+            CMD_BUILD: pyinstaller -F -n autodarts-caller-mac -i resources/autodarts-caller.icns --add-data "templates:templates" --add-data "static:static" --collect-all certifi autodarts-caller.py 
+            OUT_FILE_NAME: autodarts-caller-mac
+            ASSET_MIME: application/zip
 
           - os: macos-latest
             TARGET: macos-arm64
-            CMD_BUILD: pyinstaller -F -n autodarts-caller-mac -i resources/autodarts-caller.icns --add-data "templates:templates" --add-data "static:static" --collect-all certifi autodarts-caller.py 
-            OUT_FILE_NAME: autodarts-caller-mac
+            CMD_BUILD: pyinstaller -F -n autodarts-caller-mac-arm64 -i resources/autodarts-caller.icns --add-data "templates:templates" --add-data "static:static" --collect-all certifi autodarts-caller.py 
+            OUT_FILE_NAME: autodarts-caller-mac-arm64
             ASSET_MIME: application/zip
 
           # - os: ubuntu-20.04
