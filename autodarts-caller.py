@@ -24,8 +24,7 @@ import queue
 from mask import mask
 import re
 from urllib.parse import quote, unquote
-from flask import Flask, render_template, send_from_directory, request, redirect
-from flask_talisman import Talisman
+from flask import Flask, render_template, send_from_directory
 from autodarts_keycloak_client import AutodartsKeycloakClient
 from werkzeug.serving import make_ssl_devcert
 
