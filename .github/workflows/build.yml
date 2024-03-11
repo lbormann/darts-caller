@@ -50,11 +50,11 @@ jobs:
           #   OUT_FILE_NAME: autodarts-caller-mac-arm64
           #   ASSET_MIME: application/zip
 
-          # - os: ubuntu-20.04
-          #   TARGET: ubuntu
-          #   CMD_BUILD: pyinstaller -F -n autodarts-caller -i resources/autodarts-caller.svg --add-data "templates:templates" --add-data "static:static" --collect-all certifi autodarts-caller.py
-          #   OUT_FILE_NAME: autodarts-caller
-          #   ASSET_MIME: application/octet-stream
+          - os: ubuntu-20.04
+            TARGET: ubuntu
+            CMD_BUILD: pyinstaller -F -n autodarts-caller -i resources/autodarts-caller.svg --add-data "templates:templates" --add-data "static:static" --collect-all certifi autodarts-caller.py
+            OUT_FILE_NAME: autodarts-caller
+            ASSET_MIME: application/octet-stream
 
           # - os: windows-latest
           #   TARGET: windows
