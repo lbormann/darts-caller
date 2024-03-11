@@ -2335,7 +2335,7 @@ def on_message_autodarts(ws, message):
                     elif variant == 'ATC':
                         process_match_atc(data)
 
-                    elif variant == 'rtw':
+                    elif variant == 'RTW':
                         process_match_rtw(data)
 
             elif m['channel'] == 'autodarts.boards':
