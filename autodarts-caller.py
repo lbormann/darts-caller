@@ -2046,7 +2046,7 @@ def process_match_atc(m):
     
     mirror_sounds()
 
-def process_match_atw(m):
+def process_match_rtw(m):
     global isGameFinished
 
     variant = m['variant']
@@ -2100,19 +2100,19 @@ def process_match_atw(m):
             
         if targetHit == currentTarget['number']:
             if (hit == 'SingleInner' or hit == 'SingleOuter'):
-                if play_sound_effect('atw_target_hit_single') == False:
+                if play_sound_effect('rtw_target_hit_single') == False:
                     play_sound_effect('single')
             elif hit == 'Double':
-                if play_sound_effect('atw_target_hit_double') == False:
+                if play_sound_effect('rtw_target_hit_double') == False:
                     play_sound_effect(hit)
             elif hit == 'Triple':
-                if play_sound_effect('atw_target_hit_triple') == False:
+                if play_sound_effect('rtw_target_hit_triple') == False:
                     play_sound_effect(hit)
             else:
-                if play_sound_effect('atw_target_missed') == False:
+                if play_sound_effect('rtw_target_missed') == False:
                     play_sound_effect(str(targetHit))
         else:
-            if play_sound_effect('atw_target_missed') == False:
+            if play_sound_effect('rtw_target_missed') == False:
                 play_sound_effect(str(targetHit))
 
     if matchover:
@@ -2335,8 +2335,8 @@ def on_message_autodarts(ws, message):
                     elif variant == 'ATC':
                         process_match_atc(data)
 
-                    elif variant == 'ATW':
-                        process_match_atw(data)
+                    elif variant == 'rtw':
+                        process_match_rtw(data)
 
             elif m['channel'] == 'autodarts.boards':
                 data = m['data']
