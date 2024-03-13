@@ -14,7 +14,7 @@ Autodarts-caller plays back sound-files accordingly to the state of a https://au
 | Shanghai | |
 | Gotcha | |
 | Around the Clock | :heavy_check_mark: |
-| Round the World | |
+| Round the World | :heavy_check_mark: |
 | Random Checkout | :heavy_check_mark: |
 | Count Up | |
 | Segment Training | |
@@ -153,6 +153,13 @@ Since Version 1.6.0 you can deposit multiple sounds for every ([sound-file-key](
 - atc_target_hit
 - atc_target_missed
 - atc_target_next
+
+**RTW (Round the world)**
+
+- rtw_target_hit_single
+- rtw_target_hit_double
+- rtw_target_hit_triple
+- rtw_target_missed
 
 **CONTROL**
 
