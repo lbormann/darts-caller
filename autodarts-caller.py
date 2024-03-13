@@ -2048,7 +2048,7 @@ def process_match_atc(m):
 
 def process_match_rtw(m):
     global isGameFinished
-    
+
     variant = m['variant']
     currentPlayerIndex = m['player']
     currentPlayerName = m['players'][currentPlayerIndex]['name'].lower()
