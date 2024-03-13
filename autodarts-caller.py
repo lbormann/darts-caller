@@ -2096,20 +2096,20 @@ def process_match_rtw(m):
 
         if targetHit == currentTarget:
             if (hit == 'Single'):
-                if play_sound_effect('rtw_target_hit_single') == False:
-                    if play_sound_effect(hit) == False:
-                        play_sound_effect(str(1))
+                if play_sound_effect('rtw_target_hit_single',True) == False:
+                    if play_sound_effect(hit,True) == False:
+                        play_sound_effect(str(1),True)
             elif hit == 'Double':
-                if play_sound_effect('rtw_target_hit_double') == False:
-                    if play_sound_effect(hit) == False:
-                        play_sound_effect(str(2))
+                if play_sound_effect('rtw_target_hit_double',True) == False:
+                    if play_sound_effect(hit,True) == False:
+                        play_sound_effect(str(2),True)
             elif hit == 'Triple':
-                if play_sound_effect('rtw_target_hit_triple') == False:
-                    if play_sound_effect(hit) == False:
-                        play_sound_effect(str(3))
+                if play_sound_effect('rtw_target_hit_triple',True) == False:
+                    if play_sound_effect(hit,True) == False:
+                        play_sound_effect(str(3),True)
         else:
-            if play_sound_effect('rtw_target_missed') == False:
-                play_sound_effect(str(0))
+            if play_sound_effect('rtw_target_missed',True) == False:
+                play_sound_effect(str(0),True)
 
     # Check for 3. Dart - points call
     if turn != None and turn['throws'] != [] and len(turn['throws']) == 3:
@@ -2126,7 +2126,7 @@ def process_match_rtw(m):
         }
         broadcast(dartsThrown)
 
-        play_sound_effect(str(points))
+        play_sound_effect(str(points),True)
         if AMBIENT_SOUNDS != 0.0:
             if points == 0:
                 play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
