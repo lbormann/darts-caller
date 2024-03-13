@@ -154,7 +154,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
             type=sha
-            latest
+            type=semver,pattern={{major}}.{{minor}},value=latest
 
       - name: Build and push
         uses: docker/build-push-action@v4
