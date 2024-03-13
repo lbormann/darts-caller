@@ -2052,6 +2052,7 @@ def process_match_rtw(m):
     variant = m['variant']
     currentPlayerIndex = m['player']
     currentPlayerName = m['players'][currentPlayerIndex]['name'].lower()
+    currentPlayerIsBot = (m['players'][currentPlayerIndex]['cpuPPR'] is not None)
     numberOfPlayers = len(m['players'])
     isRandomOrder = m['settings']['order'] == 'Random-Bull'
     winningPlayerIndex = m['winner']
@@ -2059,20 +2060,15 @@ def process_match_rtw(m):
     if winningPlayerIndex != -1:
         winningPlayerName = m['players'][winningPlayerIndex]['name'].lower()
 
-    turns = m['turns'][0]
-    points = str(turns['points'])
-    currentTargetsPlayer = m['state']['currentTargets'][currentPlayerIndex]
-    currentTarget = m['state']['targets'][currentPlayerIndex][int(currentTargetsPlayer)]
+    turn = m['turns'][0]
+    points = str(turn['points'])
+    currentTarget = m['round']
 
-    gameon = (0 == m['gameScores'][0] and turns['throws'] == [])
+    gameon = (0 == m['gameScores'][0] and turn['throws'] == [])
     matchover = (winningPlayerIndex != -1 and isGameFinished == False)
 
-    # weird behavior by the api i guess?
-    if currentTarget['count'] == 0 and int(currentTargetsPlayer) > 0 and turns['throws'] != []:
-        currentTarget = m['state']['targets'][currentPlayerIndex][int(currentTargetsPlayer) -1]
-
     # Darts pulled (Playerchange and Possible-checkout)
-    if gameon == False and turns != None and turns['throws'] == [] or isGameFinished == True:
+    if gameon == False and turn != None and turn['throws'] == [] or isGameFinished == True:
         dartsPulled = {
             "event": "darts-pulled",
             "player": currentPlayerName,
@@ -2092,29 +2088,61 @@ def process_match_rtw(m):
         }
         # ppi(dartsPulled)
         broadcast(dartsPulled)
-    elif CALL_EVERY_DART == True and turns is not None and turns['throws']:
-        lastThrow = turns['throws'][-1]
+    elif CALL_EVERY_DART == True and turn is not None and turn['throws']:
+        lastThrow = turn['throws'][-1]
         targetHit = lastThrow['segment']['number']
 
         hit = lastThrow['segment']['bed']
-            
-        if targetHit == currentTarget['number']:
-            if (hit == 'SingleInner' or hit == 'SingleOuter'):
+
+        if targetHit == currentTarget:
+            if (hit == 'Single'):
                 if play_sound_effect('rtw_target_hit_single') == False:
-                    play_sound_effect('single')
+                    if play_sound_effect(hit) == False:
+                        play_sound_effect(str(1))
             elif hit == 'Double':
                 if play_sound_effect('rtw_target_hit_double') == False:
-                    play_sound_effect(hit)
+                    if play_sound_effect(hit) == False:
+                        play_sound_effect(str(2))
             elif hit == 'Triple':
                 if play_sound_effect('rtw_target_hit_triple') == False:
-                    play_sound_effect(hit)
-            else:
-                if play_sound_effect('rtw_target_missed') == False:
-                    play_sound_effect(str(targetHit))
+                    if play_sound_effect(hit) == False:
+                        play_sound_effect(str(3))
         else:
             if play_sound_effect('rtw_target_missed') == False:
-                play_sound_effect(str(targetHit))
+                play_sound_effect(str(0))
 
+    # Check for 3. Dart - points call
+    if turn != None and turn['throws'] != [] and len(turn['throws']) == 3:
+        dartsThrown = {
+            "event": "darts-thrown",
+            "player": currentPlayerName,
+            "playerIsBot": str(currentPlayerIsBot),
+            "game": {
+                "mode": variant,
+                "dartNumber": "3",
+                "dartValue": points,        
+
+            }
+        }
+        broadcast(dartsThrown)
+
+        play_sound_effect(str(points))
+        if AMBIENT_SOUNDS != 0.0:
+            if points == 0:
+                play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
+            elif points == 9:
+                play_sound_effect('ambient_180', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
+            elif points >= 7:
+                play_sound_effect('ambient_150more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)   
+            elif points >= 6:
+                play_sound_effect('ambient_120more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
+            elif points >= 5:
+                play_sound_effect('ambient_100more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
+            elif points >= 4:
+                play_sound_effect('ambient_50more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
+
+        ppi("Turn ended")
+    
     if matchover:
         isGameFinished = True
         matchWon = {
@@ -2145,7 +2173,7 @@ def process_match_rtw(m):
 
         ppi('Gameshot and match')
         
-    if m['gameScores'][0] == 0 and m['scores'] == None and turns['throws'] == [] and m['round'] == 1:
+    if m['gameScores'][0] == 0 and m['scores'] == None and turn['throws'] == [] and m['round'] == 1:
         isGameOn = True
         isGameFinished = False
         
@@ -2173,7 +2201,7 @@ def process_match_rtw(m):
     if isRandomOrder:
         play_sound_effect(str(m['state']['targets'][currentPlayerIndex][int(currentTargetsPlayer)]['number']), True)
 
-    if turns['throws'] == []:
+    if turn['throws'] == []:
         play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
         if CALL_CURRENT_PLAYER and CALL_CURRENT_PLAYER_ALWAYS and numberOfPlayers > 1:
             play_sound_effect(currentPlayerName, True)
