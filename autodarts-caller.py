@@ -2048,7 +2048,7 @@ def process_match_atc(m):
 
 def process_match_rtw(m):
     global isGameFinished
-
+    print(json.dumps(m))
     variant = m['variant']
     currentPlayerIndex = m['player']
     currentPlayerName = m['players'][currentPlayerIndex]['name'].lower()
@@ -2061,7 +2061,7 @@ def process_match_rtw(m):
         winningPlayerName = m['players'][winningPlayerIndex]['name'].lower()
 
     turn = m['turns'][0]
-    points = str(turn['points'])
+    points = turn['points']
     currentTarget = m['round']
 
     gameon = (0 == m['gameScores'][0] and turn['throws'] == [])
