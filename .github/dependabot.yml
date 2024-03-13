@@ -1,0 +1,62 @@
+version: 2
+updates:
+- package-ecosystem: "pip"
+  directory: "/"
+  schedule:
+    interval: "weekly"
+  commit-message:
+    prefix: "chore(pip): update dependency"
+  labels:
+    - "pip"
+    - "python"
+    - "dependencies"
+  pull-request-branch-name:
+    prefix: "dependabot/pip"
+    suffix: "update-dependency"
+    separator: "/"
+  target-branch: "develop"
+
+- package-ecosystem: "docker"
+  directory: "/docker"
+  schedule:
+    interval: "weekly"
+  commit-message:
+    prefix: "chore(docker): update dependency"
+  labels:
+    - "docker"
+    - "dependencies"
+  pull-request-branch-name:
+    prefix: "dependabot/docker"
+    suffix: "update-dependency"
+    separator: "/"
+  target-branch: "develop"
+
+- package-ecosystem: "composer"
+  directory: "/docker"
+  schedule:
+    interval: "weekly"
+  commit-message:
+    prefix: "chore(composer): update dependency"
+  labels:
+    - "composer"
+    - "dependencies"
+  pull-request-branch-name:
+    prefix: "dependabot/composer"
+    suffix: "update-dependency"
+    separator: "/"
+  target-branch: "develop"
+
+- package-ecosystem: "github-actions"
+  directory: "/.github/workflows"
+  schedule:
+    interval: "weekly"
+  commit-message:
+    prefix: "chore(actions): update dependency"
+  labels:
+    - "github-actions"
+    - "dependencies"
+  pull-request-branch-name:
+    prefix: "dependabot/actions"
+    suffix: "update-dependency"
+    separator: "/"
+  target-branch: "develop"
