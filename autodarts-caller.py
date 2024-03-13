@@ -80,6 +80,7 @@ DEFAULT_BACKGROUND_AUDIO_VOLUME = 0.0
 DEFAULT_WEB_CALLER = 0
 DEFAULT_WEB_CALLER_SCOREBOARD = 0
 DEFAULT_WEB_CALLER_PORT = 5000
+DEFAULT_WEB_CALLER_DISABLE_HTTPS=0
 DEFAULT_HOST_PORT = 8079
 DEFAULT_DEBUG = False
 DEFAULT_CERT_CHECK = True
@@ -2947,6 +2948,7 @@ if __name__ == "__main__":
     ap.add_argument("-WEB", "--web_caller", required=False, type=int, choices=range(0, 3), default=DEFAULT_WEB_CALLER, help="If '1' the application will host an web-endpoint, '2' it will do '1' and default caller-functionality.")
     ap.add_argument("-WEBSB", "--web_caller_scoreboard", required=False, type=int, choices=range(0, 2), default=DEFAULT_WEB_CALLER_SCOREBOARD, help="If '1' the application will host an web-endpoint, right to web-caller-functionality.")
     ap.add_argument("-WEBP", "--web_caller_port", required=False, type=int, default=DEFAULT_WEB_CALLER_PORT, help="Web-Caller-Port")
+    ap.add_argument("-WEBDH", "--web_caller_disable_https", required=False, type=int, default=DEFAULT_WEB_CALLER_PORT, help="If '0', the web caller will use http instead of https. This is unsecure, be careful!")
     ap.add_argument("-HP", "--host_port", required=False, type=int, default=DEFAULT_HOST_PORT, help="Host-Port")
     ap.add_argument("-DEB", "--debug", type=int, choices=range(0, 2), default=DEFAULT_DEBUG, required=False, help="If '1', the application will output additional information")
     ap.add_argument("-CC", "--cert_check", type=int, choices=range(0, 2), default=DEFAULT_CERT_CHECK, required=False, help="If '0', the application won't check any ssl certification")
@@ -3001,6 +3003,7 @@ if __name__ == "__main__":
     WEB = args['web_caller']
     WEB_SCOREBOARD = args['web_caller_scoreboard']
     WEB_PORT = args['web_caller_port']
+    WEB_DISABLE_HTTPS = args['web_caller_disable_https'] == 1
     HOST_PORT = args['host_port']
     DEBUG = args['debug']
     CERT_CHECK = args['cert_check']
@@ -3093,12 +3096,13 @@ if __name__ == "__main__":
     ppi('DONATION: bitcoin:bc1q8dcva098rrrq2uqhv38rj5hayzrqywhudvrmxa', None, '')
     ppi('\r\n', None, '')
 
-    if CERT_CHECK:
-        ssl._create_default_https_context = ssl.create_default_context
-    else:
-        ssl._create_default_https_context = ssl._create_unverified_context
-        os.environ['PYTHONHTTPSVERIFY'] = '0'
-        ppi("WARNING: SSL-cert-verification disabled!")
+    if not WEB_DISABLE_HTTPS:
+        if CERT_CHECK:
+            ssl._create_default_https_context = ssl.create_default_context
+        else:
+            ssl._create_default_https_context = ssl._create_unverified_context
+            os.environ['PYTHONHTTPSVERIFY'] = '0'
+            ppi("WARNING: SSL-cert-verification disabled!")
 
     if WEB == 0 or WEB == 2:
         try:
@@ -3139,15 +3143,16 @@ if __name__ == "__main__":
         sys.exit()  
 
     try:  
-        path_to_crt = os.path.join(AUDIO_MEDIA_PATH, "dummy.crt")
-        path_to_key = os.path.join(AUDIO_MEDIA_PATH, "dummy.key")
-        if os.path.exists(path_to_crt) and os.path.exists(path_to_key):
-            ssl_context = (path_to_crt, path_to_key)
-        else:
-            ssl_context = make_ssl_devcert(str(AUDIO_MEDIA_PATH / "dummy"), host=DEFAULT_HOST_IP)
+        if not WEB_DISABLE_HTTPS:
+            path_to_crt = os.path.join(AUDIO_MEDIA_PATH, "dummy.crt")
+            path_to_key = os.path.join(AUDIO_MEDIA_PATH, "dummy.key")
+            if os.path.exists(path_to_crt) and os.path.exists(path_to_key):
+                ssl_context = (path_to_crt, path_to_key)
+            else:
+                ssl_context = make_ssl_devcert(str(AUDIO_MEDIA_PATH / "dummy"), host=DEFAULT_HOST_IP)
 
-        websocket_server_thread = threading.Thread(target=start_websocket_server, args=(DEFAULT_HOST_IP, HOST_PORT, path_to_key, path_to_crt))
-        websocket_server_thread.start()
+            websocket_server_thread = threading.Thread(target=start_websocket_server, args=(DEFAULT_HOST_IP, HOST_PORT, path_to_key, path_to_crt))
+            websocket_server_thread.start()
 
         kc = AutodartsKeycloakClient(username=AUTODART_USER_EMAIL, 
                                      password=AUTODART_USER_PASSWORD, 
@@ -3160,21 +3165,25 @@ if __name__ == "__main__":
         connect_autodarts()
 
         if WEB > 0 or WEB_SCOREBOARD:
-            # flask_app_http_thread = threading.Thread(target=start_flask_app_http, args=(DEFAULT_HOST_IP, WEB_PORT))
-            # flask_app_http_thread.start()
+            if WEB_DISABLE_HTTPS:
+                flask_app_http_thread = threading.Thread(target=start_flask_app_http, args=(DEFAULT_HOST_IP, WEB_PORT))
+                flask_app_http_thread.start()
 
-            flask_app_https_thread = threading.Thread(target=start_flask_app, args=(ssl_context, DEFAULT_HOST_IP, WEB_PORT))
-            flask_app_https_thread.start()
+            else:
+                flask_app_https_thread = threading.Thread(target=start_flask_app, args=(ssl_context, DEFAULT_HOST_IP, WEB_PORT))
+                flask_app_https_thread.start()
 
             # start_flask_app(ssl_context, DEFAULT_HOST_IP, WEB_PORT)
 
 
-
-        websocket_server_thread.join()
+        if not WEB_DISABLE_HTTPS:
+            websocket_server_thread.join()
 
         if WEB > 0 or WEB_SCOREBOARD:
-            flask_app_https_thread.join() 
-            # flask_app_http_thread.join() 
+            if WEB_DISABLE_HTTPS:
+                flask_app_http_thread.join() 
+            else:
+                flask_app_https_thread.join() 
 
         kc.stop()
     except Exception as e:

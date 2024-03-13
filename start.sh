@@ -98,7 +98,9 @@ web_caller=
 web_caller_scoreboard=
 
 # -WEBP
-web_caller_port=
+
+# -WEBDH
+web_caller_disable_https=
 
 # -HP
 host_port=
@@ -217,6 +219,9 @@ if [ -n "$web_caller_scoreboard" ]; then
 fi
 if [ -n "$web_caller_port" ]; then
   args="$args -WEBP $web_caller_port"
+fi
+if [ -n "$web_caller_disable_https" ]; then
+  args="$args -WEBDH $web_caller_disable_https"
 fi
 if [ -n "$host_port" ]; then
   args="$args -HP $host_port"

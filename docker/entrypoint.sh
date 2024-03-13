@@ -76,6 +76,9 @@ if [ -n "$DOWNLOADS_NAME" ]; then
 fi
 if [ -n "$BLACKLIST_PATH" ]; then
   args="$args -BLP $BLACKLIST_PATH"
+  if [ ! -f $BLACKLIST_PATH ]; then
+    touch $BLACKLIST_PATH
+  fi
 fi
 if [ -n "$BACKGROUND_AUDIO_VOLUME" ]; then
  args="$args -BAV $BACKGROUND_AUDIO_VOLUME"
@@ -88,6 +91,9 @@ if [ -n "$WEB_CALLER_SCOREBOARD" ]; then
 fi
 if [ -n "$WEB_CALLER_PORT" ]; then
   args="$args -WEBP $WEB_CALLER_PORT"
+fi
+if [ -n "$WEB_CALLER_DISABLE_HTTPS" ]; then
+  args="$args -WEBDH $WEB_CALLER_DISABLE_HTTPS"
 fi
 if [ -n "$HOST_PORT" ]; then
   args="$args -HP $HOST_PORT"
