@@ -168,6 +168,9 @@ Since Version 1.6.0 you can deposit multiple sounds for every ([sound-file-key](
 - control_dart_correction_2 [overrides: control, control_dart_correction]
 - control_dart_correction_3 [overrides: control, control_dart_correction]
 
+**WALK ON**
+- walkon
+- walkon_{playername}
 
 
 
@@ -310,6 +313,13 @@ If you set this to '1' the application will call playernames for certain events 
 *`-CCPA / --call_current_player_always`*
 
 If you set this to '1' the application will call playernames on every playerchange (-CCP needs to be activated). By default this is not activated. 
+
+*`-WO / --walk_on`*
+
+If you set this to '1' the application will play a sound-files named: "walkon" at the start of a match (after bull-up) then for each player in the match it will play a soundfile named: walkon_{playername} if available.\
+**Note:** -CCP / -- call_current_player has to be enabled for this to work.
+
+*(during the walkon phase the board is stopped and won't detect darts, use it to throw warm ups while your song is playing).*
 
 *`-E / --call_every_dart`*
 

@@ -72,6 +72,7 @@ DEFAULT_POSSIBLE_CHECKOUT_CALL_SINGLE_FILES = 0
 DEFAULT_POSSIBLE_CHECKOUT_CALL_YOURSELF_ONLY = 0
 DEFAULT_AMBIENT_SOUNDS = 0.0
 DEFAULT_AMBIENT_SOUNDS_AFTER_CALLS = 0
+DEFAULT_WALK_ON = False
 DEFAULT_DOWNLOADS = True
 DEFAULT_DOWNLOADS_LIMIT = 3
 DEFAULT_DOWNLOADS_LANGUAGE = 1
@@ -807,6 +808,11 @@ def play_sound_effect(sound_file_key, wait_for_last = False, volume_mult = 1.0, 
         play_sound(random.choice(caller[sound_file_key]), wait_for_last, volume_mult, mod)
         return True
     except Exception as e:
+        if WEB == 0 or WEB == 2:
+            #To ensure that the next files are not being played when a walk on player file is missing
+            if wait_for_last == True and WALK_ON:
+                while mixer.get_busy():
+                    time.sleep(0.01)
         ppe('Can not play sound for sound-file-key "' + sound_file_key + '" -> Ignore this or check existance; otherwise convert your file appropriate', e)
         return False
     
@@ -838,20 +844,61 @@ def mirror_sounds():
         broadcast(mirror)
         mirror_files = []
 
+def walk_on(playersInMatch):
+    global waitForWalkOns
+    if WALK_ON and playersInMatch[0]["name"] != None:
+        stop_board()
+        walkOnIntro = play_sound_effect('walkon')
+        player1WalkOn = play_sound_effect('walkon_' + playersInMatch[0]["name"], walkOnIntro, mod = False)
+        #instead of do a for loop and going over each player before continueing with the match, do it cheesy and just create 6 players as this is the max.
+        PlayersCount = len(playersInMatch)
+        if(PlayersCount > 1):
+            player2WalkOn = play_sound_effect('walkon_' + playersInMatch[1]["name"], player1WalkOn, mod = False)
+        if(PlayersCount > 2):
+            player3WalkOn = play_sound_effect('walkon_' +  playersInMatch[2]["name"], player2WalkOn, mod = False)
+        if(PlayersCount > 3):
+            player4WalkOn = play_sound_effect('walkon_' +  playersInMatch[3]["name"], player3WalkOn, mod = False)
+        if(PlayersCount > 4):
+            player5WalkOn = play_sound_effect('walkon_' +  playersInMatch[4]["name"], player4WalkOn, mod = False)
+        if(PlayersCount > 5):
+            player6WalkOn = play_sound_effect('walkon_' +  playersInMatch[5]["name"], player5WalkOn, mod = False)
+
+        # Another dirty quick hack to wait for the right amount of player walkOns
+        if PlayersCount == 1:
+                waitForWalkOns = player1WalkOn
+        elif PlayersCount == 2:
+                waitForWalkOns = player2WalkOn
+        elif PlayersCount == 3:
+                waitForWalkOns = player3WalkOn
+        elif PlayersCount == 4:
+                waitForWalkOns = player4WalkOn
+        elif PlayersCount == 5:
+                waitForWalkOns = player5WalkOn
+        elif PlayersCount == 6:
+                waitForWalkOns = player6WalkOn
+
+        # if(waitForWalkOns == False):
+        #     start_board()
+    else:
+        waitForWalkOns = True
+
+    return waitForWalkOns
 
 def start_board():
     try:
-        res = requests.put(boardManagerAddress + '/api/detection/start')
-        # res = requests.put(boardManagerAddress + '/api/start')
+        # res = requests.put(boardManagerAddress + '/api/detection/start')
+        res = requests.put(boardManagerAddress + '/api/start')
         # ppi(res)
+        if res.status_code == 200: print("successfully started the board")
     except Exception as e:
         ppe('Start board failed', e)
 
 def stop_board():
     try:    
-        res = requests.put(boardManagerAddress + '/api/detection/stop')
-        # res = requests.put(boardManagerAddress + '/api/stop')
+        # res = requests.put(boardManagerAddress + '/api/detection/stop')
+        res = requests.put(boardManagerAddress + '/api/stop')
         # ppi(res)
+        if res.status_code == 200: print("successfully stopped the board")
     except Exception as e:
         ppe('stop board failed', e)
 
@@ -1066,6 +1113,7 @@ def listen_to_match(m, ws):
         currentMatch = m['id']
         ppi('Listen to match: ' + currentMatch)
 
+        receive_local_board_address()
 
         try:
             setup_caller()
@@ -1147,10 +1195,14 @@ def listen_to_match(m, ws):
                 broadcast(matchStarted)
 
             if mode != 'Bull-off':
+
                 callPlayerNameState = False
                 if CALL_CURRENT_PLAYER and currentPlayerName != None:
-                    callPlayerNameState = play_sound_effect(currentPlayerName)
+                    callPlayerNameState = play_sound_effect(currentPlayerName, walk_on(players), mod = False)
 
+                #Restart the board after all walk on speaking has been done
+                if(callPlayerNameState == True and WALK_ON):
+                    start_board()
                 if play_sound_effect('matchon', callPlayerNameState) == False:
                     play_sound_effect('gameon', callPlayerNameState)
 
@@ -1166,7 +1218,7 @@ def listen_to_match(m, ws):
         global isGameFinished
         isGameFinished = False
 
-        receive_local_board_address()
+        # receive_local_board_address()
 
         paramsSubscribeMatchesEvents = {
             "channel": "autodarts.matches",
@@ -1228,7 +1280,7 @@ def process_match_x01(m):
     global currentMatchPlayers
     global isGameFinished
     global lastPoints
-    
+
     variant = m['variant']
     players = m['players']
     currentPlayerIndex = m['player']
@@ -1497,8 +1549,11 @@ def process_match_x01(m):
 
         callPlayerNameState = False
         if CALL_CURRENT_PLAYER:
-            callPlayerNameState = play_sound_effect(currentPlayerName)
+            callPlayerNameState = play_sound_effect(currentPlayerName, walk_on(players))
 
+        #Restart the board after all walk on speaking has been done
+        if(callPlayerNameState == True and WALK_ON):
+            start_board()
         if play_sound_effect('matchon', callPlayerNameState, mod = False) == False:
             play_sound_effect('gameon', callPlayerNameState, mod = False)
 
@@ -2772,7 +2827,8 @@ if __name__ == "__main__":
     ap.add_argument("-PCCSF", "--possible_checkout_call_single_files", type=int, choices=range(0, 2), default=DEFAULT_POSSIBLE_CHECKOUT_CALL_SINGLE_FILES, required=False, help="If '1', the application will call a possible checkout by using yr_2-yr_170, else it uses two separated sounds: you_require + x")
     ap.add_argument("-PCCYO", "--possible_checkout_call_yourself_only", type=int, choices=range(0, 2), default=DEFAULT_POSSIBLE_CHECKOUT_CALL_YOURSELF_ONLY, required=False, help="If '1' the caller will only call if there is a checkout possibility if the current player is you")
     ap.add_argument("-A", "--ambient_sounds", type=float, default=DEFAULT_AMBIENT_SOUNDS, required=False, help="If > '0.0' (volume), the application will call a ambient_*-Sounds")
-    ap.add_argument("-AAC", "--ambient_sounds_after_calls", type=int, choices=range(0, 2), default=DEFAULT_AMBIENT_SOUNDS_AFTER_CALLS, required=False, help="If '1', the ambient sounds will appear after calling is finished") 
+    ap.add_argument("-AAC", "--ambient_sounds_after_calls", type=int, choices=range(0, 2), default=DEFAULT_AMBIENT_SOUNDS_AFTER_CALLS, required=False, help="If '1', the ambient sounds will appear after calling is finished")
+    ap.add_argument("-WO", "--walk_on", type=float, default=DEFAULT_WALK_ON, required=False, help="If '1' the application will play walk on sound at the start of the match")
     ap.add_argument("-DL", "--downloads", type=int, choices=range(0, 2), default=DEFAULT_DOWNLOADS, required=False, help="If '1', the application will try to download a curated list of caller-voices")
     ap.add_argument("-DLL", "--downloads_limit", type=int, default=DEFAULT_DOWNLOADS_LIMIT, required=False, help="If '1', the application will try to download a only the X newest caller-voices. -DLN needs to be activated.")
     ap.add_argument("-DLLA", "--downloads_language", type=int, choices=range(0, len(CALLER_LANGUAGES) + 1), default=DEFAULT_DOWNLOADS_LANGUAGE, required=False, help="If '0', the application will download speakers of every language.., else it will limit speaker downloads by specific language")
@@ -2821,6 +2877,7 @@ if __name__ == "__main__":
     POSSIBLE_CHECKOUT_CALL_YOURSELF_ONLY = args['possible_checkout_call_yourself_only']
     AMBIENT_SOUNDS = args['ambient_sounds']
     AMBIENT_SOUNDS_AFTER_CALLS = args['ambient_sounds_after_calls']
+    WALK_ON = args['walk_on']
     DOWNLOADS = args['downloads']
     DOWNLOADS_LANGUAGE = args['downloads_language']
     if DOWNLOADS_LANGUAGE < 0: DOWNLOADS_LANGUAGE = DEFAULT_DOWNLOADS_LANGUAGE
