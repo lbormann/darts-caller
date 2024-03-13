@@ -151,10 +151,11 @@ jobs:
             type=ref,event=branch
             type=ref,event=pr
             type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}.{{patch}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
             type=sha
-            type=semver,pattern={{major}}.{{minor}},value=latest
+            type=semver,pattern={{major}}.{{minor}}.{{patch}},value=latest
 
       - name: Build and push
         uses: docker/build-push-action@v4
