@@ -2986,8 +2986,8 @@ if __name__ == "__main__":
             else:
                 ssl_context = make_ssl_devcert(str(AUDIO_MEDIA_PATH / "dummy"), host=DEFAULT_HOST_IP)
 
-        websocket_server_thread = threading.Thread(target=start_websocket_server, args=(DEFAULT_HOST_IP, HOST_PORT, path_to_key, path_to_crt))
-        websocket_server_thread.start()
+            websocket_server_thread = threading.Thread(target=start_websocket_server, args=(DEFAULT_HOST_IP, HOST_PORT, path_to_key, path_to_crt))
+            websocket_server_thread.start()
 
         kc = AutodartsKeycloakClient(username=AUTODART_USER_EMAIL, 
                                      password=AUTODART_USER_PASSWORD, 
@@ -3011,8 +3011,8 @@ if __name__ == "__main__":
             # start_flask_app(ssl_context, DEFAULT_HOST_IP, WEB_PORT)
 
 
-
-        websocket_server_thread.join()
+        if not WEB_DISABLE_HTTPS:
+            websocket_server_thread.join()
 
         if WEB > 0 or WEB_SCOREBOARD:
             if WEB_DISABLE_HTTPS:
