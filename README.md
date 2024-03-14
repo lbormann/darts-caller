@@ -254,6 +254,7 @@ Start the script:
 - -WEB / --web_caller [Default: 0] [Possible values: 0,1,2]
 - -WEBSB / --web_caller_scoreboard [Default: 0] [Possible values: 0 | 1]
 - -WEBP / --web_caller_port [Default: 5000]
+- -WEBDH / --web_caller_disable_https [Default: 0] [Possible values: 0 | 1]
 - -HP / --host_port [Default: 8079]
 - -DEB / --debug [Default: 0] [Possible values: 0 | 1]
 
@@ -392,6 +393,11 @@ If you set this to a '1' the application will host a web-endpoint to display an 
 *`-WEBP / --web_caller_port`*
 
 If web-calling or web-scoreboard is enabled, you can configure a custom port. By default this is '5000'.
+
+*`-WEBDH / --web_caller_disable_https`*
+
+Disables HTTPS for the web caller. Warning! This makes the service less secure!
+Also, HTTPS is required for calls/video. If you disable HTTPS, you will have to provide the HTTPS connection somehow else (For example through a reverse proxy, no support here)
 
 *`-HP / --host_port`*
 
