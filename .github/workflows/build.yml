@@ -38,23 +38,23 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-latest
-            TARGET: macos
-            CMD_BUILD: pyinstaller -F -n autodarts-caller-mac -i resources/autodarts-caller.icns --add-data "templates:templates" --add-data "static:static" --collect-all certifi autodarts-caller.py 
-            OUT_FILE_NAME: autodarts-caller-mac
-            ASSET_MIME: application/zip
+          # - os: macos-latest
+          #   TARGET: macos
+          #   CMD_BUILD: pyinstaller -F -n autodarts-caller-mac -i resources/autodarts-caller.icns --add-data "templates:templates" --add-data "static:static" --collect-all certifi autodarts-caller.py 
+          #   OUT_FILE_NAME: autodarts-caller-mac
+          #   ASSET_MIME: application/zip
 
-          - os: macos-12-xlarge
-            TARGET: macos-arm64
-            CMD_BUILD: pyinstaller -F -n autodarts-caller-mac-arm64 -i resources/autodarts-caller.icns --target-arch "arm64" --add-data "templates:templates" --add-data "static:static" --collect-all certifi autodarts-caller.py 
-            OUT_FILE_NAME: autodarts-caller-mac-arm64
-            ASSET_MIME: application/zip
+          # - os: macos-12-xlarge
+          #   TARGET: macos-arm64
+          #   CMD_BUILD: pyinstaller -F -n autodarts-caller-mac-arm64 -i resources/autodarts-caller.icns --target-arch "arm64" --add-data "templates:templates" --add-data "static:static" --collect-all certifi autodarts-caller.py 
+          #   OUT_FILE_NAME: autodarts-caller-mac-arm64
+          #   ASSET_MIME: application/zip
 
-          # - os: ubuntu-20.04
-          #   TARGET: ubuntu
-          #   CMD_BUILD: pyinstaller -F -n autodarts-caller -i resources/autodarts-caller.svg --add-data "templates:templates" --add-data "static:static" --collect-all certifi autodarts-caller.py
-          #   OUT_FILE_NAME: autodarts-caller
-          #   ASSET_MIME: application/octet-stream
+          - os: ubuntu-20.04
+            TARGET: ubuntu
+            CMD_BUILD: pyinstaller -F -n autodarts-caller -i resources/autodarts-caller.svg --add-data "templates:templates" --add-data "static:static" --collect-all certifi autodarts-caller.py
+            OUT_FILE_NAME: autodarts-caller
+            ASSET_MIME: application/octet-stream
 
           # - os: windows-latest
           #   TARGET: windows
@@ -62,15 +62,15 @@ jobs:
           #   OUT_FILE_NAME: autodarts-caller.exe
           #   ASSET_MIME: application/vnd.microsoft.portable-executable
 
-          # - os: ubuntu-20.04
-          #   TARGET: linux-arm64
-          #   CMD_BUILD: |
-          #     sudo apt-get update
-          #     sudo apt-get install -y qemu-user-static binfmt-support
-          #     docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-          #     docker run --rm -v /usr/bin/qemu-arm-static:/usr/bin/qemu-arm-static --platform linux/arm64/v8 -v $(pwd):/workdir -w /workdir arm64v8/ubuntu:20.04 bash -c "apt-get update -y && apt-get install -y python3-pip && pip install -r requirements.txt && pyinstaller -F -n autodarts-caller-arm64 -i resources/autodarts-caller.svg --add-data 'templates:templates' --add-data 'static:static' --collect-all certifi autodarts-caller.py"
-          #   OUT_FILE_NAME: autodarts-caller-arm64
-          #   ASSET_MIME: application/octet-stream
+          - os: ubuntu-20.04
+            TARGET: linux-arm64
+            CMD_BUILD: |
+              sudo apt-get update
+              sudo apt-get install -y qemu-user-static binfmt-support
+              docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+              docker run --rm -v /usr/bin/qemu-arm-static:/usr/bin/qemu-arm-static --platform linux/arm64/v8 -v $(pwd):/workdir -w /workdir arm64v8/ubuntu:20.04 bash -c "apt-get update -y && apt-get install -y python3-pip && pip install -r requirements.txt && pyinstaller -F -n autodarts-caller-arm64 -i resources/autodarts-caller.svg --add-data 'templates:templates' --add-data 'static:static' --collect-all certifi autodarts-caller.py"
+            OUT_FILE_NAME: autodarts-caller-arm64
+            ASSET_MIME: application/octet-stream
 
 
 
@@ -119,7 +119,6 @@ jobs:
     needs: build
     env:
       PLATFORMS: linux/amd64,linux/arm64
-      IMAGE_NAME: lbormann/autodarts-caller
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
@@ -145,7 +144,7 @@ jobs:
         with:
           # list of Docker images to use as base name for tags
           images: |
-            docker.io/${{ env.IMAGE_NAME }}
+            docker.io/${{ github.repository }}
           # Docker tags based on the following events/attributes
           tags: |
             type=schedule
@@ -165,6 +164,7 @@ jobs:
           platforms: ${{ env.PLATFORMS }}
           build-args: |
             REF=${{ github.ref_name }}
+            REPOSITORY=${{ github.repository }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.set_image_metadata.outputs.tags }}
           labels: ${{ steps.set_image_metadata.outputs.labels }}
