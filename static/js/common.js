@@ -11,8 +11,8 @@ function getRandomInterval(min, max) {
 }
 
 
-function setupWebSocketConnection(host, port, onOpenHandle, onCloseHandle, onMessageHandle, maxReconnectAttempts = 3, reconnectInterval = 1000) {
-    const socket = new WebSocket(`wss://${host}:${port}`);
+function setupWebSocketConnection(protocol, host, port, onOpenHandle, onCloseHandle, onMessageHandle, maxReconnectAttempts = 3, reconnectInterval = 1000) {
+    const socket = new WebSocket(`${protocol}://${host}:${port}`);
 
     socket.onopen = function() {
         console.log("Socket: connected!");
@@ -23,13 +23,11 @@ function setupWebSocketConnection(host, port, onOpenHandle, onCloseHandle, onMes
         console.log("Socket: disconnected!");
         onCloseHandle(socket, event);
 
-        // && maxReconnectAttempts > 0
         if (event.code !== 1000) {
             console.log(`Reconnecting in ${reconnectInterval / 1000} seconds...`);
             setTimeout(function() {
-                return setupWebSocketConnection(host, port, onOpenHandle, onCloseHandle, onMessageHandle, maxReconnectAttempts, reconnectInterval);
+                return setupWebSocketConnection(protocol, host, port, onOpenHandle, onCloseHandle, onMessageHandle, maxReconnectAttempts, reconnectInterval);
             }, reconnectInterval);
-            // maxReconnectAttempts--;
         }
     };
 

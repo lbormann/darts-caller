@@ -2867,19 +2867,19 @@ def mute_background(mute_vol):
 @app.route('/')
 def index():
     return render_template('index.html', host=DEFAULT_HOST_IP, 
-                        app_version=VERSION, 
-                        db_name=WEB_DB_NAME, 
-                        ws_port=HOST_PORT, 
-                        state=WEB, 
-                        id=currentMatch,
-                        me=AUTODART_USER_BOARD_ID,
-                        meHost=currentMatchHost,
-                        players=currentMatchPlayers,
-                        languages=CALLER_LANGUAGES, 
-                        genders=CALLER_GENDERS,
-                        language=RANDOM_CALLER_LANGUAGE,
-                        gender=RANDOM_CALLER_GENDER
-                        )
+                                            app_version=VERSION, 
+                                            db_name=WEB_DB_NAME, 
+                                            ws_port=HOST_PORT, 
+                                            state=WEB, 
+                                            id=currentMatch,
+                                            me=AUTODART_USER_BOARD_ID,
+                                            meHost=currentMatchHost,
+                                            players=currentMatchPlayers,
+                                            languages=CALLER_LANGUAGES, 
+                                            genders=CALLER_GENDERS,
+                                            language=RANDOM_CALLER_LANGUAGE,
+                                            gender=RANDOM_CALLER_GENDER
+                                            )
 
     
 @app.route('/sounds/<path:file_id>', methods=['GET'])
@@ -2908,11 +2908,13 @@ def start_websocket_server(host, port, key, cert):
     server.set_fn_message_received(on_message_client)
     server.run_forever()
 
-def start_flask_app_http(host, port):
-    app.run(host=host, port=port, debug=False)
+def start_flask_app(host, port, ssl_context = None):
+    if ssl_context is None:
+        app.run(host=host, port=port, debug=False)
+    else:
+        app.run(ssl_context=ssl_context, host=host, port=port, debug=False)
 
-def start_flask_app(ssl_context, host, port):
-    app.run(ssl_context=ssl_context, host=host, port=port, debug=False)
+
 
 if __name__ == "__main__":
     check_already_running()
@@ -3143,6 +3145,9 @@ if __name__ == "__main__":
         sys.exit()  
 
     try:  
+        path_to_crt = None
+        path_to_key = None
+        ssl_context = None
         if not WEB_DISABLE_HTTPS:
             path_to_crt = os.path.join(AUDIO_MEDIA_PATH, "dummy.crt")
             path_to_key = os.path.join(AUDIO_MEDIA_PATH, "dummy.key")
@@ -3151,8 +3156,12 @@ if __name__ == "__main__":
             else:
                 ssl_context = make_ssl_devcert(str(AUDIO_MEDIA_PATH / "dummy"), host=DEFAULT_HOST_IP)
 
-            websocket_server_thread = threading.Thread(target=start_websocket_server, args=(DEFAULT_HOST_IP, HOST_PORT, path_to_key, path_to_crt))
-            websocket_server_thread.start()
+        websocket_server_thread = threading.Thread(target=start_websocket_server, args=(DEFAULT_HOST_IP, HOST_PORT, path_to_key, path_to_crt))
+        websocket_server_thread.start()
+
+        if WEB > 0 or WEB_SCOREBOARD:
+            flask_app_thread = threading.Thread(target=start_flask_app, args=(DEFAULT_HOST_IP, WEB_PORT, ssl_context))
+            flask_app_thread.start()
 
         kc = AutodartsKeycloakClient(username=AUTODART_USER_EMAIL, 
                                      password=AUTODART_USER_PASSWORD, 
@@ -3164,28 +3173,12 @@ if __name__ == "__main__":
 
         connect_autodarts()
 
-        if WEB > 0 or WEB_SCOREBOARD:
-            if WEB_DISABLE_HTTPS:
-                flask_app_http_thread = threading.Thread(target=start_flask_app_http, args=(DEFAULT_HOST_IP, WEB_PORT))
-                flask_app_http_thread.start()
-
-            else:
-                flask_app_https_thread = threading.Thread(target=start_flask_app, args=(ssl_context, DEFAULT_HOST_IP, WEB_PORT))
-                flask_app_https_thread.start()
-
-            # start_flask_app(ssl_context, DEFAULT_HOST_IP, WEB_PORT)
-
-
-        if not WEB_DISABLE_HTTPS:
-            websocket_server_thread.join()
+        websocket_server_thread.join()
 
         if WEB > 0 or WEB_SCOREBOARD:
-            if WEB_DISABLE_HTTPS:
-                flask_app_http_thread.join() 
-            else:
-                flask_app_https_thread.join() 
+            flask_app_thread.join() 
 
         kc.stop()
+
     except Exception as e:
         ppe("Connect failed: ", e)
-   

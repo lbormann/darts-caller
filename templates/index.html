@@ -125,6 +125,10 @@
 
 
     <script>
+        // CONNECTION
+        const protocol = window.location.protocol === 'http:' ? 'ws' : 'wss';
+        const hostname = window.location.hostname;
+
         // DB
         const localStorageAppKey = 'ADC';
 
@@ -308,7 +312,7 @@
             state.style.display='block'; 
             lastCall.style.display='block';
             button.remove();
-            setupWebSocketConnection(window.location.hostname, "{{ ws_port }}", onWsOpen, onWsClose, onWsData);
+            setupWebSocketConnection(protocol, hostname, "{{ ws_port }}", onWsOpen, onWsClose, onWsData);
         });
         
         // webRtc

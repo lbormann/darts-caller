@@ -1,6 +1,8 @@
 ## 2.11.0
 
 - add voice-/video-calls to match-chat
+- add support RTW (Round the world)
+- rework lobby sounds
 
 
 ## 2.10.3

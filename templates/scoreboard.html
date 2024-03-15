@@ -20,7 +20,14 @@
 
     <div id="scoreboard" class="container">
 
+
+
+
     <script>
+        // CONNECTION
+        const protocol = window.location.protocol === 'http:' ? 'ws' : 'wss';
+        const hostname = window.location.hostname;
+
         const state = document.getElementById('status');
         const scoreboard = document.getElementById('scoreboard');
         
@@ -181,7 +188,7 @@
                 showFullscreenOverlay("To use web-scoreboard set -WEBSB (--web_caller_scoreboard) to 1");
                 return;
             }
-            setupWebSocketConnection(window.location.hostname, "{{ ws_port }}", onWsOpen, onWsClose, onWsData);   
+            setupWebSocketConnection(protocol, hostname, "{{ ws_port }}", onWsOpen, onWsClose, onWsData);   
         });
     </script>
 

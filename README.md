@@ -565,7 +565,7 @@ Option 1) Enable web-caller (WEB 1|2) and press "Ban Caller!"
 Option 2) Delete ALL files of voice-pack-folder.
 Option 3) use [autodarts-voice](https://github.com/lbormann/autodarts-voice) to ban the the current caller when he/she is active.
 Option 4) put the name of the current caller (voice-pack) in autodarts-caller-banned.txt by yourself.
-All 3 options forcing the application to either download files again nor using a voice-pack anymore, except you define it in -C or -DLN
+All options forcing the application to either download files again nor using a voice-pack anymore, except you define it in -C or -DLN
 If you wish to revoke a ban, open 'autodarts-caller-banned.txt' and remove the line from the list.
 
 ### App starts and stops immediately?!
