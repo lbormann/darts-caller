@@ -1069,7 +1069,7 @@
                         conn.on('open', function(){
                             connEstablished = true;
                             webRtcContainer.style.display = 'block';
-                            webRtcChatStream.style.display = 'block';
+                            if(protocol == "wss") webRtcChatStream.style.display = 'block';
                             addWebRtcChat('Connected to ' + opponentName, 3);
                             sendDiscord();
                             
@@ -1120,7 +1120,7 @@
             connOut.on('open', function(){
                 connEstablished = true;
                 webRtcContainer.style.display = 'block';
-                webRtcChatStream.style.display = 'block';
+                if(protocol == "wss") webRtcChatStream.style.display = 'block';
                 addWebRtcChat('Connected to ' + opponentName, 3);
                 sendDiscord();
                 while (chatOffline.length > 0) {

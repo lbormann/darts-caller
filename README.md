@@ -396,8 +396,9 @@ If web-calling or web-scoreboard is enabled, you can configure a custom port. By
 
 *`-WEBDH / --web_caller_disable_https`*
 
-Disables HTTPS for the web caller. Warning! This makes the service less secure!
-Also, HTTPS is required for calls/video. If you disable HTTPS, you will have to provide the HTTPS connection somehow else (For example through a reverse proxy, no support here)
+If you set this to '1' the application will run all services with insecure http/ws. It's NOT recommended! 
+Also you won't be able to use video-/voice-calls on chat.
+By default this is NOT activated.
 
 *`-HP / --host_port`*
 
