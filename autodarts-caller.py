@@ -2056,14 +2056,20 @@ def process_match_rtw(m):
     currentPlayerIsBot = (m['players'][currentPlayerIndex]['cpuPPR'] is not None)
     numberOfPlayers = len(m['players'])
     isRandomOrder = m['settings']['order'] == 'Random-Bull'
-    winningPlayerIndex = m['winner']
+    winningPlayerIndex = int(m['winner'])
     winningPlayerName = ''
     if winningPlayerIndex != -1:
         winningPlayerName = m['players'][winningPlayerIndex]['name'].lower()
-
+    order = m['settings']['order']
     turn = m['turns'][0]
     points = turn['points']
-    currentTarget = m['round']
+    currentTarget = 0
+    if order == '1-20-Bull':
+        currentTarget = m['round']
+    elif order == '20-1-Bull':
+        currentTarget = 21 - m['round']
+    if currentTarget == 0 or currentTarget == 21:
+        currentTarget = 25
 
     gameon = (0 == m['gameScores'][0] and turn['throws'] == [])
     matchover = (winningPlayerIndex != -1 and isGameFinished == False)
@@ -2089,14 +2095,14 @@ def process_match_rtw(m):
         }
         # ppi(dartsPulled)
         broadcast(dartsPulled)
-    elif CALL_EVERY_DART == True and turn is not None and turn['throws']:
+    elif CALL_EVERY_DART == True and turn is not None and turn['throws'] and not isRandomOrder:
         lastThrow = turn['throws'][-1]
         targetHit = lastThrow['segment']['number']
 
         hit = lastThrow['segment']['bed']
 
         if targetHit == currentTarget:
-            if (hit == 'Single'):
+            if hit == 'Single' or hit == 'SingleInner' or hit == 'SingleOuter':
                 if play_sound_effect('rtw_target_hit_single',True) == False:
                     if play_sound_effect(hit,True) == False:
                         play_sound_effect(str(1),True)
@@ -2129,17 +2135,17 @@ def process_match_rtw(m):
 
         play_sound_effect(str(points),True)
         if AMBIENT_SOUNDS != 0.0:
-            if points == 0:
+            if int(points) == 0:
                 play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
-            elif points == 9:
+            elif int(points) == 9:
                 play_sound_effect('ambient_180', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
-            elif points >= 7:
+            elif int(points) >= 7:
                 play_sound_effect('ambient_150more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)   
-            elif points >= 6:
+            elif int(points) >= 6:
                 play_sound_effect('ambient_120more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
-            elif points >= 5:
+            elif int(points) >= 5:
                 play_sound_effect('ambient_100more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
-            elif points >= 4:
+            elif int(points) >= 4:
                 play_sound_effect('ambient_50more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
 
         ppi("Turn ended")
@@ -2148,7 +2154,7 @@ def process_match_rtw(m):
         isGameFinished = True
         matchWon = {
             "event": "match-won",
-            "player": m['players'][winningPlayerName],
+            "player": m['players'][winningPlayerIndex],
             "game": {
                 "mode": variant,
                 "dartsThrownValue": "0"
@@ -2784,23 +2790,25 @@ def on_left_client(client, server):
             webCallerSyncs[cid] = None
 
 def broadcast(data):
-    def process(*args):
-        global server
-        server.send_message_to_all(json.dumps(data, indent=2).encode('utf-8'))
-    t = threading.Thread(target=process)
-    t.start()
-    # t.join()
+    if not WEB_DISABLE_HTTPS:
+        def process(*args):
+            global server
+            server.send_message_to_all(json.dumps(data, indent=2).encode('utf-8'))
+        t = threading.Thread(target=process)
+        t.start()
+        # t.join()  
 
 def unicast(client, data, dump=True):
-    def process(*args):
-        global server
-        send_data = data
-        if dump:
-            send_data = json.dumps(send_data, indent=2).encode('utf-8')
-        server.send_message(client, send_data)
-    t = threading.Thread(target=process)
-    t.start()
-    # t.join()
+    if not WEB_DISABLE_HTTPS:
+        def process(*args):
+            global server
+            send_data = data
+            if dump:
+                send_data = json.dumps(send_data, indent=2).encode('utf-8')
+            server.send_message(client, send_data)
+        t = threading.Thread(target=process)
+        t.start()
+        # t.join()
 
 
 
