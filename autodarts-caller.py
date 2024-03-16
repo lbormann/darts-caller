@@ -2790,25 +2790,23 @@ def on_left_client(client, server):
             webCallerSyncs[cid] = None
 
 def broadcast(data):
-    if not WEB_DISABLE_HTTPS:
-        def process(*args):
-            global server
-            server.send_message_to_all(json.dumps(data, indent=2).encode('utf-8'))
-        t = threading.Thread(target=process)
-        t.start()
-        # t.join()  
+    def process(*args):
+        global server
+        server.send_message_to_all(json.dumps(data, indent=2).encode('utf-8'))
+    t = threading.Thread(target=process)
+    t.start()
+    # t.join()  
 
 def unicast(client, data, dump=True):
-    if not WEB_DISABLE_HTTPS:
-        def process(*args):
-            global server
-            send_data = data
-            if dump:
-                send_data = json.dumps(send_data, indent=2).encode('utf-8')
-            server.send_message(client, send_data)
-        t = threading.Thread(target=process)
-        t.start()
-        # t.join()
+    def process(*args):
+        global server
+        send_data = data
+        if dump:
+            send_data = json.dumps(send_data, indent=2).encode('utf-8')
+        server.send_message(client, send_data)
+    t = threading.Thread(target=process)
+    t.start()
+    # t.join()
 
 
 
