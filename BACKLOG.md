@@ -1,3 +1,5 @@
+- add caller fav mechanismn
+- add board-functions to web-caller
 - rework autodarts-caller code
 - rework custom-event`s data-types without stringfication
 - remove scoreboard

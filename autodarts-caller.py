@@ -2950,7 +2950,7 @@ if __name__ == "__main__":
     ap.add_argument("-WEB", "--web_caller", required=False, type=int, choices=range(0, 3), default=DEFAULT_WEB_CALLER, help="If '1' the application will host an web-endpoint, '2' it will do '1' and default caller-functionality.")
     ap.add_argument("-WEBSB", "--web_caller_scoreboard", required=False, type=int, choices=range(0, 2), default=DEFAULT_WEB_CALLER_SCOREBOARD, help="If '1' the application will host an web-endpoint, right to web-caller-functionality.")
     ap.add_argument("-WEBP", "--web_caller_port", required=False, type=int, default=DEFAULT_WEB_CALLER_PORT, help="Web-Caller-Port")
-    ap.add_argument("-WEBDH", "--web_caller_disable_https", required=False, type=int, default=DEFAULT_WEB_CALLER_PORT, help="If '0', the web caller will use http instead of https. This is unsecure, be careful!")
+    ap.add_argument("-WEBDH", "--web_caller_disable_https", required=False, type=int, choices=range(0, 2), default=DEFAULT_WEB_CALLER_PORT, help="If '0', the web caller will use http instead of https. This is unsecure, be careful!")
     ap.add_argument("-HP", "--host_port", required=False, type=int, default=DEFAULT_HOST_PORT, help="Host-Port")
     ap.add_argument("-DEB", "--debug", type=int, choices=range(0, 2), default=DEFAULT_DEBUG, required=False, help="If '1', the application will output additional information")
     ap.add_argument("-CC", "--cert_check", type=int, choices=range(0, 2), default=DEFAULT_CERT_CHECK, required=False, help="If '0', the application won't check any ssl certification")
