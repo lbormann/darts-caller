@@ -843,14 +843,13 @@ def walk_on(playersInMatch):
     global waitForWalkOns
     if WALK_ON and playersInMatch[0]["name"] != None:
         stop_board()
-        previousSound = play_sound_effect('walkon')
+        play_sound_effect('walkon')
         PlayersCount = len(playersInMatch)
         loopCount = 0
         extraPlayersWalkOn = []
         for player in playersInMatch:
             if(PlayersCount > loopCount):
                 extraPlayersWalkOn.append(play_sound_effect('walkon_' + player["name"], True, mod = False))
-                previousSound = extraPlayersWalkOn[-1]
             loopCount += 1
 
         waitForWalkOns = extraPlayersWalkOn[-1]
