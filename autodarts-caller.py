@@ -808,11 +808,6 @@ def play_sound_effect(sound_file_key, wait_for_last = False, volume_mult = 1.0, 
         play_sound(random.choice(caller[sound_file_key]), wait_for_last, volume_mult, mod)
         return True
     except Exception as e:
-        if WEB == 0 or WEB == 2:
-            #To ensure that the next files are not being played when a walk on player file is missing
-            if wait_for_last == True and WALK_ON:
-                while mixer.get_busy():
-                    time.sleep(0.01)
         ppe('Can not play sound for sound-file-key "' + sound_file_key + '" -> Ignore this or check existance; otherwise convert your file appropriate', e)
         return False
     
@@ -848,37 +843,17 @@ def walk_on(playersInMatch):
     global waitForWalkOns
     if WALK_ON and playersInMatch[0]["name"] != None:
         stop_board()
-        walkOnIntro = play_sound_effect('walkon')
-        player1WalkOn = play_sound_effect('walkon_' + playersInMatch[0]["name"], walkOnIntro, mod = False)
-        #instead of do a for loop and going over each player before continueing with the match, do it cheesy and just create 6 players as this is the max.
+        previousSound = play_sound_effect('walkon')
         PlayersCount = len(playersInMatch)
-        if(PlayersCount > 1):
-            player2WalkOn = play_sound_effect('walkon_' + playersInMatch[1]["name"], player1WalkOn, mod = False)
-        if(PlayersCount > 2):
-            player3WalkOn = play_sound_effect('walkon_' +  playersInMatch[2]["name"], player2WalkOn, mod = False)
-        if(PlayersCount > 3):
-            player4WalkOn = play_sound_effect('walkon_' +  playersInMatch[3]["name"], player3WalkOn, mod = False)
-        if(PlayersCount > 4):
-            player5WalkOn = play_sound_effect('walkon_' +  playersInMatch[4]["name"], player4WalkOn, mod = False)
-        if(PlayersCount > 5):
-            player6WalkOn = play_sound_effect('walkon_' +  playersInMatch[5]["name"], player5WalkOn, mod = False)
+        loopCount = 0
+        extraPlayersWalkOn = []
+        for player in playersInMatch:
+            if(PlayersCount > loopCount):
+                extraPlayersWalkOn.append(play_sound_effect('walkon_' + player["name"], True, mod = False))
+                previousSound = extraPlayersWalkOn[-1]
+            loopCount += 1
 
-        # Another dirty quick hack to wait for the right amount of player walkOns
-        if PlayersCount == 1:
-                waitForWalkOns = player1WalkOn
-        elif PlayersCount == 2:
-                waitForWalkOns = player2WalkOn
-        elif PlayersCount == 3:
-                waitForWalkOns = player3WalkOn
-        elif PlayersCount == 4:
-                waitForWalkOns = player4WalkOn
-        elif PlayersCount == 5:
-                waitForWalkOns = player5WalkOn
-        elif PlayersCount == 6:
-                waitForWalkOns = player6WalkOn
-
-        # if(waitForWalkOns == False):
-        #     start_board()
+        waitForWalkOns = extraPlayersWalkOn[-1]
     else:
         waitForWalkOns = True
 
