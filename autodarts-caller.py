@@ -53,7 +53,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.11.0'
+VERSION = '2.11.1'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -105,7 +105,7 @@ AUTODART_USERS_URL = 'https://api.autodarts.io/as/v0/users/'
 AUTODART_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe'
 
 SUPPORTED_SOUND_FORMATS = ['.mp3', '.wav']
-SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket', 'Random Checkout', 'ATC']
+SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket', 'Random Checkout', 'ATC', 'RTW']
 SUPPORTED_CRICKET_FIELDS = [15, 16, 17, 18, 19, 20, 25]
 BOGEY_NUMBERS = [169, 168, 166, 165, 163, 162, 159]
 TEMPLATE_FILE_ENCODING = 'utf-8-sig'
@@ -1003,48 +1003,6 @@ def receive_local_board_address():
         boardManagerAddress = None
         ppe('Fetching local-board-address failed', e)
 
-# deprecated
-def poll_lobbies(ws):
-    def process(*args):
-        global currentMatch
-        global lobbyPlayers
-
-        while currentMatch == None:
-            try:   
-                res = requests.get(AUTODART_LOBBIES_URL, headers={'Authorization': 'Bearer ' + kc.access_token})
-                res = res.json()
-                # ppi(json.dumps(res, indent = 4, sort_keys = True))
-
-                # watchout for a lobby with my board-id
-                for m in res:
-                    for p in m['players']:
-                        if 'boardId' in p and p['boardId'] == AUTODART_USER_BOARD_ID:
-                            ppi('Listen to lobby: ' + m['id'])
-                            paramsSubscribeLobbyEvents = {
-                                    "channel": "autodarts.lobbies",
-                                    "type": "subscribe",
-                                    "topic": m['id'] + ".state"
-                                }
-                            ws.send(json.dumps(paramsSubscribeLobbyEvents))
-                            paramsSubscribeLobbyEvents = {
-                                    "channel": "autodarts.lobbies",
-                                    "type": "subscribe",
-                                    "topic": m['id'] + ".events"
-                                }
-                            ws.send(json.dumps(paramsSubscribeLobbyEvents))
-                            lobbyPlayers = []
-
-                            if play_sound_effect("lobby_ambient_in", False):
-                                mirror_sounds()
-                            return
-            except Exception as e:
-                ppe('Lobby-polling failed: ', e)
-            
-            ppi('Waiting for lobby or match..')
-            time.sleep(5)
-    t = threading.Thread(target=process)
-    t.start()
-
 def listen_to_match(m, ws):
     global currentMatch
     global currentMatchHost
@@ -1176,6 +1134,14 @@ def listen_to_match(m, ws):
         }
 
         ws.send(json.dumps(paramsSubscribeMatchesEvents))
+
+        # paramsSubscribeMatchesEvents = {
+        #     "channel": "autodarts.matches",
+        #     "type": "subscribe",
+        #     "topic": currentMatch + ".game-events"
+        # }
+        # ws.send(json.dumps(paramsSubscribeMatchesEvents))
+
         
     elif m['event'] == 'finish' or m['event'] == 'delete':
         ppi('Stop listening to match: ' + m['id'])
@@ -1184,18 +1150,24 @@ def listen_to_match(m, ws):
         # currentMatchPlayers = None
         currentMatchPlayers = []
 
-        paramsUnsubscribeMatchEvents = {
-            "type": "unsubscribe",
+        paramsUnsubscribeMatchEvents = {  
             "channel": "autodarts.matches",
+            "type": "unsubscribe",
             "topic": m['id'] + ".state"
         }
         ws.send(json.dumps(paramsUnsubscribeMatchEvents))
+
+        # paramsUnsubscribeMatchEvents = {
+        #     "channel": "autodarts.matches",
+        #     "type": "unsubscribe",
+        #     "topic": m['id'] + ".game-events"
+        # }
+        # ws.send(json.dumps(paramsUnsubscribeMatchEvents))
 
         if m['event'] == 'delete':
             play_sound_effect('matchcancel', mod = False)
             mirror_sounds()
 
-        # poll_lobbies(ws)
 
 def reset_checkouts_counter():
     global checkoutsCounter
@@ -1484,12 +1456,12 @@ def process_match_x01(m):
             "event": "match-started",
             "id": currentMatch,
             "me": AUTODART_USER_BOARD_ID,
-            "meHost": currentMatchHost,
-            "players": currentMatchPlayers,
+            # "meHost": currentMatchHost,
+            # "players": currentMatchPlayers,
             "player": currentPlayerName,
             "game": {
                 "mode": variant,
-                "pointsStart": str(base),
+                "pointsStart": str(m['settings'][base]),
                 # TODO: fix
                 "special": "TODO"
                 }     
@@ -1523,7 +1495,7 @@ def process_match_x01(m):
             "player": currentPlayerName,
             "game": {
                 "mode": variant,
-                "pointsStart": str(base),
+                "pointsStart": str(m['settings'][base]),
                 # TODO: fix
                 "special": "TODO"
                 }     
@@ -2290,19 +2262,6 @@ def on_open_autodarts(ws):
 
     
     try:
-        # EXAMPLE:
-        # const unsub = MessageBroker.getInstance().subscribe<{ id: string; event: 'start' | 'finish' | 'delete' }>(
-        # 'autodarts.boards',
-        # id + '.matches',
-
-        # (msg) => {
-        #     if (msg.event === 'start') {
-        #     setMatchId(msg.id);
-        #     } else {
-        #     setMatchId(undefined);
-        #     }
-        # }
-        # );
         paramsSubscribeMatchesEvents = {
             "channel": "autodarts.boards",
             "type": "subscribe",
@@ -2311,7 +2270,6 @@ def on_open_autodarts(ws):
         ws.send(json.dumps(paramsSubscribeMatchesEvents))
 
         ppi('Receiving live information for board-id: ' + AUTODART_USER_BOARD_ID)
-        # poll_lobbies(ws)
 
     except Exception as e:
         ppe('WS-Open-boards failed: ', e)
@@ -2340,7 +2298,10 @@ def on_message_autodarts(ws, message):
   
             if m['channel'] == 'autodarts.matches':
                 data = m['data']
+
                 # ppi(json.dumps(data, indent = 4, sort_keys = True))
+                # if m['topic'].endswith('game-events'):
+                #     ppi(json.dumps(data, indent = 4, sort_keys = True))
 
                 global currentMatch
                 # ppi('Current Match: ' + currentMatch)
@@ -2451,11 +2412,10 @@ def on_message_autodarts(ws, message):
                             "topic": m['id'] + ".state"
                         }
                         ws.send(json.dumps(paramsUnsubscribeLobbyEvents))
+                        lobbyPlayers = []
                         if play_sound_effect("lobby_ambient_out", False, mod = False):
                             mirror_sounds()
   
-                        # poll_lobbies(ws)
-
 
                 elif 'players' in data:
                     # did I left the lobby?
