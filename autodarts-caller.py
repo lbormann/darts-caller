@@ -1949,6 +1949,7 @@ def process_match_atc(m):
         currentTarget = m['state']['targets'][currentPlayerIndex][int(currentTargetsPlayer) -1]
 
     if turns is not None and turns['throws']:
+        isGameFinished = False
         lastThrow = turns['throws'][-1]
         targetHit = lastThrow['segment']['number']
 
@@ -2045,6 +2046,9 @@ def process_match_rtw(m):
 
     gameon = (0 == m['gameScores'][0] and turn['throws'] == [])
     matchover = (winningPlayerIndex != -1 and isGameFinished == False)
+    
+    if turn is not None and turn['throws']:
+        isGameFinished = False
 
     # Darts pulled (Playerchange and Possible-checkout)
     if gameon == False and turn != None and turn['throws'] == [] or isGameFinished == True:
