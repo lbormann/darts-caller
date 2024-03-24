@@ -75,7 +75,10 @@
         </div>
 
         <button id="button-ban" style="display:none;">Ban caller!</button>
-        
+
+        <!-- board -->    
+        <button id="button-calibrate-board" style="display:none;">Calibrate Board!</button>
+        <button id="button-reset-board" style="display:none;">Reset Board!</button>
 
         <!-- mods -->    
         <image id="button-container-mod-toggle" src="/static/images/mods.png" style="display:none;"></image>
@@ -216,6 +219,11 @@
         const sliderRandomizer = document.getElementById('slider-randomizer');
         const sliderRandomizerValue = document.getElementById('slider-randomizer-value');
         const buttonRandomizerReset = document.getElementById('button-randomizer-reset');
+    
+        // board stuff
+        const buttonCalibrateBoard = document.getElementById('button-calibrate-board');
+        const buttonResetBoard = document.getElementById('button-reset-board');
+
 
 
     
@@ -223,6 +231,7 @@
 
         // caller
         let db, ws, done, loading, caller_name, dexie, specific, banable, playbackRateMin, playbackRateMax, detuneMin, detuneMax, volume, randomizer;
+        let boardAccessble;
         let audioContext = new (window.AudioContext || window.webkitAudioContext)();
         let audioQueue = Promise.resolve();
         let previousWait = false;
@@ -481,6 +490,13 @@
             updateRandomizerSlider();
         });
         
+        // board
+        buttonCalibrateBoard.addEventListener('click', function(){
+            ws.send('board-calibrate');
+        });
+        buttonResetBoard.addEventListener('click', function(){
+            ws.send('board-reset');
+        });
 
         function updateWebRtcSettings(save = true){
             webRtcChatSettingsDiscord.value = settingDiscord;
@@ -885,6 +901,11 @@
                 }
                 buttonSay.style.display = 'inline';
                 buttonContainerModToggle.style.display = 'inline';
+                // if(boardAccessble){
+                    buttonCalibrateBoard.style.display = 'block';
+                    buttonResetBoard.style.display = 'block';
+                // }
+                
             }
             else{
                 loader.style.display = 'block';
@@ -894,6 +915,8 @@
                 genderSelect.style.display = 'none';
                 buttonSay.style.display = 'none';
                 buttonContainerModToggle.style.display = 'none';
+                buttonCalibrateBoard.style.display = 'none';
+                buttonResetBoard.style.display = 'none';
             }
         }
 
@@ -1360,6 +1383,7 @@
                 caller_name = data.caller;
                 specific = data.specific;
                 banable = data.banable;
+                boardAccessble = data.boardAccessble;
 
                 randomize();
 

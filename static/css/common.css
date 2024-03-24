@@ -131,7 +131,6 @@ button, select{
     text-overflow: ellipsis;
 }
 
-
 .fullscreen-overlay {
     position: fixed;
     top: 0;
@@ -250,6 +249,10 @@ button, select{
     border-radius: 20px;
     background-color: royalblue;;
 }
+#button-calibrate-board, #button-reset-board{
+    background-color: darkkhaki;
+}
+
 
 
 

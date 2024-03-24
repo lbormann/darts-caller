@@ -59,16 +59,19 @@ class AutodartsKeycloakClient:
           while self.run:
             # if self.debug:
                 # print("Check token ..")
-
-            if self.access_token is None:
-                self.__get_token()
-
-            now = datetime.now()
-            if self.expires_at < now:
-                if now < self.refresh_expires_at:
-                    self.__refresh_token()
-                else:
+            
+            try:
+                if self.access_token is None:
                     self.__get_token()
+
+                now = datetime.now()
+                if self.expires_at < now:
+                    if now < self.refresh_expires_at:
+                        self.__refresh_token()
+                    else:
+                        self.__get_token()
+            except Exception:
+                print("Receive Token failed")
 
             sleep(self.tick)
                 

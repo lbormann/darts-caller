@@ -757,7 +757,8 @@ def setup_caller():
             "event": "welcome",
             "caller": caller_title_without_version,
             "specific": CALLER != DEFAULT_CALLER and CALLER != '',
-            "banable": BLACKLIST_PATH != DEFAULT_EMPTY_PATH
+            "banable": BLACKLIST_PATH != DEFAULT_EMPTY_PATH,
+            "boardAccessble": boardManagerAddress != None
         }
         if server != None:
             broadcast(welcome_event)
@@ -2645,7 +2646,8 @@ def on_message_client(client, server, message):
                     "event": "welcome",
                     "caller": caller_title_without_version,
                     "specific": CALLER != DEFAULT_CALLER and CALLER != '',
-                    "banable": BLACKLIST_PATH != DEFAULT_EMPTY_PATH
+                    "banable": BLACKLIST_PATH != DEFAULT_EMPTY_PATH,
+                    "boardAccessble": boardManagerAddress != None
                 }
                 unicast(client, welcome_event)
 

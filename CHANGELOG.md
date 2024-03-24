@@ -1,5 +1,9 @@
 ## 2.11.1
 
+- improve RTW
+- treat connection loss for kc
+- add board-functions to web-caller
+
 
 ## 2.11.0
 
