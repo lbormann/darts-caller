@@ -5,11 +5,14 @@
     <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script type="text/javascript" src="/static/js/common.js?v=1.0.1"></script>
+
     <!-- https://unpkg.com/dexie/dist/dexie.js -->
     <script type="text/javascript" src="/static/js/dexie-min-3.2.4.js"></script>
     <!-- https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js -->
     <script type="text/javascript" src="/static/js/peerjs.min-1.5.2.js"></script>
+    <!-- https://cdn.socket.io/4.7.5/socket.io.min.js -->
+    <script type="text/javascript" src="/static/js/socketio-min-4.7.5.js" crossorigin="anonymous"></script>
+
     <link rel="stylesheet" href="/static/css/common.css?v=1.0.0">
 </head>
 
@@ -22,7 +25,7 @@
     </div>
     <h3 id="status" style="display:none;">Disconnected!</h3>
 
-    <button id="button-start">Start Calling!</button>
+    <button id="button-start">Start!</button>
 
 
     <!-- webrtc -->
@@ -54,6 +57,11 @@
 
         <image src="/static/images/loading.gif" style="display:none;" id="loader"></image>
         
+        <div id="select-caller" style="display:none;">
+            <select name="caller" id="caller" tabindex="-1">
+            </select>
+        </div>
+
         <button id="button-change" style="display:none;">Change caller!</button>
 
         <div id="select-language" style="display:none;">
@@ -76,9 +84,11 @@
 
         <button id="button-ban" style="display:none;">Ban caller!</button>
 
-        <!-- board -->    
-        <button id="button-calibrate-board" style="display:none;">Calibrate Board!</button>
-        <button id="button-reset-board" style="display:none;">Reset Board!</button>
+        <!-- board -->
+        <div id="board">
+            <button id="button-calibrate-board" style="display:none;">Calibrate Board!</button>
+            <button id="button-reset-board" style="display:none;">Reset Board!</button>
+        </div>    
 
         <!-- mods -->    
         <image id="button-container-mod-toggle" src="/static/images/mods.png" style="display:none;"></image>
@@ -131,37 +141,10 @@
         // CONNECTION
         const protocol = window.location.protocol === 'http:' ? 'ws' : 'wss';
         const hostname = window.location.hostname;
+        const port = window.location.port;
 
         // DB
         const localStorageAppKey = 'ADC';
-
-        // playback-rate
-        const playbackRateDefault = 1.00;
-        const playbackRateMinMin = 0.01;
-        const playbackRateMinMax = 2.00;
-        const playbackRateMaxMin = 0.01;
-        const playbackRateMaxMax = 2.00;
-        const playbackRateStep = 0.01;
-
-        // detune
-        const detuneDefault = 0.00;
-        const detuneMinMin = -2000.00;
-        const detuneMinMax = 2000.00;
-        const detuneMaxMin = -2000.00;
-        const detuneMaxMax = 2000.00;
-        const detuneStep = 1.00;
-        
-        // volume
-        const volumeDefault = 100.0;
-        const volumeMin = -0.00;
-        const volumeMax = 100.00;
-        const volumeStep = 1.00;
-
-        // randomizer
-        const randomizerDefault = 0.00;
-        const randomizerMin = -0.00;
-        const randomizerMax = 100.00;
-        const randomizerStep = 1.00;
 
         // misc stuff
         const audio = document.getElementById('audio');
@@ -191,10 +174,41 @@
         const callerName = document.getElementById('caller-name');
         const lastCall = document.getElementById('caller-call');
         const loader = document.getElementById('loader');
+        const callerSelect = document.getElementById('select-caller');
         const languageSelect = document.getElementById('select-language');
         const genderSelect = document.getElementById('select-gender');
+        const caller = document.getElementById('caller');
         const language = document.getElementById('language');
         const gender = document.getElementById('gender');
+        
+
+        // playback-rate
+        const playbackRateDefault = 1.00;
+        const playbackRateMinMin = 0.01;
+        const playbackRateMinMax = 2.00;
+        const playbackRateMaxMin = 0.01;
+        const playbackRateMaxMax = 2.00;
+        const playbackRateStep = 0.01;
+
+        // detune
+        const detuneDefault = 0.00;
+        const detuneMinMin = -2000.00;
+        const detuneMinMax = 2000.00;
+        const detuneMaxMin = -2000.00;
+        const detuneMaxMax = 2000.00;
+        const detuneStep = 1.00;
+        
+        // volume
+        const volumeDefault = 100.0;
+        const volumeMin = -0.00;
+        const volumeMax = 100.00;
+        const volumeStep = 1.00;
+
+        // randomizer
+        const randomizerDefault = 0.00;
+        const randomizerMin = -0.00;
+        const randomizerMax = 100.00;
+        const randomizerStep = 1.00;
 
         // mod stuff
         const buttonContainerModToggle = document.getElementById('button-container-mod-toggle');
@@ -230,8 +244,10 @@
         // VARS
 
         // caller
-        let db, ws, done, loading, caller_name, dexie, specific, banable, playbackRateMin, playbackRateMax, detuneMin, detuneMax, volume, randomizer;
-        let boardAccessble;
+        let dexie, db, ws, loading, done;
+        let callers_available, caller_name, specific, banable;
+        let boardOnline;
+        let playbackRateMin, playbackRateMax, detuneMin, detuneMax, volume, randomizer;
         let audioContext = new (window.AudioContext || window.webkitAudioContext)();
         let audioQueue = Promise.resolve();
         let previousWait = false;
@@ -278,39 +294,41 @@
         sliderRandomizer.step = randomizerStep;
 
 
+        
+
 
         // meta
         document.addEventListener("DOMContentLoaded", function() {
             console.log("APP-Version: '{{ app_version }}'");
 
-            if("{{ state }}" == "0"){
-                showFullscreenOverlay("To use web-calling set -WEB (--web_caller) to 1 or 2");
-            }else{ 
-                if(!checkDBCompatibility){
-                    return;
-                }
-
-                console.log("USING DB: '{{ db_name }}'");
-                initializeDB();
-
-                const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.has('clear')) {
-                    clearPreferences();
-                } 
-                
-                loadPreferences();
-
-                setTimeout(function() {
-                    const id = JSON.parse('{{ id | tojson | safe}}');
-                    const me = JSON.parse('{{ me | tojson | safe}}');
-                    const meHost = JSON.parse('{{ meHost | tojson | safe}}');
-                    let players = JSON.parse('{{ players | tojson | safe}}');
-                    if(players == false || players == null || players == undefined || players == ''){
-                        players = null;
-                    }
-                    createPeer(id, me, meHost, players);
-                }, 1000);
+            if(!checkDBCompatibility){
+                return;
             }
+
+            console.log("USING DB: '{{ db_name }}'");
+            initializeDB();
+
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('clear')) {
+                clearPreferences();
+            } 
+            
+            loadPreferences();
+
+            boardOnline = JSON.parse('{{ boardOnline | tojson | safe}}');
+            updateBoard();
+
+            setTimeout(function() {
+                const id = JSON.parse('{{ id | tojson | safe}}');
+                const me = JSON.parse('{{ me | tojson | safe}}');
+                const meHost = JSON.parse('{{ meHost | tojson | safe}}');
+                let players = JSON.parse('{{ players | tojson | safe}}');
+                if(players == false || players == null || players == undefined || players == ''){
+                    players = null;
+                }
+                createPeer(id, me, meHost, players);
+            }, 1000);
+            
         });
         buttonClear.addEventListener('click', function() {
             clearPreferences();          
@@ -321,7 +339,13 @@
             state.style.display='block'; 
             lastCall.style.display='block';
             button.remove();
-            setupWebSocketConnection(protocol, hostname, "{{ ws_port }}", onWsOpen, onWsClose, onWsData);
+
+            // "{{ ws_port }}"
+            ws = io.connect(`${protocol}://${hostname}:${port}`);
+            ws.on('connect', onWsOpen);
+            ws.on('disconnect', onWsClose);
+            ws.on('reconnect', onWsReconnect);
+            ws.on('message', onWsData);
         });
         
         // webRtc
@@ -408,19 +432,22 @@
 
         // caller
         buttonChange.addEventListener('click', function() {
-            ws.send('ban:change');            
+            ws.emit('message', 'ban:change');            
         });
         buttonBan.addEventListener('click', function() {
-            ws.send('ban');            
+            ws.emit('message', 'ban');            
         });
         buttonSay.addEventListener('click', function() {
-            ws.send('call:hi');            
+            ws.emit('message', 'call:hi');            
+        });
+        caller.addEventListener('change', function() {
+            ws.emit('message', `caller:${caller.value}`);
         });
         language.addEventListener('change', function() {
-            ws.send(`language:${language.value}`);
+            ws.emit('message', `language:${language.value}`);
         });
         gender.addEventListener('change', function() {
-            ws.send(`gender:${gender.value}`);
+            ws.emit('message', `gender:${gender.value}`);
         });
         
         // mods
@@ -491,11 +518,20 @@
         });
         
         // board
+        function updateBoard(){
+            if(boardOnline){
+                buttonCalibrateBoard.style.display = 'block';
+                buttonResetBoard.style.display = 'block';
+            }else{
+                buttonCalibrateBoard.style.display = 'none';
+                buttonResetBoard.style.display = 'none';
+            }
+        }
         buttonCalibrateBoard.addEventListener('click', function(){
-            ws.send('board-calibrate');
+            ws.emit('message', 'board-calibrate');
         });
         buttonResetBoard.addEventListener('click', function(){
-            ws.send('board-reset');
+            ws.emit('message', 'board-reset');
         });
 
         function updateWebRtcSettings(save = true){
@@ -619,7 +655,7 @@
                             callerName.innerText = "Database cleared. Sync.."
                             initializeDB();
                             if(ws){
-                                ws.send('hello');
+                                ws.emit('message', 'hello');
                             }
                         }).catch(error => {
                             console.error('Failed to clear database', error);
@@ -680,14 +716,6 @@
             }
             return bytes.buffer;
         }
-        
-        // async function decodeAndCacheSound(caller, new_file) {
-        //     const arrayBuffer = base64ToArrayBuffer(new_file.file);
-        //     await db.sounds.put({ caller: caller, name: new_file.name, path: new_file.path, file: arrayBuffer });
-        //     done += 1;
-        //     callerName.innerText = `${caller_name} [Syncing .. ${done}]`;
-        //     console.log(`Caching successful for ${new_file.name} -> ${new_file.path}`);
-        // }
         
         async function downloadAndCacheSound(caller, file) {
             if(!loading){
@@ -899,33 +927,20 @@
                     languageSelect.style.display = 'block';
                     genderSelect.style.display = 'block';
                 }
+                callerSelect.style.display = 'block';
                 buttonSay.style.display = 'inline';
-                buttonContainerModToggle.style.display = 'inline';
-                // if(boardAccessble){
-                    buttonCalibrateBoard.style.display = 'block';
-                    buttonResetBoard.style.display = 'block';
-                // }
-                
+                buttonContainerModToggle.style.display = 'inline';                
             }
             else{
                 loader.style.display = 'block';
                 buttonBan.style.display = 'none';
                 buttonChange.style.display = 'none';
+                callerSelect.style.display = 'none';
                 languageSelect.style.display = 'none';
                 genderSelect.style.display = 'none';
                 buttonSay.style.display = 'none';
                 buttonContainerModToggle.style.display = 'none';
-                buttonCalibrateBoard.style.display = 'none';
-                buttonResetBoard.style.display = 'none';
             }
-        }
-
-        function splitArrayIntoChunks(array, chunkSize) {
-            const chunks = [];
-            for (let i = 0; i < array.length; i += chunkSize) {
-                chunks.push(array.slice(i, i + chunkSize));
-            }
-            return chunks;
         }
 
 
@@ -1334,21 +1349,24 @@
         }
 
 
-        function onWsOpen(wss){
-            ws = wss;
 
+        function onWsOpen(){
             state.innerText = "CONNECTED!";
             state.classList = "success";
-
-            ws.send('hello');
+            ws.emit('message', 'hello');
         }
         
-        function onWsClose(ws){
+        function onWsClose(){
             state.innerText = "DISCONNECTED!";
             state.classList = "failure";
         }
 
-        async function onWsData(ws, data){
+        function onWsReconnect(){
+            state.innerText = "RECONNECTING!";
+            state.classList = "success";
+        }
+
+        async function onWsData(data){
             if(data.event === 'mirror'){
                 previousWait = true;
 
@@ -1380,41 +1398,35 @@
                 console.log('welcome by server');
 
                 done = 0;
+                callers_available = data.callersAvailable;
                 caller_name = data.caller;
                 specific = data.specific;
                 banable = data.banable;
-                boardAccessble = data.boardAccessble;
-
+                
                 randomize();
+
+                caller.innerHTML = "";
+                callers_available.forEach(function(ca) {
+                    const callerElement = document.createElement("option");
+                    callerElement.textContent = ca;
+                    callerElement.value = ca;
+                    if(ca.toLowerCase() == data.callerVersion.toLowerCase()){
+                        callerElement.selected = true;
+                    }
+                    caller.appendChild(callerElement);
+                });
 
                 callerName.style.display = 'block';
 
                 const exists_db_entries = await db.sounds.where('caller').equals(data.caller).toArray();
-                // const exists_db_entries = await db.sounds.where('caller').equals(data.caller).primaryKeys();
-                // db.sounds.where('caller').equals(data.caller).primaryKeys().then((exists_db_entries) => {
-                    // const exists = exists_db_entries.map(entry => entry[1]);
-                    const exists = exists_db_entries.map(entry => entry['name']);
-                    console.log(`${exists.length} cached files for ${data.caller}`);
-                    callerName.innerText = `${caller_name} [${exists.length} sounds]`;
+                const exists = exists_db_entries.map(entry => entry['name']);
+                console.log(`${exists.length} cached files for ${data.caller}`);
+                callerName.innerText = `${caller_name} [${exists.length} sounds]`;
 
-                    data['event'] = 'sync';
-                    if(exists.length > 2000){
-                        const chunks = splitArrayIntoChunks(exists, 2000);
-                        chunks.forEach((chunk, index) => {
-                            setLoading(true);
-                            data['exists'] = chunk;
-                            data['part'] = index;
-                            data['parted'] = chunks.length;
-                            ws.send(JSON.stringify(data));            
-                        });
-                    }else{
-                        setLoading(true);
-                        data['exists'] = exists;
-                        ws.send(JSON.stringify(data));
-                    }
-                    
-                // });
-            
+                setLoading(true);
+                data['event'] = 'sync';
+                data['exists'] = exists;
+                ws.emit('message', data);
             }
 
             else if(data.event === 'sync'){
@@ -1426,13 +1438,10 @@
                         let arrayBuffer = base64ToArrayBuffer(new_file.file);
                         done += 1;
                         callerName.innerText = `${caller_name} [${done} sounds extracted]`;
-                        console.log(`decode successful for ${new_file.name} -> ${new_file.path}`);
+                        // console.log(`decode successful for ${new_file.name} -> ${new_file.path}`);
                         return { caller: data.caller, name: new_file.name, path: new_file.path, file: arrayBuffer };
                     });
 
-                // await db.sounds.bulkPut(new_files);
-                // setLoading(false);
-                    
                 db.sounds.bulkPut(new_files).then(function(last_file) {
                     callerName.innerText = `${caller_name} [${done} sounds synced]`;
                     console.log("last sounds's id was: " + last_file);
@@ -1450,30 +1459,11 @@
                 }
             }
             
-            /*
-            else if(data.event === 'get') {
-                console.log(data.caller + " - " + data.files.length + " files");
-
-                callerName.innerText = data.caller
-                callerName.style.display = 'block'; 
-                // setLoading(false);
-
-                done = 0;
-                lastCall.innerText = done;
-                var limit = data.files.length
-
-                db.open()
-                    .then(async () => {
-                        setLoading(true);
-                        await Promise.all(data.files.slice(0, limit).map(file => downloadAndCacheSound(data.caller, file)));
-                        setLoading(false);
-                    })
-                    .catch(error => {
-                        console.error(`Database error: ${error}`);
-                    });
+            else if(data.event === 'board'){
+                console.log(boardOnline);
+                boardOnline = data.boardOnline;
+                updateBoard();
             }
-            */
-
 
             else{
                 console.log("Unknown message");

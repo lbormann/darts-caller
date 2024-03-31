@@ -10,23 +10,23 @@ import argparse
 import requests
 from pygame import mixer
 import websocket
-from websocket_server import WebsocketServer
 import threading
 import logging
 from download import download
 import shutil
 import csv
 import math
-import ssl
 import certifi
 import psutil
 import queue
 from mask import mask
 import re
 from urllib.parse import quote, unquote
-from flask import Flask, render_template, send_from_directory
 from autodarts_keycloak_client import AutodartsKeycloakClient
+from flask import Flask, render_template, send_from_directory, request
+from flask_socketio import SocketIO
 from werkzeug.serving import make_ssl_devcert
+
 
 
 
@@ -47,13 +47,16 @@ logger.setLevel(logging.INFO)
 logger.addHandler(sh)
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'caller for autodarts'
+socketio = SocketIO(app)
+
 
 
 main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.11.1'
+VERSION = '2.12.0'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -77,13 +80,10 @@ DEFAULT_DOWNLOADS_LIMIT = 3
 DEFAULT_DOWNLOADS_LANGUAGE = 1
 DEFAULT_DOWNLOADS_NAME = None
 DEFAULT_BACKGROUND_AUDIO_VOLUME = 0.0
-DEFAULT_WEB_CALLER = 0
-DEFAULT_WEB_CALLER_SCOREBOARD = 0
-DEFAULT_WEB_CALLER_PORT = 5000
+DEFAULT_LOCAL_PLAYBACK = 1
 DEFAULT_WEB_CALLER_DISABLE_HTTPS = False
 DEFAULT_HOST_PORT = 8079
 DEFAULT_DEBUG = False
-DEFAULT_CERT_CHECK = True
 DEFAULT_MIXER_FREQUENCY = 44100
 DEFAULT_MIXER_SIZE = 32
 DEFAULT_MIXER_CHANNELS = 2
@@ -677,9 +677,11 @@ def filter_most_recent_version(path_list):
     return filtered_list
 
 def setup_caller():
+    global CALLER
     global caller
     global caller_title
     global caller_title_without_version
+    global callers_available
     global caller_profiles_banned
     caller = None
     caller_title = ''
@@ -687,6 +689,34 @@ def setup_caller():
 
     callers = load_callers()
     ppi(str(len(callers)) + ' voice-pack(s) found.')
+
+
+    # filter callers
+    callers_filtered = []
+    for c in callers:
+        caller_name = grab_caller_name(c)
+        if caller_name in caller_profiles_banned or caller_name.split("-v")[0] in caller_profiles_banned:
+            continue
+        if RANDOM_CALLER_LANGUAGE != 0:
+            caller_language_key = grab_caller_language(caller_name)
+            if caller_language_key != RANDOM_CALLER_LANGUAGE:
+                continue
+        if RANDOM_CALLER_GENDER != 0:
+            caller_gender_key = grab_caller_gender(caller_name)
+            if caller_gender_key != RANDOM_CALLER_GENDER:
+                continue      
+        callers_filtered.append(c)
+    if len(callers_filtered) > 0:
+        callers_filtered = filter_most_recent_version(callers_filtered)
+        
+
+    # available callers
+    callers_available = []
+    for cf in callers_filtered:
+        caller_name = grab_caller_name(cf)
+        callers_available.append(caller_name)
+
+
 
     if CALLER != DEFAULT_CALLER and CALLER != '':
         wished_caller = CALLER.lower()
@@ -704,28 +734,9 @@ def setup_caller():
         if RANDOM_CALLER == False:
             caller = callers[0]
         else:
-            callers_filtered = []
-            for c in callers:
-                caller_name = grab_caller_name(c)
-
-                if caller_name in caller_profiles_banned or caller_name.split("-v")[0] in caller_profiles_banned:
-                    continue
-
-                if RANDOM_CALLER_LANGUAGE != 0:
-                    caller_language_key = grab_caller_language(caller_name)
-                    if caller_language_key != RANDOM_CALLER_LANGUAGE:
-                        continue
-    
-                if RANDOM_CALLER_GENDER != 0:
-                    caller_gender_key = grab_caller_gender(caller_name)
-                    if caller_gender_key != RANDOM_CALLER_GENDER:
-                        continue
-                callers_filtered.append(c)
-
             if len(callers_filtered) > 0:
-                # reduce to most recent version
-                callers_filtered = filter_most_recent_version(callers_filtered)
                 caller = random.choice(callers_filtered)
+
 
     if(caller != None):
         for sound_file_key, sound_file_values in caller[1].items():
@@ -740,28 +751,15 @@ def setup_caller():
         # ppi(caller[1])
         caller = caller[1]
 
-
-        # files = []
-        # for key, value in caller.items():
-        #     for sound_file in value:
-        #         files.append(quote(sound_file, safe=""))
-        # get_event = {
-        #     "event": "get",
-        #     "caller": caller_title_without_version,
-        #     "files": files
-        # }
-        # if server != None:
-        #   broadcast(get_event)
-
         welcome_event = {
             "event": "welcome",
+            "callersAvailable": callers_available,
             "caller": caller_title_without_version,
+            "callerVersion": caller_title,
             "specific": CALLER != DEFAULT_CALLER and CALLER != '',
-            "banable": BLACKLIST_PATH != DEFAULT_EMPTY_PATH,
-            "boardAccessble": boardManagerAddress != None
+            "banable": BLACKLIST_PATH != DEFAULT_EMPTY_PATH
         }
-        if server != None:
-            broadcast(welcome_event)
+        broadcast(welcome_event)
 
 
 def check_sounds(sounds_list):
@@ -770,7 +768,7 @@ def check_sounds(sounds_list):
     try:
         for s in sounds_list:
             caller[s]
-    except Exception as e:
+    except Exception:
         all_sounds_available = False
     return all_sounds_available
 
@@ -779,20 +777,19 @@ def play_sound(sound, wait_for_last, volume_mult, mod):
     if AUDIO_CALLER_VOLUME is not None:
         volume = AUDIO_CALLER_VOLUME * volume_mult
 
-    if WEB > 0:
-        global mirror_files
-        global caller_title_without_version
-        
-        mirror_file = {
-                    "caller": caller_title_without_version,
-                    "path": quote(sound, safe=""),
-                    "wait": wait_for_last,
-                    "volume": volume,
-                    "mod": mod
-                }
-        mirror_files.append(mirror_file)
+    global mirror_files
+    global caller_title_without_version
+    
+    mirror_file = {
+                "caller": caller_title_without_version,
+                "path": quote(sound, safe=""),
+                "wait": wait_for_last,
+                "volume": volume,
+                "mod": mod
+            }
+    mirror_files.append(mirror_file)
 
-    if WEB == 0 or WEB == 2:
+    if LOCAL_PLAYBACK:
         if wait_for_last == True:
             while mixer.get_busy():
                 time.sleep(0.01)
@@ -999,6 +996,12 @@ def receive_local_board_address():
             else:
                 boardManagerAddress = None
                 ppi('Board-address: UNKNOWN') 
+
+            board_event = {
+                "event": "board",
+                "boardOnline": boardManagerAddress != None
+            }
+            broadcast(board_event)
             
     except Exception as e:
         boardManagerAddress = None
@@ -1302,7 +1305,8 @@ def process_match_x01(m):
 
             # Player-change
             if pcc_success == False and AMBIENT_SOUNDS != 0.0:
-                play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
+                if play_sound_effect('ambient_playerchange_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False) == False:
+                    play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
                 
 
             ppi("Next player")
@@ -1897,7 +1901,7 @@ def process_match_cricket(m):
     if isGameOn == False and turns != None and turns['throws'] == [] or isGameFinished == True:
         dartsPulled = {
             "event": "darts-pulled",
-            "player": str(currentPlayer['name']),
+            "player": currentPlayerName,
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -1920,7 +1924,8 @@ def process_match_cricket(m):
             play_sound_effect(currentPlayerName)
 
         if AMBIENT_SOUNDS != 0.0:
-            play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
+            if play_sound_effect('ambient_playerchange_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False) == False:
+                play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
         
         ppi("Next player")
 
@@ -2015,7 +2020,10 @@ def process_match_atc(m):
             play_sound_effect(str(m['state']['targets'][currentPlayerIndex][int(currentTargetsPlayer)]['number']), True)
 
     if turns['throws'] == []:
-        play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
+        if AMBIENT_SOUNDS != 0.0:
+            if play_sound_effect('ambient_playerchange_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False) == False:
+                play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
+
         if CALL_CURRENT_PLAYER and CALL_CURRENT_PLAYER_ALWAYS and numberOfPlayers > 1:
             play_sound_effect(currentPlayerName, True)
     
@@ -2186,7 +2194,10 @@ def process_match_rtw(m):
         play_sound_effect(str(m['state']['targets'][currentPlayerIndex][int(currentTargetsPlayer)]['number']), True)
 
     if turn['throws'] == []:
-        play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
+        if AMBIENT_SOUNDS != 0.0:
+            if play_sound_effect('ambient_playerchange_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False) == False:
+                play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
+
         if CALL_CURRENT_PLAYER and CALL_CURRENT_PLAYER_ALWAYS and numberOfPlayers > 1:
             play_sound_effect(currentPlayerName, True)
     
@@ -2227,6 +2238,66 @@ def process_common(m):
     broadcast(m)
 
 
+
+def mute_audio_background(vol):
+    global background_audios
+    session_fails = 0
+    for session in background_audios:
+        try:
+            volume = session.SimpleAudioVolume
+            if session.Process and session.Process.name() != "autodarts-caller.exe":
+                volume.SetMasterVolume(vol, None)
+        # Exception as e:
+        except:
+            session_fails += 1
+            # ppe('Failed to mute audio-process', e)
+
+    return session_fails
+
+def unmute_audio_background(mute_vol):
+    global background_audios
+    current_master = mute_vol
+    steps = 0.1
+    wait = 0.1
+    while(current_master < 1.0):
+        time.sleep(wait)          
+        current_master += steps
+        for session in background_audios:
+            try:
+                if session.Process and session.Process.name() != "autodarts-caller.exe":
+                    volume = session.SimpleAudioVolume
+                    volume.SetMasterVolume(current_master, None)
+            #  Exception as e:
+            except:
+                continue
+                # ppe('Failed to unmute audio-process', e)
+                
+def mute_background(mute_vol):
+    global background_audios
+
+    muted = False
+    waitDefault = 0.1
+    waitForMore = 1.0
+    wait = waitDefault
+
+    while True:
+        time.sleep(wait)
+        if mixer.get_busy() == True and muted == False:
+            muted = True
+            wait = waitForMore
+            session_fails = mute_audio_background(mute_vol)
+
+            if session_fails >= 3:
+                # ppi('refreshing background audio sessions')
+                background_audios = AudioUtilities.GetAllSessions()
+
+        elif mixer.get_busy() == False and muted == True:    
+            muted = False
+            wait = waitDefault
+            unmute_audio_background(mute_vol)  
+
+
+
 def connect_autodarts():
     def process(*args):
         websocket.enableTrace(False)
@@ -2237,7 +2308,6 @@ def connect_autodarts():
                                     on_error = on_error_autodarts,
                                     on_close = on_close_autodarts)
         
-
         ws.run_forever()
     threading.Thread(target=process).start()
 
@@ -2537,19 +2607,45 @@ def on_error_autodarts(ws, error):
         ppe('WS-Error failed: ', e)
 
 
-def on_open_client(client, server):
+def start_webserver(host, port, ssl_context=None):
+    if ssl_context is None:
+        socketio.run(app, host=host, port=port, debug=False)
+    else:
+        socketio.run(app, host=host, port=port, debug=False, ssl_context=ssl_context)
+
+def broadcast(data):
+    socketio.emit('message', data)
+
+def unicast(client, data):
+    socketio.emit('message', data, room=client)
+
+
+@socketio.on('connect')
+def handle_connect():
     global webCallerSyncs
-    ppi('NEW CLIENT CONNECTED: ' + str(client))
-    cid = str(client['id'])
+    cid = str(request.sid)
+    ppi('NEW CLIENT CONNECTED: ' + cid)
     if cid not in webCallerSyncs or webCallerSyncs[cid] is None:
         webCallerSyncs[cid] = queue.Queue()
 
-def on_message_client(client, server, message):
-    def process(*args):
-        try:
-            global RANDOM_CALLER_LANGUAGE
-            global RANDOM_CALLER_GENDER
+@socketio.on('disconnect')
+def handle_disconnect():
+    cid = str(request.sid)
+    ppi('CLIENT DISCONNECTED: ' + cid)
+    if cid in webCallerSyncs:
+        webCallerSyncs[cid] = None
+            
+@socketio.on('message')
+def handle_message(message):
+    try:
+        global CALLER
+        global RANDOM_CALLER_LANGUAGE
+        global RANDOM_CALLER_GENDER
 
+        cid = str(request.sid)
+
+        if type(message) == str:
+       
             if message.startswith('board'):
                 receive_local_board_address()
 
@@ -2576,15 +2672,15 @@ def on_message_client(client, server, message):
                         calibrate_board()
 
                     else:
-                        ppi('This message is not supported')  
+                        ppi('message', 'This message is not supported')  
+
                 else:
-                    ppi('Can not change board-state as board-address is unknown!')  
+                    ppi('message', 'Can not change board-state as board-address is unknown!')  
 
             elif message.startswith('correct'):
                 msg_splitted = message.split(':')
-                msg_splitted.pop(0)
-                throw_indices = msg_splitted[:-1]
-                score = msg_splitted[len(msg_splitted) - 1]
+                throw_indices = msg_splitted[1:-1]
+                score = msg_splitted[-1]
                 correct_throw(throw_indices, score)
                     
             elif message.startswith('next'):
@@ -2597,252 +2693,97 @@ def on_message_client(client, server, message):
                 undo_throw()
 
             elif message.startswith('ban'):
-                msg_splitted = message.split(':')
-                if len(msg_splitted) > 1:
+                if len(message.split(':')) > 1:
                     ban_caller(True)
                 else:
                     ban_caller(False)
 
-            elif message.startswith('language'):
-                msg_splitted = message.split(':')
-                if len(msg_splitted) > 1:
-                    RANDOM_CALLER_LANGUAGE = int(msg_splitted[1])
+            elif message.startswith('caller'):
+                messsageSplitted = message.split(':')
+                if len(messsageSplitted) > 1:
+                    CALLER = messsageSplitted[1]
                     setup_caller()
-                    if play_sound_effect('hi', wait_for_last = False):
+                    if play_sound_effect('hi', wait_for_last=False):
+                        mirror_sounds()
+
+            elif message.startswith('language'):
+                messsageSplitted = message.split(':')
+                if len(messsageSplitted) > 1:
+                    CALLER = DEFAULT_CALLER
+                    RANDOM_CALLER_LANGUAGE = int(messsageSplitted[1])
+                    setup_caller()
+                    if play_sound_effect('hi', wait_for_last=False):
                         mirror_sounds()
 
             elif message.startswith('gender'):
-                msg_splitted = message.split(':')
-                if len(msg_splitted) > 1:
-                    RANDOM_CALLER_GENDER = int(msg_splitted[1])
+                messsageSplitted = message.split(':')
+                if len(messsageSplitted) > 1:
+                    CALLER = DEFAULT_CALLER
+                    RANDOM_CALLER_GENDER = int(messsageSplitted[1])
                     setup_caller()
-                    if play_sound_effect('hi', wait_for_last = False):
+                    if play_sound_effect('hi', wait_for_last=False):
                         mirror_sounds()
 
             elif message.startswith('call'):
-                msg_splitted = message.split(':')
-                to_call = msg_splitted[1]
+                to_call = message.split(':')[1]
                 call_parts = to_call.split(' ')
                 for cp in call_parts:
-                    play_sound_effect(cp, wait_for_last = False, volume_mult = 1.0)
+                    play_sound_effect(cp, wait_for_last=False, volume_mult=1.0)
                 mirror_sounds()
-
-            # elif message.startswith('get'):
-            #     files = []
-            #     for key, value in caller.items():
-            #         for sound_file in value:
-            #             files.append(quote(sound_file, safe=""))
-            #     get_event = {
-            #         "event": "get",
-            #         "caller": caller_title_without_version,
-            #         "specific": CALLER != DEFAULT_CALLER and CALLER != '',
-            #         "banable": BLACKLIST_PATH != DEFAULT_EMPTY_PATH
-            #         "files": files
-            #     }
-            #     unicast(client, get_event)
 
             elif message.startswith('hello'):
                 welcome_event = {
                     "event": "welcome",
+                    "callersAvailable": callers_available,
                     "caller": caller_title_without_version,
+                    "callerVersion": caller_title,
                     "specific": CALLER != DEFAULT_CALLER and CALLER != '',
-                    "banable": BLACKLIST_PATH != DEFAULT_EMPTY_PATH,
-                    "boardAccessble": boardManagerAddress != None
+                    "banable": BLACKLIST_PATH != DEFAULT_EMPTY_PATH
                 }
-                unicast(client, welcome_event)
+                unicast(cid, welcome_event)
 
-            elif message.startswith('sync|'): 
-                exists = message[len("sync|"):].split("|")
+        elif type(message) == dict:
+            event = message['event']
 
-                # new = []
-                # count_exists = 0
-                # count_new = 0
-                # caller_copied = caller.copy()
-                # for key, value in caller_copied.items():
-                #     for sound_file in value:
-                #         base_name = os.path.basename(sound_file)
-                #         if base_name not in exists:
-                #             count_new+=1
-                #             # ppi("exists: " + base_name)
+            if event == 'sync' and caller is not None:                    
+                if 'parted' in message:
+                    webCallerSyncs[cid].put(message['exists'])
 
-                #             with open(sound_file, 'rb') as file:
-                #                 encoded_file = (base64.b64encode(file.read())).decode('ascii')
-                #             # print(encoded_file)
-                                
-                #             new.append({"name": base_name, "path": quote(sound_file, safe=""), "file": encoded_file})
-                #         else:
-                #             count_exists+=1
-                #             # ppi("new: " + base_name)   
-                                
-                # ppi(f"Sync {count_new} new files")
-                new = [{"name": os.path.basename(sound_file), "path": quote(sound_file, safe=""), "file": (base64.b64encode(open(sound_file, 'rb').read())).decode('ascii')} for key, value in caller.items() for sound_file in value if os.path.basename(sound_file) not in exists]
-
-                res = {
-                    'caller': caller_title_without_version,
-                    'event': 'sync',
-                    'exists': new
-                }
-                unicast(client, res, dump=True)
-
-            # else try to read json
-            else: 
-                messageJson = json.loads(message)
-
-                # client requests for sync
-                if 'event' in messageJson and messageJson['event'] == 'sync' and caller is not None:                    
-                    if 'parted' in messageJson:
-                        cid = str(client['id'])
-
-                        # ppi("client-id: " + cid)
-                        # ppi("client parted " + str(messageJson['parted']) + " - " + str(messageJson['exists']))   
-                        # ppi("client already cached: " + str(len(webCallerSyncs[cid])))             
+                    partsNeeded = message['parted']
                     
-                        webCallerSyncs[cid].put(messageJson['exists'])
-
-                        partsNeeded = messageJson['parted']
-                        # ppi("Sync chunks. parts needed: " + str(partsNeeded))
-                        
-                        existing = []
-                        if webCallerSyncs[cid].qsize() == partsNeeded:
-                            while partsNeeded > 0:
-                                partsNeeded -= 1
-                                existing += webCallerSyncs[cid].get()
-                            webCallerSyncs[cid].task_done()
-                        else:
-                            return
-                        
-                        new = []
-                        count_exists = 0
-                        count_new = 0
-                        caller_copied = caller.copy()
-                        for key, value in caller_copied.items():
-                            for sound_file in value:
-                                base_name = os.path.basename(sound_file)
-                                if base_name not in existing:
-                                    count_new += 1
-                                    # ppi("new: " + base_name)
-
-                                    with open(sound_file, 'rb') as file:
-                                        encoded_file = (base64.b64encode(file.read())).decode('ascii')
-                                    # print(encoded_file)
-                                        
-                                    new.append({"name": base_name, "path": quote(sound_file, safe=""), "file": encoded_file})
-                                else:
-                                    count_exists+=1
-                                    # ppi("exists: " + base_name)   
-                                        
-                        ppi(f"Sync chunks. {count_new} new files")
-
-                        # new = [{"name": os.path.basename(sound_file), "path": quote(sound_file, safe=""), "file": (base64.b64encode(open(sound_file, 'rb').read())).decode('ascii')} for key, value in caller.items() for sound_file in value if os.path.basename(sound_file) not in webCallerSyncs[cid]]  
-                        messageJson['exists'] = new
-                        unicast(client, messageJson, dump=True)
-                        webCallerSyncs[cid] = queue.Queue()
+                    existing = []
+                    if webCallerSyncs[cid].qsize() == partsNeeded:
+                        while partsNeeded > 0:
+                            partsNeeded -= 1
+                            existing += webCallerSyncs[cid].get()
+                        webCallerSyncs[cid].task_done()
                     else:
-                        # ppi("client already cached: " + str(len(messageJson['exists'])))
-                        new = [{"name": os.path.basename(sound_file), "path": quote(sound_file, safe=""), "file": (base64.b64encode(open(sound_file, 'rb').read())).decode('ascii')} for key, value in caller.items() for sound_file in value if os.path.basename(sound_file) not in messageJson['exists']]
-                        messageJson['exists'] = new
-                        unicast(client, messageJson, dump=True)
+                        return
+                    
+                    new = []
+                    for key, value in caller.items():
+                        for sound_file in value:
+                            base_name = os.path.basename(sound_file)
+                            if base_name not in existing:
+                                with open(sound_file, 'rb') as file:
+                                    encoded_file = (base64.b64encode(file.read())).decode('ascii')
+                                new.append({"name": base_name, "path": quote(sound_file, safe=""), "file": encoded_file})
 
-        except Exception as e:
-            ppe('WS-Client-Message failed.', e)
+                    unicast(cid, {"exists": new})
 
-    t = threading.Thread(target=process).start()
+                else:
+                    new = [{"name": os.path.basename(sound_file), "path": quote(sound_file, safe=""), "file": (base64.b64encode(open(sound_file, 'rb').read())).decode('ascii')} for key, value in caller.items() for sound_file in value if os.path.basename(sound_file) not in message['exists']]
+                    message['exists'] = new
+                    unicast(cid, message)
 
-def on_left_client(client, server):
-    ppi('CLIENT DISCONNECTED: ' + str(client))
-    if client is not None:
-        cid = str(client['id'])
-        if cid in webCallerSyncs:
-            webCallerSyncs[cid] = None
-
-def broadcast(data):
-    def process(*args):
-        global server
-        server.send_message_to_all(json.dumps(data, indent=2).encode('utf-8'))
-    t = threading.Thread(target=process)
-    t.start()
-    # t.join()  
-
-def unicast(client, data, dump=True):
-    def process(*args):
-        global server
-        send_data = data
-        if dump:
-            send_data = json.dumps(send_data, indent=2).encode('utf-8')
-        server.send_message(client, send_data)
-    t = threading.Thread(target=process)
-    t.start()
-    # t.join()
-
-
-
-def mute_audio_background(vol):
-    global background_audios
-    session_fails = 0
-    for session in background_audios:
-        try:
-            volume = session.SimpleAudioVolume
-            if session.Process and session.Process.name() != "autodarts-caller.exe":
-                volume.SetMasterVolume(vol, None)
-        # Exception as e:
-        except:
-            session_fails += 1
-            # ppe('Failed to mute audio-process', e)
-
-    return session_fails
-
-def unmute_audio_background(mute_vol):
-    global background_audios
-    current_master = mute_vol
-    steps = 0.1
-    wait = 0.1
-    while(current_master < 1.0):
-        time.sleep(wait)          
-        current_master += steps
-        for session in background_audios:
-            try:
-                if session.Process and session.Process.name() != "autodarts-caller.exe":
-                    volume = session.SimpleAudioVolume
-                    volume.SetMasterVolume(current_master, None)
-            #  Exception as e:
-            except:
-                continue
-                # ppe('Failed to unmute audio-process', e)
-                
-def mute_background(mute_vol):
-    global background_audios
-
-    muted = False
-    waitDefault = 0.1
-    waitForMore = 1.0
-    wait = waitDefault
-
-    while True:
-        time.sleep(wait)
-        if mixer.get_busy() == True and muted == False:
-            muted = True
-            wait = waitForMore
-            session_fails = mute_audio_background(mute_vol)
-
-            if session_fails >= 3:
-                # ppi('refreshing background audio sessions')
-                background_audios = AudioUtilities.GetAllSessions()
-
-        elif mixer.get_busy() == False and muted == True:    
-            muted = False
-            wait = waitDefault
-            unmute_audio_background(mute_vol)  
-
-
+    except Exception as e:
+        ppe('WS-Client-Message failed.', e)
 
 
 @app.route('/')
 def index():
-    return render_template('index.html', host=DEFAULT_HOST_IP, 
-                                            app_version=VERSION, 
+    return render_template('index.html',    app_version=VERSION, 
                                             db_name=WEB_DB_NAME, 
-                                            ws_port=HOST_PORT, 
-                                            state=WEB, 
                                             id=currentMatch,
                                             me=AUTODART_USER_BOARD_ID,
                                             meHost=currentMatchHost,
@@ -2850,9 +2791,9 @@ def index():
                                             languages=CALLER_LANGUAGES, 
                                             genders=CALLER_GENDERS,
                                             language=RANDOM_CALLER_LANGUAGE,
-                                            gender=RANDOM_CALLER_GENDER
+                                            gender=RANDOM_CALLER_GENDER,
+                                            boardOnline=boardManagerAddress != None
                                             )
-
     
 @app.route('/sounds/<path:file_id>', methods=['GET'])
 def sound(file_id):
@@ -2865,26 +2806,7 @@ def sound(file_id):
     file_name = os.path.basename(file_path)
     return send_from_directory(directory, file_name)
 
-@app.route('/scoreboard')
-def scoreboard():
-    return render_template('scoreboard.html', host=DEFAULT_HOST_IP, ws_port=HOST_PORT, state=WEB_SCOREBOARD)
 
-
-
-
-def start_websocket_server(host, port, key, cert):
-    global server
-    server = WebsocketServer(host=host, port=port, key=key, cert=cert, loglevel=logging.ERROR)
-    server.set_fn_new_client(on_open_client)
-    server.set_fn_client_left(on_left_client)
-    server.set_fn_message_received(on_message_client)
-    server.run_forever()
-
-def start_flask_app(host, port, ssl_context = None):
-    if ssl_context is None:
-        app.run(host=host, port=port, debug=False)
-    else:
-        app.run(ssl_context=ssl_context, host=host, port=port, debug=False)
 
 
 
@@ -2919,13 +2841,10 @@ if __name__ == "__main__":
     ap.add_argument("-DLN", "--downloads_name", default=DEFAULT_DOWNLOADS_NAME, required=False, help="Sets a specific caller (voice-pack) for download")
     ap.add_argument("-BLP", "--blacklist_path", required=False, default=DEFAULT_EMPTY_PATH, help="Absolute path to storage directory for blacklist-file")
     ap.add_argument("-BAV","--background_audio_volume", required=False, type=float, default=DEFAULT_BACKGROUND_AUDIO_VOLUME, help="Set background-audio-volume between 0.1 (silent) and 1.0 (no mute)")
-    ap.add_argument("-WEB", "--web_caller", required=False, type=int, choices=range(0, 3), default=DEFAULT_WEB_CALLER, help="If '1' the application will host an web-endpoint, '2' it will do '1' and default caller-functionality.")
-    ap.add_argument("-WEBSB", "--web_caller_scoreboard", required=False, type=int, choices=range(0, 2), default=DEFAULT_WEB_CALLER_SCOREBOARD, help="If '1' the application will host an web-endpoint, right to web-caller-functionality.")
-    ap.add_argument("-WEBP", "--web_caller_port", required=False, type=int, default=DEFAULT_WEB_CALLER_PORT, help="Web-Caller-Port")
+    ap.add_argument("-LPB", "--local_playback", type=int, choices=range(0, 2), default=DEFAULT_LOCAL_PLAYBACK, required=False, help="If '1' the application will playback audio on your local device.")
     ap.add_argument("-WEBDH", "--web_caller_disable_https", required=False, type=int, choices=range(0, 2), default=DEFAULT_WEB_CALLER_DISABLE_HTTPS, help="If '0', the web caller will use http instead of https. This is unsecure, be careful!")
     ap.add_argument("-HP", "--host_port", required=False, type=int, default=DEFAULT_HOST_PORT, help="Host-Port")
     ap.add_argument("-DEB", "--debug", type=int, choices=range(0, 2), default=DEFAULT_DEBUG, required=False, help="If '1', the application will output additional information")
-    ap.add_argument("-CC", "--cert_check", type=int, choices=range(0, 2), default=DEFAULT_CERT_CHECK, required=False, help="If '0', the application won't check any ssl certification")
     ap.add_argument("-MIF", "--mixer_frequency", type=int, required=False, default=DEFAULT_MIXER_FREQUENCY, help="Pygame mixer frequency")
     ap.add_argument("-MIS", "--mixer_size", type=int, required=False, default=DEFAULT_MIXER_SIZE, help="Pygame mixer size")
     ap.add_argument("-MIC", "--mixer_channels", type=int, required=False, default=DEFAULT_MIXER_CHANNELS, help="Pygame mixer channels")
@@ -2933,6 +2852,7 @@ if __name__ == "__main__":
     
     args = vars(ap.parse_args())
 
+    global CALLER
     global RANDOM_CALLER_GENDER
     global RANDOM_CALLER_LANGUAGE
     
@@ -2974,13 +2894,10 @@ if __name__ == "__main__":
     else:
         BLACKLIST_PATH = DEFAULT_EMPTY_PATH
     BACKGROUND_AUDIO_VOLUME = args['background_audio_volume']
-    WEB = args['web_caller']
-    WEB_SCOREBOARD = args['web_caller_scoreboard']
-    WEB_PORT = args['web_caller_port']
+    LOCAL_PLAYBACK = args['local_playback']
     WEB_DISABLE_HTTPS = args['web_caller_disable_https']
     HOST_PORT = args['host_port']
     DEBUG = args['debug']
-    CERT_CHECK = args['cert_check']
     MIXER_FREQUENCY = args['mixer_frequency']
     MIXER_SIZE = args['mixer_size']
     MIXER_CHANNELS = args['mixer_channels']
@@ -3000,9 +2917,6 @@ if __name__ == "__main__":
         masked_args = mask(args, data_to_mask)
         ppi(json.dumps(masked_args, indent=4))
     
-    
-    global server
-    server = None
 
     global boardManagerAddress
     boardManagerAddress = None
@@ -3030,6 +2944,9 @@ if __name__ == "__main__":
 
     global caller_title_without_version
     caller_title_without_version = ''
+
+    global callers_available
+    callers_available = []
 
     global caller_profiles_banned
     caller_profiles_banned = []
@@ -3070,28 +2987,18 @@ if __name__ == "__main__":
     ppi('DONATION: bitcoin:bc1q8dcva098rrrq2uqhv38rj5hayzrqywhudvrmxa', None, '')
     ppi('\r\n', None, '')
 
-    if WEB_DISABLE_HTTPS == False:
-        if CERT_CHECK:
-            ssl._create_default_https_context = ssl.create_default_context
-        else:
-            ssl._create_default_https_context = ssl._create_unverified_context
-            os.environ['PYTHONHTTPSVERIFY'] = '0'
-            ppi("WARNING: SSL-cert-verification disabled!")
-
-    if WEB == 0 or WEB == 2:
-        try:
-            mixer.pre_init(MIXER_FREQUENCY, MIXER_SIZE, MIXER_CHANNELS, MIXER_BUFFERSIZE)
-            mixer.init()
-        except Exception as e:
-            WEB = 1
-            ppe("Failed to initialize audio device! Make sure the target device is connected and configured as os default. Fallback to web-caller", e)
-            # sys.exit()  
-
     path_status = check_paths(__file__, AUDIO_MEDIA_PATH, AUDIO_MEDIA_PATH_SHARED, BLACKLIST_PATH)
     if path_status is not None: 
         ppi('Please check your arguments: ' + path_status)
         sys.exit()  
-    
+
+
+    if LOCAL_PLAYBACK:
+        try:
+            mixer.pre_init(MIXER_FREQUENCY, MIXER_SIZE, MIXER_CHANNELS, MIXER_BUFFERSIZE)
+            mixer.init()
+        except Exception as e:
+            ppe("Failed to initialize audio device! Make sure the target device is connected and configured as os default. Fallback to web-caller", e)
 
     if plat == 'Windows' and BACKGROUND_AUDIO_VOLUME > 0.0:
         try:
@@ -3128,29 +3035,19 @@ if __name__ == "__main__":
             else:
                 ssl_context = make_ssl_devcert(str(AUDIO_MEDIA_PATH / "dummy"), host=DEFAULT_HOST_IP)
 
-        websocket_server_thread = threading.Thread(target=start_websocket_server, args=(DEFAULT_HOST_IP, HOST_PORT, path_to_key, path_to_crt))
-        websocket_server_thread.start()
-
-        if WEB > 0 or WEB_SCOREBOARD:
-            flask_app_thread = threading.Thread(target=start_flask_app, args=(DEFAULT_HOST_IP, WEB_PORT, ssl_context))
-            flask_app_thread.start()
+        webserver_thread = threading.Thread(target=start_webserver, args=(DEFAULT_HOST_IP, HOST_PORT, ssl_context))
+        webserver_thread.start()
 
         kc = AutodartsKeycloakClient(username=AUTODART_USER_EMAIL, 
                                      password=AUTODART_USER_PASSWORD, 
                                      client_id=AUTODART_CLIENT_ID, 
                                      client_secret=AUTODART_CLIENT_SECRET,
-                                     debug=DEBUG
-                                     )
+                                     debug=DEBUG)
+                                     
         kc.start()
-
         connect_autodarts()
 
-        websocket_server_thread.join()
-
-        if WEB > 0 or WEB_SCOREBOARD:
-            flask_app_thread.join() 
-
+        webserver_thread.join() 
         kc.stop()
-
     except Exception as e:
         ppe("Connect failed: ", e)

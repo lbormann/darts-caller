@@ -2,7 +2,7 @@
 [![Downloads](https://img.shields.io/github/downloads/lbormann/autodarts-caller/total.svg)](https://github.com/lbormann/autodarts-caller/releases/latest)
 
 Autodarts-caller plays back sound-files accordingly to the state of a https://autodarts.io game. Furthermore it acts as a central hub by forwarding game-events to connected clients like https://github.com/lbormann/autodarts-extern that process incoming data to automate other dart-web-platforms like https://lidarts.org
-
+Learn more about the [Features!](#WORKFLOW & FUNCTIONALITY)
 
 ## COMPATIBILITY
 
@@ -20,7 +20,7 @@ Autodarts-caller plays back sound-files accordingly to the state of a https://au
 | Segment Training | |
 
 <div style="display: flex;">
-  <h2> Preview - Web-Caller functionalities </h2>
+  <h2> Preview - Web-Caller </h2>
   <img src="https://github.com/lbormann/autodarts-caller/blob/master/images/chat.jpg" alt="chat preview 1" style="width:250px;margin-right:15px;margin-top:15px;"/>
   <img src="https://github.com/lbormann/autodarts-caller/blob/master/images/chat2.jpg" alt="chat preview 2" style="width:250px;margin-right:15px;margin-top:15px;"/>
   <img src="https://github.com/lbormann/autodarts-caller/blob/master/images/chat3.jpg" alt="chat preview 3" style="width:250px;margin-right:15px;margin-top:15px;"/>
@@ -60,11 +60,20 @@ Optional for Linux: If you encounter problems with playing sound:
 
 
 
-## SETUP
+## WORKFLOW & FUNCTIONALITY
 
-Since version 2.0.0 there is a build-in download-mechanismn that automatically downloads multiple voice-packs in different languages and genders on application start - you don't need to setup manually. Every voice-pack contain all sound-files of category [MAIN-CALLING](#Sound-file-keys). If you would like to extend a voice-pack, e.g. to add other sound-files-keys like "ambient_gameshot" or "ambient_playerchange", copy them into specific voice-pack directory to use them only for specific voice-pack or copy them into --media_path_shared (-MS) to use them for every voice-pack. You can find a specific voice-pack in --media_path (-M).
+Der folgende Abschnitt erklärt den Ablauf und die einzelnen Komponenten der Anwendung mit dem Ziel, dass Du nach dem Lesen ein besseres Verständnis erlangst.
 
-### Use my own voice-pack / sounds
+### Downloads & Voice-packs
+
+Nach dem Start der Anwendung, werden automatisch sogenannte "voice-packs" heruntergeladen. Ein voice-pack stellt einen bestimmten Sprecher dar, der aus einer Sammlung von Audio-Dateien besteht. Diese Audio-Dateien können von der Anwendung gelesen werden, um deine geworfenen Punkte ausrufen zu können. Die Anwendung kennt eine große Anzahl, verschiedener voice-packs, bestehend aus unterschiedlichen Sprachen und Geschlechtern. Da das Herunterladen und die Extraction sämtlicher voice-packs sehr lange dauern kann, ist die Anzahl der Downloads standartmäßig auf eine kleine Anzahl englisch-sprachiger Sprecher begrenzt. Diese Begrenzung kannst Du natürlich aufheben (später mehr dazu). Zurück zu der Definition eines "voice-pack": Ein voice-pack enthält alle Audio-Dateien, um ein vollständiges "Call-Erlebnis" zu garantieren. Jede enthaltene Audio-Datei ist nach einem bestimmten Schema benannt, sodass die Anwendung über den Namen einer Datei erkennen kann, welcher Ton-Inhalt vorliegt (vorliegen soll). Ein Beispiel dazu: Datei "gameon.mp3" enthält eine Audiospur, in der der Sprecher zum Spielstart ausruft. Nehmen wir an, diese Datei würde nun nicht mehr "gameon.mp3" heißen, sondern "game.mp3". Dies würde zur Folge haben, dass die Anwendung mit dieser Datei nichts anfangen kann, da eine inhaltliche Zuordnung nicht möglich ist. "gameon" ist ein sogenannter "sound-file-key". "game" ist kein gültiger sound-file-key. Die Anwendung kennt ein großes Repertoire von gültigen [sound-file-keys](#Sound-file-keys). 
+Die zum Download, zur Verfügung gestellten voice-packs, werden in unregelmäßigen Abständen erweitert; beispielsweise werden neue Audio-Dateien für Spielernamen (die in einem separaten Prozess auf autodarts.io gesammelt werden) hinzugefügt. Falls Du wissen möchtest, was Du machen musst, damit dein Spielername in zukünftigen voice-packs enthalten ist, ließ Dir bitte folgendes Regelwerk auf Discord durch und passe ggf. deinen Namen an: TODODISCORDLINK
+
+
+
+### How can I use my own Sounds?
+
+Every voice-pack contain all sound-files of category [MAIN-CALLING](#Sound-file-keys). If you would like to extend a voice-pack, e.g. to add other sound-files-keys like "ambient_gameshot" or "ambient_playerchange", copy them into specific voice-pack directory to use them only for specific voice-pack or copy them into --media_path_shared (-MS) to use them for every voice-pack. You can find a specific voice-pack in --media_path (-M).
 
 Copy your sound-files to --media_path (-M). Make sure your sound-files are named according to the rules: [supported sound-file-keys](#Sound-file-keys). You don't need to have all listed sound-file-keys - just add the ones you want to use.
 You can find sounds at https://freesound.org, https://www.zapsplat.com, https://mixkit.co/free-sound-effects/hit/. 
@@ -72,6 +81,57 @@ You can find sounds at https://freesound.org, https://www.zapsplat.com, https://
 ______
 
 Since Version 1.6.0 you can deposit multiple sounds for every ([sound-file-key](#Sound-file-keys)). Therefor you have to add a "+" to the filename. After the "+" you can add whatever text you prefer; as an example: let`s say we want multiple sounds for the 'gameon'-event. Our default file is 'gameon.mp3'. Now we add some more: 'gameon+1.mp3', 'gameon+2.mp3', 'gameon+BEST.mp3'. You are not limited to the gameon-event, even score-sounds can have multiple soundfiles.
+
+
+Fassen wir also zusammen. In der Theorie kann die Anwendung unendlich viele Sprecher (voice-packs) verarbeiten, wobei jedes voice-pack aus vielen Audio-Dateien besteht, die bestimmtermaßen benannt sein müssen, damit die Verarbeitung dieser funktioniert.
+
+
+
+
+
+### Web-Caller
+
+Der Web-caller stellt verschiedene Funktionalitäten auf einer, bei Dir lokal gehosteten Website bereit. Diese Website kannst Du auf allen Geräten mit einem modernen Browser aufrufen. Anders als der Name vielleicht vermuten lässt, bietet der Web-Caller mehr als nur die reine "Call-Funktionalität".
+Die Webseite ist in folgende Bereiche, bzw. Funktionalitäten aufgeteilt:
+
+#### Start
+
+* Durch Drücken des Start-Knopfs erlaubst Du dem Browser das Abspielen von Audio-Dateien und startest damit auch die Verbindung zur Anwendung.
+
+#### Chat
+
+* Automatisch erzeugter peer-to-peer Chat mit deinem Gegner.
+* Austausch von textbasierten Nachrichten, Links und Bildern.
+* Schnellspeicher-Funktion für Nachrichten (z.B. um Emotjis direkt via dediziertem Knopf zu senden).
+* Sprach-und-Video-Anrufe (Voraussetzung ist aktives https).
+
+Disclaimer: Damit das Chatfenster angezeigt wird, muss dein Gegner den Web-Caller geöffnet haben. Darüberhinaus ist ein Chat mit mehreren Spielern aktuell nicht möglich (ausschließlich im 1v1, Spielvariante: X01)
+
+#### Calling
+
+* Audio-Wiedergabe direkt über einen Browser deiner Wahl (das aktuelle voice-pack wird einmalig heruntergeladen und dann gecached).
+* Anzeige des aktuellen Sprechers (voice-pack).
+* Auswahlmenü zum Wechseln auf einen bestimmmten Sprecher.
+* Knopf zum Wechseln auf einen anderen zufälligen Sprecher.
+* Auswahlmenüs zur Anpassung von Sprache und Geschlecht.
+* Knopf zum Bannen des aktuellen Sprechers.
+* Mod-Bereich für zufallsbasierte Stimmen-Anpassung.
+
+Disclaimer: For a continuous calling experience make sure your device display stays on while you are playing.
+
+#### Board
+
+* Knopf zum automatischen Kalibrieren deines Boards
+* Knopf zum Zurücksetzen deines Boards
+
+#### Game
+
+* "Magic-Knopf" zum automatischen "Weiterschalten" von Lobby, Aufnahme und Spiel (je nachdem, welchen Status das aktuelle Match gerade aufweist.)
+
+
+
+
+
 
 
 
@@ -113,6 +173,7 @@ Since Version 1.6.0 you can deposit multiple sounds for every ([sound-file-key](
 **AMBIENT (Argument -A > 0.0):**
 
 - ambient_playerchange
+- ambient_playerchange_{playername} [overrides: ambient_playerchange]
 - ambient_gameon 
 - ambient_gameon_{playername} [overrides: ambient_gameon]
 - ambient_matchon
@@ -251,9 +312,7 @@ Start the script:
 - -DLN / --downloads_name [Default: '']
 - -BLP / --blacklist_path [Default: '']
 - -BAV / --background_audio_volume [Default: 0.0] [Possible values: 0.0 .. 1.0]
-- -WEB / --web_caller [Default: 0] [Possible values: 0,1,2]
-- -WEBSB / --web_caller_scoreboard [Default: 0] [Possible values: 0 | 1]
-- -WEBP / --web_caller_port [Default: 5000]
+- -LPB / --local_playback [Default: 1] [Possible values: 0 | 1]
 - -WEBDH / --web_caller_disable_https [Default: 0] [Possible values: 0 | 1]
 - -HP / --host_port [Default: 8079]
 - -DEB / --debug [Default: 0] [Possible values: 0 | 1]
@@ -377,33 +436,22 @@ The blacklist-file stores voice-pack-names that are undesired for downloads or c
 
 *`-BAV / --background_audio_volume`*
 
-You can not hear any calls as your music is way too loud? Try to set this to '0.03' and let the calls begin :) Default is '0.0' (no background-audio-muting). Note: Only availble on windows-os.
+You can not hear any calls as your music is way too loud? Try to set this to '0.03' and let the calls begin :) Default is '0.0' (no background-audio-muting). Note: Only availble on windows-os and local playback (no web-caller).
 
-*`-WEB / --web_caller`*
+*`LPB / --local_playback`*
 
-If you set this '1' or '2' the application will host a web-server to mirror call-events. A value '1' will play sounds only on the website. Value '2' will play sounds on the application (locally) and on the website; Use your smartphone, tablet or other device and visit https://{machine-ip-address}:{web-caller-port}. For a continuous calling experience make sure your device display stays on while you are playing. For faster processing the web-caller caches sound-files which results in fast response times; Internet Explorer, non-chromium Edge and Safari > v10 is mandantory as caching is realized by indexeddb.
-If you're using an ios device, you probably need to open the page twice and confirm audio-playing by pressing the displayed button. In case that doesn't solve problems try to use another browser like firefox. 
-There is more to say: you can switch caller language, gender, change to a random caller or ban a caller on-the-fly. Use the modification area to randomize caller-voices.
-Also you can auto-calibrate your board and reset it.
-If your opponent is also using the web-caller, you both will be able to communicate in realtime, p2p by chat and voice-/video-calls.
-
-*`-WEBSB / --web_caller_scoreboard`*
-
-If you set this to a '1' the application will host a web-endpoint to display an alternative scoreboard. Visit https://{machine-ip-address}:{web-caller-port}/scoreboard in browser.
-
-*`-WEBP / --web_caller_port`*
-
-If web-calling or web-scoreboard is enabled, you can configure a custom port. By default this is '5000'.
+If you set this to '1' the application will playback audio by using your local speakers.
+By default this is activated.
 
 *`-WEBDH / --web_caller_disable_https`*
 
 If you set this to '1' the application will run all services with insecure http/ws. It's NOT recommended! 
-Also you won't be able to use video-/voice-calls on chat.
+Also you won't be able to use video-/voice-calls.
 By default this is NOT activated.
 
 *`-HP / --host_port`*
 
-The application provides a websocket-service. Other extensions like autodarts-extern or autodarts-wled can connect to this service (ws://ip:port).
+The application provides a websocket-service. Other extensions like autodarts-extern or autodarts-wled can connect to this service (wss://ip:port).
 For a list of json-examples look at 'broadcast-examples.dat' - who knows maybe you build your own extension upon this?!
 
 *`-DEB / --debug`*
@@ -497,7 +545,6 @@ services:
     container_name: autodarts-caller
     restart: unless-stopped
     ports:
-    - 5000:5000 #Web Caller Port
     - 8079:8079 #Host Port
     devices:
     - /dev/snd:/dev/snd
@@ -552,6 +599,7 @@ Make sure the displayed exists! If you rename any of your sound-files you NEED t
 
 ### Sound is not playing?!
 
+- Check if the filename exists on your drive
 - Check that the filename is a supported [Sound-file-key](#Sound-file-keys)
 - Sometimes there are sounds that are not readable. In this case you can convert sound-file(s) with an additional program (https://www.heise.de/download/product/mp3-quality-modifier-66202) Make sure you configurate 44100HZ, Stereo.
 - Check the console output: in case you do not receive any messages (only 'Receiving live information from ..') -> you should check the given Board-ID (-B) for correctness.
@@ -563,10 +611,10 @@ EVERY sound is optional! If you don't like a specific sound just delete it! The 
 ### I don't like voice-pack X
 
 There are four ways to ban an undesired voice-pack.
-Option 1) Enable web-caller (WEB 1|2) and press "Ban Caller!"
+Option 1) Visist web-caller and press "Ban Caller!"
 Option 2) Delete ALL files of voice-pack-folder.
-Option 3) use [autodarts-voice](https://github.com/lbormann/autodarts-voice) to ban the the current caller when he/she is active.
-Option 4) put the name of the current caller (voice-pack) in autodarts-caller-banned.txt by yourself.
+Option 3) use [autodarts-voice](https://github.com/lbormann/autodarts-voice).
+Option 4) put the name of the current caller (voice-pack) in autodarts-caller-banned.txt manually.
 All options forcing the application to either download files again nor using a voice-pack anymore, except you define it in -C or -DLN
 If you wish to revoke a ban, open 'autodarts-caller-banned.txt' and remove the line from the list.
 

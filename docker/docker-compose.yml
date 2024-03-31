@@ -6,7 +6,6 @@ services:
     container_name: autodarts-caller
     restart: unless-stopped
     ports:
-    - 5000:5000 #Web Caller Port
     - 8079:8079 #Host Port
     devices:
     - /dev/snd:/dev/snd
@@ -38,11 +37,9 @@ services:
       DOWNLOADS_NAME:
       BLACKLIST_PATH:
       BACKGROUND_AUDIO_VOLUME:
-      WEB_CALLER:
-      WEB_CALLER_SCOREBOARD:
+      LOCAL_PLAYBACK:
       WEB_CALLER_DISABLE_HTTPS:
       DEBUG:
-      CERT_CHECK:
       MIXER_FREQUENCY:
       MIXER_SIZE:
       MIXER_CHANNELS:

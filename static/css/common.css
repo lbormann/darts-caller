@@ -116,6 +116,7 @@ input[type=range]:focus::-ms-fill-upper {
 }
 button, select{
     width: auto;
+    max-width: 90%;
     opacity: 0.95;
     margin: 0 auto;
     border-radius: 10px;
@@ -123,13 +124,17 @@ button, select{
     color: white;
     height: auto;
     background-color: royalblue;
-    font-size: 30pt;
+    font-size: 26pt;
     margin-bottom: 15px;
     cursor: pointer;
     text-align: center;
     overflow: hidden;
     text-overflow: ellipsis;
 }
+select:hover {
+    background-color: rgb(25, 61, 172);
+}
+
 
 .fullscreen-overlay {
     position: fixed;
@@ -205,6 +210,7 @@ button, select{
     margin: 0 auto;
     width: 48px;
     height: 48px;
+    margin-bottom: 15px;
 }
 #app-info{
     cursor: pointer;
@@ -219,10 +225,14 @@ button, select{
     z-index: 999;
 }
 #caller-name{
+    margin: 0 auto;
     margin-top: 40px;
+    max-width: 90%;
 }
 #caller-call{
+    margin: 0 auto;
     margin-bottom: 40px;
+    max-width: 90%;
 }
 #button-start{
     margin-top: 50px;

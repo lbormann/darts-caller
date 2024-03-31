@@ -91,14 +91,8 @@ downloads_name=
 # -BLP
 blacklist_path=
 
-# -WEB
-web_caller=
-
-# -WEBSB
-web_caller_scoreboard=
-
-# -WEBP
-web_caller_port=
+# -LPB
+local_playback=
 
 # -WEBDH
 web_caller_disable_https=
@@ -108,9 +102,6 @@ host_port=
 
 # -DEB
 debug=
-
-# -CC
-cert_check=
 
 # -MIF
 mixer_frequency=
@@ -212,14 +203,8 @@ fi
 #if [ -n "$background_audio_volume" ]; then
 #  args="$args -BAV $background_audio_volume"
 #fi
-if [ -n "$web_caller" ]; then
-  args="$args -WEB $web_caller"
-fi
-if [ -n "$web_caller_scoreboard" ]; then
-  args="$args -WEBSB $web_caller_scoreboard"
-fi
-if [ -n "$web_caller_port" ]; then
-  args="$args -WEBP $web_caller_port"
+if [ -n "$local_playback" ]; then
+  args="$args -LPB $local_playback"
 fi
 if [ -n "$web_caller_disable_https" ]; then
   args="$args -WEBDH $web_caller_disable_https"
@@ -229,9 +214,6 @@ if [ -n "$host_port" ]; then
 fi
 if [ -n "$debug" ]; then
   args="$args -DEB $debug"
-fi
-if [ -n "$cert_check" ]; then
-  args="$args -DEB $cert_check"
 fi
 if [ -n "$mixer_frequency" ]; then
   args="$args -MIF $mixer_frequency"

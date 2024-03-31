@@ -46,13 +46,10 @@ ENV AUTODARTS_EMAIL= \
     DOWNLOADS_NAME= \
     BLACKLIST_PATH='/usr/share/autodarts-caller/blacklist.txt' \
     BACKGROUND_AUDIO_VOLUME= \
-    WEB_CALLER= \
-    WEB_CALLER_SCOREBOARD= \
-    WEB_CALLER_PORT=5000 \
+    LOCAL_PLAYBACK= \
     WEB_CALLER_DISABLE_HTTPS= \
     HOST_PORT=8079\
     DEBUG= \
-    CERT_CHECK= \
     MIXER_FREQUENCY= \
     MIXER_SIZE= \
     MIXER_CHANNELS= \
@@ -67,6 +64,6 @@ RUN chmod +x autodarts-caller && \
     apt install -y libglib2.0-0 alsa-utils && \
     rm -rf /var/lib/apt/lists/*
 
-EXPOSE 5000 8079
+EXPOSE 8079
 
 CMD ./entrypoint.sh

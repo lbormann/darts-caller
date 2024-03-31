@@ -83,14 +83,8 @@ fi
 if [ -n "$BACKGROUND_AUDIO_VOLUME" ]; then
  args="$args -BAV $BACKGROUND_AUDIO_VOLUME"
 fi
-if [ -n "$WEB_CALLER" ]; then
-  args="$args -WEB $WEB_CALLER"
-fi
-if [ -n "$WEB_CALLER_SCOREBOARD" ]; then
-  args="$args -WEBSB $WEB_CALLER_SCOREBOARD"
-fi
-if [ -n "$WEB_CALLER_PORT" ]; then
-  args="$args -WEBP $WEB_CALLER_PORT"
+if [ -n "$LOCAL_PLAYBACK" ]; then
+  args="$args -LPB $LOCAL_PLAYBACK"
 fi
 if [ -n "$WEB_CALLER_DISABLE_HTTPS" ]; then
   args="$args -WEBDH $WEB_CALLER_DISABLE_HTTPS"
@@ -100,9 +94,6 @@ if [ -n "$HOST_PORT" ]; then
 fi
 if [ -n "$DEBUG" ]; then
   args="$args -DEB $DEBUG"
-fi
-if [ -n "$CERT_CHECK" ]; then
-  args="$args -DEB $CERT_CHECK"
 fi
 if [ -n "$MIXER_FREQUENCY" ]; then
   args="$args -MIF $MIXER_FREQUENCY"

@@ -1,3 +1,20 @@
+## 2.12.0
+
+- rework README
+- add direct voice-pack selection on web-caller
+- add sound-file-key 'ambient_playerchange_{playername}
+- add "magic next button"
+- add voice-pack 'en-GB-TODO-Female'
+- add voice-pack 'en-GB-TODO-Female'
+- add voice-pack 'en-GB-TODO-Female'
+- add voice-pack 'en-GB-TODO-Female'
+- remove web-scoreboard
+- remove arguments WEB, WEBSB, WEBP, CC
+- add argument LPB (--local_playback) => playbacks audio locally / default: yes
+- rework websockets (fix browser incompatibilities and improves ios device support)
+- process token-refresh response correctly
+
+
 ## 2.11.1
 
 - improve RTW
