@@ -93,16 +93,16 @@ DEFAULT_CALLERS_BANNED_FILE = 'autodarts-caller-banned.txt'
 DEFAULT_HOST_IP = '0.0.0.0'
 
 
-AUTODART_URL = 'https://autodarts.io'
-AUTODART_AUTH_URL = 'https://login.autodarts.io/'
-AUTODART_CLIENT_ID = 'wusaaa-caller-for-autodarts'
-AUTODART_REALM_NAME = 'autodarts'
-AUTODART_CLIENT_SECRET = "4hg5d4fddW7rqgoY8gZ42aMpi2vjLkzf"
-AUTODART_LOBBIES_URL = 'https://api.autodarts.io/gs/v0/lobbies/'
-AUTODART_MATCHES_URL = 'https://api.autodarts.io/gs/v0/matches/'
-AUTODART_BOARDS_URL = 'https://api.autodarts.io/bs/v0/boards/'
-AUTODART_USERS_URL = 'https://api.autodarts.io/as/v0/users/'
-AUTODART_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe'
+AUTODARTS_URL = 'https://autodarts.io'
+AUTODARTS_AUTH_URL = 'https://login.autodarts.io/'
+AUTODARTS_CLIENT_ID = 'wusaaa-caller-for-autodarts'
+AUTODARTS_REALM_NAME = 'autodarts'
+AUTODARTS_CLIENT_SECRET = "4hg5d4fddW7rqgoY8gZ42aMpi2vjLkzf"
+AUTODARTS_LOBBIES_URL = 'https://api.autodarts.io/gs/v0/lobbies/'
+AUTODARTS_MATCHES_URL = 'https://api.autodarts.io/gs/v0/matches/'
+AUTODARTS_BOARDS_URL = 'https://api.autodarts.io/bs/v0/boards/'
+AUTODARTS_USERS_URL = 'https://api.autodarts.io/as/v0/users/'
+AUTODARTS_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe'
 
 SUPPORTED_SOUND_FORMATS = ['.mp3', '.wav']
 SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket', 'Random Checkout', 'ATC', 'RTW']
@@ -174,6 +174,11 @@ CALLER_PROFILES = {
     'en-US-Stephen-Male': ('https://add.arnes-design.de/ADC/en-US-Stephen-Male-v5.zip', 5),  
     'en-US-Kendra-Female': ('https://add.arnes-design.de/ADC/en-US-Kendra-Female-v6.zip', 6),
     'en-US-Gregory-Male': ('https://add.arnes-design.de/ADC/en-US-Gregory-Male-v3.zip', 3),
+    # -- en-GB --
+    # 'en-GB-Emma-Female': ('https://add.arnes-design.de/ADC/en-GB-Emma-Female.zip', 1),
+    # 'en-GB-Brian-Male': ('https://add.arnes-design.de/ADC/en-GB-Brian-Male.zip', 1),
+    # 'en-GB-Amy-Female': ('https://add.arnes-design.de/ADC/en-GB-Amy-Female.zip', 1),
+    # 'en-GB-Arthur-Male': ('https://add.arnes-design.de/ADC/en-GB-Arthur-Male.zip', 1),
     
     # 'TODONAME': ('TODOLINK', TODOVERSION),  
 }
@@ -877,7 +882,7 @@ def get_player_average(user_id, variant = 'x01', limit = '100'):
     # get
     # https://api.autodarts.io/as/v0/users/<user-id>/stats/<variant>?limit=<limit>
     try:
-        res = requests.get(AUTODART_USERS_URL + user_id + "/stats/" + variant + "?limit=" + limit, headers={'Authorization': 'Bearer ' + kc.access_token})
+        res = requests.get(AUTODARTS_USERS_URL + user_id + "/stats/" + variant + "?limit=" + limit, headers={'Authorization': 'Bearer ' + kc.access_token})
         m = res.json()
         # ppi(m)
         return m['average']['average']
@@ -885,20 +890,21 @@ def get_player_average(user_id, variant = 'x01', limit = '100'):
         ppe('Receive player-stats failed', e)
         return None
 
-def next_game():
-    if play_sound_effect('control_next_game', wait_for_last = False, volume_mult = 1.0, mod = False) == False:
+def start_match(lobbyId):
+    if play_sound_effect('control_start_match', wait_for_last = False, volume_mult = 1.0, mod = False) == False:
         play_sound_effect('control', wait_for_last = False, volume_mult = 1.0, mod = False)
     mirror_sounds()
 
     # post
-    # https://api.autodarts.io/gs/v0/matches/<match-id>/games/next
+    # https://api.autodarts.io/gs/v0/lobbies/<lobby-id>/start
     try:
         global currentMatch
         if currentMatch != None:
-            requests.post(AUTODART_MATCHES_URL + currentMatch + "/games/next", headers={'Authorization': 'Bearer ' + kc.access_token})
+            res = requests.post(AUTODARTS_LOBBIES_URL + lobbyId + "/start", headers={'Authorization': 'Bearer ' + kc.access_token})
+            ppi(res)
 
     except Exception as e:
-        ppe('Next game failed', e)
+        ppe('Start match failed', e)
 
 def next_throw():
     if play_sound_effect('control_next', wait_for_last = False, volume_mult = 1.0, mod = False) == False:
@@ -910,7 +916,7 @@ def next_throw():
     try:
         global currentMatch
         if currentMatch != None:
-            requests.post(AUTODART_MATCHES_URL + currentMatch + "/players/next", headers={'Authorization': 'Bearer ' + kc.access_token})
+            requests.post(AUTODARTS_MATCHES_URL + currentMatch + "/players/next", headers={'Authorization': 'Bearer ' + kc.access_token})
 
     except Exception as e:
         ppe('Next throw failed', e)
@@ -925,7 +931,7 @@ def undo_throw():
     try:
         global currentMatch
         if currentMatch != None:
-            requests.post(AUTODART_MATCHES_URL + currentMatch + "/undo", headers={'Authorization': 'Bearer ' + kc.access_token})
+            requests.post(AUTODARTS_MATCHES_URL + currentMatch + "/undo", headers={'Authorization': 'Bearer ' + kc.access_token})
     except Exception as e:
         ppe('Undo throw failed', e)
 
@@ -974,7 +980,7 @@ def correct_throw(throw_indices, score):
 
         # ppi(f'Data: {data}')
         if lastCorrectThrow == None or lastCorrectThrow != data:
-            requests.patch(AUTODART_MATCHES_URL + currentMatch + "/throws", json=data, headers={'Authorization': 'Bearer ' + kc.access_token})
+            requests.patch(AUTODARTS_MATCHES_URL + currentMatch + "/throws", json=data, headers={'Authorization': 'Bearer ' + kc.access_token})
             lastCorrectThrow = data
         else:
             lastCorrectThrow = None 
@@ -983,12 +989,27 @@ def correct_throw(throw_indices, score):
         lastCorrectThrow = None 
         ppe('Correcting throw failed', e)
 
+def next_game():
+    if play_sound_effect('control_next_game', wait_for_last = False, volume_mult = 1.0, mod = False) == False:
+        play_sound_effect('control', wait_for_last = False, volume_mult = 1.0, mod = False)
+    mirror_sounds()
+
+    # post
+    # https://api.autodarts.io/gs/v0/matches/<match-id>/games/next
+    try:
+        global currentMatch
+        if currentMatch != None:
+            requests.post(AUTODARTS_MATCHES_URL + currentMatch + "/games/next", headers={'Authorization': 'Bearer ' + kc.access_token})
+
+    except Exception as e:
+        ppe('Next game failed', e)
+
 def receive_local_board_address():
     try:
         global boardManagerAddress
 
         if boardManagerAddress == None:
-            res = requests.get(AUTODART_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + kc.access_token})
+            res = requests.get(AUTODARTS_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + kc.access_token})
             board_ip = res.json()['ip']
             if board_ip != None and board_ip != '':  
                 boardManagerAddress = 'http://' + board_ip
@@ -1036,7 +1057,7 @@ def listen_to_match(m, ws):
             ppe("Setup callers failed!", e)
 
         try:
-            res = requests.get(AUTODART_MATCHES_URL + currentMatch, headers={'Authorization': 'Bearer ' + kc.access_token})
+            res = requests.get(AUTODARTS_MATCHES_URL + currentMatch, headers={'Authorization': 'Bearer ' + kc.access_token})
             m = res.json()
             # ppi(json.dumps(m, indent = 4, sort_keys = True))
 
@@ -1150,8 +1171,8 @@ def listen_to_match(m, ws):
     elif m['event'] == 'finish' or m['event'] == 'delete':
         ppi('Stop listening to match: ' + m['id'])
 
+        currentMatch = None
         currentMatchHost = None
-        # currentMatchPlayers = None
         currentMatchPlayers = []
 
         paramsUnsubscribeMatchEvents = {  
@@ -2301,7 +2322,7 @@ def mute_background(mute_vol):
 def connect_autodarts():
     def process(*args):
         websocket.enableTrace(False)
-        ws = websocket.WebSocketApp(AUTODART_WEBSOCKET_URL,
+        ws = websocket.WebSocketApp(AUTODARTS_WEBSOCKET_URL,
                                     header={'Authorization': 'Bearer ' + kc.access_token},
                                     on_open = on_open_autodarts,
                                     on_message = on_message_autodarts,
@@ -2313,7 +2334,7 @@ def connect_autodarts():
 
 def on_open_autodarts(ws):
     try:
-        res = requests.get(AUTODART_MATCHES_URL, headers={'Authorization': 'Bearer ' + kc.access_token})
+        res = requests.get(AUTODARTS_MATCHES_URL, headers={'Authorization': 'Bearer ' + kc.access_token})
         res = res.json()
         # ppi(json.dumps(res, indent = 4, sort_keys = True))
 
@@ -2366,8 +2387,9 @@ def on_open_autodarts(ws):
 def on_message_autodarts(ws, message):
     def process(*args):
         try:
-            global lastMessage
+            global currentMatch
             global lobbyPlayers
+            global lastMessage
             m = json.loads(message)
             # ppi(json.dumps(m, indent = 4, sort_keys = True))
   
@@ -2378,7 +2400,6 @@ def on_message_autodarts(ws, message):
                 # if m['topic'].endswith('game-events'):
                 #     ppi(json.dumps(data, indent = 4, sort_keys = True))
 
-                global currentMatch
                 # ppi('Current Match: ' + currentMatch)
                 
                 if('turns' in data and len(data['turns']) >=1):
@@ -2423,6 +2444,7 @@ def on_message_autodarts(ws, message):
                         # ppi("lobby-enter", data)
 
                         lobby_id = data['body']['id']
+                        currentMatch = 'lobby:' + lobby_id
 
                         ppi('Listen to lobby: ' + lobby_id)
                         paramsSubscribeLobbyEvents = {
@@ -2446,6 +2468,7 @@ def on_message_autodarts(ws, message):
                         # ppi("lobby-leave", data)
 
                         lobby_id = data['body']['id']
+                        currentMatch = None
 
                         ppi('Stop Listen to lobby: ' + lobby_id)
                         paramsUnsubscribeLobbyEvents = {
@@ -2488,6 +2511,7 @@ def on_message_autodarts(ws, message):
                         }
                         ws.send(json.dumps(paramsUnsubscribeLobbyEvents))
                         lobbyPlayers = []
+                        # currentMatch = None
                         if play_sound_effect("lobby_ambient_out", False, mod = False):
                             mirror_sounds()
   
@@ -2518,6 +2542,7 @@ def on_message_autodarts(ws, message):
                         if play_sound_effect("lobby_ambient_out", False, mod = False):
                             mirror_sounds()
                         lobbyPlayers = []
+                        currentMatch = None
                         return
                         
 
@@ -2684,15 +2709,19 @@ def handle_message(message):
                 correct_throw(throw_indices, score)
                     
             elif message.startswith('next'):
-                if message.startswith('next-game'):
-                    next_game()
-                else:
-                    next_throw()
+                if currentMatch is not None:
+                    if currentMatch.startswith('lobby'):
+                        start_match(currentMatch.split(':')[1])
+                    elif isGameFinished == False:
+                        next_throw()
+                    else:
+                        next_game()
 
             elif message.startswith('undo'):
                 undo_throw()
 
             elif message.startswith('ban'):
+                CALLER = DEFAULT_CALLER
                 if len(message.split(':')) > 1:
                     ban_caller(True)
                 else:
@@ -2815,9 +2844,9 @@ if __name__ == "__main__":
         
     ap = argparse.ArgumentParser()
     
-    ap.add_argument("-U", "--autodarts_email", required=True, help="Registered email address at " + AUTODART_URL)
-    ap.add_argument("-P", "--autodarts_password", required=True, help="Registered password address at " + AUTODART_URL)
-    ap.add_argument("-B", "--autodarts_board_id", required=True, help="Registered board-id at " + AUTODART_URL)
+    ap.add_argument("-U", "--autodarts_email", required=True, help="Registered email address at " + AUTODARTS_URL)
+    ap.add_argument("-P", "--autodarts_password", required=True, help="Registered password address at " + AUTODARTS_URL)
+    ap.add_argument("-B", "--autodarts_board_id", required=True, help="Registered board-id at " + AUTODARTS_URL)
     ap.add_argument("-M", "--media_path", required=True, help="Absolute path to your media")
     ap.add_argument("-MS", "--media_path_shared", required=False, default=DEFAULT_EMPTY_PATH, help="Absolute path to shared media folder (every caller get sounds)")
     ap.add_argument("-V", "--caller_volume", type=float, default=DEFAULT_CALLER_VOLUME, required=False, help="Sets calling-volume between 0.0 (silent) and 1.0 (max)")
@@ -2902,8 +2931,6 @@ if __name__ == "__main__":
     MIXER_SIZE = args['mixer_size']
     MIXER_CHANNELS = args['mixer_channels']
     MIXER_BUFFERSIZE = args['mixer_buffersize']
-
-
 
 
 
@@ -3040,8 +3067,8 @@ if __name__ == "__main__":
 
         kc = AutodartsKeycloakClient(username=AUTODART_USER_EMAIL, 
                                      password=AUTODART_USER_PASSWORD, 
-                                     client_id=AUTODART_CLIENT_ID, 
-                                     client_secret=AUTODART_CLIENT_SECRET,
+                                     client_id=AUTODARTS_CLIENT_ID, 
+                                     client_secret=AUTODARTS_CLIENT_SECRET,
                                      debug=DEBUG)
                                      
         kc.start()

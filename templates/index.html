@@ -88,7 +88,12 @@
         <div id="board">
             <button id="button-calibrate-board" style="display:none;">Calibrate Board!</button>
             <button id="button-reset-board" style="display:none;">Reset Board!</button>
-        </div>    
+        </div>  
+        
+        <!-- match -->
+        <div id="match">
+            <button id="button-next" style="display:none;">Next!</button>
+        </div>
 
         <!-- mods -->    
         <image id="button-container-mod-toggle" src="/static/images/mods.png" style="display:none;"></image>
@@ -238,6 +243,8 @@
         const buttonCalibrateBoard = document.getElementById('button-calibrate-board');
         const buttonResetBoard = document.getElementById('button-reset-board');
 
+        // match stuff
+        const buttonNext = document.getElementById('button-next');
 
 
     
@@ -245,7 +252,7 @@
 
         // caller
         let dexie, db, ws, loading, done;
-        let callers_available, caller_name, specific, banable;
+        let callersAvailable, name, specific, banable;
         let boardOnline;
         let playbackRateMin, playbackRateMax, detuneMin, detuneMax, volume, randomizer;
         let audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -255,7 +262,7 @@
         // webRtc
         const discordUrl = 'https://discordapp.com/users/';
         let match, me, opponent;
-        let opponentName, oppoenentAvatar;
+        let opponentName, opponentAvatar;
         let peer, connOut, callOut;
         let connEstablished = false;
         let chat = [];
@@ -315,8 +322,8 @@
             
             loadPreferences();
 
-            boardOnline = JSON.parse('{{ boardOnline | tojson | safe}}');
-            updateBoard();
+            // boardOnline = JSON.parse('{{ boardOnline | tojson | safe}}');
+            // updateBoard();
 
             setTimeout(function() {
                 const id = JSON.parse('{{ id | tojson | safe}}');
@@ -335,7 +342,7 @@
         });
         button.addEventListener('click', function(){
             audio.load();
-            caller_name = undefined;
+            name = undefined;
             state.style.display='block'; 
             lastCall.style.display='block';
             button.remove();
@@ -375,6 +382,10 @@
             settingDiscord = this.value;
             updateWebRtcSettings();
         });
+        webRtcChat.addEventListener("click", function() {
+            callerContainer.style.display = 'block';
+            webRtcContainer.classList.remove("fix-bottom");   
+        });
         webRtcChatSendMessage.addEventListener("focus", function() {
             callerContainer.style.display = 'none';
             webRtcContainer.classList.add("fix-bottom");
@@ -382,10 +393,6 @@
         webRtcChatSendMessage.addEventListener("click", function() {
             callerContainer.style.display = 'none';
             webRtcContainer.classList.add("fix-bottom");
-        });
-        webRtcChat.addEventListener("click", function() {
-            callerContainer.style.display = 'block';
-            webRtcContainer.classList.remove("fix-bottom");   
         });
         webRtcChatSendMessage.addEventListener("keydown", function(event) {  
             if (event.keyCode === 13) {
@@ -532,6 +539,11 @@
         });
         buttonResetBoard.addEventListener('click', function(){
             ws.emit('message', 'board-reset');
+        });
+
+        // match
+        buttonNext.addEventListener('click', function(){
+            ws.emit('message', 'next');
         });
 
         function updateWebRtcSettings(save = true){
@@ -917,29 +929,39 @@
             loading = state
             if(!loading){
                 loader.style.display = 'none';
+
                 lastCall.style.display = 'block';
                 lastCall.innerText = 'Waiting for throws ..';
-                if(!specific && banable){
+                buttonSay.style.display = 'inline';
+                buttonChange.style.display = 'block';
+                callerSelect.style.display = 'block';
+                languageSelect.style.display = 'block';
+                genderSelect.style.display = 'block';
+                if(banable){
                     buttonBan.style.display = 'block';
                 }
-                if(!specific){
-                    buttonChange.style.display = 'block';
-                    languageSelect.style.display = 'block';
-                    genderSelect.style.display = 'block';
-                }
-                callerSelect.style.display = 'block';
-                buttonSay.style.display = 'inline';
-                buttonContainerModToggle.style.display = 'inline';                
+                buttonContainerModToggle.style.display = 'inline';   
+                        
+                buttonCalibrateBoard.style.display = 'block';
+                buttonResetBoard.style.display = 'block';   
+                
+                buttonNext.style.display = 'block'; 
             }
             else{
                 loader.style.display = 'block';
-                buttonBan.style.display = 'none';
+
+                buttonSay.style.display = 'none';
                 buttonChange.style.display = 'none';
                 callerSelect.style.display = 'none';
                 languageSelect.style.display = 'none';
                 genderSelect.style.display = 'none';
-                buttonSay.style.display = 'none';
+                buttonBan.style.display = 'none';
                 buttonContainerModToggle.style.display = 'none';
+
+                buttonCalibrateBoard.style.display = 'none';
+                buttonResetBoard.style.display = 'none';   
+
+                buttonNext.style.display = 'none'; 
             }
         }
 
@@ -1080,7 +1102,7 @@
             me = meId;
             opponent = players[0]['boardId'];
             opponentName = players[0]['name'];
-            oppoenentAvatar = players[0]['avatarUrl'];
+            opponentAvatar = players[0]['avatarUrl'];
 
             console.log('Opponent-ID: ' + opponent);
 
@@ -1278,10 +1300,10 @@
                 
                 // MSG IN
                 if(cm.type === 1){
-                    if(oppoenentAvatar){
+                    if(opponentAvatar){
                         const avatar = document.createElement("img");
                         avatar.classList.add("web-rtc-chat-message-avatar");
-                        avatar.src = oppoenentAvatar;
+                        avatar.src = opponentAvatar;
                         message.appendChild(avatar);
                     }
                     if(typeof(cm.text) === "string"){
@@ -1398,15 +1420,15 @@
                 console.log('welcome by server');
 
                 done = 0;
-                callers_available = data.callersAvailable;
-                caller_name = data.caller;
+                callersAvailable = data.callersAvailable;
+                name = data.caller;
                 specific = data.specific;
                 banable = data.banable;
                 
                 randomize();
 
                 caller.innerHTML = "";
-                callers_available.forEach(function(ca) {
+                callersAvailable.forEach(function(ca) {
                     const callerElement = document.createElement("option");
                     callerElement.textContent = ca;
                     callerElement.value = ca;
@@ -1421,7 +1443,7 @@
                 const exists_db_entries = await db.sounds.where('caller').equals(data.caller).toArray();
                 const exists = exists_db_entries.map(entry => entry['name']);
                 console.log(`${exists.length} cached files for ${data.caller}`);
-                callerName.innerText = `${caller_name} [${exists.length} sounds]`;
+                callerName.innerText = `${name} [${exists.length} sounds]`;
 
                 setLoading(true);
                 data['event'] = 'sync';
@@ -1437,13 +1459,13 @@
                 const new_files = data.exists.map(new_file => {
                         let arrayBuffer = base64ToArrayBuffer(new_file.file);
                         done += 1;
-                        callerName.innerText = `${caller_name} [${done} sounds extracted]`;
+                        callerName.innerText = `${name} [${done} sounds extracted]`;
                         // console.log(`decode successful for ${new_file.name} -> ${new_file.path}`);
                         return { caller: data.caller, name: new_file.name, path: new_file.path, file: arrayBuffer };
                     });
 
                 db.sounds.bulkPut(new_files).then(function(last_file) {
-                    callerName.innerText = `${caller_name} [${done} sounds synced]`;
+                    callerName.innerText = `${name} [${done} sounds synced]`;
                     console.log("last sounds's id was: " + last_file);
                 }).catch(Dexie.BulkError, function (e) {
                     console.error("some sounds did not succeed: " + e.failures.length + " failed");
@@ -1460,9 +1482,8 @@
             }
             
             else if(data.event === 'board'){
-                console.log(boardOnline);
                 boardOnline = data.boardOnline;
-                updateBoard();
+                // updateBoard();
             }
 
             else{

@@ -4,14 +4,15 @@
 - add direct voice-pack selection on web-caller
 - add sound-file-key 'ambient_playerchange_{playername}
 - add "magic next button"
-- add voice-pack 'en-GB-TODO-Female'
-- add voice-pack 'en-GB-TODO-Female'
-- add voice-pack 'en-GB-TODO-Female'
-- add voice-pack 'en-GB-TODO-Female'
+- add voice-pack 'en-GB-Emma-Female'
+- add voice-pack 'en-GB-Brian-Male'
+- add voice-pack 'en-GB-Amy-Female'
+- add voice-pack 'en-GB-Arthur-Male'
+- support argument "caller" without specific voice-pack version
 - remove web-scoreboard
 - remove arguments WEB, WEBSB, WEBP, CC
 - add argument LPB (--local_playback) => playbacks audio locally / default: yes
-- rework websockets (fix browser incompatibilities and improves ios device support)
+- rework websockets (fix browser incompatibilities and improve ios device support)
 - process token-refresh response correctly
 
 

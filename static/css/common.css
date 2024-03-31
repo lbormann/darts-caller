@@ -123,7 +123,7 @@ button, select{
     padding: 20px;
     color: white;
     height: auto;
-    background-color: royalblue;
+    background-color: rgb(30, 75, 207);
     font-size: 26pt;
     margin-bottom: 15px;
     cursor: pointer;
@@ -131,8 +131,23 @@ button, select{
     overflow: hidden;
     text-overflow: ellipsis;
 }
-select:hover {
-    background-color: rgb(25, 61, 172);
+option, option:hover {
+    background-color: rgb(30, 75, 207);
+}
+button:hover, select:hover {
+    background-color: rgb(35, 87, 245);
+}
+#button-calibrate-board, #button-reset-board{
+    background-color: darkkhaki;
+}
+#button-calibrate-board:hover, #button-reset-board:hover{
+    background-color: rgb(219, 212, 114);
+}
+#button-next{
+    background-color: rgb(13, 136, 13);
+}
+#button-next:hover{
+    background-color: rgb(19, 168, 19);
 }
 
 
@@ -259,9 +274,7 @@ select:hover {
     border-radius: 20px;
     background-color: royalblue;;
 }
-#button-calibrate-board, #button-reset-board{
-    background-color: darkkhaki;
-}
+
 
 
 
@@ -375,7 +388,7 @@ select:hover {
     background-color: #EBDFCE;
     border: 3px solid black;
     height: 350px;
-    max-height: 350px; 
+    max-height: 350px;
     overflow-y: auto;
     border-radius: 15px;
     word-wrap: break-word;
@@ -392,7 +405,6 @@ select:hover {
     opacity: 100%;
     background-color: #EBDFCE;
     border: 3px solid black;
-
     overflow-y: auto;
     border-radius: 15px;
 }
@@ -455,5 +467,5 @@ select:hover {
 .fix-bottom{
     position: fixed;
     bottom: 0;
-    left: 2%;  
+    left: 2%; 
 }

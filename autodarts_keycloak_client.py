@@ -71,6 +71,7 @@ class AutodartsKeycloakClient:
                     else:
                         self.__get_token()
             except Exception:
+                self.access_token = None
                 print("Receive Token failed")
 
             sleep(self.tick)
