@@ -69,7 +69,6 @@ DEFAULT_RANDOM_CALLER_GENDER = 0
 DEFAULT_CALL_CURRENT_PLAYER = 1
 DEFAULT_CALL_CURRENT_PLAYER_ALWAYS = 0
 DEFAULT_CALL_EVERY_DART = 0
-DEFAULT_CALL_EVERY_DART_SINGLE_FILES = 1
 DEFAULT_POSSIBLE_CHECKOUT_CALL = 1
 DEFAULT_POSSIBLE_CHECKOUT_CALL_SINGLE_FILES = 0
 DEFAULT_POSSIBLE_CHECKOUT_CALL_YOURSELF_ONLY = 0
@@ -124,42 +123,19 @@ CALLER_GENDERS = {
 }
 CALLER_PROFILES = {
     #------------------------------------------------------------------------------------------------
-    # GOOGLE / Cloud TTS
-    #------------------------------------------------------------------------------------------------
-    # -- fr-FR --
-    'fr-FR-Wavenet-E-FEMALE': ('https://add.arnes-design.de/ADC/fr-FR-Wavenet-E-FEMALE-v3.zip', 3),
-    'fr-FR-Wavenet-B-MALE': ('https://add.arnes-design.de/ADC/fr-FR-Wavenet-B-MALE-v3.zip', 3),
-    # -- ru-RU --
-    'ru-RU-Wavenet-E-FEMALE': ('https://add.arnes-design.de/ADC/ru-RU-Wavenet-E-FEMALE-v3.zip', 3),
-    'ru-RU-Wavenet-B-MALE': ('https://add.arnes-design.de/ADC/ru-RU-Wavenet-B-MALE-v3.zip', 3),
-    # -- de-DE --
-    'de-DE-Wavenet-F-FEMALE': ('https://add.arnes-design.de/ADC/de-DE-Wavenet-F-FEMALE-v3.zip', 3),  
-    'de-DE-Wavenet-B-MALE': ('https://add.arnes-design.de/ADC/de-DE-Wavenet-B-MALE-v3.zip', 3),
-    # -- es-ES --
-    'es-ES-Wavenet-C-FEMALE': ('https://add.arnes-design.de/ADC/es-ES-Wavenet-C-FEMALE-v3.zip', 3),  
-    'es-ES-Wavenet-B-MALE': ('https://add.arnes-design.de/ADC/es-ES-Wavenet-B-MALE-v3.zip', 3),
-    # -- nl-NL --
-    'nl-NL-Wavenet-B-MALE': ('https://add.arnes-design.de/ADC/nl-NL-Wavenet-B-MALE-v3.zip', 3),  
-    'nl-NL-Wavenet-D-FEMALE': ('https://add.arnes-design.de/ADC/nl-NL-Wavenet-D-FEMALE-v3.zip', 3),
-    # -- en-US --
-    'en-US-Wavenet-E-FEMALE': ('https://add.arnes-design.de/ADC/en-US-Wavenet-E-FEMALE-v4.zip', 4),
-    'en-US-Wavenet-G-FEMALE': ('https://add.arnes-design.de/ADC/en-US-Wavenet-G-FEMALE-v4.zip', 4),
-    'en-US-Wavenet-A-MALE': ('https://add.arnes-design.de/ADC/en-US-Wavenet-A-MALE-v4.zip', 4),
-    'en-US-Wavenet-H-FEMALE': ('https://add.arnes-design.de/ADC/en-US-Wavenet-H-FEMALE-v4.zip', 4),
-    'en-US-Wavenet-I-MALE': ('https://add.arnes-design.de/ADC/en-US-Wavenet-I-MALE-v4.zip', 4),
-    'en-US-Wavenet-J-MALE': ('https://add.arnes-design.de/ADC/en-US-Wavenet-J-MALE-v4.zip', 4),
-    'en-US-Wavenet-F-FEMALE': ('https://add.arnes-design.de/ADC/en-US-Wavenet-F-FEMALE-v4.zip', 4),
-
-    #------------------------------------------------------------------------------------------------
     # AMAZON / AWS Polly
     #------------------------------------------------------------------------------------------------
-    # -- nl-NL --
+    # -- fr-FR --
+    # -- ru-RU --
+    
     'nl-NL-Laura-Female': ('https://add.arnes-design.de/ADC/nl-NL-Laura-Female-v2.zip', 2),
     # -- de-AT --
     'de-AT-Hannah-Female': ('https://add.arnes-design.de/ADC/de-AT-Hannah-Female-v2.zip', 2),
     # -- de-DE --
     'de-DE-Vicki-Female': ('https://add.arnes-design.de/ADC/de-DE-Vicki-Female-v5.zip', 5),  
     'de-DE-Daniel-Male': ('https://add.arnes-design.de/ADC/de-DE-Daniel-Male-v5.zip', 5),
+    # -- es-ES --
+    # -- nl-NL --
     # -- en-US --
     'en-US-Ivy-Female': ('https://add.arnes-design.de/ADC/en-US-Ivy-Female-v5.zip', 5),
     'en-US-Joey-Male': ('https://add.arnes-design.de/ADC/en-US-Joey-Male-v6.zip', 6),
@@ -175,8 +151,6 @@ CALLER_PROFILES = {
     'en-US-Kendra-Female': ('https://add.arnes-design.de/ADC/en-US-Kendra-Female-v6.zip', 6),
     'en-US-Gregory-Male': ('https://add.arnes-design.de/ADC/en-US-Gregory-Male-v3.zip', 3),
     # -- en-GB --
-    # 'en-GB-Emma-Female': ('https://add.arnes-design.de/ADC/en-GB-Emma-Female.zip', 1),
-    # 'en-GB-Brian-Male': ('https://add.arnes-design.de/ADC/en-GB-Brian-Male.zip', 1),
     # 'en-GB-Amy-Female': ('https://add.arnes-design.de/ADC/en-GB-Amy-Female.zip', 1),
     # 'en-GB-Arthur-Male': ('https://add.arnes-design.de/ADC/en-GB-Arthur-Male.zip', 1),
     
@@ -504,6 +478,7 @@ def download_callers():
 
 def ban_caller(only_change):
     global caller_title
+    global caller_title_without_version
 
     # ban/change not possible as caller is specified by user or current caller is 'None'
     if (CALLER != DEFAULT_CALLER and CALLER != '' and caller_title != '' and caller_title != None):
@@ -521,7 +496,7 @@ def ban_caller(only_change):
 
         if BLACKLIST_PATH != DEFAULT_EMPTY_PATH:
             global caller_profiles_banned
-            caller_profiles_banned.append(caller_title)
+            caller_profiles_banned.append(caller_title_without_version)
             path_to_callers_banned_file = os.path.join(BLACKLIST_PATH, DEFAULT_CALLERS_BANNED_FILE)   
             with open(path_to_callers_banned_file, 'w') as bcf:
                 for cpb in caller_profiles_banned:
@@ -602,13 +577,8 @@ def load_callers():
     for ss_k, ss_v in shared_sounds.items():
         for (root, c_keys) in callers:
             if ss_k in c_keys:
-                # for sound_variant in ss_v:
-                #     c_keys[ss_k].append(sound_variant)
-                if CALL_EVERY_DART == True and CALL_EVERY_DART_SINGLE_FILE == True:
-                    c_keys[ss_k] = ss_v
-                else:
-                    for sound_variant in ss_v:
-                        c_keys[ss_k].append(sound_variant)
+                for sound_variant in ss_v:
+                    c_keys[ss_k].append(sound_variant)
             else:
                 c_keys[ss_k] = ss_v
 
@@ -693,10 +663,10 @@ def setup_caller():
     caller_title_without_version = ''
 
     callers = load_callers()
-    ppi(str(len(callers)) + ' voice-pack(s) found.')
 
-
-    # filter callers
+    ppi('Available voice-pack(s):')
+    
+    # filter callers by blacklist, language, gender and most recent version
     callers_filtered = []
     for c in callers:
         caller_name = grab_caller_name(c)
@@ -713,36 +683,37 @@ def setup_caller():
         callers_filtered.append(c)
     if len(callers_filtered) > 0:
         callers_filtered = filter_most_recent_version(callers_filtered)
+    
         
-
-    # available callers
+    # store available caller names
     callers_available = []
     for cf in callers_filtered:
         caller_name = grab_caller_name(cf)
         callers_available.append(caller_name)
 
 
-
+    # specific caller
     if CALLER != DEFAULT_CALLER and CALLER != '':
         wished_caller = CALLER.lower()
-        for c in callers:
+        for c in callers_filtered:
             caller_name = os.path.basename(os.path.normpath(c[0])).lower()
             ppi(caller_name, None, '')
-            if caller == None and caller_name == wished_caller:
+            if caller == None and caller_name.startswith(wished_caller):
                 caller = c
 
+    # random caller
     else:
-        for c in callers: 
+        for c in callers_filtered: 
             caller_name = grab_caller_name(c)
             ppi(caller_name, None, '')
 
         if RANDOM_CALLER == False:
-            caller = callers[0]
+            caller = callers_filtered[0]
         else:
             if len(callers_filtered) > 0:
                 caller = random.choice(callers_filtered)
 
-
+    # set caller
     if(caller != None):
         for sound_file_key, sound_file_values in caller[1].items():
             sound_list = list()
@@ -752,7 +723,7 @@ def setup_caller():
 
         caller_title = str(os.path.basename(os.path.normpath(caller[0])))
         caller_title_without_version = caller_title.split("-v")[0].lower()
-        ppi("Your current caller: " + caller_title + " knows " + str(len(caller[1].values())) + " Sound-file-key(s)")
+        ppi("Current voice-pack: " + caller_title + " (" + str(len(caller[1].values())) + " Sound-file-key(s))")
         # ppi(caller[1])
         caller = caller[1]
 
@@ -1333,7 +1304,7 @@ def process_match_x01(m):
             ppi("Next player")
 
     # Call every thrown dart
-    elif CALL_EVERY_DART == True and turns != None and turns['throws'] != [] and len(turns['throws']) >= 1 and busted == False and matchshot == False and gameshot == False: 
+    elif CALL_EVERY_DART > 0 and turns != None and turns['throws'] != [] and len(turns['throws']) >= 1 and busted == False and matchshot == False and gameshot == False: 
 
         throwAmount = len(turns['throws'])
         type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
@@ -1341,30 +1312,35 @@ def process_match_x01(m):
  
         if field_name == '25':
             field_name = 'sbull'
+        elif field_name == '50':
+            field_name == 'bull'
 
         # ppi("Type: " + str(type) + " - Field-name: " + str(field_name))
+            
+        # sounds-effects
+        if CALL_EVERY_DART == 2:
 
-        if CALL_EVERY_DART_SINGLE_FILE == True:
-            if play_sound_effect(field_name) == False:
+            # S20, D20, sbull
+            if play_sound_effect(field_name, mod = False) == False:
+
+                # single
                 inner_outer = False
                 if type == 'singleouter' or type == 'singleinner':
-                    inner_outer = play_sound_effect(type)
+                    inner_outer = play_sound_effect(type, mod = False)
                     if inner_outer == False:
-                        play_sound_effect('single')
+                        play_sound_effect('single', mod = False)
+
+                # double | triple | outside
                 else:
-                    play_sound_effect(type)
+                    play_sound_effect(type, mod = False)
             
+        # multiplicated score
+        else:
+            field_number = turns['throws'][throwAmount - 1]['segment']['number']
+            field_multiplier = turns['throws'][throwAmount - 1]['segment']['multiplier']
 
-        elif len(turns['throws']) <= 2:
-            field_number = str(turns['throws'][throwAmount - 1]['segment']['number'])
-
-            if type == 'single' or type == 'singleinner' or type == "singleouter":
-                play_sound_effect(field_number)
-            elif type == 'double' or type == 'triple':
-                play_sound_effect(type)
-                play_sound_effect(field_number, True)
-            else:
-                play_sound_effect('outside')
+            score = field_number * field_multiplier
+            play_sound_effect(str(score))
             
     # Check for matchshot
     if matchshot == True:
@@ -1587,7 +1563,8 @@ def process_match_x01(m):
         }
         broadcast(dartsThrown)
 
-        play_sound_effect(points)
+        if CALL_EVERY_DART == 0 or CALL_EVERY_DART == 2:
+            play_sound_effect(points)
 
         if AMBIENT_SOUNDS != 0.0:
             ambient_x_success = False
@@ -1694,7 +1671,7 @@ def process_match_cricket(m):
     global lastPoints
 
     # Call every thrown dart
-    if CALL_EVERY_DART and turns != None and turns['throws'] != [] and len(turns['throws']) >= 1: 
+    if CALL_EVERY_DART > 0 and turns != None and turns['throws'] != [] and len(turns['throws']) >= 1: 
         throwAmount = len(turns['throws'])
         type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
         field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
@@ -1702,18 +1679,39 @@ def process_match_cricket(m):
 
         if field_name == '25':
             field_name = 'sbull'
+        elif field_name == '50':
+            field_name == 'bull'
             
         # ppi("Type: " + str(type) + " - Field-name: " + str(field_name))
 
-        # TODO non single file
-        if field_number in SUPPORTED_CRICKET_FIELDS and play_sound_effect(field_name) == False:
-            inner_outer = False
-            if type == 'singleouter' or type == 'singleinner':
-                 inner_outer = play_sound_effect(type)
-                 if inner_outer == False:
-                    play_sound_effect('single')
-            else:
-                play_sound_effect(type)
+
+        if field_number not in SUPPORTED_CRICKET_FIELDS:
+            return
+        
+
+        # TODO fields already closed?
+
+        # sounds-effects
+        if CALL_EVERY_DART == 2:
+            if play_sound_effect(field_name, mod = False) == False:
+
+                # single
+                inner_outer = False
+                if type == 'singleouter' or type == 'singleinner':
+                    inner_outer = play_sound_effect(type, mod = False)
+                    if inner_outer == False:
+                        play_sound_effect('single', mod = False)
+
+                # double | triple | outside
+                else:
+                    play_sound_effect(type, mod = False)
+
+        # multiplicated score
+        else:
+            field_multiplier = turns['throws'][throwAmount - 1]['segment']['multiplier']
+            score = field_number * field_multiplier
+            play_sound_effect(str(score))
+
 
     # Check for matchshot
     if m['winner'] != -1 and isGameFinished == False:
@@ -1879,6 +1877,7 @@ def process_match_cricket(m):
     elif turns != None and turns['throws'] != [] and len(turns['throws']) == 3:
         isGameFinished = False
 
+        # TODO fields already closed?
         throwPoints = 0
         lastPoints = ''
         for t in turns['throws']:
@@ -1901,7 +1900,9 @@ def process_match_cricket(m):
         }
         broadcast(dartsThrown)
 
-        play_sound_effect(str(throwPoints))
+        if CALL_EVERY_DART == 0 or CALL_EVERY_DART == 2: 
+            play_sound_effect(str(throwPoints))
+
         if AMBIENT_SOUNDS != 0.0:
             if throwPoints == 0:
                 play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
@@ -2101,7 +2102,8 @@ def process_match_rtw(m):
         }
         # ppi(dartsPulled)
         broadcast(dartsPulled)
-    elif CALL_EVERY_DART == True and turn is not None and turn['throws'] and not isRandomOrder:
+
+    elif CALL_EVERY_DART > 0 and turn is not None and turn['throws'] and not isRandomOrder:
         lastThrow = turn['throws'][-1]
         targetHit = lastThrow['segment']['number']
 
@@ -2109,20 +2111,20 @@ def process_match_rtw(m):
 
         if targetHit == currentTarget:
             if hit == 'Single' or hit == 'SingleInner' or hit == 'SingleOuter':
-                if play_sound_effect('rtw_target_hit_single',True) == False:
-                    if play_sound_effect(hit,True) == False:
-                        play_sound_effect(str(1),True)
+                if play_sound_effect('rtw_target_hit_single', True, mod = False) == False:
+                    if play_sound_effect(hit, wait_for_last = True, mod = False) == False:
+                        play_sound_effect(str(1), wait_for_last = True, mod = True)
             elif hit == 'Double':
-                if play_sound_effect('rtw_target_hit_double',True) == False:
-                    if play_sound_effect(hit,True) == False:
-                        play_sound_effect(str(2),True)
+                if play_sound_effect('rtw_target_hit_double', wait_for_last = True, mod = False) == False:
+                    if play_sound_effect(hit, wait_for_last = True, mod = False) == False:
+                        play_sound_effect(str(2), wait_for_last = True, mod = True)
             elif hit == 'Triple':
-                if play_sound_effect('rtw_target_hit_triple',True) == False:
-                    if play_sound_effect(hit,True) == False:
-                        play_sound_effect(str(3),True)
+                if play_sound_effect('rtw_target_hit_triple', wait_for_last = True, mod = False) == False:
+                    if play_sound_effect(hit, wait_for_last = True, mod = False) == False:
+                        play_sound_effect(str(3), wait_for_last = True, mod = True)
         else:
-            if play_sound_effect('rtw_target_missed',True) == False:
-                play_sound_effect(str(0),True)
+            if play_sound_effect('rtw_target_missed', wait_for_last = True, mod = False) == False:
+                play_sound_effect(str(0), wait_for_last = True, mod = True)
 
     # Check for 3. Dart - points call
     if turn != None and turn['throws'] != [] and len(turn['throws']) == 3:
@@ -2139,7 +2141,7 @@ def process_match_rtw(m):
         }
         broadcast(dartsThrown)
 
-        play_sound_effect(str(points),True)
+        play_sound_effect(str(points), True)
         if AMBIENT_SOUNDS != 0.0:
             if int(points) == 0:
                 play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
@@ -2857,8 +2859,7 @@ if __name__ == "__main__":
     ap.add_argument("-RG", "--random_caller_gender", type=int, choices=range(0, len(CALLER_GENDERS) + 1), default=DEFAULT_RANDOM_CALLER_GENDER, required=False, help="If '0', the application will allow every gender.., else it will limit caller selection by specific gender")
     ap.add_argument("-CCP", "--call_current_player", type=int, choices=range(0, 2), default=DEFAULT_CALL_CURRENT_PLAYER, required=False, help="If '1', the application will call who is the current player to throw")
     ap.add_argument("-CCPA", "--call_current_player_always", type=int, choices=range(0, 2), default=DEFAULT_CALL_CURRENT_PLAYER_ALWAYS, required=False, help="If '1', the application will call every playerchange")
-    ap.add_argument("-E", "--call_every_dart", type=int, choices=range(0, 2), default=DEFAULT_CALL_EVERY_DART, required=False, help="If '1', the application will call every thrown dart")
-    ap.add_argument("-ESF", "--call_every_dart_single_files", type=int, choices=range(0, 2), default=DEFAULT_CALL_EVERY_DART_SINGLE_FILES, required=False, help="If '1', the application will call a every dart by using single, dou.., else it uses two separated sounds: single + x (score)")
+    ap.add_argument("-E", "--call_every_dart", type=int, choices=range(0, 3), default=DEFAULT_CALL_EVERY_DART, required=False, help="If '1', the application will call every thrown dart")
     ap.add_argument("-PCC", "--possible_checkout_call", type=int, default=DEFAULT_POSSIBLE_CHECKOUT_CALL, required=False, help="If '1', the application will call a possible checkout starting at 170")
     ap.add_argument("-PCCSF", "--possible_checkout_call_single_files", type=int, choices=range(0, 2), default=DEFAULT_POSSIBLE_CHECKOUT_CALL_SINGLE_FILES, required=False, help="If '1', the application will call a possible checkout by using yr_2-yr_170, else it uses two separated sounds: you_require + x")
     ap.add_argument("-PCCYO", "--possible_checkout_call_yourself_only", type=int, choices=range(0, 2), default=DEFAULT_POSSIBLE_CHECKOUT_CALL_YOURSELF_ONLY, required=False, help="If '1' the caller will only call if there is a checkout possibility if the current player is you")
@@ -2904,7 +2905,6 @@ if __name__ == "__main__":
     CALL_CURRENT_PLAYER = args['call_current_player']
     CALL_CURRENT_PLAYER_ALWAYS = args['call_current_player_always']
     CALL_EVERY_DART = args['call_every_dart']
-    CALL_EVERY_DART_SINGLE_FILE = args['call_every_dart_single_files']
     POSSIBLE_CHECKOUT_CALL = args['possible_checkout_call']
     if POSSIBLE_CHECKOUT_CALL < 0: POSSIBLE_CHECKOUT_CALL = 0
     POSSIBLE_CHECKOUT_CALL_SINGLE_FILE = args['possible_checkout_call_single_files']

@@ -156,7 +156,10 @@ Disclaimer: For a continuous calling experience make sure your device display st
 - you_require (-PCC = 1 and -PCCSF = 0)
 - yr_2-yr_170 (-PCC = 1 and -PCCSF = 1)
 
-**SINGLE-DARTS (Argument -E = 1):**
+**SINGLE-DARTS-SOUND-EFFECTS (Argument -E = 1 and -ESE = 1):**
+
+
+**SINGLE-DARTS- (Argument -E = 1):**
 
 - single 
 - singleinner [overrides: single]
@@ -299,8 +302,7 @@ Start the script:
 - -RG / --random_caller_gender [Default: 0] [Possible values: 0 (every gender) | 1 (female) | 2 (male) ]
 - -CCP / --call_current_player [Default: 1] [Possible values: 0 | 1]
 - -CCPA / --call_current_player_always [Default: 0] [Possible values: 0 | 1]
-- -E / --call_every_dart [Default: 0] [Possible values: 0 | 1]
-- -ESF / --call_every_dart_single_files [Default: 1] [Possible values: 0 | 1]
+- -E / --call_every_dart [Default: 0] [Possible values: 0 | 1 | 2]
 - -PCC / --possible_checkout_call [Default: 1] [Possible values: 0..Inf]
 - -PCCSF / --possible_checkout_call_single_files [Default: 1] [Possible values: 0 | 1]
 - -PCCYO / --possible_checkout_call_yourself_only [Default: 0] [Possible values: 0 | 1]
@@ -381,11 +383,9 @@ If you set this to '1' the application will call playernames on every playerchan
 *`-E / --call_every_dart`*
 
 If you set this to '1' the application calls every thrown dart. Setup sounds 's1'-'t20', single, double and others. This is pretty handy if you want to play sound-effects. Note: the third dart will only considered if argument '-ESF' is set to '1'. By default this is not activated.
-
-*`-ESF / --call_every_dart_single_files`*
-
 If you set this to '0' the application calls every thrown dart by combining the type of hit (single, double ..) with hit-number (20, 30, ..) so that it reuses
 the sounds of score-values (0-180). If you set this to '1' (default) it will call by using only one file (ie. single, double, t19, ..).
+TODO
 
 *`-PCC / --possible_checkout_call`*
 

@@ -1,3 +1,4 @@
+- remove deleted sounds from web-caller cache
 - rework code
 - add caller fav mechanismn
 - add setshot for main-calling

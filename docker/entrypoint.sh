@@ -44,9 +44,6 @@ fi
 if [ -n "$CALL_EVERY_DART" ]; then
   args="$args -E $CALL_EVERY_DART"
 fi
-if [ -n "$CALL_EVERY_DART_SINGLE_FILES" ]; then
-  args="$args -ESF $CALL_EVERY_DART_SINGLE_FILES"
-fi
 if [ -n "$POSSIBLE_CHECKOUT_CALL" ]; then
   args="$args -PCC $POSSIBLE_CHECKOUT_CALL"
 fi
