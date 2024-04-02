@@ -40,9 +40,6 @@ caller=
 # -R
 random_caller=
 
-# -L
-random_caller_each_leg=
-
 # -RL
 random_caller_language=
 
@@ -51,9 +48,6 @@ random_caller_gender=
 
 # -CCP
 call_current_player=
-
-# -CCPA
-call_current_player_always=
 
 # -E
 call_every_dart=
@@ -149,9 +143,6 @@ fi
 if [ -n "$random_caller" ]; then
   args="$args -R $random_caller"
 fi
-if [ -n "$random_caller_each_leg" ]; then
-  args="$args -L $random_caller_each_leg"
-fi
 if [ -n "$random_caller_language" ]; then
   args="$args -RL $random_caller_language"
 fi
@@ -160,9 +151,6 @@ if [ -n "$random_caller_gender" ]; then
 fi
 if [ -n "$call_current_player" ]; then
   args="$args -CCP $call_current_player"
-fi
-if [ -n "$call_current_player_always" ]; then
-  args="$args -CCP $call_current_player_always"
 fi
 if [ -n "$call_every_dart" ]; then
   args="$args -E $call_every_dart"

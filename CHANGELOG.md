@@ -1,10 +1,7 @@
 ## 2.12.0
 
-- rework README
-- rework CALL_EVERY_DART (-E)
 - add direct voice-pack selection on web-caller
-- add sound-file-key 'ambient_playerchange_{playername}
-- add "magic next button"
+- add "magic next button" on web-caller
 - add voice-pack 'en-GB-Amy-Female'
 - add voice-pack 'en-GB-Arthur-Male'
 - add voice-pack 'TODO'
@@ -14,14 +11,19 @@
 - add voice-pack 'TODO'
 - add voice-pack 'TODO'
 - update all amazon/aws voice-packs
-- support argument "caller" without specific voice-pack version
-- blacklisting without specific voice-pack version
+- remove all google-cloud-tts voice-packs (*-wavenet-*)
 - remove web-scoreboard
-- remove arguments WEB, WEBSB, WEBP, CC
-- remove google-cloud-tts voice-packs (*-wavenet-*)
-- add argument LPB (--local_playback) => playbacks audio locally / default: yes
+- remove arguments -WEB, -WEBSB, -WEBP, -CC
+- rework argument -R (random_caller)
+- rework argument -CCP (call_current_player)
+- rework argument -E (call_every_dart)
+- add argument -LPB (local_playback) => playbacks audio locally / default: yes
+- support argument -C (caller) without specific voice-pack version
+- add sound-file-key 'ambient_playerchange_{playername}
+- blacklisting without specific voice-pack version
 - rework websockets (fix browser incompatibilities and improve ios device support)
 - process token-refresh response correctly
+- rework README
 
 
 ## 2.11.1

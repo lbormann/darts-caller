@@ -297,7 +297,6 @@ Start the script:
 - -V / --caller_volume [Default: 1.0] [Possible values: 0.0 .. 1.0]
 - -C / --caller [Default: None] [Possible values: look at description below]
 - -R / --random_caller [Default: 1] [Possible values: 0 | 1]
-- -L / --random_caller_each_leg [Default: 0] [Possible values: 0 | 1]
 - -RL / --random_caller_language [Default: 1] [Possible values: 0 (every language) | 1 (english) | 2 (french) | 3 (russian) | 4 (german) | 5 (spanish) | 6 (dutch)]
 - -RG / --random_caller_gender [Default: 0] [Possible values: 0 (every gender) | 1 (female) | 2 (male) ]
 - -CCP / --call_current_player [Default: 1] [Possible values: 0 | 1]
@@ -357,12 +356,13 @@ Sets a specific voice-pack as caller. On start the application displays a list o
 
 *`-R / --random_caller`*
 
-The application will randomly choose a voice-pack on every match-start. If you use this functionality, the application considers only most recent version of a voice-pack by finding highest version number (e.g: a-caller-v3).
-By default this is activated.
+The application will randomly choose a voice-pack. If you use this functionality, the application considers only most recent version of a voice-pack by finding highest version number (e.g: a-caller-v3).
 
-*`-L / --random_caller_each_leg`*
+- '0' = random caller deactivated (use -C to set your favorite caller)
+- '1' = random caller for every match-start
+- '2' = random caller for every leg
 
-If you set this to '1' the application will randomly choose a voice-pack each time a new leg starts. By default this is not activated.
+By default this is '1'.
 
 *`-RL / --random_caller_language`*
 
@@ -374,18 +374,19 @@ Filters randomly chosen voice-pack by its gender. '0' means no filtering. By def
 
 *`-CCP / --call_current_player`*
 
-If you set this to '1' the application will call playernames for certain events like "you require", "leg/set start", "leg/set end". By default this is activated.
+The application will call playernames for certain events like "you require", "leg/set start", "leg/set end". By default this is activated.
 
-*`-CCPA / --call_current_player_always`*
-
-If you set this to '1' the application will call playernames on every playerchange (-CCP needs to be activated). By default this is not activated. 
+- '0' = call current playername deactivated
+- '1' = call current playername activated
+- '2' = call current playername also on every playerchange
 
 *`-E / --call_every_dart`*
 
-If you set this to '1' the application calls every thrown dart. Setup sounds 's1'-'t20', single, double and others. This is pretty handy if you want to play sound-effects. Note: the third dart will only considered if argument '-ESF' is set to '1'. By default this is not activated.
-If you set this to '0' the application calls every thrown dart by combining the type of hit (single, double ..) with hit-number (20, 30, ..) so that it reuses
-the sounds of score-values (0-180). If you set this to '1' (default) it will call by using only one file (ie. single, double, t19, ..).
-TODO
+The application will call every thrown dart. By default this is not activated.
+
+- '0' = call every dart deactivated
+- '1' = call every dart by calculating the multiplication of field value and multiplier (for example: you hit a triple 20, resulting in calling 60). If activated the endscore (of 3 darts won't be called)
+- '2' = call every dart by calling sound-effects you setup. s1, d1, t1 to s20, d20, t30, outside, sbull, bull. If particular sound-file-key can't be found, it will fallback to common field-name: singleinner, singleouter, single, double, triple.
 
 *`-PCC / --possible_checkout_call`*
 

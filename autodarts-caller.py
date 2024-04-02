@@ -63,11 +63,9 @@ DEFAULT_EMPTY_PATH = ''
 DEFAULT_CALLER_VOLUME = 1.0
 DEFAULT_CALLER = None
 DEFAULT_RANDOM_CALLER = 1
-DEFAULT_RANDOM_CALLER_EACH_LEG = 0
 DEFAULT_RANDOM_CALLER_LANGUAGE = 0
 DEFAULT_RANDOM_CALLER_GENDER = 0
 DEFAULT_CALL_CURRENT_PLAYER = 1
-DEFAULT_CALL_CURRENT_PLAYER_ALWAYS = 0
 DEFAULT_CALL_EVERY_DART = 0
 DEFAULT_POSSIBLE_CHECKOUT_CALL = 1
 DEFAULT_POSSIBLE_CHECKOUT_CALL_SINGLE_FILES = 0
@@ -707,7 +705,7 @@ def setup_caller():
             caller_name = grab_caller_name(c)
             ppi(caller_name, None, '')
 
-        if RANDOM_CALLER == False:
+        if RANDOM_CALLER > 0:
             caller = callers_filtered[0]
         else:
             if len(callers_filtered) > 0:
@@ -1103,7 +1101,7 @@ def listen_to_match(m, ws):
 
             if mode != 'Bull-off':
                 callPlayerNameState = False
-                if CALL_CURRENT_PLAYER and currentPlayerName != None:
+                if CALL_CURRENT_PLAYER >= 1 and currentPlayerName != None:
                     callPlayerNameState = play_sound_effect(currentPlayerName)
 
                 if play_sound_effect('matchon', callPlayerNameState) == False:
@@ -1276,7 +1274,7 @@ def process_match_x01(m):
                 else:
                     remaining = str(remainingPlayerScore)
                     if remainingPlayerScore not in BOGEY_NUMBERS:
-                        if CALL_CURRENT_PLAYER:
+                        if CALL_CURRENT_PLAYER >= 1:
                             play_sound_effect(currentPlayerName)
 
                         if POSSIBLE_CHECKOUT_CALL_SINGLE_FILE:
@@ -1292,7 +1290,7 @@ def process_match_x01(m):
                             play_sound_effect('ambient_bogey_number', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
                         ppi('bogey-number: ' + remaining)
 
-            if pcc_success == False and CALL_CURRENT_PLAYER and CALL_CURRENT_PLAYER_ALWAYS and numberOfPlayers > 1:
+            if pcc_success == False and CALL_CURRENT_PLAYER == 2 and numberOfPlayers > 1:
                 play_sound_effect(currentPlayerName)
 
             # Player-change
@@ -1359,7 +1357,7 @@ def process_match_x01(m):
         if play_sound_effect('matchshot') == False:
             play_sound_effect('gameshot')
 
-        if CALL_CURRENT_PLAYER:
+        if CALL_CURRENT_PLAYER >= 1:
             play_sound_effect(currentPlayerName, True)
 
         if AMBIENT_SOUNDS != 0.0:
@@ -1373,7 +1371,7 @@ def process_match_x01(m):
                 play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
             
 
-        if RANDOM_CALLER_EACH_LEG:
+        if RANDOM_CALLER == 2:
             setup_caller()
         ppi('Gameshot and match')
 
@@ -1413,7 +1411,7 @@ def process_match_x01(m):
             else:
                 play_sound_effect('leg_' + str(currentLeg), gameshotState)    
 
-        if CALL_CURRENT_PLAYER:
+        if CALL_CURRENT_PLAYER >= 1:
             play_sound_effect(currentPlayerName, True)
 
         if AMBIENT_SOUNDS != 0.0:
@@ -1433,7 +1431,7 @@ def process_match_x01(m):
                 else:
                     play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
 
-        if RANDOM_CALLER_EACH_LEG:
+        if RANDOM_CALLER == 2:
             setup_caller()
         ppi('Gameshot')
 
@@ -1471,7 +1469,7 @@ def process_match_x01(m):
         broadcast(matchStarted)
 
         callPlayerNameState = False
-        if CALL_CURRENT_PLAYER:
+        if CALL_CURRENT_PLAYER >= 1:
             callPlayerNameState = play_sound_effect(currentPlayerName)
 
         if play_sound_effect('matchon', callPlayerNameState, mod = False) == False:
@@ -1505,7 +1503,7 @@ def process_match_x01(m):
         broadcast(gameStarted)
 
         callPlayerNameState = False
-        if CALL_CURRENT_PLAYER:
+        if CALL_CURRENT_PLAYER >= 1:
             callPlayerNameState = play_sound_effect(currentPlayerName)
 
         play_sound_effect('gameon', callPlayerNameState, mod = False)
@@ -1785,7 +1783,7 @@ def process_match_cricket(m):
             else:
                 play_sound_effect('ambient_gameshot', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
         
-        if RANDOM_CALLER_EACH_LEG:
+        if RANDOM_CALLER == 2:
             setup_caller()
         ppi('Gameshot')
     
@@ -1942,7 +1940,7 @@ def process_match_cricket(m):
         }
         broadcast(dartsPulled)
 
-        if CALL_CURRENT_PLAYER and CALL_CURRENT_PLAYER_ALWAYS:
+        if CALL_CURRENT_PLAYER == 2:
             play_sound_effect(currentPlayerName)
 
         if AMBIENT_SOUNDS != 0.0:
@@ -2019,7 +2017,7 @@ def process_match_atc(m):
         if play_sound_effect('matchshot') == False:
             play_sound_effect('gameshot')
 
-        if CALL_CURRENT_PLAYER:
+        if CALL_CURRENT_PLAYER >= 1:
             play_sound_effect(currentPlayerName, True)
 
         if AMBIENT_SOUNDS != 0.0:
@@ -2046,7 +2044,7 @@ def process_match_atc(m):
             if play_sound_effect('ambient_playerchange_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False) == False:
                 play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
 
-        if CALL_CURRENT_PLAYER and CALL_CURRENT_PLAYER_ALWAYS and numberOfPlayers > 1:
+        if CALL_CURRENT_PLAYER == 2 and numberOfPlayers > 1:
             play_sound_effect(currentPlayerName, True)
     
     mirror_sounds()
@@ -2173,7 +2171,7 @@ def process_match_rtw(m):
         if play_sound_effect('matchshot') == False:
             play_sound_effect('gameshot')
 
-        if CALL_CURRENT_PLAYER:
+        if CALL_CURRENT_PLAYER >= 1:
             play_sound_effect(winningPlayerName, True)
 
         if AMBIENT_SOUNDS != 0.0:
@@ -2221,7 +2219,7 @@ def process_match_rtw(m):
             if play_sound_effect('ambient_playerchange_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False) == False:
                 play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
 
-        if CALL_CURRENT_PLAYER and CALL_CURRENT_PLAYER_ALWAYS and numberOfPlayers > 1:
+        if CALL_CURRENT_PLAYER == 2 and numberOfPlayers > 1:
             play_sound_effect(currentPlayerName, True)
     
     mirror_sounds()
@@ -2854,11 +2852,9 @@ if __name__ == "__main__":
     ap.add_argument("-V", "--caller_volume", type=float, default=DEFAULT_CALLER_VOLUME, required=False, help="Sets calling-volume between 0.0 (silent) and 1.0 (max)")
     ap.add_argument("-C", "--caller", default=DEFAULT_CALLER, required=False, help="Sets a specific caller (voice-pack) for calling")
     ap.add_argument("-R", "--random_caller", type=int, choices=range(0, 2), default=DEFAULT_RANDOM_CALLER, required=False, help="If '1', the application will randomly choose a caller each game. It only works when your base-media-folder has subfolders with its files")
-    ap.add_argument("-L", "--random_caller_each_leg", type=int, choices=range(0, 2), default=DEFAULT_RANDOM_CALLER_EACH_LEG, required=False, help="If '1', the application will randomly choose a caller each leg instead of each game. It only works when 'random_caller=1'")
     ap.add_argument("-RL", "--random_caller_language", type=int, choices=range(0, len(CALLER_LANGUAGES) + 1), default=DEFAULT_RANDOM_CALLER_LANGUAGE, required=False, help="If '0', the application will allow every language.., else it will limit caller selection by specific language")
     ap.add_argument("-RG", "--random_caller_gender", type=int, choices=range(0, len(CALLER_GENDERS) + 1), default=DEFAULT_RANDOM_CALLER_GENDER, required=False, help="If '0', the application will allow every gender.., else it will limit caller selection by specific gender")
     ap.add_argument("-CCP", "--call_current_player", type=int, choices=range(0, 2), default=DEFAULT_CALL_CURRENT_PLAYER, required=False, help="If '1', the application will call who is the current player to throw")
-    ap.add_argument("-CCPA", "--call_current_player_always", type=int, choices=range(0, 2), default=DEFAULT_CALL_CURRENT_PLAYER_ALWAYS, required=False, help="If '1', the application will call every playerchange")
     ap.add_argument("-E", "--call_every_dart", type=int, choices=range(0, 3), default=DEFAULT_CALL_EVERY_DART, required=False, help="If '1', the application will call every thrown dart")
     ap.add_argument("-PCC", "--possible_checkout_call", type=int, default=DEFAULT_POSSIBLE_CHECKOUT_CALL, required=False, help="If '1', the application will call a possible checkout starting at 170")
     ap.add_argument("-PCCSF", "--possible_checkout_call_single_files", type=int, choices=range(0, 2), default=DEFAULT_POSSIBLE_CHECKOUT_CALL_SINGLE_FILES, required=False, help="If '1', the application will call a possible checkout by using yr_2-yr_170, else it uses two separated sounds: you_require + x")
@@ -2896,14 +2892,12 @@ if __name__ == "__main__":
         AUDIO_MEDIA_PATH_SHARED = DEFAULT_EMPTY_PATH
     AUDIO_CALLER_VOLUME = args['caller_volume']
     CALLER = args['caller']
-    RANDOM_CALLER = args['random_caller']   
-    RANDOM_CALLER_EACH_LEG = args['random_caller_each_leg']   
+    RANDOM_CALLER = args['random_caller']    
     RANDOM_CALLER_LANGUAGE = args['random_caller_language'] 
     if RANDOM_CALLER_LANGUAGE < 0: RANDOM_CALLER_LANGUAGE = DEFAULT_RANDOM_CALLER_LANGUAGE
     RANDOM_CALLER_GENDER = args['random_caller_gender'] 
     if RANDOM_CALLER_GENDER < 0: RANDOM_CALLER_GENDER = DEFAULT_RANDOM_CALLER_GENDER
     CALL_CURRENT_PLAYER = args['call_current_player']
-    CALL_CURRENT_PLAYER_ALWAYS = args['call_current_player_always']
     CALL_EVERY_DART = args['call_every_dart']
     POSSIBLE_CHECKOUT_CALL = args['possible_checkout_call']
     if POSSIBLE_CHECKOUT_CALL < 0: POSSIBLE_CHECKOUT_CALL = 0

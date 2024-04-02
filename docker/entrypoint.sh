@@ -26,9 +26,6 @@ fi
 if [ -n "$RANDOM_CALLER" ]; then
   args="$args -R $RANDOM_CALLER"
 fi
-if [ -n "$RANDOM_CALLER_EACH_LEG" ]; then
-  args="$args -L $RANDOM_CALLER_EACH_LEG"
-fi
 if [ -n "$RANDOM_CALLER_LANGUAGE" ]; then
   args="$args -RL $RANDOM_CALLER_LANGUAGE"
 fi
@@ -37,9 +34,6 @@ if [ -n "$RANDOM_CALLER_GENDER" ]; then
 fi
 if [ -n "$CALL_CURRENT_PLAYER" ]; then
   args="$args -CCP $CALL_CURRENT_PLAYER"
-fi
-if [ -n "$CALL_CURRENT_PLAYER_ALWAYS" ]; then
-  args="$args -CCP $CALL_CURRENT_PLAYER_ALWAYS"
 fi
 if [ -n "$CALL_EVERY_DART" ]; then
   args="$args -E $CALL_EVERY_DART"
