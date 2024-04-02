@@ -76,7 +76,7 @@ Die zum Download, zur Verfügung gestellten voice-packs, werden in unregelmäßi
 Every voice-pack contain all sound-files of category [MAIN-CALLING](#Sound-file-keys). If you would like to extend a voice-pack, e.g. to add other sound-files-keys like "ambient_gameshot" or "ambient_playerchange", copy them into specific voice-pack directory to use them only for specific voice-pack or copy them into --media_path_shared (-MS) to use them for every voice-pack. You can find a specific voice-pack in --media_path (-M).
 
 Copy your sound-files to --media_path (-M). Make sure your sound-files are named according to the rules: [supported sound-file-keys](#Sound-file-keys). You don't need to have all listed sound-file-keys - just add the ones you want to use.
-You can find sounds at https://freesound.org, https://www.zapsplat.com, https://mixkit.co/free-sound-effects/hit/. 
+You can find sounds at . 
 
 ______
 
@@ -105,11 +105,11 @@ Die Webseite ist in folgende Bereiche, bzw. Funktionalitäten aufgeteilt:
 * Schnellspeicher-Funktion für Nachrichten (z.B. um Emotjis direkt via dediziertem Knopf zu senden).
 * Sprach-und-Video-Anrufe (Voraussetzung ist aktives https).
 
-Disclaimer: Damit das Chatfenster angezeigt wird, muss dein Gegner den Web-Caller geöffnet haben. Darüberhinaus ist ein Chat mit mehreren Spielern aktuell nicht möglich (ausschließlich im 1v1, Spielvariante: X01)
+Disclaimer: Damit das Chatfenster angezeigt wird, muss dein Gegner den Web-Caller geöffnet haben. Darüberhinaus ist ein Chat mit mehreren Spielern aktuell (noch) nicht möglich (ausschließlich im 1v1, Spielvariante: X01)
 
 #### Calling
 
-* Audio-Wiedergabe direkt über einen Browser deiner Wahl (das aktuelle voice-pack wird einmalig heruntergeladen und dann gecached).
+* Audio-Wiedergabe direkt über einen Browser deiner Wahl (das aktuelle voice-pack wird einmalig heruntergeladen bzw. aktualisiert und dann, um eine unverzögerte Wiedergabe zu ermöglichen, im cache abgespeichert).
 * Anzeige des aktuellen Sprechers (voice-pack).
 * Auswahlmenü zum Wechseln auf einen bestimmmten Sprecher.
 * Knopf zum Wechseln auf einen anderen zufälligen Sprecher.
@@ -117,7 +117,7 @@ Disclaimer: Damit das Chatfenster angezeigt wird, muss dein Gegner den Web-Calle
 * Knopf zum Bannen des aktuellen Sprechers.
 * Mod-Bereich für zufallsbasierte Stimmen-Anpassung.
 
-Disclaimer: For a continuous calling experience make sure your device display stays on while you are playing.
+Disclaimer: For a continuous calling experience on mobile devices, make sure your device display stays on while you are playing.
 
 #### Board
 
@@ -152,26 +152,23 @@ Disclaimer: For a continuous calling experience make sure your device display st
 - set_{x}
 - busted
 - 0-180
-- {playername} (-CCP = 1)
+- {playername} (-CCP > 0)
 - you_require (-PCC = 1 and -PCCSF = 0)
 - yr_2-yr_170 (-PCC = 1 and -PCCSF = 1)
 
-**SINGLE-DARTS-SOUND-EFFECTS (Argument -E = 1 and -ESE = 1):**
-
-
-**SINGLE-DARTS- (Argument -E = 1):**
+**SINGLE-DART-SOUND-EFFECTS (Argument -E = 2):**
 
 - single 
 - singleinner [overrides: single]
 - singleouter [overrides: single]
 - double
 - triple
-- outside
 - s1-s20 [overrides: single, singleinner, singleouter]
 - d1-d20 [overrides: double]
 - t1-t20 [overrides: triple]
 - sbull [overrides: single]
 - bull [overrides: double]
+- outside
 
 **AMBIENT (Argument -A > 0.0):**
 
@@ -202,11 +199,11 @@ Disclaimer: For a continuous calling experience make sure your device display st
 - ambient_group_good
 - ambient_group_normal
 - ambient_checkout_call_limit
+- lobby_ambient_in
+- lobby_ambient_out
 
 **LOBBY**
 
-- lobby_ambient_in
-- lobby_ambient_out
 - {playername}
 - average
 - 0-180
@@ -297,10 +294,9 @@ Start the script:
 - -V / --caller_volume [Default: 1.0] [Possible values: 0.0 .. 1.0]
 - -C / --caller [Default: None] [Possible values: look at description below]
 - -R / --random_caller [Default: 1] [Possible values: 0 | 1]
-- -RL / --random_caller_language [Default: 1] [Possible values: 0 (every language) | 1 (english) | 2 (french) | 3 (russian) | 4 (german) | 5 (spanish) | 6 (dutch)]
-- -RG / --random_caller_gender [Default: 0] [Possible values: 0 (every gender) | 1 (female) | 2 (male) ]
+- -RL / --random_caller_language [Default: 1] [Possible values: look at description below]
+- -RG / --random_caller_gender [Default: 0] [Possible values: look at description below]
 - -CCP / --call_current_player [Default: 1] [Possible values: 0 | 1]
-- -CCPA / --call_current_player_always [Default: 0] [Possible values: 0 | 1]
 - -E / --call_every_dart [Default: 0] [Possible values: 0 | 1 | 2]
 - -PCC / --possible_checkout_call [Default: 1] [Possible values: 0..Inf]
 - -PCCSF / --possible_checkout_call_single_files [Default: 1] [Possible values: 0 | 1]
@@ -309,7 +305,7 @@ Start the script:
 - -AAC / --ambient_sounds_after_calls [Default: 0] [Possible values: 0 | 1]
 - -DL / --downloads [Default: 1] [Possible values: 0 | 1]
 - -DLL / --downloads_limit [Default: 3]
-- -DLLA / --downloads_language [Default: 1] [Possible values: 0 (every language) | 1 (english) | 2 (french) | 3 (russian) | 4 (german) | 5 (spanish) | 6 (dutch)]
+- -DLLA / --downloads_language [Default: 1] [Possible values: look at description below]
 - -DLN / --downloads_name [Default: '']
 - -BLP / --blacklist_path [Default: '']
 - -BAV / --background_audio_volume [Default: 0.0] [Possible values: 0.0 .. 1.0]
@@ -352,25 +348,35 @@ You can lower the call-volume in relation to current system-volume. '1.0' is sys
 
 *`-C / --caller`*
 
-Sets a specific voice-pack as caller. On start the application displays a list of installed voice-packs; copy the name of chosen one and paste it here. By default this is 'None' meaning the application uses sound-files of argument '-M' or a random voice-pack if this is configurated (see next). Note: if you set this to a value unequal to 'None' the arguments '-R' and '-L' are no more relevant.
+Sets a specific voice-pack as caller. On start the application displays a list of installed voice-packs; copy the name of chosen one and paste it here. By default this is 'None' meaning the application chooses a random caller (voice-pack).
 
 *`-R / --random_caller`*
 
-The application will randomly choose a voice-pack. If you use this functionality, the application considers only most recent version of a voice-pack by finding highest version number (e.g: a-caller-v3).
+The application will randomly choose a voice-pack. If you use this functionality, the application only considers most recent version of a voice-pack by finding its highest version number by name. Example: 'en-US-Joey-Male-v3'. Because there is no voice-pack with name 'en-US-Joey-Male-v4', version is 'v3' (en-US-Joey-Male-v3). By default this is '1'.
 
-- '0' = random caller deactivated (use -C to set your favorite caller)
+- '0' = random caller deactivated (instead use -C to set your favorite caller)
 - '1' = random caller for every match-start
 - '2' = random caller for every leg
 
-By default this is '1'.
-
 *`-RL / --random_caller_language`*
 
-Filters randomly chosen voice-pack by its language. '0' means no filtering. By default this is '1' (english).
+Filters randomly chosen voice-pack by its language. '0' means no filtering (every language). By default this is '1' (english).
+
+- '0' = every language
+- '1' = english
+- '2' = french
+- '3' = russian
+- '4' = german
+- '5' = spanish
+- '6' = dutch
 
 *`-RG / --random_caller_gender`*
 
-Filters randomly chosen voice-pack by its gender. '0' means no filtering. By default this is '0'.
+Filters randomly chosen voice-pack by its gender. '0' means no filtering (every gender). By default this is '0'.
+
+- '0' = every gender
+- '1' = female
+- '2' = male
 
 *`-CCP / --call_current_player`*
 
@@ -416,7 +422,6 @@ If you set this to '1' ambient_*-sounds will wait until main-calls are finished.
 *`-DL / --downloads`*
 
 If you set this to '1' the application will download available voice-packs that are not already installed. Installation path is the value of -M. 
-On first application-start, it downloads and extracts multiple voice-packs: it will take several minutes; be patient - take a coffee. 
 By default this is activated.
 
 *`-DLL / --downloads_limit`*
@@ -425,19 +430,28 @@ If you want to limit download-count, you can set it to x most recent. By default
 
 *`-DLLA / --downloads_language`*
 
-If you want to filter downloads for a specific language. '0' means no language-filtering. By default this is '1' (english).
+If you want to filter downloads for a specific language. '0' means no language-filtering (every language). By default this is '1' (english).
+
+- '0' = every language
+- '1' = english
+- '2' = french
+- '3' = russian
+- '4' = german
+- '5' = spanish
+- '6' = dutch
 
 *`-DLN / --downloads_name`*
 
 If you want to filter downloads to a specific voice-pack-name. '' means no name-filtering. By default this is ''.
+For example you could set a value 'en-US-Joey-Male'.
 
 *`-BLP / --blacklist_path`*
 
-The blacklist-file stores voice-pack-names that are undesired for downloads or calls. In other words: those ones are just ignored by the application. To use blacklist define an absolute path where the blacklist-file should be located (it will be generated automatically on application start). Now you can simply add an undesired voice-pack-name (have a look at available ones on application start). 
+The blacklist-file stores voice-pack-names that are undesired for downloads or calls. In other words: those ones are just ignored by the application. To use blacklist define an absolute path where the blacklist-file should be located (it will be generated automatically on application start). You can simply add an undesired voice-pack-name (have a look at available ones on application start) to the file or use the web-caller (press 'Ban Caller'). 
 
 *`-BAV / --background_audio_volume`*
 
-You can not hear any calls as your music is way too loud? Try to set this to '0.03' and let the calls begin :) Default is '0.0' (no background-audio-muting). Note: Only availble on windows-os and local playback (no web-caller).
+You can not hear any calls as your music is way too loud? Try to set this to '0.03' and let the calls begin :) Default is '0.0' (no background-audio-muting). Note: Only availble for windows-os and local playback (LPB = 1).
 
 *`LPB / --local_playback`*
 
@@ -446,9 +460,9 @@ By default this is activated.
 
 *`-WEBDH / --web_caller_disable_https`*
 
-If you set this to '1' the application will run all services with insecure http/ws. It's NOT recommended! 
-Also you won't be able to use video-/voice-calls.
-By default this is NOT activated.
+If you set this to '1' the application will run all connection services with insecure http/ws protocol. It's NOT recommended! 
+Also you won't be able to use video-/voice-calls on web-caller.
+By default this is not activated.
 
 *`-HP / --host_port`*
 
@@ -591,32 +605,37 @@ AUTODARTS_BOARD_ID=123-456-789
 ### failed keycloakauthentication Error (401 invalid_grant)
 
 - Disable Two-Factor-Auth (2FA).
-- Make sure you use your email-addres - NOT your username.
+- Make sure you use your email-addres.
 - Check your password.
+- Else try to change your password.
 
 ### Can not play sound for sound-file-key 'X' -> Ignore this or check existance; otherwise convert your file appropriate
 
-Make sure the displayed exists! If you rename any of your sound-files you NEED to restart the application as it internally creates a list of available sound-files ONLY on application-start AND on a caller-switch (random_caller-functionality)!
+This is NOT automatically an error. It just informs you about a missing sound-file-key.
+If you wish to hear that missing sound-file-key, make sure the audio file exists.
+If you rename any of your sound-files while the application is running you need to restart the application, change the current caller with web-caller or wait until a new match starts (assumed random-caller-functionality (-R) is activated.)
 
 ### Sound is not playing?!
 
 - Check if the filename exists on your drive
 - Check that the filename is a supported [Sound-file-key](#Sound-file-keys)
-- Sometimes there are sounds that are not readable. In this case you can convert sound-file(s) with an additional program (https://www.heise.de/download/product/mp3-quality-modifier-66202) Make sure you configurate 44100HZ, Stereo.
+- Sometimes there are sounds that are not playable. In this case you can convert that sound-file with the help of an additional program like (https://www.heise.de/download/product/mp3-quality-modifier-66202) Make sure you configurate 44100HZ, Stereo.
 - Check the console output: in case you do not receive any messages (only 'Receiving live information from ..') -> you should check the given Board-ID (-B) for correctness.
 
 ### I don't like sound X of voice-pack Y
 
-EVERY sound is optional! If you don't like a specific sound just delete it! The application can even function with no files at all.
+EVERY sound-file is optional! If you don't like a specific sound just delete it! The application can even function with no files at all.
 
 ### I don't like voice-pack X
 
-There are four ways to ban an undesired voice-pack.
-Option 1) Visist web-caller and press "Ban Caller!"
-Option 2) Delete ALL files of voice-pack-folder.
-Option 3) use [autodarts-voice](https://github.com/lbormann/autodarts-voice).
-Option 4) put the name of the current caller (voice-pack) in autodarts-caller-banned.txt manually.
-All options forcing the application to either download files again nor using a voice-pack anymore, except you define it in -C or -DLN
+There are multiple ways to ban an undesired voice-pack:
+
+- Option 1) Visist web-caller and press "Ban Caller!"
+- Option 2) Delete ALL audio-files of voice-pack-folder.
+- Option 3) use [autodarts-voice](https://github.com/lbormann/autodarts-voice).
+- Option 4) put the name of the current caller (voice-pack) in autodarts-caller-banned.txt manually.
+
+All options forcing the application to either download files again nor using a voice-pack for calling.
 If you wish to revoke a ban, open 'autodarts-caller-banned.txt' and remove the line from the list.
 
 ### App starts and stops immediately?!
@@ -625,6 +644,13 @@ Start application out of terminal to check whats going on.
 
 ### Sound does not match up calls?!
 Try https://www.audacity.de/ to modify your sound-files.
+
+## Where can I find additional sounds for ambient or every-dart-sound-effects?
+
+- https://www.101soundboards.com/
+- https://freesound.org
+- https://www.zapsplat.com
+- https://mixkit.co/free-sound-effects/hit/
 
 
 
