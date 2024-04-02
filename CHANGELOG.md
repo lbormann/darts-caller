@@ -10,7 +10,7 @@
 - add voice-pack 'TODO'
 - add voice-pack 'TODO'
 - add voice-pack 'TODO'
-- update all amazon/aws voice-packs
+- update all existing amazon/aws voice-packs
 - remove all google-cloud-tts voice-packs (*-wavenet-*)
 - remove web-scoreboard
 - remove arguments -WEB, -WEBSB, -WEBP, -CC
@@ -18,9 +18,9 @@
 - rework argument -CCP (call_current_player)
 - rework argument -E (call_every_dart)
 - add argument -LPB (local_playback) => playbacks audio locally / default: yes
-- support argument -C (caller) without specific voice-pack version
+- support argument -C (caller) without specification of voice-pack-version
 - add sound-file-key 'ambient_playerchange_{playername}
-- blacklisting without specific voice-pack version
+- support blacklisting without specific voice-pack-version
 - rework websockets (fix browser incompatibilities and improve ios device support)
 - process token-refresh response correctly
 - rework README
