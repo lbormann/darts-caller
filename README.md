@@ -2,7 +2,8 @@
 [![Downloads](https://img.shields.io/github/downloads/lbormann/autodarts-caller/total.svg)](https://github.com/lbormann/autodarts-caller/releases/latest)
 
 Autodarts-caller plays back sound-files accordingly to the state of a https://autodarts.io game. Furthermore it acts as a central hub by forwarding game-events to connected clients like https://github.com/lbormann/autodarts-extern that process incoming data to automate other dart-web-platforms like https://lidarts.org
-Learn more about the [Features!](#WORKFLOW & FUNCTIONALITY)
+Learn more about the [Features!](#workflow--functionality)
+
 
 ## COMPATIBILITY
 
@@ -62,7 +63,8 @@ Optional for Linux: If you encounter problems with playing sound:
 
 ## WORKFLOW & FUNCTIONALITY
 
-Der folgende Abschnitt erklärt den Ablauf und die einzelnen Komponenten der Anwendung mit dem Ziel, dass Du nach dem Lesen ein besseres Verständnis erlangst.
+The following section elucidates the procedure and individual components of the application with the aim that you gain a better understanding upon reading.
+
 
 ### Downloads & Voice-packs
 
@@ -77,7 +79,6 @@ The available voice-packs for download are periodically expanded, such as with t
 Every voice-pack contain all sound-files of category 'MAIN' and 'LOBBY'. So you're good to go by default without changing anything.
 If you would like to extend a voice-pack, for example to add sound-files-keys of category 'AMBIENT' like "ambient_gameshot" or "ambient_playerchange", copy them into --media_path_shared (-MS) to make them usable for every voice-pack.
 In addition it is also possible to have multiple sounds for a sound-file-key. Therefor you have to add a "+" to the filename. After the "+" you can add whatever text you prefer; as an example: let`s say we want multiple sounds for the 'ambient_gameshot' sound-file-key. Our default file is 'ambient_gameshot.mp3'. Now we add some more: 'ambient_gameshot+1.mp3', 'ambient_gameshot+2.mp3', 'ambient_gameshot+BEST.mp3'. Of course you are not limited to the "ambient_gameshot" sound-file-key - this rule applies to every sound-file-key.
-
 
 
 ### Web-Caller
@@ -117,7 +118,7 @@ Disclaimer: For uninterrupted calling experience on mobile devices, ensure that 
 
 #### Game
 
-- "Magic button" for automatic transitioning between lobby, recording, and gameplay, depending on the current status of the match.
+- "Magic button" for automatic transitioning between lobby, turns, and games, depending on the current status of the match.
 
 
 
