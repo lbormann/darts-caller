@@ -66,68 +66,58 @@ Der folgende Abschnitt erklärt den Ablauf und die einzelnen Komponenten der Anw
 
 ### Downloads & Voice-packs
 
-Nach dem Start der Anwendung, werden automatisch sogenannte "voice-packs" heruntergeladen. Ein voice-pack stellt einen bestimmten Sprecher dar, der aus einer Sammlung von Audio-Dateien besteht. Diese Audio-Dateien können von der Anwendung gelesen werden, um deine geworfenen Punkte ausrufen zu können. Die Anwendung kennt eine große Anzahl, verschiedener voice-packs, bestehend aus unterschiedlichen Sprachen und Geschlechtern. Da das Herunterladen und die Extraction sämtlicher voice-packs sehr lange dauern kann, ist die Anzahl der Downloads standartmäßig auf eine kleine Anzahl englisch-sprachiger Sprecher begrenzt. Diese Begrenzung kannst Du natürlich aufheben (später mehr dazu). Zurück zu der Definition eines "voice-pack": Ein voice-pack enthält alle Audio-Dateien, um ein vollständiges "Call-Erlebnis" zu garantieren. Jede enthaltene Audio-Datei ist nach einem bestimmten Schema benannt, sodass die Anwendung über den Namen einer Datei erkennen kann, welcher Ton-Inhalt vorliegt (vorliegen soll). Ein Beispiel dazu: Datei "gameon.mp3" enthält eine Audiospur, in der der Sprecher zum Spielstart ausruft. Nehmen wir an, diese Datei würde nun nicht mehr "gameon.mp3" heißen, sondern "game.mp3". Dies würde zur Folge haben, dass die Anwendung mit dieser Datei nichts anfangen kann, da eine inhaltliche Zuordnung nicht möglich ist. "gameon" ist ein sogenannter "sound-file-key". "game" ist kein gültiger sound-file-key. Die Anwendung kennt ein großes Repertoire von gültigen [sound-file-keys](#Sound-file-keys). 
-Die zum Download, zur Verfügung gestellten voice-packs, werden in unregelmäßigen Abständen erweitert; beispielsweise werden neue Audio-Dateien für Spielernamen (die in einem separaten Prozess auf autodarts.io gesammelt werden) hinzugefügt. Falls Du wissen möchtest, was Du machen musst, damit dein Spielername in zukünftigen voice-packs enthalten ist, ließ Dir bitte folgendes Regelwerk auf Discord durch und passe ggf. deinen Namen an: TODODISCORDLINK
+After launching the application, "voice-packs" are automatically downloaded. A voice-pack represents a specific speaker, comprised of a collection of audio files. These audio files can be accessed by the application to announce your scored points. The application features a wide variety of voice-packs, encompassing different languages and genders. 
+Due to the potentially lengthy process of downloading and extracting all voice-packs, the number of downloads is initially limited to a small selection of English-speaking speakers. However, you can lift this restriction. Returning to the definition of a "voice-pack": it contains all the audio files necessary to ensure a complete "calling experience." Each audio file within it is named according to a specific schema, enabling the application to recognize the content (or intended content) based on the file name. For instance, the file "gameon.mp3" contains an audio track where the speaker announces the start of the game. If, hypothetically, this file were renamed "game.mp3," the application would fail to interpret it since the content association would be lost. "gameon" serves as a valid "sound-file-key," whereas "game" does not. The application is equipped with an extensive repertoire of valid [sound-file-keys](#Sound-file-keys). 
+The available voice-packs for download are periodically expanded, such as with the addition of new audio files for player names (gathered separately through a process on autodarts.io). If you're interested in knowing how to ensure your player name is included in future voice-packs, please read the following rules on Discord and adjust your name accordingly: [TODO DISCORD LINK].
 
 
 
-### How can I use my own Sounds?
+### How can I add my own Sounds?
 
-Every voice-pack contain all sound-files of category [MAIN-CALLING](#Sound-file-keys). If you would like to extend a voice-pack, e.g. to add other sound-files-keys like "ambient_gameshot" or "ambient_playerchange", copy them into specific voice-pack directory to use them only for specific voice-pack or copy them into --media_path_shared (-MS) to use them for every voice-pack. You can find a specific voice-pack in --media_path (-M).
-
-Copy your sound-files to --media_path (-M). Make sure your sound-files are named according to the rules: [supported sound-file-keys](#Sound-file-keys). You don't need to have all listed sound-file-keys - just add the ones you want to use.
-You can find sounds at . 
-
-______
-
-Since Version 1.6.0 you can deposit multiple sounds for every ([sound-file-key](#Sound-file-keys)). Therefor you have to add a "+" to the filename. After the "+" you can add whatever text you prefer; as an example: let`s say we want multiple sounds for the 'gameon'-event. Our default file is 'gameon.mp3'. Now we add some more: 'gameon+1.mp3', 'gameon+2.mp3', 'gameon+BEST.mp3'. You are not limited to the gameon-event, even score-sounds can have multiple soundfiles.
-
-
-Fassen wir also zusammen. In der Theorie kann die Anwendung unendlich viele Sprecher (voice-packs) verarbeiten, wobei jedes voice-pack aus vielen Audio-Dateien besteht, die bestimmtermaßen benannt sein müssen, damit die Verarbeitung dieser funktioniert.
-
-
+Every voice-pack contain all sound-files of category 'MAIN' and 'LOBBY'. So you're good to go by default without changing anything.
+If you would like to extend a voice-pack, for example to add sound-files-keys of category 'AMBIENT' like "ambient_gameshot" or "ambient_playerchange", copy them into --media_path_shared (-MS) to make them usable for every voice-pack.
+In addition it is also possible to have multiple sounds for a sound-file-key. Therefor you have to add a "+" to the filename. After the "+" you can add whatever text you prefer; as an example: let`s say we want multiple sounds for the 'ambient_gameshot' sound-file-key. Our default file is 'ambient_gameshot.mp3'. Now we add some more: 'ambient_gameshot+1.mp3', 'ambient_gameshot+2.mp3', 'ambient_gameshot+BEST.mp3'. Of course you are not limited to the "ambient_gameshot" sound-file-key - this rule applies to every sound-file-key.
 
 
 
 ### Web-Caller
 
-Der Web-caller stellt verschiedene Funktionalitäten auf einer, bei Dir lokal gehosteten Website bereit. Diese Website kannst Du auf allen Geräten mit einem modernen Browser aufrufen. Anders als der Name vielleicht vermuten lässt, bietet der Web-Caller mehr als nur die reine "Call-Funktionalität".
-Die Webseite ist in folgende Bereiche, bzw. Funktionalitäten aufgeteilt:
+The web-caller provides various functionalities on a website hosted locally on your end. You can access this website on any device with a modern browser. Contrary to what the name might suggest, the web-caller offers more than just the pure "call functionality".
+The website is divided into the following sections or functionalities:
 
 #### Start
 
-* Durch Drücken des Start-Knopfs erlaubst Du dem Browser das Abspielen von Audio-Dateien und startest damit auch die Verbindung zur Anwendung.
+* By pressing the start button, you enable the browser to play audio files and initiate the connection to the application.
 
 #### Chat
 
-* Automatisch erzeugter peer-to-peer Chat mit deinem Gegner.
-* Austausch von textbasierten Nachrichten, Links und Bildern.
-* Schnellspeicher-Funktion für Nachrichten (z.B. um Emotjis direkt via dediziertem Knopf zu senden).
-* Sprach-und-Video-Anrufe (Voraussetzung ist aktives https).
+- Automatically generated peer-to-peer chat with your opponent.
+- Exchange of text-based messages, links, and images.
+- Quick message storage function (e.g., to send emojis directly via a dedicated button).
+- Voice and video calls (requires active HTTPS).
 
-Disclaimer: Damit das Chatfenster angezeigt wird, muss dein Gegner den Web-Caller geöffnet haben. Darüberhinaus ist ein Chat mit mehreren Spielern aktuell (noch) nicht möglich (ausschließlich im 1v1, Spielvariante: X01)
+Disclaimer: In order for the chat window to appear, your opponent must have the web caller open. Additionally, chatting with multiple players is currently not possible (only in 1v1, game variant: X01).
 
 #### Calling
 
-* Audio-Wiedergabe direkt über einen Browser deiner Wahl (das aktuelle voice-pack wird einmalig heruntergeladen bzw. aktualisiert und dann, um eine unverzögerte Wiedergabe zu ermöglichen, im cache abgespeichert).
-* Anzeige des aktuellen Sprechers (voice-pack).
-* Auswahlmenü zum Wechseln auf einen bestimmmten Sprecher.
-* Knopf zum Wechseln auf einen anderen zufälligen Sprecher.
-* Auswahlmenüs zur Anpassung von Sprache und Geschlecht.
-* Knopf zum Bannen des aktuellen Sprechers.
-* Mod-Bereich für zufallsbasierte Stimmen-Anpassung.
+- Direct audio playback through a browser of your choice (the current voice pack is downloaded or updated once and then cached to enable seamless playback).
+- Display of the current speaker (voice pack).
+- Selection menu to switch to a specific speaker.
+- Button to switch to another random speaker.
+- Selection menus for adjusting language and gender.
+- Button to ban the current speaker.
+- Mod section for random voice customization.
 
-Disclaimer: For a continuous calling experience on mobile devices, make sure your device display stays on while you are playing.
+Disclaimer: For uninterrupted calling experience on mobile devices, ensure that your device display remains active while you are playing.
 
 #### Board
 
-* Knopf zum automatischen Kalibrieren deines Boards
-* Knopf zum Zurücksetzen deines Boards
+- Button for automatic calibration of your board
+- Button for resetting your board
 
 #### Game
 
-* "Magic-Knopf" zum automatischen "Weiterschalten" von Lobby, Aufnahme und Spiel (je nachdem, welchen Status das aktuelle Match gerade aufweist.)
-
+- "Magic button" for automatic transitioning between lobby, recording, and gameplay, depending on the current status of the match.
 
 
 
@@ -141,13 +131,13 @@ Disclaimer: For a continuous calling experience on mobile devices, make sure you
 
 **MAIN:**
 
+- bulling_start
+- bulling_end
 - gameon
 - matchon
 - gameshot
 - matchshot
 - matchcancel
-- bulling_start
-- bulling_end
 - leg_{x}
 - set_{x}
 - busted
@@ -453,7 +443,7 @@ The blacklist-file stores voice-pack-names that are undesired for downloads or c
 
 You can not hear any calls as your music is way too loud? Try to set this to '0.03' and let the calls begin :) Default is '0.0' (no background-audio-muting). Note: Only availble for windows-os and local playback (LPB = 1).
 
-*`LPB / --local_playback`*
+*`-LPB / --local_playback`*
 
 If you set this to '1' the application will playback audio by using your local speakers.
 By default this is activated.
