@@ -27,7 +27,8 @@ from autodarts_keycloak_client import AutodartsKeycloakClient
 from flask import Flask, render_template, send_from_directory, request
 from flask_socketio import SocketIO
 from werkzeug.serving import make_ssl_devcert
-
+# from engineio.async_drivers import gevent
+from engineio.async_drivers import threading as th
 
 
 
@@ -49,7 +50,7 @@ logger.addHandler(sh)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'caller for autodarts'
-socketio = SocketIO(app)
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
 
 
 

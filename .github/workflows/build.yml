@@ -52,7 +52,7 @@ jobs:
 
           - os: windows-latest
             TARGET: windows
-            CMD_BUILD: pyinstaller -F -n autodarts-caller -i resources/autodarts-caller.ico --add-data "templates;templates" --add-data "static;static" --collect-all certifi autodarts-caller.py
+            CMD_BUILD: pyinstaller -F -n autodarts-caller --hidden-import flask_socketio --hidden-import engineio -i resources/autodarts-caller.ico --add-data "templates;templates" --add-data "static;static" --collect-all certifi autodarts-caller.py
             OUT_FILE_NAME: autodarts-caller.exe
             ASSET_MIME: application/vnd.microsoft.portable-executable
 
