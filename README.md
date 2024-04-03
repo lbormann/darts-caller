@@ -76,7 +76,7 @@ The available voice-packs for download are periodically expanded, such as with t
 
 ### How can I add my own voice-pack?
 
-Create a folder in path you defined for -M containing every audio file you wish to be included. Make sure you follow the [rules of valid sound-file-keys](#Sound-file-keys).
+Create a folder in path you defined for -M (--media_path) containing every audio file you wish to be included. Make sure you follow the [rules of valid sound-file-keys](#Sound-file-keys).
 It is advantageous for the folder to adhere to the naming convention. For example: "en-GB-russ-bray-male" (country-region-name-gender).
 
 ### How can I add sounds to a voice-pack?
@@ -112,7 +112,9 @@ Disclaimer: In order for the chat window to appear, your opponent must have the 
 - Button to switch to another random speaker.
 - Selection menus for adjusting language and gender.
 - Button to ban the current speaker.
-- Mod section for random voice customization.
+- Mod section:
+    - adjust arguments on-the-fly
+    - customize current speaker voice
 
 Disclaimer: For uninterrupted calling experience on mobile devices, ensure that your device display remains active while you are playing.
 
