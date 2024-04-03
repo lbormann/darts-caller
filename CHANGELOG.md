@@ -15,10 +15,10 @@
 - update all existing amazon/aws voice-packs
 - remove all google-cloud-tts voice-packs (*-wavenet-*)
 - remove web-scoreboard
-- remove arguments -WEB, -WEBSB, -WEBP, -CC
+- remove arguments -WEB, -WEBSB, -WEBP, -L, -CCPA
+- rework argument -E (call_every_dart)
 - rework argument -R (random_caller)
 - rework argument -CCP (call_current_player)
-- rework argument -E (call_every_dart)
 - add argument -LPB (local_playback) => playbacks audio locally / default: yes
 - support argument -C (caller) without specification of voice-pack-version
 - add sound-file-key 'ambient_playerchange_{playername}

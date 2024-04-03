@@ -2,26 +2,27 @@ import os
 import sys
 from pathlib import Path
 import time
-import json
 import base64
 import platform
 import random
 import argparse
-import requests
 from pygame import mixer
-import websocket
 import threading
 import logging
-from download import download
 import shutil
 import csv
 import math
-import certifi
 import psutil
 import queue
 from mask import mask
 import re
 from urllib.parse import quote, unquote
+import ssl
+from download import download
+import json
+import certifi
+import requests
+import websocket
 from autodarts_keycloak_client import AutodartsKeycloakClient
 from flask import Flask, render_template, send_from_directory, request
 from flask_socketio import SocketIO
@@ -81,6 +82,7 @@ DEFAULT_LOCAL_PLAYBACK = 1
 DEFAULT_WEB_CALLER_DISABLE_HTTPS = False
 DEFAULT_HOST_PORT = 8079
 DEFAULT_DEBUG = False
+DEFAULT_CERT_CHECK = True
 DEFAULT_MIXER_FREQUENCY = 44100
 DEFAULT_MIXER_SIZE = 32
 DEFAULT_MIXER_CHANNELS = 2
@@ -90,11 +92,11 @@ DEFAULT_CALLERS_BANNED_FILE = 'autodarts-caller-banned.txt'
 DEFAULT_HOST_IP = '0.0.0.0'
 
 
-AUTODARTS_URL = 'https://autodarts.io'
-AUTODARTS_AUTH_URL = 'https://login.autodarts.io/'
 AUTODARTS_CLIENT_ID = 'wusaaa-caller-for-autodarts'
 AUTODARTS_REALM_NAME = 'autodarts'
 AUTODARTS_CLIENT_SECRET = "4hg5d4fddW7rqgoY8gZ42aMpi2vjLkzf"
+AUTODARTS_URL = 'https://autodarts.io'
+AUTODARTS_AUTH_URL = 'https://login.autodarts.io/'
 AUTODARTS_LOBBIES_URL = 'https://api.autodarts.io/gs/v0/lobbies/'
 AUTODARTS_MATCHES_URL = 'https://api.autodarts.io/gs/v0/matches/'
 AUTODARTS_BOARDS_URL = 'https://api.autodarts.io/bs/v0/boards/'
@@ -106,6 +108,7 @@ SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket', 'Random Checkout', 'ATC', 'RTW']
 SUPPORTED_CRICKET_FIELDS = [15, 16, 17, 18, 19, 20, 25]
 BOGEY_NUMBERS = [169, 168, 166, 165, 163, 162, 159]
 TEMPLATE_FILE_ENCODING = 'utf-8-sig'
+BLACKLISTED_SOUND_FILE_KEYS = ['double', 'triple', 'outside', 'sbull', 'bull', 'bullseye', 'single']
 
 CALLER_LANGUAGES = {
     1: ['english', 'en', ],
@@ -161,8 +164,8 @@ CALLER_PROFILES = {
     'en-US-Gregory-Male': ('https://add.arnes-design.de/ADC/en-US-Gregory-Male-v4.zip', 4),
     
     # -- en-GB --
-    'en-GB-Amy-Female': ('https://add.arnes-design.de/ADC/en-GB-Amy-Female.zip', 1),
-    'en-GB-Arthur-Male': ('https://add.arnes-design.de/ADC/en-GB-Arthur-Male.zip', 1),
+    'en-GB-Amy-Female': ('https://add.arnes-design.de/ADC/en-GB-Amy-Female-v2.zip', 2),
+    'en-GB-Arthur-Male': ('https://add.arnes-design.de/ADC/en-GB-Arthur-Male-v2.zip', 2),
     
     # 'TODONAME': ('TODOLINK', TODOVERSION),  
 }
@@ -573,9 +576,13 @@ def load_callers():
         file_dict = {}
         for filename in files:
             if filename.endswith(tuple(SUPPORTED_SOUND_FORMATS)):
-                full_path = os.path.join(root, filename)
                 base = os.path.splitext(filename)[0]
                 key = base.split('+', 1)[0]
+
+                if key in BLACKLISTED_SOUND_FILE_KEYS:
+                    continue
+
+                full_path = os.path.join(root, filename)
                 if key in file_dict:
                     file_dict[key].append(full_path)
                 else:
@@ -583,7 +590,7 @@ def load_callers():
         if file_dict:
             callers.append((root, file_dict))
         
-     # add shared-sounds to callers
+    # add shared-sounds to callers
     for ss_k, ss_v in shared_sounds.items():
         for (root, c_keys) in callers:
             c_keys[ss_k] = ss_v
@@ -824,6 +831,7 @@ def mirror_sounds():
 
 
 def start_board():
+
     try:
         res = requests.put(boardManagerAddress + '/api/detection/start')
         # res = requests.put(boardManagerAddress + '/api/start')
@@ -985,6 +993,8 @@ def next_game():
         ppe('Next game failed', e)
 
 def receive_local_board_address():
+    # get
+    # https://api.autodarts.io/bs/v0/boards/<board-id>
     try:
         global boardManagerAddress
 
@@ -1036,6 +1046,9 @@ def listen_to_match(m, ws):
         except Exception as e:
             ppe("Setup callers failed!", e)
 
+        # fetch-match
+        # get
+        # https://api.autodarts.io/gs/v0/matches/<match-id>
         try:
             res = requests.get(AUTODARTS_MATCHES_URL + currentMatch, headers={'Authorization': 'Bearer ' + kc.access_token})
             m = res.json()
@@ -2339,11 +2352,17 @@ def connect_autodarts():
                                     on_message = on_message_autodarts,
                                     on_error = on_error_autodarts,
                                     on_close = on_close_autodarts)
-        
-        ws.run_forever()
+        sslOptions = {"cert_reqs": ssl.CERT_NONE}
+        if CERT_CHECK:
+            sslOptions = None
+        ws.run_forever(sslopt=sslOptions)
     threading.Thread(target=process).start()
 
 def on_open_autodarts(ws):
+
+    # fetch-matches
+    # get
+    # https://api.autodarts.io/gs/v0/matches/
     try:
         res = requests.get(AUTODARTS_MATCHES_URL, headers={'Authorization': 'Bearer ' + kc.access_token})
         res = res.json()
@@ -2422,7 +2441,7 @@ def on_message_autodarts(ws, message):
 
                     # ppi(json.dumps(data, indent = 4, sort_keys = True))
 
-                    process_common(data)
+                    # process_common(data)
 
                     variant = data['variant']
                     
@@ -2904,6 +2923,7 @@ if __name__ == "__main__":
     ap.add_argument("-WEBDH", "--web_caller_disable_https", required=False, type=int, choices=range(0, 2), default=DEFAULT_WEB_CALLER_DISABLE_HTTPS, help="If '0', the web caller will use http instead of https. This is unsecure, be careful!")
     ap.add_argument("-HP", "--host_port", required=False, type=int, default=DEFAULT_HOST_PORT, help="Host-Port")
     ap.add_argument("-DEB", "--debug", type=int, choices=range(0, 2), default=DEFAULT_DEBUG, required=False, help="If '1', the application will output additional information")
+    ap.add_argument("-CC", "--cert_check", type=int, choices=range(0, 2), default=DEFAULT_CERT_CHECK, required=False, help="If '0', the application won't check any ssl certification")
     ap.add_argument("-MIF", "--mixer_frequency", type=int, required=False, default=DEFAULT_MIXER_FREQUENCY, help="Pygame mixer frequency")
     ap.add_argument("-MIS", "--mixer_size", type=int, required=False, default=DEFAULT_MIXER_SIZE, help="Pygame mixer size")
     ap.add_argument("-MIC", "--mixer_channels", type=int, required=False, default=DEFAULT_MIXER_CHANNELS, help="Pygame mixer channels")
@@ -2958,6 +2978,7 @@ if __name__ == "__main__":
     WEB_DISABLE_HTTPS = args['web_caller_disable_https']
     HOST_PORT = args['host_port']
     DEBUG = args['debug']
+    CERT_CHECK = args['cert_check']
     MIXER_FREQUENCY = args['mixer_frequency']
     MIXER_SIZE = args['mixer_size']
     MIXER_CHANNELS = args['mixer_channels']

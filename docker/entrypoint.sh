@@ -86,6 +86,9 @@ fi
 if [ -n "$DEBUG" ]; then
   args="$args -DEB $DEBUG"
 fi
+if [ -n "$CERT_CHECK" ]; then
+  args="$args -CC $CERT_CHECK"
+fi
 if [ -n "$MIXER_FREQUENCY" ]; then
   args="$args -MIF $MIXER_FREQUENCY"
 fi

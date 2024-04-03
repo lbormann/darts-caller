@@ -37,6 +37,7 @@ services:
       LOCAL_PLAYBACK:
       WEB_CALLER_DISABLE_HTTPS:
       DEBUG:
+      CERT_CHECK:
       MIXER_FREQUENCY:
       MIXER_SIZE:
       MIXER_CHANNELS:
