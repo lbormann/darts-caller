@@ -99,7 +99,7 @@ The website is divided into the following sections or functionalities:
 - Automatically generated peer-to-peer chat with your opponent.
 - Exchange of text-based messages, links, and images.
 - Quick message storage function (e.g., to send emojis directly via a dedicated button).
-- Voice and video calls (requires active HTTPS).
+- Voice- and video-calls (requires active HTTPS).
 
 Disclaimer: In order for the chat window to appear, your opponent must have the web caller open. Additionally, chatting with multiple players is currently not possible (only in 1v1, game variant: X01).
 
@@ -325,13 +325,14 @@ You can find your Board-ID in Board-Manager.
 
 *`-M / --media_path`*
 
-Setup an absolute path where sounds should be/are located (If you are new just create an empty folder for that).
+Setup an absolute-path where voice-packs should be located. Just create an empty folder.
+Make sure the given path doesn't reside inside main-directory (autodarts-caller).
+
 Examples: 
 - (Windows): C:\Users\Luca\Desktop\Programme\autodarts\autodarts-caller-speaker
 - (Linux): /home/luca/autodarts/autodarts-caller-speaker
 
-By-the-way: this folder will be targeted for voice-pack-downloads/installs (-DL).
-Make sure the given path doesn't reside inside main-directory (autodarts-caller).
+Side note: this folder will be targeted for voice-pack-downloads/installs (-DL).
 
 *`-MS / --media_path_shared`*
 
@@ -340,10 +341,13 @@ If you do not want to configure same sounds again for every individual voice-pac
 *`-V / --caller_volume`*
 
 You can lower the call-volume in relation to current system-volume. '1.0' is system-volume. '0.5' is "half" volume. By default this is '1.0'.
+The web-caller has its own volume control.
 
 *`-C / --caller`*
 
 Sets a specific voice-pack as caller. On start the application displays a list of installed voice-packs; copy the name of chosen one and paste it here. By default this is 'None' meaning the application chooses a random caller (voice-pack).
+
+Side note: You can change the caller/voice-pack anytime in the web-caller.
 
 *`-R / --random_caller`*
 
@@ -365,6 +369,8 @@ Filters randomly chosen voice-pack by its language. '0' means no filtering (ever
 - '5' = spanish
 - '6' = dutch
 
+Side note: You can change the gender anytime in the web-caller.
+
 *`-RG / --random_caller_gender`*
 
 Filters randomly chosen voice-pack by its gender. '0' means no filtering (every gender). By default this is '0'.
@@ -372,6 +378,8 @@ Filters randomly chosen voice-pack by its gender. '0' means no filtering (every 
 - '0' = every gender
 - '1' = female
 - '2' = male
+
+Side note: You can change the gender anytime in the web-caller.
 
 *`-CCP / --call_current_player`*
 
@@ -381,6 +389,8 @@ The application will call playernames for certain events like "you require", "le
 - '1' = call current playername activated
 - '2' = call current playername also on every playerchange
 
+Side note: You can change that option anytime in the web-caller.
+
 *`-E / --call_every_dart`*
 
 The application will call every thrown dart. By default this is not activated.
@@ -389,11 +399,15 @@ The application will call every thrown dart. By default this is not activated.
 - '1' = call every dart by calculating the multiplication of field value and multiplier (for example: you hit a triple 20, resulting in calling 60). If activated the endscore (of 3 darts won't be called)
 - '2' = call every dart by calling sound-effects you setup. s1, d1, t1 to s20, d20, t30, outside, sbull, bull. If particular sound-file-key can't be found, it will fallback to common field-name: singleinner, singleouter, single, double, triple.
 
+Side note: You can change that option anytime in the web-caller.
+
 *`-PCC / --possible_checkout_call`*
 
 If you set this to '1' the application will call possible checkouts. Setup sounds {playername}{yr_2-yr_170} or {2-170} as a fallback. 
 If you set this to value above '1' calls won't be repeat when the count of value is reached.
 By default this is '1'.
+
+Side note: You can change that option anytime in the web-caller.
 
 *`-PCCSF / --possible_checkout_call_single_file`*
 
@@ -404,6 +418,8 @@ If you set this to '0' (default) the application uses two separated sound-files 
 If you set this to '1' the application will only call if there is a checkout possibility and the current player is you (associated to your board-id). 
 Note: this functionality won't work if your board is offline.
 By default this is '0'.
+
+Side note: You can change that option anytime in the web-caller.
 
 *`-A / --ambient_sounds`*
 

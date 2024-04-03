@@ -7,11 +7,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- https://unpkg.com/dexie/dist/dexie.js -->
-    <script type="text/javascript" src="/static/js/dexie-min-3.2.4.js"></script>
+    <script type="text/javascript" src="/static/js/dexie.min-3.2.4.js"></script>
     <!-- https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js -->
     <script type="text/javascript" src="/static/js/peerjs.min-1.5.2.js"></script>
     <!-- https://cdn.socket.io/4.7.5/socket.io.min.js -->
-    <script type="text/javascript" src="/static/js/socketio-min-4.7.5.js" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="/static/js/socket.io.min-4.7.5.js" crossorigin="anonymous"></script>
 
     <link rel="stylesheet" href="/static/css/common.css?v=1.0.0">
 </head>
@@ -97,9 +97,41 @@
 
         <!-- mods -->    
         <image id="button-container-mod-toggle" src="/static/images/mods.png" style="display:none;"></image>
-        <div id="container-mod">   
+        <div id="container-mod">
+            
             <div class="area-mod">
-                <h2>Volume</h2>
+                <h2>Call every dart</h2>
+                <p>
+                    <div id="slider-every-dart-value" class="mod-value"></div>
+                    <input id="slider-every-dart" class="ranger" type="range" min="0" max="2" step="1" value="{{ every_dart }}">
+                </p>
+            </div>
+
+            <div class="area-mod">
+                <h2>Call current player</h2>
+                <p>
+                    <div id="slider-call-current-player-value" class="mod-value"></div>
+                    <input id="slider-call-current-player" class="ranger" type="range" min="0" max="2" step="1" value="{{ call_current_player }}">
+                </p>
+            </div>
+
+            <div class="area-mod">
+                <h2>Call possible checkout</h2>
+                <p>
+                    <div id="slider-possible-checkout-value" class="mod-value"></div>
+                    <input id="slider-possible-checkout" class="ranger" type="range" min="0" max="100" step="1" value="{{ checkout_call }}">
+                </p>
+            </div>
+
+            <div class="area-mod">
+                <h2>Call possible checkout - only Yourself</h2>
+                <p>
+                    <input type="checkbox" id="checkbox-possible-checkout-yourself" {% if checkout_call_yourself %}checked{% endif %}>
+                </p>
+            </div>
+            
+            <div class="area-mod">
+                <h2>Web-Caller Volume</h2>
                 <p>
                     <div id="slider-volume-value" class="mod-value"></div>
                     <input id="slider-volume" class="ranger" type="range" >
@@ -108,7 +140,7 @@
             </div>
 
             <div class="area-mod">
-                <h2>Auto-Randomizer</h2>
+                <h2>Web-Caller Auto-Randomizer</h2>
                 <p>
                     <div id="slider-randomizer-value" class="mod-value"></div>
                     <input id="slider-randomizer" class="ranger" type="range">
@@ -117,7 +149,7 @@
             </div>
 
             <div class="area-mod">
-                <h2>Playback-Rate</h2>
+                <h2>Web-Caller Playback-Rate</h2>
                 <p>
                     <div id="slider-playback-rate-min-value" class="mod-value"></div>
                     <input id="slider-playback-rate-min" class="ranger" type="range">
@@ -128,7 +160,7 @@
             </div>
 
             <div class="area-mod">
-                <h2>Detune</h2>
+                <h2>Web-Caller Detune</h2>
                 <p>
                     <div id="slider-detune-min-value" class="mod-value"></div>
                     <input id="slider-detune-min" class="ranger" type="range">
@@ -218,6 +250,17 @@
         // mod stuff
         const buttonContainerModToggle = document.getElementById('button-container-mod-toggle');
         const containerMod = document.getElementById('container-mod');
+
+        const sliderEveryDart = document.getElementById('slider-every-dart');
+        const sliderEveryDartValue = document.getElementById('slider-every-dart-value');
+
+        const sliderCallCurrentPlayer = document.getElementById('slider-call-current-player');
+        const sliderCallCurrentPlayerValue = document.getElementById('slider-call-current-player-value');
+
+        const sliderPossibleCheckout = document.getElementById('slider-possible-checkout');
+        const sliderPossibleCheckoutValue = document.getElementById('slider-possible-checkout-value');
+
+        const checkboxPossibleCheckoutYourself = document.getElementById('checkbox-possible-checkout-yourself');
 
         const sliderPlaybackRateMin = document.getElementById('slider-playback-rate-min');
         const sliderPlaybackRateMinValue = document.getElementById('slider-playback-rate-min-value');
@@ -463,6 +506,47 @@
                 containerMod.style.display = 'none';
             }else{
                 containerMod.style.display = 'block';
+                containerMod.scrollIntoView({ behavior: 'smooth' });
+                // containerMod.scrollTop = containerMod.scrollHeight;   
+            }
+        });
+        sliderEveryDart.addEventListener('input', function(){
+            switch(this.value) {
+                case "0":
+                    sliderEveryDartValue.innerHTML = this.value + " = inactive";
+                    break;
+                case "1":
+                    sliderEveryDartValue.innerHTML = this.value + " = active";
+                    break;
+                case "2":
+                    sliderEveryDartValue.innerHTML = this.value + " = active (sound-effects)";
+                    break;
+            }
+            ws.emit('message', `arg:e:${this.value}`);
+        });
+        sliderCallCurrentPlayer.addEventListener('input', function() {
+            switch(this.value) {
+                case "0":
+                    sliderCallCurrentPlayerValue.innerHTML = this.value + " = inactive";
+                    break;
+                case "1":
+                    sliderCallCurrentPlayerValue.innerHTML = this.value + " = active";
+                    break;
+                case "2":
+                    sliderCallCurrentPlayerValue.innerHTML = this.value + " = active (every turn)";
+                    break;
+            }
+            ws.emit('message', `arg:ccp:${this.value}`);
+        });
+        sliderPossibleCheckout.addEventListener('input', function() {
+            sliderPossibleCheckoutValue.innerHTML = this.value + " times";
+            ws.emit('message', `arg:pcc:${this.value}`);
+        });
+        checkboxPossibleCheckoutYourself.addEventListener('change', function() {
+            if (this.checked) {
+                ws.emit('message', `arg:pccyo:1`);
+            } else {
+                ws.emit('message', `arg:pccyo:0`);
             }
         });
         sliderPlaybackRateMin.addEventListener('input', function() {

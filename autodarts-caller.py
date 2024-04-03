@@ -124,33 +124,45 @@ CALLER_PROFILES = {
     # AMAZON / AWS Polly
     #------------------------------------------------------------------------------------------------
     # -- fr-FR --
-    # -- ru-RU --
+    'fr-FR-Remi-Male': ('https://add.arnes-design.de/ADC/fr-FR-Remi-Male.zip', 1), 
+    'fr-FR-Lea-Female': ('https://add.arnes-design.de/ADC/fr-FR-Lea-Female.zip', 1), 
     
-    'nl-NL-Laura-Female': ('https://add.arnes-design.de/ADC/nl-NL-Laura-Female-v2.zip', 2),
+    # -- ru-RU --
+    # 'ru-RU-TODO': ('https://add.arnes-design.de/ADC/TODOLINK.zip', 1), 
+    # 'ru-RU-TODO': ('https://add.arnes-design.de/ADC/TODOLINK.zip', 1), 
+    
     # -- de-AT --
-    'de-AT-Hannah-Female': ('https://add.arnes-design.de/ADC/de-AT-Hannah-Female-v2.zip', 2),
+    'de-AT-Hannah-Female': ('https://add.arnes-design.de/ADC/de-AT-Hannah-Female-v3.zip', 3),
+    
     # -- de-DE --
-    'de-DE-Vicki-Female': ('https://add.arnes-design.de/ADC/de-DE-Vicki-Female-v5.zip', 5),  
-    'de-DE-Daniel-Male': ('https://add.arnes-design.de/ADC/de-DE-Daniel-Male-v5.zip', 5),
+    'de-DE-Vicki-Female': ('https://add.arnes-design.de/ADC/de-DE-Vicki-Female-v6.zip', 6),  
+    'de-DE-Daniel-Male': ('https://add.arnes-design.de/ADC/de-DE-Daniel-Male-v6.zip', 6),
+    
     # -- es-ES --
+    'es-ES-Lucia-Female': ('https://add.arnes-design.de/ADC/es-ES-Lucia-Female.zip', 1), 
+    'es-ES-Sergio-Male': ('https://add.arnes-design.de/ADC/es-ES-Sergio-Male.zip', 1), 
+
     # -- nl-NL --
+    'nl-NL-Laura-Female': ('https://add.arnes-design.de/ADC/nl-NL-Laura-Female-v3.zip', 3),
+    
     # -- en-US --
-    'en-US-Ivy-Female': ('https://add.arnes-design.de/ADC/en-US-Ivy-Female-v5.zip', 5),
-    'en-US-Joey-Male': ('https://add.arnes-design.de/ADC/en-US-Joey-Male-v6.zip', 6),
-    'en-US-Joanna-Female': ('https://add.arnes-design.de/ADC/en-US-Joanna-Female-v6.zip', 6),
-    'en-US-Matthew-Male': ('https://add.arnes-design.de/ADC/en-US-Matthew-Male-v3.zip', 3),
-    'en-US-Danielle-Female': ('https://add.arnes-design.de/ADC/en-US-Danielle-Female-v3.zip', 3),
-    'en-US-Kimberly-Female': ('https://add.arnes-design.de/ADC/en-US-Kimberly-Female-v2.zip', 2),
-    'en-US-Ruth-Female': ('https://add.arnes-design.de/ADC/en-US-Ruth-Female-v2.zip', 2),
-    'en-US-Salli-Female': ('https://add.arnes-design.de/ADC/en-US-Salli-Female-v2.zip', 2),
-    'en-US-Kevin-Male': ('https://add.arnes-design.de/ADC/en-US-Kevin-Male-v2.zip', 2),
-    'en-US-Justin-Male': ('https://add.arnes-design.de/ADC/en-US-Justin-Male-v2.zip', 2),
-    'en-US-Stephen-Male': ('https://add.arnes-design.de/ADC/en-US-Stephen-Male-v5.zip', 5),  
-    'en-US-Kendra-Female': ('https://add.arnes-design.de/ADC/en-US-Kendra-Female-v6.zip', 6),
-    'en-US-Gregory-Male': ('https://add.arnes-design.de/ADC/en-US-Gregory-Male-v3.zip', 3),
+    'en-US-Ivy-Female': ('https://add.arnes-design.de/ADC/en-US-Ivy-Female-v6.zip', 6),
+    'en-US-Joey-Male': ('https://add.arnes-design.de/ADC/en-US-Joey-Male-v7.zip', 7),
+    'en-US-Joanna-Female': ('https://add.arnes-design.de/ADC/en-US-Joanna-Female-v7.zip', 7),
+    'en-US-Matthew-Male': ('https://add.arnes-design.de/ADC/en-US-Matthew-Male-v4.zip', 4),
+    'en-US-Danielle-Female': ('https://add.arnes-design.de/ADC/en-US-Danielle-Female-v4.zip', 4),
+    'en-US-Kimberly-Female': ('https://add.arnes-design.de/ADC/en-US-Kimberly-Female-v3.zip', 3),
+    'en-US-Ruth-Female': ('https://add.arnes-design.de/ADC/en-US-Ruth-Female-v3.zip', 3),
+    'en-US-Salli-Female': ('https://add.arnes-design.de/ADC/en-US-Salli-Female-v3.zip', 3),
+    'en-US-Kevin-Male': ('https://add.arnes-design.de/ADC/en-US-Kevin-Male-v3.zip', 3),
+    'en-US-Justin-Male': ('https://add.arnes-design.de/ADC/en-US-Justin-Male-v3.zip', 3),
+    'en-US-Stephen-Male': ('https://add.arnes-design.de/ADC/en-US-Stephen-Male-v6.zip', 6),  
+    'en-US-Kendra-Female': ('https://add.arnes-design.de/ADC/en-US-Kendra-Female-v7.zip', 7),
+    'en-US-Gregory-Male': ('https://add.arnes-design.de/ADC/en-US-Gregory-Male-v4.zip', 4),
+    
     # -- en-GB --
-    # 'en-GB-Amy-Female': ('https://add.arnes-design.de/ADC/en-GB-Amy-Female.zip', 1),
-    # 'en-GB-Arthur-Male': ('https://add.arnes-design.de/ADC/en-GB-Arthur-Male.zip', 1),
+    'en-GB-Amy-Female': ('https://add.arnes-design.de/ADC/en-GB-Amy-Female.zip', 1),
+    'en-GB-Arthur-Male': ('https://add.arnes-design.de/ADC/en-GB-Arthur-Male.zip', 1),
     
     # 'TODONAME': ('TODOLINK', TODOVERSION),  
 }
@@ -480,7 +492,7 @@ def ban_caller(only_change):
 
     # ban/change not possible as caller is specified by user or current caller is 'None'
     if (CALLER != DEFAULT_CALLER and CALLER != '' and caller_title != '' and caller_title != None):
-        return
+       return
     
     if only_change:
         ccc_success = play_sound_effect('control_change_caller', wait_for_last = False, volume_mult = 1.0, mod = False)
@@ -571,16 +583,11 @@ def load_callers():
         if file_dict:
             callers.append((root, file_dict))
         
-    # add shared-sounds to callers
+     # add shared-sounds to callers
     for ss_k, ss_v in shared_sounds.items():
         for (root, c_keys) in callers:
-            if ss_k in c_keys:
-                for sound_variant in ss_v:
-                    c_keys[ss_k].append(sound_variant)
-            else:
-                c_keys[ss_k] = ss_v
-
-
+            c_keys[ss_k] = ss_v
+ 
     return callers
 
 def grab_caller_name(caller_root):
@@ -705,14 +712,16 @@ def setup_caller():
             caller_name = grab_caller_name(c)
             ppi(caller_name, None, '')
 
-        if RANDOM_CALLER > 0:
-            caller = callers_filtered[0]
-        else:
-            if len(callers_filtered) > 0:
+        if len(callers_filtered) > 0:
+            if RANDOM_CALLER == 0:
+                caller = callers_filtered[0]
+            else:
                 caller = random.choice(callers_filtered)
+        else:
+            caller = None
 
     # set caller
-    if(caller != None):
+    if caller is not None:
         for sound_file_key, sound_file_values in caller[1].items():
             sound_list = list()
             for sound_file_path in sound_file_values:
@@ -734,6 +743,8 @@ def setup_caller():
             "banable": BLACKLIST_PATH != DEFAULT_EMPTY_PATH
         }
         broadcast(welcome_event)
+    else:
+        ppi('No callers available.')
 
 
 def check_sounds(sounds_list):
@@ -1561,7 +1572,7 @@ def process_match_x01(m):
         }
         broadcast(dartsThrown)
 
-        if CALL_EVERY_DART == 0 or CALL_EVERY_DART == 2:
+        if CALL_EVERY_DART == 0:
             play_sound_effect(points)
 
         if AMBIENT_SOUNDS != 0.0:
@@ -1898,7 +1909,7 @@ def process_match_cricket(m):
         }
         broadcast(dartsThrown)
 
-        if CALL_EVERY_DART == 0 or CALL_EVERY_DART == 2: 
+        if CALL_EVERY_DART == 0: 
             play_sound_effect(str(throwPoints))
 
         if AMBIENT_SOUNDS != 0.0:
@@ -2666,6 +2677,10 @@ def handle_message(message):
         global CALLER
         global RANDOM_CALLER_LANGUAGE
         global RANDOM_CALLER_GENDER
+        global CALL_EVERY_DART
+        global CALL_CURRENT_PLAYER
+        global POSSIBLE_CHECKOUT_CALL
+        global POSSIBLE_CHECKOUT_CALL_YOURSELF_ONLY
 
         cid = str(request.sid)
 
@@ -2753,6 +2768,20 @@ def handle_message(message):
                     if play_sound_effect('hi', wait_for_last=False):
                         mirror_sounds()
 
+            elif message.startswith('arg'):
+                messsageSplitted = message.split(':')
+                if len(messsageSplitted) == 3:
+                    arg_name = messsageSplitted[1]
+                    arg_value = messsageSplitted[2]
+                    if arg_name == 'e':
+                        CALL_EVERY_DART = int(arg_value)
+                    elif arg_name == 'ccp':
+                        CALL_CURRENT_PLAYER = int(arg_value)
+                    elif arg_name == 'pcc':
+                        POSSIBLE_CHECKOUT_CALL = int(arg_value)
+                    elif arg_name == 'pccyo':
+                        POSSIBLE_CHECKOUT_CALL_YOURSELF_ONLY = arg_value == "1"
+
             elif message.startswith('call'):
                 to_call = message.split(':')[1]
                 call_parts = to_call.split(' ')
@@ -2821,6 +2850,10 @@ def index():
                                             genders=CALLER_GENDERS,
                                             language=RANDOM_CALLER_LANGUAGE,
                                             gender=RANDOM_CALLER_GENDER,
+                                            every_dart=CALL_EVERY_DART,
+                                            call_current_player=CALL_CURRENT_PLAYER,
+                                            checkout_call=POSSIBLE_CHECKOUT_CALL,
+                                            checkout_call_yourself=POSSIBLE_CHECKOUT_CALL_YOURSELF_ONLY,
                                             boardOnline=boardManagerAddress != None
                                             )
     
@@ -2881,6 +2914,10 @@ if __name__ == "__main__":
     global CALLER
     global RANDOM_CALLER_GENDER
     global RANDOM_CALLER_LANGUAGE
+    global CALL_EVERY_DART
+    global CALL_CURRENT_PLAYER
+    global POSSIBLE_CHECKOUT_CALL
+    global POSSIBLE_CHECKOUT_CALL_YOURSELF_ONLY
     
     AUTODART_USER_EMAIL = args['autodarts_email']                          
     AUTODART_USER_PASSWORD = args['autodarts_password']              

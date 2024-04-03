@@ -1,15 +1,17 @@
 ## 2.12.0
 
-- add direct voice-pack selection on web-caller
-- add "magic next button" on web-caller
+- add direct voice-pack selection to web-caller
+- add "magic next button" to web-caller
+- add option -E to web-caller
+- add option -CCP to web-caller
+- add option -PCC to web-caller
+- add option -PCCYO to web-caller
 - add voice-pack 'en-GB-Amy-Female'
 - add voice-pack 'en-GB-Arthur-Male'
-- add voice-pack 'TODO'
-- add voice-pack 'TODO'
-- add voice-pack 'TODO'
-- add voice-pack 'TODO'
-- add voice-pack 'TODO'
-- add voice-pack 'TODO'
+- add voice-pack 'es-ES-Lucia-Female'
+- add voice-pack 'es-ES-Sergio-Male'
+- add voice-pack 'fr-FR-Remi-Male'
+- add voice-pack 'fr-FR-Lea-Female'
 - update all existing amazon/aws voice-packs
 - remove all google-cloud-tts voice-packs (*-wavenet-*)
 - remove web-scoreboard
