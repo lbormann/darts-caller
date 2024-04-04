@@ -15,7 +15,7 @@
 - update all existing amazon/aws voice-packs
 - remove all google-cloud-tts voice-packs (*-wavenet-*)
 - remove web-scoreboard
-- remove arguments -WEB, -WEBSB, -WEBP, -L, -CCPA
+- remove arguments -WEB, -WEBSB, -WEBP, -L, -CCPA, -ESF
 - rework argument -E (call_every_dart)
 - rework argument -R (random_caller)
 - rework argument -CCP (call_current_player)
