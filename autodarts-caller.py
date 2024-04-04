@@ -27,7 +27,7 @@ from autodarts_keycloak_client import AutodartsKeycloakClient
 from flask import Flask, render_template, send_from_directory, request
 from flask_socketio import SocketIO
 from werkzeug.serving import make_ssl_devcert
-from engineio.async_drivers import threading as th # IMPORTANT
+# from engineio.async_drivers import threading as th # IMPORTANT
 
 
 
@@ -49,7 +49,8 @@ logger.addHandler(sh)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'caller for autodarts'
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
+# cors_allowed_origins="*", async_mode="threading"
+socketio = SocketIO(app)
 
 
 
@@ -2661,12 +2662,12 @@ def on_error_autodarts(ws, error):
     except Exception as e:
         ppe('WS-Error failed: ', e)
 
-
+ 
 def start_webserver(host, port, ssl_context=None):
     if ssl_context is None:
-        socketio.run(app, host=host, port=port, debug=False)
+        socketio.run(app, host=host, port=port, debug=False, allow_unsafe_werkzeug=True)
     else:
-        socketio.run(app, host=host, port=port, debug=False, ssl_context=ssl_context)
+        socketio.run(app, host=host, port=port, debug=False,  allow_unsafe_werkzeug=True, ssl_context=ssl_context)
 
 def broadcast(data):
     socketio.emit('message', data)
@@ -3114,19 +3115,21 @@ if __name__ == "__main__":
             else:
                 ssl_context = make_ssl_devcert(str(AUDIO_MEDIA_PATH / "dummy"), host=DEFAULT_HOST_IP)
 
-        webserver_thread = threading.Thread(target=start_webserver, args=(DEFAULT_HOST_IP, HOST_PORT, ssl_context))
-        webserver_thread.start()
-
         kc = AutodartsKeycloakClient(username=AUTODART_USER_EMAIL, 
-                                     password=AUTODART_USER_PASSWORD, 
-                                     client_id=AUTODARTS_CLIENT_ID, 
-                                     client_secret=AUTODARTS_CLIENT_SECRET,
-                                     debug=DEBUG)
-                                     
+                                password=AUTODART_USER_PASSWORD, 
+                                client_id=AUTODARTS_CLIENT_ID, 
+                                client_secret=AUTODARTS_CLIENT_SECRET,
+                                debug=DEBUG)                     
         kc.start()
         connect_autodarts()
 
-        webserver_thread.join() 
+        # webserver_thread = threading.Thread(target=start_webserver, args=(DEFAULT_HOST_IP, HOST_PORT, ssl_context))
+        # webserver_thread.start()
+        start_webserver(DEFAULT_HOST_IP, HOST_PORT, ssl_context)
+
+
+
+        # webserver_thread.join() 
         kc.stop()
     except Exception as e:
         ppe("Connect failed: ", e)
