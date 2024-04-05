@@ -646,21 +646,32 @@ def filter_most_recent_version(path_list):
         versions = [int(re.search(r'-v(\d+)$', x[0]).group(1)) for x in path_list if base_entry + "-v" in x[0]]
         return max(versions, default=None)
 
-    base_entries = set()
-    for item in path_list:
-        entry = get_last_component(item[0])
-        if not is_versioned(entry):
-            base_entries.add(entry)
+    # base_entries = set()
+    # for item in path_list:
+    #     entry = get_last_component(item[0])
+    #     if not is_versioned(entry):
+    #         base_entries.add(entry)
 
     filtered_list = []
     for item in path_list:
         entry = get_last_component(item[0])
-        base_entry = re.sub(r'-v\d+$', '', entry)
-        highest_ver = highest_version(base_entry)
-        if highest_ver is not None and entry == base_entry + "-v" + str(highest_ver):
-            filtered_list.append(item)
-        elif highest_ver is None:
-            filtered_list.append(item)
+        
+        if not is_versioned(entry):
+            filtered_list.append(entry)
+            
+        else:
+            base_entry = re.sub(r'-v\d+$', '', entry)
+            highest_ver = highest_version(base_entry)
+
+            # add only if its unversionized or versionized and its the highest version
+            if highest_ver is not None and entry == base_entry + "-v" + str(highest_ver):
+                ppi("HIGHST VERSION " + entry + " - " + str(highest_ver))
+                filtered_list.append(item)
+
+            # else if its unversionized = append
+            elif highest_ver is None:
+                ppi("UNVERSIONIZED " + entry)
+                filtered_list.append(item)
     
     return filtered_list
 
