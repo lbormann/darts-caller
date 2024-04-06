@@ -296,6 +296,7 @@ Start the script:
 - -RG / --random_caller_gender [Default: 0] [Possible values: look at description below]
 - -CCP / --call_current_player [Default: 1] [Possible values: 0 | 1 | 2]
 - -E / --call_every_dart [Default: 0] [Possible values: 0 | 1 | 2]
+- -ETS / --call_every_dart_total_score [Default: 1] [Possible values: 0 | 1]
 - -PCC / --possible_checkout_call [Default: 1] [Possible values: 0..Inf]
 - -PCCSF / --possible_checkout_call_single_files [Default: 1] [Possible values: 0 | 1]
 - -PCCYO / --possible_checkout_call_yourself_only [Default: 0] [Possible values: 0 | 1]
@@ -340,6 +341,8 @@ Side note: this folder will be targeted for voice-pack-downloads/installs (-DL).
 *`-MS / --media_path_shared`*
 
 If you do not want to configure same sounds again for every individual voice-pack, you can specify an absolute path to a shared directory. Every voice-pack will use the sounds of that directory. Have a look at [supported Sound-file-keys](#Sound-file-keys). Moreover make sure the given path neither resides inside main-directory (autodarts-caller) nor inside media-path (-M).
+
+Side note: sounds in that directory will override sounds of voice-pack(s).
 
 *`-V / --caller_volume`*
 
@@ -399,10 +402,15 @@ Side note: You can change that option anytime in the web-caller.
 The application will call every thrown dart. By default this is not activated.
 
 - '0' = call every dart deactivated
-- '1' = call every dart by calculating the multiplication of field value and multiplier (for example: you hit a triple 20, resulting in calling 60). If activated the endscore (of 3 darts won't be called)
-- '2' = call every dart by calling sound-effects you setup. s1, d1, t1 to s20, d20, t30, outside, sbull, bull. If particular sound-file-key can't be found, it will fallback to common field-name: singleinner, singleouter, single, double, triple.
+- '1' = call every dart by calculating the multiplication of field value and multiplier (for example: you hit a triple 20, resulting in calling 60). 
+- '2' = call every dart by calling sound-effects you setup. s1, d1, t1 to s20, d20, t20, outside, sbull, bull. If particular sound-file-key can't be found, it will fallback to: singleinner, singleouter, single, double, triple.
 
 Side note: You can change that option anytime in the web-caller.
+
+*`-ETS / --call_every_dart_total_score`*
+
+The application will call total score if call-every-dart is active (1 or 2).
+By default this is activated.
 
 *`-PCC / --possible_checkout_call`*
 

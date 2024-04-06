@@ -38,6 +38,9 @@ fi
 if [ -n "$CALL_EVERY_DART" ]; then
   args="$args -E $CALL_EVERY_DART"
 fi
+if [ -n "$CALL_EVERY_DART_TOTAL_SCORE" ]; then
+  args="$args -ETS $CALL_EVERY_DART_TOTAL_SCORE"
+fi
 if [ -n "$POSSIBLE_CHECKOUT_CALL" ]; then
   args="$args -PCC $POSSIBLE_CHECKOUT_CALL"
 fi

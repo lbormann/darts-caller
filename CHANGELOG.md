@@ -1,3 +1,9 @@
+## 2.12.1
+
+- fix bug on caller-setup
+- add argument -ETS (call_every_dart_total_score)
+
+
 ## 2.12.0
 
 - add direct voice-pack selection to web-caller

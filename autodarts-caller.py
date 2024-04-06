@@ -15,7 +15,6 @@ import math
 import psutil
 import queue
 from mask import mask
-import re
 from urllib.parse import quote, unquote
 import ssl
 from download import download
@@ -58,7 +57,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.12.0'
+VERSION = '2.12.1'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -69,6 +68,7 @@ DEFAULT_RANDOM_CALLER_LANGUAGE = 0
 DEFAULT_RANDOM_CALLER_GENDER = 0
 DEFAULT_CALL_CURRENT_PLAYER = 1
 DEFAULT_CALL_EVERY_DART = 0
+DEFAULT_CALL_EVERY_DART_TOTAL_SCORE = True
 DEFAULT_POSSIBLE_CHECKOUT_CALL = 1
 DEFAULT_POSSIBLE_CHECKOUT_CALL_SINGLE_FILES = 0
 DEFAULT_POSSIBLE_CHECKOUT_CALL_YOURSELF_ONLY = 0
@@ -635,45 +635,25 @@ def grab_caller_gender(caller_name):
     first_occurrences.sort(key=lambda x: x[0])
     return first_occurrences[0][1]
 
-def filter_most_recent_version(path_list):
-    def get_last_component(path):
-        return os.path.basename(os.path.normpath(path))
 
-    def is_versioned(entry):
-        return bool(re.search(r'-v\d+$', entry))
-
-    def highest_version(base_entry):
-        versions = [int(re.search(r'-v(\d+)$', x[0]).group(1)) for x in path_list if base_entry + "-v" in x[0]]
-        return max(versions, default=None)
-
-    # base_entries = set()
-    # for item in path_list:
-    #     entry = get_last_component(item[0])
-    #     if not is_versioned(entry):
-    #         base_entries.add(entry)
-
-    filtered_list = []
-    for item in path_list:
-        entry = get_last_component(item[0])
-        
-        if not is_versioned(entry):
-            filtered_list.append(entry)
-            
-        else:
-            base_entry = re.sub(r'-v\d+$', '', entry)
-            highest_ver = highest_version(base_entry)
-
-            # add only if its unversionized or versionized and its the highest version
-            if highest_ver is not None and entry == base_entry + "-v" + str(highest_ver):
-                ppi("HIGHST VERSION " + entry + " - " + str(highest_ver))
-                filtered_list.append(item)
-
-            # else if its unversionized = append
-            elif highest_ver is None:
-                ppi("UNVERSIONIZED " + entry)
-                filtered_list.append(item)
+def filter_most_recent_versions(voices):
+    max_versions = {}
+    for voice, data in voices:
+        parts = voice.split('-')
+        key = '-'.join(parts[:-1]) if parts[-1].startswith('v') else voice
+        version = int(parts[-1][1:]) if parts[-1].startswith('v') else 0
+        if key not in max_versions or version > max_versions[key][0]:
+            max_versions[key] = (version, data)
     
-    return filtered_list
+    filtered_voices = []
+    for voice, data in voices:
+        parts = voice.split('-')
+        key = '-'.join(parts[:-1]) if parts[-1].startswith('v') else voice
+        version = int(parts[-1][1:]) if parts[-1].startswith('v') else 0
+        if version == max_versions[key][0]:
+            filtered_voices.append((voice, data))
+    
+    return filtered_voices
 
 def setup_caller():
     global CALLER
@@ -696,17 +676,18 @@ def setup_caller():
         caller_name = grab_caller_name(c)
         if caller_name in caller_profiles_banned or caller_name.split("-v")[0] in caller_profiles_banned:
             continue
-        if RANDOM_CALLER_LANGUAGE != 0:
-            caller_language_key = grab_caller_language(caller_name)
-            if caller_language_key != RANDOM_CALLER_LANGUAGE:
-                continue
-        if RANDOM_CALLER_GENDER != 0:
-            caller_gender_key = grab_caller_gender(caller_name)
-            if caller_gender_key != RANDOM_CALLER_GENDER:
-                continue      
+        if RANDOM_CALLER > 0:
+            if RANDOM_CALLER_LANGUAGE != 0:
+                caller_language_key = grab_caller_language(caller_name)
+                if caller_language_key != RANDOM_CALLER_LANGUAGE:
+                    continue
+            if RANDOM_CALLER_GENDER != 0:
+                caller_gender_key = grab_caller_gender(caller_name)
+                if caller_gender_key != RANDOM_CALLER_GENDER:
+                    continue      
         callers_filtered.append(c)
     if len(callers_filtered) > 0:
-        callers_filtered = filter_most_recent_version(callers_filtered)
+        callers_filtered = filter_most_recent_versions(callers_filtered)
     
         
     # store available caller names
@@ -1597,8 +1578,8 @@ def process_match_x01(m):
         }
         broadcast(dartsThrown)
 
-        if CALL_EVERY_DART == 0:
-            play_sound_effect(points)
+        if CALL_EVERY_DART == 0 or CALL_EVERY_DART_TOTAL_SCORE == True:
+            play_sound_effect(points, wait_for_last=CALL_EVERY_DART != 0)
 
         if AMBIENT_SOUNDS != 0.0:
             ambient_x_success = False
@@ -1934,8 +1915,8 @@ def process_match_cricket(m):
         }
         broadcast(dartsThrown)
 
-        if CALL_EVERY_DART == 0: 
-            play_sound_effect(str(throwPoints))
+        if CALL_EVERY_DART == 0 or CALL_EVERY_DART_TOTAL_SCORE == True:
+            play_sound_effect(str(throwPoints), wait_for_last=CALL_EVERY_DART != 0)
 
         if AMBIENT_SOUNDS != 0.0:
             if throwPoints == 0:
@@ -2706,6 +2687,7 @@ def handle_disconnect():
 def handle_message(message):
     try:
         global CALLER
+        global RANDOM_CALLER
         global RANDOM_CALLER_LANGUAGE
         global RANDOM_CALLER_GENDER
         global CALL_EVERY_DART
@@ -2776,6 +2758,7 @@ def handle_message(message):
             elif message.startswith('caller'):
                 messsageSplitted = message.split(':')
                 if len(messsageSplitted) > 1:
+                    RANDOM_CALLER = 0
                     CALLER = messsageSplitted[1]
                     setup_caller()
                     if play_sound_effect('hi', wait_for_last=False):
@@ -2785,6 +2768,7 @@ def handle_message(message):
                 messsageSplitted = message.split(':')
                 if len(messsageSplitted) > 1:
                     CALLER = DEFAULT_CALLER
+                    RANDOM_CALLER = 1
                     RANDOM_CALLER_LANGUAGE = int(messsageSplitted[1])
                     setup_caller()
                     if play_sound_effect('hi', wait_for_last=False):
@@ -2794,6 +2778,7 @@ def handle_message(message):
                 messsageSplitted = message.split(':')
                 if len(messsageSplitted) > 1:
                     CALLER = DEFAULT_CALLER
+                    RANDOM_CALLER = 1
                     RANDOM_CALLER_GENDER = int(messsageSplitted[1])
                     setup_caller()
                     if play_sound_effect('hi', wait_for_last=False):
@@ -2920,6 +2905,7 @@ if __name__ == "__main__":
     ap.add_argument("-RG", "--random_caller_gender", type=int, choices=range(0, len(CALLER_GENDERS) + 1), default=DEFAULT_RANDOM_CALLER_GENDER, required=False, help="If '0', the application will allow every gender.., else it will limit caller selection by specific gender")
     ap.add_argument("-CCP", "--call_current_player", type=int, choices=range(0, 3), default=DEFAULT_CALL_CURRENT_PLAYER, required=False, help="If '1', the application will call who is the current player to throw")
     ap.add_argument("-E", "--call_every_dart", type=int, choices=range(0, 3), default=DEFAULT_CALL_EVERY_DART, required=False, help="If '1', the application will call every thrown dart")
+    ap.add_argument("-ETS", "--call_every_dart_total_score", type=int, choices=range(0, 2), default=DEFAULT_CALL_EVERY_DART_TOTAL_SCORE, required=False, help="If '1', the application will call total-score if call-every-dart is active")
     ap.add_argument("-PCC", "--possible_checkout_call", type=int, default=DEFAULT_POSSIBLE_CHECKOUT_CALL, required=False, help="If '1', the application will call a possible checkout starting at 170")
     ap.add_argument("-PCCSF", "--possible_checkout_call_single_files", type=int, choices=range(0, 2), default=DEFAULT_POSSIBLE_CHECKOUT_CALL_SINGLE_FILES, required=False, help="If '1', the application will call a possible checkout by using yr_2-yr_170, else it uses two separated sounds: you_require + x")
     ap.add_argument("-PCCYO", "--possible_checkout_call_yourself_only", type=int, choices=range(0, 2), default=DEFAULT_POSSIBLE_CHECKOUT_CALL_YOURSELF_ONLY, required=False, help="If '1' the caller will only call if there is a checkout possibility if the current player is you")
@@ -2944,6 +2930,7 @@ if __name__ == "__main__":
     args = vars(ap.parse_args())
 
     global CALLER
+    global RANDOM_CALLER
     global RANDOM_CALLER_GENDER
     global RANDOM_CALLER_LANGUAGE
     global CALL_EVERY_DART
@@ -2968,6 +2955,7 @@ if __name__ == "__main__":
     if RANDOM_CALLER_GENDER < 0: RANDOM_CALLER_GENDER = DEFAULT_RANDOM_CALLER_GENDER
     CALL_CURRENT_PLAYER = args['call_current_player']
     CALL_EVERY_DART = args['call_every_dart']
+    CALL_EVERY_DART_TOTAL_SCORE = args['call_every_dart_total_score']
     POSSIBLE_CHECKOUT_CALL = args['possible_checkout_call']
     if POSSIBLE_CHECKOUT_CALL < 0: POSSIBLE_CHECKOUT_CALL = 0
     POSSIBLE_CHECKOUT_CALL_SINGLE_FILE = args['possible_checkout_call_single_files']
