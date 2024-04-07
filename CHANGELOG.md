@@ -1,3 +1,8 @@
+## 2.12.2
+
+- fix sound-file-keys sbull, bull
+
+
 ## 2.12.1
 
 - fix bug on caller-setup

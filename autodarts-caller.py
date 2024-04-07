@@ -57,7 +57,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.12.1'
+VERSION = '2.12.2'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -1324,11 +1324,12 @@ def process_match_x01(m):
         throwAmount = len(turns['throws'])
         type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
         field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
+        field_multiplier = turns['throws'][throwAmount - 1]['segment']['multiplier']
  
-        if field_name == '25':
+        if field_name == '25' and field_multiplier == 1:
             field_name = 'sbull'
-        elif field_name == '50':
-            field_name == 'bull'
+        elif field_name == '25' and field_multiplier == 2:
+            field_name = 'bull'
 
         # ppi("Type: " + str(type) + " - Field-name: " + str(field_name))
             
@@ -1352,7 +1353,7 @@ def process_match_x01(m):
         # multiplicated score
         else:
             field_number = turns['throws'][throwAmount - 1]['segment']['number']
-            field_multiplier = turns['throws'][throwAmount - 1]['segment']['multiplier']
+            
 
             score = field_number * field_multiplier
             play_sound_effect(str(score))
@@ -1691,14 +1692,14 @@ def process_match_cricket(m):
         type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
         field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
         field_number = turns['throws'][throwAmount - 1]['segment']['number']
-
-        if field_name == '25':
+        field_multiplier = turns['throws'][throwAmount - 1]['segment']['multiplier']
+ 
+        if field_name == '25' and field_multiplier == 1:
             field_name = 'sbull'
-        elif field_name == '50':
-            field_name == 'bull'
+        elif field_name == '25' and field_multiplier == 2:
+            field_name = 'bull'
             
         # ppi("Type: " + str(type) + " - Field-name: " + str(field_name))
-
 
         if field_number not in SUPPORTED_CRICKET_FIELDS:
             return
@@ -1723,7 +1724,6 @@ def process_match_cricket(m):
 
         # multiplicated score
         else:
-            field_multiplier = turns['throws'][throwAmount - 1]['segment']['multiplier']
             score = field_number * field_multiplier
             play_sound_effect(str(score))
 
