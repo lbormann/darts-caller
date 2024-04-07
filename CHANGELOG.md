@@ -1,3 +1,10 @@
+## 2.12.3
+
+- improve change-caller speed
+- fix bug for change-caller
+- improve "magic-next-button" for bulling
+
+
 ## 2.12.2
 
 - fix sound-file-keys sbull, bull

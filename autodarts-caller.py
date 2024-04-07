@@ -57,7 +57,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.12.2'
+VERSION = '2.12.3'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -655,36 +655,37 @@ def filter_most_recent_versions(voices):
     
     return filtered_voices
 
-def setup_caller():
+def setup_caller(initial_load = False):
+    global callers_profiles_all
+    global caller_profiles_banned
     global CALLER
     global caller
     global caller_title
     global caller_title_without_version
     global callers_available
-    global caller_profiles_banned
     caller = None
     caller_title = ''
     caller_title_without_version = ''
 
-    callers = load_callers()
+    if initial_load:
+        callers_profiles_all = load_callers()
 
     ppi('Available voice-pack(s):')
     
     # filter callers by blacklist, language, gender and most recent version
     callers_filtered = []
-    for c in callers:
+    for c in callers_profiles_all:
         caller_name = grab_caller_name(c)
         if caller_name in caller_profiles_banned or caller_name.split("-v")[0] in caller_profiles_banned:
             continue
-        if RANDOM_CALLER > 0:
-            if RANDOM_CALLER_LANGUAGE != 0:
-                caller_language_key = grab_caller_language(caller_name)
-                if caller_language_key != RANDOM_CALLER_LANGUAGE:
-                    continue
-            if RANDOM_CALLER_GENDER != 0:
-                caller_gender_key = grab_caller_gender(caller_name)
-                if caller_gender_key != RANDOM_CALLER_GENDER:
-                    continue      
+        if RANDOM_CALLER_LANGUAGE != 0:
+            caller_language_key = grab_caller_language(caller_name)
+            if caller_language_key != RANDOM_CALLER_LANGUAGE:
+                continue
+        if RANDOM_CALLER_GENDER != 0:
+            caller_gender_key = grab_caller_gender(caller_name)
+            if caller_gender_key != RANDOM_CALLER_GENDER:
+                continue      
         callers_filtered.append(c)
     if len(callers_filtered) > 0:
         callers_filtered = filter_most_recent_versions(callers_filtered)
@@ -2242,6 +2243,7 @@ def process_match_rtw(m):
     mirror_sounds()
 
 def process_bulling(m):
+    global isBullingFinished
     currentPlayerIndex = m['player']
     currentPlayer = m['players'][currentPlayerIndex]
     currentPlayerName = str(currentPlayer['name']).lower()
@@ -2249,6 +2251,7 @@ def process_bulling(m):
     gameshot = m['gameWinner'] != -1
 
     if gameshot == True:
+        isBullingFinished = True
         bullingEnd = {
             "event": "bulling-end",
             "player": currentPlayerName,
@@ -2261,6 +2264,7 @@ def process_bulling(m):
             play_sound_effect('bulling_end', wait_for_last=True)
     else:
         if m['round'] == 1 and m['gameScores'] is None:  
+            isBullingFinished = False
             bullingStart = {
                 "event": "bulling-start",
                 "player": currentPlayerName,
@@ -2694,6 +2698,8 @@ def handle_message(message):
         global CALL_CURRENT_PLAYER
         global POSSIBLE_CHECKOUT_CALL
         global POSSIBLE_CHECKOUT_CALL_YOURSELF_ONLY
+        global isBullingFinished
+        global isGameFinished
 
         cid = str(request.sid)
 
@@ -2738,8 +2744,12 @@ def handle_message(message):
                     
             elif message.startswith('next'):
                 if currentMatch is not None:
+
                     if currentMatch.startswith('lobby'):
                         start_match(currentMatch.split(':')[1])
+                    elif isBullingFinished == True:
+                        isBullingFinished = False
+                        next_game()
                     elif isGameFinished == False:
                         next_throw()
                     else:
@@ -2751,7 +2761,8 @@ def handle_message(message):
             elif message.startswith('ban'):
                 CALLER = DEFAULT_CALLER
                 if len(message.split(':')) > 1:
-                    ban_caller(True)
+                    RANDOM_CALLER = 1
+                    ban_caller(only_change=True)
                 else:
                     ban_caller(False)
 
@@ -3015,6 +3026,15 @@ if __name__ == "__main__":
     global currentMatchHost
     currentMatchHost = None
 
+    global callers_profiles_all
+    callers_profiles_all = []
+
+    global caller_profiles_banned
+    caller_profiles_banned = []
+
+    global callers_available
+    callers_available = []
+
     global caller
     caller = None
 
@@ -3024,14 +3044,11 @@ if __name__ == "__main__":
     global caller_title_without_version
     caller_title_without_version = ''
 
-    global callers_available
-    callers_available = []
-
-    global caller_profiles_banned
-    caller_profiles_banned = []
-
     global lastPoints
     lastPoints = None
+
+    global isBullingFinished
+    isBullingFinished = False
 
     global isGameFinished
     isGameFinished = False
@@ -3094,7 +3111,7 @@ if __name__ == "__main__":
         ppe("Voice-pack fetching failed!", e)
 
     try:
-        setup_caller()
+        setup_caller(initial_load=True)
         if caller == None:
             ppi('A caller with name "' + str(CALLER) + '" does NOT exist! Please compare your input with list of available voice-packs.')
             sys.exit()  
