@@ -51,7 +51,9 @@
 
     <!-- caller -->
     <div id="caller-container">
+        
         <h2 id="caller-name" style="display:none;"></h2>
+        <image src="" id="button-favorite" style="display:none;"></image>
         <image src="/static/images/say.png" id="button-say" style="display:none;"></image>
         <h2 id="caller-call" style="display:none;"></h2>
 
@@ -206,6 +208,7 @@
         const button = document.getElementById('button-start');
         const buttonChange = document.getElementById('button-change');
         const buttonBan = document.getElementById('button-ban');
+        const buttonFavorite = document.getElementById('button-favorite');
         const buttonSay = document.getElementById('button-say');
         const state = document.getElementById('status');
         const callerName = document.getElementById('caller-name');
@@ -295,8 +298,7 @@
 
         // caller
         let dexie, db, ws, loading, done;
-        let callersAvailable, name, specific, banable;
-        let boardOnline;
+        let callersAvailable, callersFavoured, name;
         let playbackRateMin, playbackRateMax, detuneMin, detuneMax, volume, randomizer;
         let audioContext = new (window.AudioContext || window.webkitAudioContext)();
         let audioQueue = Promise.resolve();
@@ -362,9 +364,6 @@
             } 
             
             loadPreferences();
-
-            // boardOnline = JSON.parse('{{ boardOnline | tojson | safe}}');
-            // updateBoard();
 
             setTimeout(function() {
                 const id = JSON.parse('{{ id | tojson | safe}}');
@@ -497,7 +496,47 @@
         gender.addEventListener('change', function() {
             ws.emit('message', `gender:${gender.value}`);
         });
-        
+        buttonFavorite.addEventListener('click', function() {
+            if(callersFavoured.includes(name)){
+                ws.emit('message', 'fav:0');
+                callersFavoured = callersFavoured.filter(item => item !== name);
+                buttonFavorite.src = "/static/images/star-no.png";
+                renderAvailableCallers();
+                
+            }else{
+                ws.emit('message', 'fav:1');
+                callersFavoured.push(name);
+                buttonFavorite.src = "/static/images/star.png";
+                renderAvailableCallers();
+            }
+        });
+        function renderAvailableCallers(){
+            caller.innerHTML = "";
+                callersAvailable.forEach(function(ca) {
+                    if (callersFavoured.includes(ca)) {
+                        const callerElement = document.createElement("option");
+                        callerElement.textContent = ca;
+                        callerElement.value = ca;
+                        callerElement.classList.add("favorite");
+                        if (ca.toLowerCase() == name) {
+                            callerElement.selected = true;
+                        }
+                        caller.appendChild(callerElement);
+                    }
+                });
+                callersAvailable.forEach(function(ca) {
+                    if (!callersFavoured.includes(ca)) {
+                        const callerElement = document.createElement("option");
+                        callerElement.textContent = ca;
+                        callerElement.value = ca;
+                        if (ca.toLowerCase() == name) {
+                            callerElement.selected = true;
+                        }
+                        caller.appendChild(callerElement);
+                    }
+                });
+        }
+
         // mods
         buttonContainerModToggle.addEventListener('click', function(){
             if(containerMod.style.display == 'block'){
@@ -605,17 +644,8 @@
             randomizer = randomizerDefault;
             updateRandomizerSlider();
         });
-        
+
         // board
-        function updateBoard(){
-            if(boardOnline){
-                buttonCalibrateBoard.style.display = 'block';
-                buttonResetBoard.style.display = 'block';
-            }else{
-                buttonCalibrateBoard.style.display = 'none';
-                buttonResetBoard.style.display = 'none';
-            }
-        }
         buttonCalibrateBoard.addEventListener('click', function(){
             ws.emit('message', 'board-calibrate');
         });
@@ -1003,13 +1033,12 @@
                 lastCall.style.display = 'block';
                 lastCall.innerText = 'Waiting for throws ..';
                 buttonSay.style.display = 'inline';
+                buttonFavorite.style.display = 'inline';
                 buttonChange.style.display = 'block';
                 callerSelect.style.display = 'block';
                 languageSelect.style.display = 'block';
                 genderSelect.style.display = 'block';
-                if(banable){
-                    buttonBan.style.display = 'block';
-                }
+                buttonBan.style.display = 'block';
                 buttonContainerModToggle.style.display = 'inline';   
                         
                 buttonCalibrateBoard.style.display = 'block';
@@ -1021,6 +1050,7 @@
                 loader.style.display = 'block';
 
                 buttonSay.style.display = 'none';
+                buttonFavorite.style.display = 'none';
                 buttonChange.style.display = 'none';
                 callerSelect.style.display = 'none';
                 languageSelect.style.display = 'none';
@@ -1472,29 +1502,27 @@
 
                 done = 0;
                 callersAvailable = data.callersAvailable;
+                callersFavoured = data.callersFavoured;
                 name = data.caller;
-                specific = data.specific;
-                banable = data.banable;
                 
                 randomize();
 
-                caller.innerHTML = "";
-                callersAvailable.forEach(function(ca) {
-                    const callerElement = document.createElement("option");
-                    callerElement.textContent = ca;
-                    callerElement.value = ca;
-                    if(ca.toLowerCase() == data.callerVersion.toLowerCase()){
-                        callerElement.selected = true;
-                    }
-                    caller.appendChild(callerElement);
-                });
 
+                renderAvailableCallers();
+
+                
                 callerName.style.display = 'block';
-
                 const exists_db_entries = await db.sounds.where('caller').equals(data.caller).toArray();
                 const exists = exists_db_entries.map(entry => entry['name']);
                 console.log(`${exists.length} cached files for ${data.caller}`);
-                callerName.innerText = `${name} [${exists.length} sounds]`;
+                callerName.innerHTML = `${name} [${exists.length} sounds]`;
+
+
+                if(callersFavoured.includes(name)){
+                    buttonFavorite.src =  "/static/images/star.png";
+                }else{
+                    buttonFavorite.src =  "/static/images/star-no.png";
+                }
 
                 setLoading(true);
                 data['event'] = 'sync';
@@ -1532,11 +1560,6 @@
                 }
             }
             
-            else if(data.event === 'board'){
-                boardOnline = data.boardOnline;
-                // updateBoard();
-            }
-
             else{
                 console.log("Unknown message");
             }

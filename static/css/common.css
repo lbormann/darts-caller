@@ -128,6 +128,10 @@ button, select{
     overflow: hidden;
     text-overflow: ellipsis;
 }
+.favorite {
+    color: #F9C917;
+    font-weight: bold;
+}
 option, option:hover {
     background-color: rgb(30, 75, 207);
 }
@@ -236,6 +240,13 @@ button:hover, select:hover {
     margin-top: 15px;
     width: 48px;
     height: 48px;
+    cursor: pointer;
+}
+#button-favorite{
+    margin-bottom: 7px;
+    margin-right: 15px;
+    width: 38px;
+    height: 38px;
     cursor: pointer;
 }
 #button-container-mod-toggle{

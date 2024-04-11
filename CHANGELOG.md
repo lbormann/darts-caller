@@ -1,3 +1,11 @@
+## 2.12.4
+
+- change sound-file-key 'lobby_ambient_in' to 'ambient_lobby_in'
+- change sound-file-key 'lobby_ambient_out' to 'ambient_lobby_out'
+- remove -BLP
+- add caller fav mechanismn
+
+
 ## 2.12.3
 
 - improve change-caller speed

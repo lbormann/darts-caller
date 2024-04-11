@@ -82,9 +82,6 @@ downloads_limit=
 # -DLN
 downloads_name=
 
-# -BLP
-blacklist_path=
-
 # -LPB
 local_playback=
 
@@ -184,9 +181,6 @@ if [ -n "$downloads_limit" ]; then
 fi
 if [ -n "$downloads_name" ]; then
   args="$args -DLN $downloads_name"
-fi
-if [ -n "$blacklist_path" ]; then
-  args="$args -BLP $blacklist_path"
 fi
 #if [ -n "$background_audio_volume" ]; then
 #  args="$args -BAV $background_audio_volume"

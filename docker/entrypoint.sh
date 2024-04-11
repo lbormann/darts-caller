@@ -68,12 +68,6 @@ fi
 if [ -n "$DOWNLOADS_NAME" ]; then
   args="$args -DLN $DOWNLOADS_NAME"
 fi
-if [ -n "$BLACKLIST_PATH" ]; then
-  args="$args -BLP $BLACKLIST_PATH"
-  if [ ! -f $BLACKLIST_PATH ]; then
-    touch $BLACKLIST_PATH
-  fi
-fi
 if [ -n "$BACKGROUND_AUDIO_VOLUME" ]; then
  args="$args -BAV $BACKGROUND_AUDIO_VOLUME"
 fi

@@ -306,7 +306,6 @@ Start the script:
 - -DLL / --downloads_limit [Default: 3]
 - -DLLA / --downloads_language [Default: 1] [Possible values: look at description below]
 - -DLN / --downloads_name [Default: '']
-- -BLP / --blacklist_path [Default: '']
 - -BAV / --background_audio_volume [Default: 0.0] [Possible values: 0.0 .. 1.0]
 - -LPB / --local_playback [Default: 1] [Possible values: 0 | 1]
 - -WEBDH / --web_caller_disable_https [Default: 0] [Possible values: 0 | 1]
@@ -466,10 +465,6 @@ If you want to filter downloads for a specific language. '0' means no language-f
 
 If you want to filter downloads to a specific voice-pack-name. '' means no name-filtering. By default this is ''.
 For example you could set a value 'en-US-Joey-Male'.
-
-*`-BLP / --blacklist_path`*
-
-The blacklist-file stores voice-pack-names that are undesired for downloads or calls. In other words: those ones are just ignored by the application. To use blacklist define an absolute path where the blacklist-file should be located (it will be generated automatically on application start). You can simply add an undesired voice-pack-name (have a look at available ones on application start) to the file or use the web-caller (press 'Ban Caller'). 
 
 *`-BAV / --background_audio_volume`*
 
@@ -705,3 +700,4 @@ Try https://www.audacity.de/ to modify your sound-files.
 - Sounds by <a href="https://zapsplat.com">zapsplat.com</a>
 - Icon by <a href="https://freeicons.io/user-interface-and-electronics/camera-cam-photo-pic-shoot-image-ui-f-ef-ec-icon-841">icon king1</a>
 - Icon by <a href="https://freeicons.io/office-and-workstation-icons-6/video-call-icon-19057">Free Preloaders</a>
+- Icon by <a href="https://freeicons.io/undefined/star-icon-14946">Free Icons Pack</a>

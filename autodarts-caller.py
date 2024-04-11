@@ -57,7 +57,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.12.3'
+VERSION = '2.12.4'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -90,6 +90,7 @@ DEFAULT_MIXER_CHANNELS = 2
 DEFAULT_MIXER_BUFFERSIZE = 4096
 DEFAULT_DOWNLOADS_PATH = 'caller-downloads-temp'
 DEFAULT_CALLERS_BANNED_FILE = 'autodarts-caller-banned.txt'
+DEFAULT_CALLERS_FAVOURED_FILE = 'autodarts-caller-favoured.txt'
 DEFAULT_HOST_IP = '0.0.0.0'
 
 
@@ -167,6 +168,8 @@ CALLER_PROFILES = {
     # -- en-GB --
     'en-GB-Amy-Female': ('https://add.arnes-design.de/ADC/en-GB-Amy-Female-v2.zip', 2),
     'en-GB-Arthur-Male': ('https://add.arnes-design.de/ADC/en-GB-Arthur-Male-v2.zip', 2),
+
+    # 'theo-m-english-uk': ('https://add.arnes-design.de/ADC/theo-m-english-uk.zip', 1),
     
     # 'TODONAME': ('TODOLINK', TODOVERSION),  
 }
@@ -263,7 +266,7 @@ def same_drive(path1, path2):
     drive2 = os.path.splitdrive(path2)[0]
     return drive1 == drive2
 
-def check_paths(main_directory, audio_media_path, audio_media_path_shared, blacklist_path):
+def check_paths(main_directory, audio_media_path, audio_media_path_shared):
     try:
         main_directory = get_executable_directory()
         errors = None
@@ -272,8 +275,6 @@ def check_paths(main_directory, audio_media_path, audio_media_path_shared, black
         
         if audio_media_path_shared != DEFAULT_EMPTY_PATH:
             audio_media_path_shared = os.path.normpath(audio_media_path_shared)
-        if blacklist_path != DEFAULT_EMPTY_PATH:
-            blacklist_path = os.path.normpath(blacklist_path)
 
         if same_drive(audio_media_path, main_directory) == True and os.path.commonpath([audio_media_path, main_directory]) == main_directory:
             errors = 'AUDIO_MEDIA_PATH (-M) is a subdirectory of MAIN_DIRECTORY.'
@@ -288,9 +289,6 @@ def check_paths(main_directory, audio_media_path, audio_media_path_shared, black
             elif same_drive(audio_media_path, audio_media_path_shared) == True and audio_media_path == audio_media_path_shared:
                 errors = 'AUDIO_MEDIA_PATH (-M) is equal to AUDIO_MEDIA_SHARED (-MS). This is NOT allowed.'
 
-        if blacklist_path != '':
-            if same_drive(blacklist_path, main_directory) == True and os.path.commonpath([blacklist_path, main_directory]) == main_directory:
-                errors = 'BLACKLIST_FILE_PATH (-BLP) is a subdirectory of MAIN_DIRECTORY. This is NOT allowed.'
 
     except Exception as e:
         errors = f'Path validation failed: {e}'
@@ -299,7 +297,6 @@ def check_paths(main_directory, audio_media_path, audio_media_path_shared, black
         ppi("main_directory: " + main_directory)
         ppi("audio_media_path: " + str(audio_media_path))
         ppi("audio_media_path_shared: " + str(audio_media_path_shared))
-        ppi("blacklist_path: " + str(blacklist_path))
 
     return errors
 
@@ -508,13 +505,13 @@ def ban_caller(only_change):
         if not cbc_success:
             play_sound_effect('control', wait_for_last = False, volume_mult = 1.0, mod = False)
 
-        if BLACKLIST_PATH != DEFAULT_EMPTY_PATH:
-            global caller_profiles_banned
-            caller_profiles_banned.append(caller_title_without_version)
-            path_to_callers_banned_file = os.path.join(BLACKLIST_PATH, DEFAULT_CALLERS_BANNED_FILE)   
-            with open(path_to_callers_banned_file, 'w') as bcf:
-                for cpb in caller_profiles_banned:
-                    bcf.write(cpb.lower() + '\n')
+
+        global caller_profiles_banned
+        caller_profiles_banned.append(caller_title_without_version)
+        path_to_callers_banned_file = os.path.join(AUDIO_MEDIA_PATH, DEFAULT_CALLERS_BANNED_FILE)   
+        with open(path_to_callers_banned_file, 'w') as bcf:
+            for cpb in caller_profiles_banned:
+                bcf.write(cpb.lower() + '\n')
 
     mirror_sounds()
     setup_caller()
@@ -522,39 +519,75 @@ def ban_caller(only_change):
     if play_sound_effect('hi', wait_for_last = False):
         mirror_sounds()
     
+def favor_caller(unfavor):
+    global caller_title_without_version
+    global caller_profiles_favoured
 
+    if caller_title_without_version == '':
+        return
+    
+    if unfavor:
+        caller_profiles_favoured.remove(caller_title_without_version)
+    else:
+        caller_profiles_favoured.append(caller_title_without_version)
 
-def load_callers_banned(preview=False):
+    path_to_callers_favoured_file = os.path.join(AUDIO_MEDIA_PATH, DEFAULT_CALLERS_FAVOURED_FILE)   
+    with open(path_to_callers_favoured_file, 'w') as fcf:
+        for cpf in caller_profiles_favoured:
+            fcf.write(cpf.lower() + '\n')
+
+def load_callers_banned():
     global caller_profiles_banned
     caller_profiles_banned = []
     
-    if BLACKLIST_PATH == DEFAULT_EMPTY_PATH:
-        return
-    
-    path_to_callers_banned_file = os.path.join(BLACKLIST_PATH, DEFAULT_CALLERS_BANNED_FILE)
+    path_to_callers_banned_file = os.path.join(AUDIO_MEDIA_PATH, DEFAULT_CALLERS_BANNED_FILE)
     
     if os.path.exists(path_to_callers_banned_file):
         try:
             with open(path_to_callers_banned_file, 'r') as bcf:
                 caller_profiles_banned = list(set(line.strip() for line in bcf))
-                if preview:
-                    banned_info = f"Banned voice-packs: {len(caller_profiles_banned)} [ - "
-                    for cpb in caller_profiles_banned:
-                        banned_info += cpb + " - "
-                    banned_info += "]"
-                    ppi(banned_info)
+                banned_info = f"Banned voice-packs: {len(caller_profiles_banned)} [ - "
+                for cpb in caller_profiles_banned:
+                    banned_info += cpb + " - "
+                banned_info += "]"
+                ppi(banned_info)
         except FileExistsError:
             pass
     else:
-        # directory = os.path.dirname(path_to_callers_banned_file)
-        # os.makedirs(directory, exist_ok=True)
         try:
             with open(path_to_callers_banned_file, 'x'):
                 ppi(f"'{path_to_callers_banned_file}' created successfully.")
         except Exception as e:
             ppe(f"Failed to create '{path_to_callers_banned_file}'", e)
 
+def load_callers_favoured():
+    global caller_profiles_favoured
+    caller_profiles_favoured = []
+        
+    path_to_callers_favoured_file = os.path.join(AUDIO_MEDIA_PATH, DEFAULT_CALLERS_FAVOURED_FILE)
+    
+    if os.path.exists(path_to_callers_favoured_file):
+        try:
+            with open(path_to_callers_favoured_file, 'r') as bcf:
+                caller_profiles_favoured = list(set(line.strip() for line in bcf))
+                favoured_info = f"Favoured voice-packs: {len(caller_profiles_favoured)} [ - "
+                for cpb in caller_profiles_favoured:
+                    favoured_info += cpb + " - "
+                favoured_info += "]"
+                ppi(favoured_info)
+        except FileExistsError:
+            pass
+    else:
+        try:
+            with open(path_to_callers_favoured_file, 'x'):
+                ppi(f"'{path_to_callers_favoured_file}' created successfully.")
+        except Exception as e:
+            ppe(f"Failed to create '{path_to_callers_favoured_file}'", e)
+
 def load_callers():
+    global callers_profiles_all
+    callers_profiles_all = []
+
     # load shared-sounds
     shared_sounds = {}
     if AUDIO_MEDIA_PATH_SHARED != DEFAULT_EMPTY_PATH: 
@@ -568,11 +601,8 @@ def load_callers():
                         shared_sounds[key].append(full_path)
                     else:
                         shared_sounds[key] = [full_path]
-
-    load_callers_banned()
         
     # load callers
-    callers = []
     for root, dirs, files in os.walk(AUDIO_MEDIA_PATH):
         file_dict = {}
         for filename in files:
@@ -589,14 +619,13 @@ def load_callers():
                 else:
                     file_dict[key] = [full_path]
         if file_dict:
-            callers.append((root, file_dict))
+            callers_profiles_all.append((root, file_dict))
         
     # add shared-sounds to callers
     for ss_k, ss_v in shared_sounds.items():
-        for (root, c_keys) in callers:
+        for (root, c_keys) in callers_profiles_all:
             c_keys[ss_k] = ss_v
- 
-    return callers
+
 
 def grab_caller_name(caller_root):
     return os.path.basename(os.path.normpath(caller_root[0])).lower()
@@ -655,7 +684,7 @@ def filter_most_recent_versions(voices):
     
     return filtered_voices
 
-def setup_caller(initial_load = False):
+def setup_caller():
     global callers_profiles_all
     global caller_profiles_banned
     global CALLER
@@ -663,14 +692,13 @@ def setup_caller(initial_load = False):
     global caller_title
     global caller_title_without_version
     global callers_available
+    global caller_profiles_favoured
     caller = None
     caller_title = ''
     caller_title_without_version = ''
 
-    if initial_load:
-        callers_profiles_all = load_callers()
 
-    ppi('Available voice-pack(s):')
+    ppi('Available voice-packs:')
     
     # filter callers by blacklist, language, gender and most recent version
     callers_filtered = []
@@ -694,7 +722,7 @@ def setup_caller(initial_load = False):
     # store available caller names
     callers_available = []
     for cf in callers_filtered:
-        caller_name = grab_caller_name(cf)
+        caller_name = os.path.basename(os.path.normpath(cf[0].split("-v")[0])).lower()
         callers_available.append(caller_name)
 
 
@@ -731,17 +759,15 @@ def setup_caller(initial_load = False):
 
         caller_title = str(os.path.basename(os.path.normpath(caller[0])))
         caller_title_without_version = caller_title.split("-v")[0].lower()
-        ppi("Current voice-pack: " + caller_title + " (" + str(len(caller[1].values())) + " Sound-file-key(s))")
+        ppi("Current voice-pack: " + caller_title + " (" + str(len(caller[1].values())) + " Sound-file-keys)")
         # ppi(caller[1])
         caller = caller[1]
 
         welcome_event = {
             "event": "welcome",
             "callersAvailable": callers_available,
-            "caller": caller_title_without_version,
-            "callerVersion": caller_title,
-            "specific": CALLER != DEFAULT_CALLER and CALLER != '',
-            "banable": BLACKLIST_PATH != DEFAULT_EMPTY_PATH
+            "callersFavoured": caller_profiles_favoured,
+            "caller": caller_title_without_version
         }
         broadcast(welcome_event)
     else:
@@ -1358,7 +1384,8 @@ def process_match_x01(m):
 
             score = field_number * field_multiplier
             play_sound_effect(str(score))
-            
+
+
     # Check for matchshot
     if matchshot == True:
         isGameFin = True
@@ -1581,7 +1608,7 @@ def process_match_x01(m):
         broadcast(dartsThrown)
 
         if CALL_EVERY_DART == 0 or CALL_EVERY_DART_TOTAL_SCORE == True:
-            play_sound_effect(points, wait_for_last=CALL_EVERY_DART != 0)
+            play_sound_effect(points, wait_for_last=CALL_EVERY_DART > 0)
 
         if AMBIENT_SOUNDS != 0.0:
             ambient_x_success = False
@@ -2488,7 +2515,7 @@ def on_message_autodarts(ws, message):
                         ws.send(json.dumps(paramsSubscribeLobbyEvents))
                         lobbyPlayers = []
 
-                        if play_sound_effect("lobby_ambient_in", False, mod = False):
+                        if play_sound_effect("ambient_lobby_in", False, mod = False):
                             mirror_sounds()
 
                     elif data['event'] == 'lobby-leave':
@@ -2512,7 +2539,7 @@ def on_message_autodarts(ws, message):
                         ws.send(json.dumps(paramsUnsubscribeLobbyEvents))
                         lobbyPlayers = []
 
-                        if play_sound_effect("lobby_ambient_out", False, mod = False):
+                        if play_sound_effect("ambient_lobby_out", False, mod = False):
                             mirror_sounds()
 
             elif m['channel'] == 'autodarts.lobbies':
@@ -2539,7 +2566,7 @@ def on_message_autodarts(ws, message):
                         ws.send(json.dumps(paramsUnsubscribeLobbyEvents))
                         lobbyPlayers = []
                         # currentMatch = None
-                        if play_sound_effect("lobby_ambient_out", False, mod = False):
+                        if play_sound_effect("ambient_lobby_out", False, mod = False):
                             mirror_sounds()
   
 
@@ -2566,7 +2593,7 @@ def on_message_autodarts(ws, message):
                                 "topic": lobby_id + ".events"
                             }
                         ws.send(json.dumps(paramsUnsubscribeLobbyEvents))
-                        if play_sound_effect("lobby_ambient_out", False, mod = False):
+                        if play_sound_effect("ambient_lobby_out", False, mod = False):
                             mirror_sounds()
                         lobbyPlayers = []
                         currentMatch = None
@@ -2589,7 +2616,7 @@ def on_message_autodarts(ws, message):
                         player_name = str(lpl['name']).lower()
                         ppi(player_name + " left the lobby")
 
-                        play_sound_effect('lobby_ambient_out', False, mod = False)
+                        play_sound_effect('ambient_lobby_out', False, mod = False)
 
                         if check_sounds([player_name, 'left']):
                             play_sound_effect(player_name, True)
@@ -2615,7 +2642,7 @@ def on_message_autodarts(ws, message):
 
                             ppi(player_name + " (" + player_avg + " average) joined the lobby")
 
-                            play_sound_effect('lobby_ambient_in', False, mod = False)
+                            play_sound_effect('ambient_lobby_in', False, mod = False)
 
                             if check_sounds([player_name, 'average', player_avg]):
                                 play_sound_effect(player_name, True)
@@ -2700,6 +2727,7 @@ def handle_message(message):
         global POSSIBLE_CHECKOUT_CALL_YOURSELF_ONLY
         global isBullingFinished
         global isGameFinished
+        global caller_profiles_favoured
 
         cid = str(request.sid)
 
@@ -2795,6 +2823,14 @@ def handle_message(message):
                     if play_sound_effect('hi', wait_for_last=False):
                         mirror_sounds()
 
+            elif message.startswith('fav'):
+                messsageSplitted = message.split(':')
+                if len(messsageSplitted) > 1:
+                    if messsageSplitted[1] == '0':
+                        favor_caller(unfavor = True)
+                    else:
+                        favor_caller(unfavor = False)
+
             elif message.startswith('arg'):
                 messsageSplitted = message.split(':')
                 if len(messsageSplitted) == 3:
@@ -2820,10 +2856,8 @@ def handle_message(message):
                 welcome_event = {
                     "event": "welcome",
                     "callersAvailable": callers_available,
-                    "caller": caller_title_without_version,
-                    "callerVersion": caller_title,
-                    "specific": CALLER != DEFAULT_CALLER and CALLER != '',
-                    "banable": BLACKLIST_PATH != DEFAULT_EMPTY_PATH
+                    "callersFavoured": caller_profiles_favoured,
+                    "caller": caller_title_without_version
                 }
                 unicast(cid, welcome_event)
 
@@ -2880,8 +2914,7 @@ def index():
                                             every_dart=CALL_EVERY_DART,
                                             call_current_player=CALL_CURRENT_PLAYER,
                                             checkout_call=POSSIBLE_CHECKOUT_CALL,
-                                            checkout_call_yourself=POSSIBLE_CHECKOUT_CALL_YOURSELF_ONLY,
-                                            boardOnline=boardManagerAddress != None
+                                            checkout_call_yourself=POSSIBLE_CHECKOUT_CALL_YOURSELF_ONLY
                                             )
     
 @app.route('/sounds/<path:file_id>', methods=['GET'])
@@ -2926,7 +2959,6 @@ if __name__ == "__main__":
     ap.add_argument("-DLL", "--downloads_limit", type=int, default=DEFAULT_DOWNLOADS_LIMIT, required=False, help="If '1', the application will try to download a only the X newest caller-voices. -DLN needs to be activated.")
     ap.add_argument("-DLLA", "--downloads_language", type=int, choices=range(0, len(CALLER_LANGUAGES) + 1), default=DEFAULT_DOWNLOADS_LANGUAGE, required=False, help="If '0', the application will download speakers of every language.., else it will limit speaker downloads by specific language")
     ap.add_argument("-DLN", "--downloads_name", default=DEFAULT_DOWNLOADS_NAME, required=False, help="Sets a specific caller (voice-pack) for download")
-    ap.add_argument("-BLP", "--blacklist_path", required=False, default=DEFAULT_EMPTY_PATH, help="Absolute path to storage directory for blacklist-file")
     ap.add_argument("-BAV","--background_audio_volume", required=False, type=float, default=DEFAULT_BACKGROUND_AUDIO_VOLUME, help="Set background-audio-volume between 0.1 (silent) and 1.0 (no mute)")
     ap.add_argument("-LPB", "--local_playback", type=int, choices=range(0, 2), default=DEFAULT_LOCAL_PLAYBACK, required=False, help="If '1' the application will playback audio on your local device.")
     ap.add_argument("-WEBDH", "--web_caller_disable_https", required=False, type=int, choices=range(0, 2), default=DEFAULT_WEB_CALLER_DISABLE_HTTPS, help="If '0', the web caller will use http instead of https. This is unsecure, be careful!")
@@ -2980,10 +3012,6 @@ if __name__ == "__main__":
     if DOWNLOADS_LIMIT < 0: DOWNLOADS_LIMIT = DEFAULT_DOWNLOADS_LIMIT
     DOWNLOADS_PATH = DEFAULT_DOWNLOADS_PATH
     DOWNLOADS_NAME = args['downloads_name']
-    if args['blacklist_path'] != DEFAULT_EMPTY_PATH:
-        BLACKLIST_PATH = Path(args['blacklist_path'])
-    else:
-        BLACKLIST_PATH = DEFAULT_EMPTY_PATH
     BACKGROUND_AUDIO_VOLUME = args['background_audio_volume']
     LOCAL_PLAYBACK = args['local_playback']
     WEB_DISABLE_HTTPS = args['web_caller_disable_https']
@@ -3031,6 +3059,9 @@ if __name__ == "__main__":
 
     global caller_profiles_banned
     caller_profiles_banned = []
+
+    global caller_profiles_favoured
+    caller_profiles_favoured = []
 
     global callers_available
     callers_available = []
@@ -3083,7 +3114,7 @@ if __name__ == "__main__":
     ppi('DONATION: bitcoin:bc1q8dcva098rrrq2uqhv38rj5hayzrqywhudvrmxa', None, '')
     ppi('\r\n', None, '')
 
-    path_status = check_paths(__file__, AUDIO_MEDIA_PATH, AUDIO_MEDIA_PATH_SHARED, BLACKLIST_PATH)
+    path_status = check_paths(__file__, AUDIO_MEDIA_PATH, AUDIO_MEDIA_PATH_SHARED)
     if path_status is not None: 
         ppi('Please check your arguments: ' + path_status)
         sys.exit()  
@@ -3105,13 +3136,27 @@ if __name__ == "__main__":
             ppe("Background-Muter failed!", e)
 
     try:
-        load_callers_banned(preview = True)
-        download_callers()
+        load_callers_banned()
     except Exception as e:
-        ppe("Voice-pack fetching failed!", e)
+        ppe("Load banned voice-packs failed!", e)
 
     try:
-        setup_caller(initial_load=True)
+        load_callers_favoured()
+    except Exception as e:
+        ppe("Load favoured voice-packs failed!", e)
+
+    try: 
+        download_callers()
+    except Exception as e:
+        ppe("Download voice-packs failed", e)
+
+    try:
+        load_callers()
+    except Exception as e:
+        ppe("Load voice-packs failed!", e)  
+
+    try:
+        setup_caller()
         if caller == None:
             ppi('A caller with name "' + str(CALLER) + '" does NOT exist! Please compare your input with list of available voice-packs.')
             sys.exit()  
@@ -3139,13 +3184,9 @@ if __name__ == "__main__":
         kc.start()
         connect_autodarts()
 
-        # webserver_thread = threading.Thread(target=start_webserver, args=(DEFAULT_HOST_IP, HOST_PORT, ssl_context))
-        # webserver_thread.start()
         start_webserver(DEFAULT_HOST_IP, HOST_PORT, ssl_context)
 
-
-
-        # webserver_thread.join() 
         kc.stop()
+
     except Exception as e:
         ppe("Connect failed: ", e)
