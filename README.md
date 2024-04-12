@@ -74,16 +74,19 @@ Due to the potentially lengthy process of downloading and extracting all voice-p
 The available voice-packs for download are periodically expanded, such as with the addition of new audio files for player names (gathered separately through a process on autodarts.io). If you're interested in knowing how to ensure your player name is included in future voice-packs, please read the [rules](https://discord.com/channels/802528604067201055/1146376616264597647/1148254133963477044) on Discord and adjust your name accordingly.
 
 
-### How can I add my own voice-pack?
-
-Create a folder in path you defined for -M (--media_path) containing every audio file you wish to be included. Make sure you follow the [rules of valid sound-file-keys](#Sound-file-keys).
-It is advantageous for the folder to adhere to the naming convention. For example: "en-GB-russ-bray-male" (country-region-name-gender).
-
 ### How can I add sounds to a voice-pack?
 
 Every voice-pack contain all sound-files of category 'MAIN' and 'LOBBY'. So you're good to go by default without changing anything.
 If you would like to extend a voice-pack, for example to add sound-files-keys of category 'AMBIENT' like "ambient_gameshot" or "ambient_playerchange", copy them into --media_path_shared (-MS) to make them usable for every voice-pack.
 In addition you can place multiple sounds for a sound-file-key. Therefor you have to add a "+" to the filename. After the "+" you can add whatever text you prefer; as an example: let`s say we want multiple sounds for the 'ambient_gameshot' sound-file-key. Our default file is 'ambient_gameshot.mp3'. Now we add some more: 'ambient_gameshot+1.mp3', 'ambient_gameshot+2.mp3', 'ambient_gameshot+BEST.mp3'. Of course you are not limited to the "ambient_gameshot" sound-file-key - this rule applies to every sound-file-key.
+
+
+### How can I add my own voice-pack?
+
+Create a folder in path you defined for -M (--media_path) containing every audio file you wish to be included. Make sure you follow the [rules of valid sound-file-keys](#Sound-file-keys).
+It is advantageous for the folder to adhere to the naming convention. For example: "en-GB-russ-bray-male" (country-region-name-gender).
+
+
 
 
 ### Web-Caller
@@ -650,7 +653,6 @@ There are multiple ways to ban an undesired voice-pack:
 - Option 1) Visist web-caller and press "Ban Caller!"
 - Option 2) Delete ALL audio-files of voice-pack-folder.
 - Option 3) use [autodarts-voice](https://github.com/lbormann/autodarts-voice).
-- Option 4) put the name of the current caller (voice-pack) in autodarts-caller-banned.txt manually.
 
 All options forcing the application to either download files again nor using a voice-pack for calling.
 If you wish to revoke a ban, open 'autodarts-caller-banned.txt' and remove the line from the list.

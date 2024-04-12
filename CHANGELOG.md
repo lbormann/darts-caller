@@ -4,6 +4,7 @@
 - change sound-file-key 'lobby_ambient_out' to 'ambient_lobby_out'
 - remove -BLP
 - add caller fav mechanismn
+- fix bug for option -C
 
 
 ## 2.12.3

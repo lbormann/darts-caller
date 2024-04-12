@@ -628,7 +628,9 @@ def load_callers():
 
 
 def grab_caller_name(caller_root):
-    return os.path.basename(os.path.normpath(caller_root[0])).lower()
+    caller_name_without_version = os.path.basename(os.path.normpath(caller_root[0].split("-v")[0])).lower()
+    caller_name_with_version = os.path.basename(os.path.normpath(caller_root[0])).lower()
+    return (caller_name_without_version, caller_name_with_version)
 
 def grab_caller_language(caller_name):
     first_occurrences = []
@@ -663,7 +665,6 @@ def grab_caller_gender(caller_name):
     # Sort the list of first occurrences and get the gender of the tag that appears first
     first_occurrences.sort(key=lambda x: x[0])
     return first_occurrences[0][1]
-
 
 def filter_most_recent_versions(voices):
     max_versions = {}
@@ -703,14 +704,18 @@ def setup_caller():
     # filter callers by blacklist, language, gender and most recent version
     callers_filtered = []
     for c in callers_profiles_all:
-        caller_name = grab_caller_name(c)
-        if caller_name in caller_profiles_banned or caller_name.split("-v")[0] in caller_profiles_banned:
+        (caller_name, caller_name_with_version) = grab_caller_name(c)
+
+        if caller_name in caller_profiles_banned or caller_name_with_version in caller_profiles_banned:
             continue
-        if RANDOM_CALLER_LANGUAGE != 0:
+
+        if CALLER != DEFAULT_CALLER and CALLER != '' and caller_name_with_version.startswith(CALLER.lower()):
+            pass
+        elif RANDOM_CALLER_LANGUAGE != 0:
             caller_language_key = grab_caller_language(caller_name)
             if caller_language_key != RANDOM_CALLER_LANGUAGE:
                 continue
-        if RANDOM_CALLER_GENDER != 0:
+        elif RANDOM_CALLER_GENDER != 0:
             caller_gender_key = grab_caller_gender(caller_name)
             if caller_gender_key != RANDOM_CALLER_GENDER:
                 continue      
@@ -722,23 +727,23 @@ def setup_caller():
     # store available caller names
     callers_available = []
     for cf in callers_filtered:
-        caller_name = os.path.basename(os.path.normpath(cf[0].split("-v")[0])).lower()
+        (caller_name, caller_name_with_version) = grab_caller_name(cf)
         callers_available.append(caller_name)
 
 
     # specific caller
     if CALLER != DEFAULT_CALLER and CALLER != '':
         wished_caller = CALLER.lower()
-        for c in callers_filtered:
-            caller_name = os.path.basename(os.path.normpath(c[0])).lower()
+        for cf in callers_filtered:
+            (caller_name, caller_name_with_version) = grab_caller_name(cf)         
             ppi(caller_name, None, '')
-            if caller == None and caller_name.startswith(wished_caller):
-                caller = c
+            if caller == None and caller_name_with_version.startswith(wished_caller):
+                caller = cf
 
     # random caller
     else:
-        for c in callers_filtered: 
-            caller_name = grab_caller_name(c)
+        for cf in callers_filtered: 
+            (caller_name, caller_name_with_version) = grab_caller_name(cf)  
             ppi(caller_name, None, '')
 
         if len(callers_filtered) > 0:
@@ -757,8 +762,9 @@ def setup_caller():
                 sound_list.append(sound_file_path)
             caller[1][sound_file_key] = sound_list
 
-        caller_title = str(os.path.basename(os.path.normpath(caller[0])))
-        caller_title_without_version = caller_title.split("-v")[0].lower()
+        (caller_name, caller_name_with_version) = grab_caller_name(caller)  
+        caller_title = caller_name_with_version
+        caller_title_without_version = caller_name
         ppi("Current voice-pack: " + caller_title + " (" + str(len(caller[1].values())) + " Sound-file-keys)")
         # ppi(caller[1])
         caller = caller[1]
