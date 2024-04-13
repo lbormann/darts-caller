@@ -203,8 +203,8 @@ Disclaimer: For uninterrupted calling experience on mobile devices, ensure that 
 - ambient_group_good
 - ambient_group_normal
 - ambient_checkout_call_limit
-- lobby_ambient_in
-- lobby_ambient_out
+- ambient_lobby_in
+- ambient_lobby_out
 
 **LOBBY**
 
