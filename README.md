@@ -116,7 +116,7 @@ Disclaimer: In order for the chat window to appear, your opponent must have the 
 - Button to switch to another random speaker.
 - Selection menus for adjusting language and gender.
 - Button to ban the current speaker.
-- Button to favor/mark a the current speaker (Favoured speakers will be color-coded and positioned at the top of the selection).
+- Button to favor the current speaker (Favoured speakers will be color-coded and positioned at the top of the selection list).
 - Button to introduce the current speaker.
 - Mod section:
     - adjust arguments on-the-fly
