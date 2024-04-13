@@ -160,6 +160,13 @@ Disclaimer: For uninterrupted calling experience on mobile devices, ensure that 
 - you_require (-PCC = 1 and -PCCSF = 0)
 - yr_2-yr_170 (-PCC = 1 and -PCCSF = 1)
 
+**LOBBY**
+
+- {playername}
+- average
+- 0-180
+- left
+
 **SINGLE-DART-SOUND-EFFECTS (Argument -E = 2):**
 
 - single 
@@ -205,13 +212,6 @@ Disclaimer: For uninterrupted calling experience on mobile devices, ensure that 
 - ambient_checkout_call_limit
 - ambient_lobby_in
 - ambient_lobby_out
-
-**LOBBY**
-
-- {playername}
-- average
-- 0-180
-- left
 
 **ATC (Around the clock)**
 
