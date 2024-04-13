@@ -91,7 +91,8 @@ It is advantageous for the folder to adhere to the naming convention. For exampl
 
 ### Web-Caller
 
-The web-caller provides various functionalities on a website hosted locally on your end. You can access this website on any device with a modern browser. Contrary to what the name might suggest, the web-caller offers more than just the pure "call functionality".
+The web-caller provides various functionalities on a website hosted locally on your end. By default you can access this website on any device with a modern browser by entering https://your-ip:8079. 
+Contrary to what the name 'Web-Caller' might suggest, it offers more than just the pure "call functionality".
 The website is divided into the following sections or functionalities:
 
 #### Start
@@ -109,12 +110,14 @@ Disclaimer: In order for the chat window to appear, your opponent must have the 
 
 #### Calling
 
-- Direct audio playback through a browser of your choice (the current voice pack is downloaded or updated once and then cached to enable seamless playback).
+- Direct audio playback through a browser of your choice (the current voice-pack is downloaded or updated and then cached to enable seamless playback for later visits).
 - Display of the current speaker (voice pack).
 - Selection menu to switch to a specific speaker.
 - Button to switch to another random speaker.
 - Selection menus for adjusting language and gender.
 - Button to ban the current speaker.
+- Button to favor/mark a the current speaker (Favoured speakers will be color-coded and positioned at the top of the selection).
+- Button to introduce the current speaker.
 - Mod section:
     - adjust arguments on-the-fly
     - customize current speaker voice

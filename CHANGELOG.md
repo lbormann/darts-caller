@@ -5,6 +5,7 @@
 - remove -BLP
 - add caller fav mechanismn
 - fix bug for option -C
+- reposition inputs on web-caller (for better practical use)
 
 
 ## 2.12.3

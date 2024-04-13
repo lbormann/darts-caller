@@ -66,6 +66,13 @@
 
         <button id="button-change" style="display:none;">Change caller!</button>
 
+        <!-- match -->
+        <div id="match">
+            <button id="button-next" style="display:none;">Next!</button>
+        </div>
+
+        <button id="button-calibrate-board" style="display:none;">Calibrate Board!</button>
+
         <div id="select-language" style="display:none;">
             <select name="language" id="language" tabindex="-1">
                 <option value="0"{% if key == language %}selected{% endif %}>All languages</option>
@@ -88,14 +95,11 @@
 
         <!-- board -->
         <div id="board">
-            <button id="button-calibrate-board" style="display:none;">Calibrate Board!</button>
+            
             <button id="button-reset-board" style="display:none;">Reset Board!</button>
         </div>  
         
-        <!-- match -->
-        <div id="match">
-            <button id="button-next" style="display:none;">Next!</button>
-        </div>
+
 
         <!-- mods -->    
         <image id="button-container-mod-toggle" src="/static/images/mods.png" style="display:none;"></image>
