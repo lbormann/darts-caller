@@ -320,21 +320,21 @@ Start the script:
 
 
 
-#### **<span style="color:red">`-U / --autodarts_email`</span>**
+#### **`-U / --autodarts_email`**
 
-You should know your autodarts.io registered email-address.
+**Required:** You should know your autodarts.io registered email-address.
 
 #### **`-P / --autodarts_password`**
 
-You should know your autodarts.io registered password. Make sure you disable 2FA (Two-Factor-Auth).
+**Required:** You should know your autodarts.io registered password. Make sure you disable 2FA (Two-Factor-Auth).
 
 #### **`-B / --autodarts_board_id`**
 
-You can find your Board-ID in Board-Manager.
+**Required:** You can find your Board-ID in Board-Manager.
 
 #### **`-M / --media_path`**
 
-Setup an absolute-path where voice-packs should be located. Just create an empty folder.
+**Required:** Setup an absolute-path where voice-packs should be located. Just create an empty folder.
 Make sure the given path doesn't reside inside main-directory (autodarts-caller).
 
 Examples: 
