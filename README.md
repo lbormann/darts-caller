@@ -328,7 +328,7 @@ Side note: The web-caller has its own volume control.
 
 #### *`-C / --caller`*
 
-Sets a specific voice-pack as caller. On start the application displays a list of installed voice-packs; copy the name of chosen one and paste it here. By default this is 'None' meaning the application chooses a random caller (voice-pack).
+Sets a specific voice-pack as caller. On start the application displays a list of installed voice-packs; copy the name of chosen one and paste it here.
 
 Side note: You can change the caller/voice-pack anytime in the web-caller.
 
