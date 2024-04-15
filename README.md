@@ -320,21 +320,22 @@ Start the script:
 
 
 
-#### **`-U / --autodarts_email`**
+#### *`-U / --autodarts_email`*
 
-**Required:** You should know your autodarts.io registered email-address.
+**Required:** Your autodarts.io registered email-address.
 
-#### **`-P / --autodarts_password`**
+#### *`-P / --autodarts_password`*
 
-**Required:** You should know your autodarts.io registered password. Make sure you disable 2FA (Two-Factor-Auth).
+**Required: Your autodarts.io registered password. Make sure you disable 2FA (Two-Factor-Auth).**
 
-#### **`-B / --autodarts_board_id`**
+#### *`-B / --autodarts_board_id`*
 
-**Required:** You can find your Board-ID in Board-Manager.
+**Required: Your autodarts.io registered board-id. You can find your Board-ID in Board-Manager.**
 
-#### **`-M / --media_path`**
+#### *`-M / --media_path`*
 
-**Required:** Setup an absolute-path where voice-packs should be located. Just create an empty folder.
+**Required: Setup an absolute-path where voice-packs should be located.**
+
 Make sure the given path doesn't reside inside main-directory (autodarts-caller).
 
 Examples: 
@@ -343,35 +344,42 @@ Examples:
 
 Side note: this folder will be targeted for voice-pack-downloads/installs (-DL).
 
+
 #### *`-MS / --media_path_shared`*
 
 If you do not want to configure same sounds again for every individual voice-pack, you can specify an absolute path to a shared directory. Every voice-pack will use the sounds of that directory. Have a look at [supported Sound-file-keys](#Sound-file-keys). Moreover make sure the given path neither resides inside main-directory (autodarts-caller) nor inside media-path (-M).
 
-[Default: '']
+**Default: Empty**
 
-Side note: sounds located in that directory will override sounds located in voice-pack(s).
+*Side note: sounds located in that directory will override sounds located in voice-pack(s).*
 
 #### *`-V / --caller_volume`*
 
 You can lower the call-volume in relation to current system-volume. '1.0' is system-volume. '0.5' is "half" volume.
 
-[Default: 1.0] [Possible values: 0.0 .. 1.0]
+**Default: 1.0**
+**Possible values: 0.0 .. 1.0**
 
-Side note: The web-caller has its own volume control.
+*Side note: The web-caller has its own volume control.*
 
 #### *`-C / --caller`*
 
 Sets a specific voice-pack as caller. On start the application displays a list of installed voice-packs; copy the name of chosen one and paste it here. By default this is 'None' meaning the application chooses a random caller (voice-pack).
 
-Side note: You can change the caller/voice-pack anytime in the web-caller.
+**Default: Empty**
+
+*Side note: You can change the caller/voice-pack anytime in the web-caller.*
 
 #### *`-R / --random_caller`*
 
 The application will randomly choose a voice-pack. If you use this functionality, the application only considers most recent version of a voice-pack by finding its highest version number by name. Example: 'en-US-Joey-Male-v3'. Because there is no voice-pack with name 'en-US-Joey-Male-v4', version is 'v3' (en-US-Joey-Male-v3). By default this is '1'.
 
-- '0' = random caller deactivated (instead use -C to set your favorite caller)
-- '1' = random caller for every match-start
-- '2' = random caller for every leg
+- **'0'** = random caller deactivated (instead use -C to set your favorite caller)
+- **'1'** = random caller for every match-start
+- **'2'** = random caller for every leg
+
+**Default: 1**
+**Possible values: 0 | 1 | 2**
 
 #### *`-RL / --random_caller_language`*
 
@@ -385,7 +393,7 @@ Filters randomly chosen voice-pack by its language. '0' means no filtering (ever
 - '5' = spanish
 - '6' = dutch
 
-Side note: You can change the gender anytime in the web-caller.
+*Side note: You can change the gender anytime in the web-caller.*
 
 #### *`-RG / --random_caller_gender`*
 
@@ -395,7 +403,7 @@ Filters randomly chosen voice-pack by its gender. '0' means no filtering (every 
 - '1' = female
 - '2' = male
 
-Side note: You can change the gender anytime in the web-caller.
+*Side note: You can change the gender anytime in the web-caller.*
 
 #### *`-CCP / --call_current_player`*
 
@@ -405,7 +413,7 @@ The application will call playernames for certain events like "you require", "le
 - '1' = call current playername activated
 - '2' = call current playername also on every playerchange
 
-Side note: You can change that option anytime in the web-caller.
+*Side note: You can change that option anytime in the web-caller.*
 
 #### *`-E / --call_every_dart`*
 
@@ -415,7 +423,7 @@ The application will call every thrown dart. By default this is not activated.
 - '1' = call every dart by calculating the multiplication of field value and multiplier (for example: you hit a triple 20, resulting in calling 60). 
 - '2' = call every dart by calling sound-effects you setup. s1, d1, t1 to s20, d20, t20, outside, sbull, bull. If particular sound-file-key can't be found, it will fallback to: singleinner, singleouter, single, double, triple.
 
-Side note: You can change that option anytime in the web-caller.
+*Side note: You can change that option anytime in the web-caller.*
 
 #### *`-ETS / --call_every_dart_total_score`*
 
@@ -428,7 +436,7 @@ If you set this to '1' the application will call possible checkouts. Setup sound
 If you set this to value above '1' calls won't be repeat when the count of value is reached.
 By default this is '1'.
 
-Side note: You can change that option anytime in the web-caller.
+*Side note: You can change that option anytime in the web-caller.*
 
 #### *`-PCCSF / --possible_checkout_call_single_file`*
 
@@ -440,7 +448,7 @@ If you set this to '1' the application will only call if there is a checkout pos
 Note: this functionality won't work if your board is offline.
 By default this is '0'.
 
-Side note: You can change that option anytime in the web-caller.
+*Side note: You can change that option anytime in the web-caller.*
 
 #### *`-A / --ambient_sounds`*
 
