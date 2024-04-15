@@ -342,7 +342,7 @@ Examples:
 - (Windows): C:\Users\Luca\Desktop\Programme\autodarts\autodarts-caller-speaker
 - (Linux): /home/luca/autodarts/autodarts-caller-speaker
 
-Side note: this folder will be targeted for voice-pack-downloads/installs (-DL).
+*Side note: this folder will be targeted for voice-pack-downloads/installs (-DL).*
 
 
 #### *`-MS / --media_path_shared`*
@@ -358,6 +358,7 @@ If you do not want to configure same sounds again for every individual voice-pac
 You can lower the call-volume in relation to current system-volume. '1.0' is system-volume. '0.5' is "half" volume.
 
 **Default: 1.0**
+
 **Possible values: 0.0 .. 1.0**
 
 *Side note: The web-caller has its own volume control.*
@@ -379,6 +380,7 @@ The application will randomly choose a voice-pack. If you use this functionality
 - **'2'** = random caller for every leg
 
 **Default: 1**
+
 **Possible values: 0 | 1 | 2**
 
 #### *`-RL / --random_caller_language`*
