@@ -322,19 +322,19 @@ Start the script:
 
 #### *`-U / --autodarts_email`*
 
-**Required:** Your autodarts.io registered email-address.
+**REQUIRED:** Your autodarts.io registered email-address.
 
 #### *`-P / --autodarts_password`*
 
-**Required: Your autodarts.io registered password. Make sure you disable 2FA (Two-Factor-Auth).**
+**REQUIRED: Your autodarts.io registered password. Make sure you disable 2FA (Two-Factor-Auth).**
 
 #### *`-B / --autodarts_board_id`*
 
-**Required: Your autodarts.io registered board-id. You can find your Board-ID in Board-Manager.**
+**REQUIRED: Your autodarts.io registered board-id. You can find your Board-ID in Board-Manager.**
 
 #### *`-M / --media_path`*
 
-**Required: Setup an absolute-path where voice-packs should be located.**
+**REQUIRED: Setup an absolute-path where voice-packs should be located.**
 
 Make sure the given path doesn't reside inside main-directory (autodarts-caller).
 
@@ -355,7 +355,8 @@ If you do not want to configure same sounds again for every individual voice-pac
 
 #### *`-V / --caller_volume`*
 
-You can lower the call-volume in relation to current system-volume. '1.0' is system-volume. '0.5' is "half" volume.
+You can lower the local playback volume in relation to current system volume. 
+'1.0' is max volume. '0.5' is "half" volume.
 
 **Default: 1.0**
 
