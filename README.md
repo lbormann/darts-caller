@@ -326,15 +326,15 @@ Start the script:
 
 #### *`-P / --autodarts_password`*
 
-**REQUIRED: Your autodarts.io registered password. Make sure you disable 2FA (Two-Factor-Auth).**
+**REQUIRED:** Your autodarts.io registered password. Make sure you disable 2FA (Two-Factor-Auth).
 
 #### *`-B / --autodarts_board_id`*
 
-**REQUIRED: Your autodarts.io registered board-id. You can find your Board-ID in Board-Manager.**
+**REQUIRED:** Your autodarts.io registered board-id. You can find your Board-ID in Board-Manager.
 
 #### *`-M / --media_path`*
 
-**REQUIRED: Setup an absolute-path where voice-packs should be located.**
+**REQUIRED:** Setup an absolute-path where voice-packs should be located.
 
 Make sure the given path doesn't reside inside main-directory (autodarts-caller).
 
@@ -349,40 +349,40 @@ Examples:
 
 If you do not want to configure same sounds again for every individual voice-pack, you can specify an absolute path to a shared directory. Every voice-pack will use the sounds of that directory. Have a look at [supported Sound-file-keys](#Sound-file-keys). Moreover make sure the given path neither resides inside main-directory (autodarts-caller) nor inside media-path (-M).
 
-**Default: Empty**
+Default: Empty
 
-*Side note: sounds located in that directory will override sounds located in voice-pack(s).*
+Side note: sounds located in that directory will override sounds located in voice-pack(s).
 
 #### *`-V / --caller_volume`*
 
 You can lower the local playback volume in relation to current system volume. 
 '1.0' is max volume. '0.5' is "half" volume.
 
-**Default: 1.0**
+Default: 1.0
 
-**Possible values: 0.0 .. 1.0**
+Possible values: 0.0 .. 1.0
 
-*Side note: The web-caller has its own volume control.*
+Side note: The web-caller has its own volume control.
 
 #### *`-C / --caller`*
 
 Sets a specific voice-pack as caller. On start the application displays a list of installed voice-packs; copy the name of chosen one and paste it here. By default this is 'None' meaning the application chooses a random caller (voice-pack).
 
-**Default: Empty**
+Default: Empty
 
-*Side note: You can change the caller/voice-pack anytime in the web-caller.*
+Side note: You can change the caller/voice-pack anytime in the web-caller.
 
 #### *`-R / --random_caller`*
 
 The application will randomly choose a voice-pack. If you use this functionality, the application only considers most recent version of a voice-pack by finding its highest version number by name. Example: 'en-US-Joey-Male-v3'. Because there is no voice-pack with name 'en-US-Joey-Male-v4', version is 'v3' (en-US-Joey-Male-v3). By default this is '1'.
 
-- **'0'** = random caller deactivated (instead use -C to set your favorite caller)
-- **'1'** = random caller for every match-start
-- **'2'** = random caller for every leg
+- '0' = random caller deactivated (instead use -C to set your favorite caller)
+- '1' = random caller for every match-start
+- '2' = random caller for every leg
 
-**Default: 1**
+Default: 1
 
-**Possible values: 0 | 1 | 2**
+Possible values: 0 | 1 | 2
 
 #### *`-RL / --random_caller_language`*
 
@@ -396,7 +396,7 @@ Filters randomly chosen voice-pack by its language. '0' means no filtering (ever
 - '5' = spanish
 - '6' = dutch
 
-*Side note: You can change the gender anytime in the web-caller.*
+Side note: You can change the gender anytime in the web-caller.
 
 #### *`-RG / --random_caller_gender`*
 
