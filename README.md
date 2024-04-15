@@ -285,40 +285,6 @@ Start the script:
 
 ### Arguments
 
-**Required:**
-
-- -U / --autodarts_email
-- -P / --autodarts_password
-- -B / --autodarts_board_id
-- -M / --media_path
-
-**Optional:**
-
-- -MS / --media_path_shared [Default: '']
-- -V / --caller_volume [Default: 1.0] [Possible values: 0.0 .. 1.0]
-- -C / --caller [Default: None] [Possible values: look at description below]
-- -R / --random_caller [Default: 1] [Possible values: 0 | 1 | 2]
-- -RL / --random_caller_language [Default: 1] [Possible values: look at description below]
-- -RG / --random_caller_gender [Default: 0] [Possible values: look at description below]
-- -CCP / --call_current_player [Default: 1] [Possible values: 0 | 1 | 2]
-- -E / --call_every_dart [Default: 0] [Possible values: 0 | 1 | 2]
-- -ETS / --call_every_dart_total_score [Default: 1] [Possible values: 0 | 1]
-- -PCC / --possible_checkout_call [Default: 1] [Possible values: 0..Inf]
-- -PCCSF / --possible_checkout_call_single_files [Default: 1] [Possible values: 0 | 1]
-- -PCCYO / --possible_checkout_call_yourself_only [Default: 0] [Possible values: 0 | 1]
-- -A / --ambient_sounds [Default: 0.0] [Possible values: 0.0 .. 1.0]
-- -AAC / --ambient_sounds_after_calls [Default: 0] [Possible values: 0 | 1]
-- -DL / --downloads [Default: 1] [Possible values: 0 | 1]
-- -DLL / --downloads_limit [Default: 3]
-- -DLLA / --downloads_language [Default: 1] [Possible values: look at description below]
-- -DLN / --downloads_name [Default: '']
-- -BAV / --background_audio_volume [Default: 0.0] [Possible values: 0.0 .. 1.0]
-- -LPB / --local_playback [Default: 1] [Possible values: 0 | 1]
-- -WEBDH / --web_caller_disable_https [Default: 0] [Possible values: 0 | 1]
-- -HP / --host_port [Default: 8079]
-- -DEB / --debug [Default: 0] [Possible values: 0 | 1]
-
-
 
 #### *`-U / --autodarts_email`*
 
@@ -349,8 +315,6 @@ Side note: this folder will be targeted for voice-pack-downloads/installs (-DL).
 
 If you do not want to configure same sounds again for every individual voice-pack, you can specify an absolute path to a shared directory. Every voice-pack will use the sounds of that directory. Have a look at [supported Sound-file-keys](#Sound-file-keys). Moreover make sure the given path neither resides inside main-directory (autodarts-caller) nor inside media-path (-M).
 
-Default: Empty
-
 Side note: sounds located in that directory will override sounds located in voice-pack(s).
 
 #### *`-V / --caller_volume`*
@@ -358,9 +322,7 @@ Side note: sounds located in that directory will override sounds located in voic
 You can lower the local playback volume in relation to current system volume. 
 '1.0' is max volume. '0.5' is "half" volume.
 
-Default: 1.0
-
-Possible values: 0.0 .. 1.0
+Default: '1.0'
 
 Side note: The web-caller has its own volume control.
 
@@ -368,25 +330,21 @@ Side note: The web-caller has its own volume control.
 
 Sets a specific voice-pack as caller. On start the application displays a list of installed voice-packs; copy the name of chosen one and paste it here. By default this is 'None' meaning the application chooses a random caller (voice-pack).
 
-Default: Empty
-
 Side note: You can change the caller/voice-pack anytime in the web-caller.
 
 #### *`-R / --random_caller`*
 
-The application will randomly choose a voice-pack. If you use this functionality, the application only considers most recent version of a voice-pack by finding its highest version number by name. Example: 'en-US-Joey-Male-v3'. Because there is no voice-pack with name 'en-US-Joey-Male-v4', version is 'v3' (en-US-Joey-Male-v3). By default this is '1'.
+The application will randomly choose a voice-pack. If you use this functionality, the application only considers most recent version of a voice-pack by finding its highest version number by name. Example: 'en-US-Joey-Male-v3'. Because there is no voice-pack with name 'en-US-Joey-Male-v4', version is 'v3' (en-US-Joey-Male-v3).
 
 - '0' = random caller deactivated (instead use -C to set your favorite caller)
 - '1' = random caller for every match-start
 - '2' = random caller for every leg
 
-Default: 1
-
-Possible values: 0 | 1 | 2
+Default: '1'
 
 #### *`-RL / --random_caller_language`*
 
-Filters randomly chosen voice-pack by its language. '0' means no filtering (every language). By default this is '1' (english).
+Filters randomly chosen voice-pack by its language.
 
 - '0' = every language
 - '1' = english
@@ -396,84 +354,112 @@ Filters randomly chosen voice-pack by its language. '0' means no filtering (ever
 - '5' = spanish
 - '6' = dutch
 
-Side note: You can change the gender anytime in the web-caller.
+Default: '1'
+
+Side note: You can change that option anytime in the web-caller.
 
 #### *`-RG / --random_caller_gender`*
 
-Filters randomly chosen voice-pack by its gender. '0' means no filtering (every gender). By default this is '0'.
+Filters randomly chosen voice-pack by its gender.
 
 - '0' = every gender
 - '1' = female
 - '2' = male
 
-Side note: You can change the gender anytime in the web-caller.
+Default: '0'
+
+Side note: You can change that option anytime in the web-caller.
 
 #### *`-CCP / --call_current_player`*
 
-The application will call playernames for certain events like "you require", "leg/set start", "leg/set end". By default this is activated.
+The application will call playernames for certain events like "you require", "leg/set start", "leg/set end".
 
 - '0' = call current playername deactivated
 - '1' = call current playername activated
-- '2' = call current playername also on every playerchange
+- '2' = call current playername activated also on every playerchange
+
+Default: '1'
 
 Side note: You can change that option anytime in the web-caller.
 
 #### *`-E / --call_every_dart`*
 
-The application will call every thrown dart. By default this is not activated.
+The application will call every thrown dart.
 
 - '0' = call every dart deactivated
-- '1' = call every dart by calculating the multiplication of field value and multiplier (for example: you hit a triple 20, resulting in calling 60). 
-- '2' = call every dart by calling sound-effects you setup. s1, d1, t1 to s20, d20, t20, outside, sbull, bull. If particular sound-file-key can't be found, it will fallback to: singleinner, singleouter, single, double, triple.
+- '1' = call every dart by calculating the multiplication of field value and multiplier (for example: you hit a triple 20, resulting in calling 60) 
+- '2' = call every dart by calling sound-effects you setup. s1, d1, t1 to s20, d20, t20, outside, sbull, bull. If particular sound-file-key can't be found, it will fallback to: singleinner, singleouter, single, double, triple
+
+Default: '0'
 
 Side note: You can change that option anytime in the web-caller.
 
 #### *`-ETS / --call_every_dart_total_score`*
 
-The application will call total score if call-every-dart is active (1 or 2).
-By default this is activated.
+The application will call total score if call-every-dart is active ('1' or '2').
+
+- '0' = call total score deactivated
+- '1' = call total score activated
+
+Default: '1'
 
 #### *`-PCC / --possible_checkout_call`*
 
-If you set this to '1' the application will call possible checkouts. Setup sounds {playername}{yr_2-yr_170} or {2-170} as a fallback. 
-If you set this to value above '1' calls won't be repeat when the count of value is reached.
-By default this is '1'.
+The application will call possible checkout every turn until given value is reached.
+
+Default: '1'
 
 Side note: You can change that option anytime in the web-caller.
 
 #### *`-PCCSF / --possible_checkout_call_single_file`*
 
-If you set this to '0' (default) the application uses two separated sound-files named: 'you_require' and 'x' (score-value). If you set this to '1' the application will call a possible checkout by using one file 'yr_2-yr_170'.
+Specify which sound-file-keys should be used for "you require"-event.
+
+- '0' = The application uses two separated sound-file-keys: 'you_require' and 'x' (score-value)
+- '1' = The application uses one sound-file-key: 'yr_2 to yr_170'
+
+Default: '0'
 
 #### *`-PCCYO / --possible_checkout_call_yourself_only`*
 
 If you set this to '1' the application will only call if there is a checkout possibility and the current player is you (associated to your board-id). 
-Note: this functionality won't work if your board is offline.
-By default this is '0'.
+This functionality won't work if your board is offline.
+
+- '0' = call possible checkout for every player
+- '1' = call possible checkout only for yourself
+
+Default: '0'
 
 Side note: You can change that option anytime in the web-caller.
 
 #### *`-A / --ambient_sounds`*
 
-If you set this to value between '0.1' and '1.0' the caller will call extra sounds like crowd-shouting or whatever you like (you decide!). Setup sounds {ambient_*}. 
-The configured value will be multiplied by caller_volume. As an example: caller_volume = '0.8' and ambient_sounds = '1.0' means your sound-volume will be 0.8 relative to your system-volume. By default this is '0'.
+If you set this to value between '0.1' and '1.0' the application will playback sound-file-keys ambient_*. 
+The configured value will be multiplied by caller-volume (-V). As an example: caller-volume = '0.8' and ambient-sounds = '1.0' resultung in '0.8' relative to your system-volume.
+
+Default: '0.0'
 
 #### *`-AAC / --ambient_sounds_after_calls`*
 
-If you set this to '1' ambient_*-sounds will wait until main-calls are finished. By default this is not activated.
+If you set this to '1', sound-file-keys ambient_* will wait until main-calls are finished.
+
+Default: '0'
 
 #### *`-DL / --downloads`*
 
 If you set this to '1' the application will download available voice-packs that are not already installed. Installation path is the value of -M. 
-By default this is activated.
+
+Default: '1'
 
 #### *`-DLL / --downloads_limit`*
 
-If you want to limit download-count, you can set it to x most recent. By default this is '3'.
+If you want to limit download-count, you can set it to x most recent.
+
+Default: '3'
 
 #### *`-DLLA / --downloads_language`*
 
-If you want to filter downloads for a specific language. '0' means no language-filtering (every language). By default this is '1' (english).
+If you want to filter downloads for a specific language.
 
 - '0' = every language
 - '1' = english
@@ -483,34 +469,45 @@ If you want to filter downloads for a specific language. '0' means no language-f
 - '5' = spanish
 - '6' = dutch
 
+Default: '1'
+
 #### *`-DLN / --downloads_name`*
 
-If you want to filter downloads to a specific voice-pack-name. '' means no name-filtering. By default this is ''.
-For example you could set a value 'en-US-Joey-Male'.
+If you want to filter downloads to a specific voice-pack. For example you could set a value 'en-US-Joey-Male'.
 
 #### *`-BAV / --background_audio_volume`*
 
-You can not hear any calls as your music is way too loud? Try to set this to '0.03' and let the calls begin :) Default is '0.0' (no background-audio-muting). Note: Only availble for windows-os and local playback (LPB = 1).
+You can not hear any calls as your music is way too loud? Try to set this to '0.03'.
+
+Default: '0.0' (no background-audio-muting)
+
+Side Note: only availble for windows-os and local playback (LPB = 1).
 
 #### *`-LPB / --local_playback`*
 
-If you set this to '1' the application will playback audio by using your local speakers.
-By default this is activated.
+The application will playback audio by using your local speakers.
+
+Default: '1'
 
 #### *`-WEBDH / --web_caller_disable_https`*
 
 If you set this to '1' the application will run all connection services with insecure http/ws protocol. It's NOT recommended! 
 Also you won't be able to use video-/voice-calls on web-caller.
-By default this is not activated.
+
+Default: '0'
 
 #### *`-HP / --host_port`*
 
 The application provides a websocket-service. Other extensions like autodarts-extern or autodarts-wled can connect to this service (wss://ip:port).
 For a list of json-examples look at 'broadcast-examples.dat' - who knows maybe you build your own extension upon this?!
 
+Default: '8079'
+
 #### *`-DEB / --debug`*
 
-Set this to value '1', to output extended event-information on console. By default this is '0'.
+The application outputs extended event-information.
+
+Default: '0'
 
 
 
