@@ -609,7 +609,7 @@ def load_callers():
     for root, dirs, files in os.walk(AUDIO_MEDIA_PATH):
 
         isCallerProfile = False
-        for value in CALLER_PROFILES.values():
+        for value in CALLER_PROFILES.keys():
             if value in root:
                 isCallerProfile = True
                 break
