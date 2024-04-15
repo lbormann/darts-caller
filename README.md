@@ -320,7 +320,7 @@ Start the script:
 
 
 
-#### **`-U / --autodarts_email`**
+#### **<span style="color:red">`-U / --autodarts_email`</span>**
 
 You should know your autodarts.io registered email-address.
 
