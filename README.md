@@ -56,7 +56,7 @@ Go to download-directory and type:
 
     pip3 install -r requirements.txt
 
-Optional for Linux: If you encounter problems with playing sound:
+Optional for Linux: If you encounter problems local playback:
 
     sudo apt-get install python3-sdl2
 
@@ -111,7 +111,7 @@ Disclaimer: In order for the chat window to appear, your opponent must have the 
 #### Calling
 
 - Direct audio playback through a browser of your choice (the current voice-pack is downloaded or updated and then cached to enable seamless playback for later visits).
-- Display of the current speaker (voice pack).
+- Display of the current speaker (voice-pack).
 - Selection menu to switch to a specific speaker.
 - Button to switch to another random speaker.
 - Selection menus for adjusting language and gender.
@@ -320,19 +320,19 @@ Start the script:
 
 
 
-*`-U / --autodarts_email`*
+#### **`-U / --autodarts_email`**
 
-You should know your autodarts.io registered email-adress.
+You should know your autodarts.io registered email-address.
 
-*`-P / --autodarts_password`*
+#### **`-P / --autodarts_password`**
 
 You should know your autodarts.io registered password. Make sure you disable 2FA (Two-Factor-Auth).
 
-*`-B / --autodarts_board_id`*
+#### **`-B / --autodarts_board_id`**
 
 You can find your Board-ID in Board-Manager.
 
-*`-M / --media_path`*
+#### **`-M / --media_path`**
 
 Setup an absolute-path where voice-packs should be located. Just create an empty folder.
 Make sure the given path doesn't reside inside main-directory (autodarts-caller).
@@ -343,24 +343,29 @@ Examples:
 
 Side note: this folder will be targeted for voice-pack-downloads/installs (-DL).
 
-*`-MS / --media_path_shared`*
+#### *`-MS / --media_path_shared`*
 
 If you do not want to configure same sounds again for every individual voice-pack, you can specify an absolute path to a shared directory. Every voice-pack will use the sounds of that directory. Have a look at [supported Sound-file-keys](#Sound-file-keys). Moreover make sure the given path neither resides inside main-directory (autodarts-caller) nor inside media-path (-M).
 
-Side note: sounds in that directory will override sounds of voice-pack(s).
+[Default: '']
 
-*`-V / --caller_volume`*
+Side note: sounds located in that directory will override sounds located in voice-pack(s).
 
-You can lower the call-volume in relation to current system-volume. '1.0' is system-volume. '0.5' is "half" volume. By default this is '1.0'.
-The web-caller has its own volume control.
+#### *`-V / --caller_volume`*
 
-*`-C / --caller`*
+You can lower the call-volume in relation to current system-volume. '1.0' is system-volume. '0.5' is "half" volume.
+
+[Default: 1.0] [Possible values: 0.0 .. 1.0]
+
+Side note: The web-caller has its own volume control.
+
+#### *`-C / --caller`*
 
 Sets a specific voice-pack as caller. On start the application displays a list of installed voice-packs; copy the name of chosen one and paste it here. By default this is 'None' meaning the application chooses a random caller (voice-pack).
 
 Side note: You can change the caller/voice-pack anytime in the web-caller.
 
-*`-R / --random_caller`*
+#### *`-R / --random_caller`*
 
 The application will randomly choose a voice-pack. If you use this functionality, the application only considers most recent version of a voice-pack by finding its highest version number by name. Example: 'en-US-Joey-Male-v3'. Because there is no voice-pack with name 'en-US-Joey-Male-v4', version is 'v3' (en-US-Joey-Male-v3). By default this is '1'.
 
@@ -368,7 +373,7 @@ The application will randomly choose a voice-pack. If you use this functionality
 - '1' = random caller for every match-start
 - '2' = random caller for every leg
 
-*`-RL / --random_caller_language`*
+#### *`-RL / --random_caller_language`*
 
 Filters randomly chosen voice-pack by its language. '0' means no filtering (every language). By default this is '1' (english).
 
@@ -382,7 +387,7 @@ Filters randomly chosen voice-pack by its language. '0' means no filtering (ever
 
 Side note: You can change the gender anytime in the web-caller.
 
-*`-RG / --random_caller_gender`*
+#### *`-RG / --random_caller_gender`*
 
 Filters randomly chosen voice-pack by its gender. '0' means no filtering (every gender). By default this is '0'.
 
@@ -392,7 +397,7 @@ Filters randomly chosen voice-pack by its gender. '0' means no filtering (every 
 
 Side note: You can change the gender anytime in the web-caller.
 
-*`-CCP / --call_current_player`*
+#### *`-CCP / --call_current_player`*
 
 The application will call playernames for certain events like "you require", "leg/set start", "leg/set end". By default this is activated.
 
@@ -402,7 +407,7 @@ The application will call playernames for certain events like "you require", "le
 
 Side note: You can change that option anytime in the web-caller.
 
-*`-E / --call_every_dart`*
+#### *`-E / --call_every_dart`*
 
 The application will call every thrown dart. By default this is not activated.
 
@@ -412,12 +417,12 @@ The application will call every thrown dart. By default this is not activated.
 
 Side note: You can change that option anytime in the web-caller.
 
-*`-ETS / --call_every_dart_total_score`*
+#### *`-ETS / --call_every_dart_total_score`*
 
 The application will call total score if call-every-dart is active (1 or 2).
 By default this is activated.
 
-*`-PCC / --possible_checkout_call`*
+#### *`-PCC / --possible_checkout_call`*
 
 If you set this to '1' the application will call possible checkouts. Setup sounds {playername}{yr_2-yr_170} or {2-170} as a fallback. 
 If you set this to value above '1' calls won't be repeat when the count of value is reached.
@@ -425,11 +430,11 @@ By default this is '1'.
 
 Side note: You can change that option anytime in the web-caller.
 
-*`-PCCSF / --possible_checkout_call_single_file`*
+#### *`-PCCSF / --possible_checkout_call_single_file`*
 
 If you set this to '0' (default) the application uses two separated sound-files named: 'you_require' and 'x' (score-value). If you set this to '1' the application will call a possible checkout by using one file 'yr_2-yr_170'.
 
-*`-PCCYO / --possible_checkout_call_yourself_only`*
+#### *`-PCCYO / --possible_checkout_call_yourself_only`*
 
 If you set this to '1' the application will only call if there is a checkout possibility and the current player is you (associated to your board-id). 
 Note: this functionality won't work if your board is offline.
@@ -437,25 +442,25 @@ By default this is '0'.
 
 Side note: You can change that option anytime in the web-caller.
 
-*`-A / --ambient_sounds`*
+#### *`-A / --ambient_sounds`*
 
 If you set this to value between '0.1' and '1.0' the caller will call extra sounds like crowd-shouting or whatever you like (you decide!). Setup sounds {ambient_*}. 
 The configured value will be multiplied by caller_volume. As an example: caller_volume = '0.8' and ambient_sounds = '1.0' means your sound-volume will be 0.8 relative to your system-volume. By default this is '0'.
 
-*`-AAC / --ambient_sounds_after_calls`*
+#### *`-AAC / --ambient_sounds_after_calls`*
 
 If you set this to '1' ambient_*-sounds will wait until main-calls are finished. By default this is not activated.
 
-*`-DL / --downloads`*
+#### *`-DL / --downloads`*
 
 If you set this to '1' the application will download available voice-packs that are not already installed. Installation path is the value of -M. 
 By default this is activated.
 
-*`-DLL / --downloads_limit`*
+#### *`-DLL / --downloads_limit`*
 
 If you want to limit download-count, you can set it to x most recent. By default this is '3'.
 
-*`-DLLA / --downloads_language`*
+#### *`-DLLA / --downloads_language`*
 
 If you want to filter downloads for a specific language. '0' means no language-filtering (every language). By default this is '1' (english).
 
@@ -467,32 +472,32 @@ If you want to filter downloads for a specific language. '0' means no language-f
 - '5' = spanish
 - '6' = dutch
 
-*`-DLN / --downloads_name`*
+#### *`-DLN / --downloads_name`*
 
 If you want to filter downloads to a specific voice-pack-name. '' means no name-filtering. By default this is ''.
 For example you could set a value 'en-US-Joey-Male'.
 
-*`-BAV / --background_audio_volume`*
+#### *`-BAV / --background_audio_volume`*
 
 You can not hear any calls as your music is way too loud? Try to set this to '0.03' and let the calls begin :) Default is '0.0' (no background-audio-muting). Note: Only availble for windows-os and local playback (LPB = 1).
 
-*`-LPB / --local_playback`*
+#### *`-LPB / --local_playback`*
 
 If you set this to '1' the application will playback audio by using your local speakers.
 By default this is activated.
 
-*`-WEBDH / --web_caller_disable_https`*
+#### *`-WEBDH / --web_caller_disable_https`*
 
 If you set this to '1' the application will run all connection services with insecure http/ws protocol. It's NOT recommended! 
 Also you won't be able to use video-/voice-calls on web-caller.
 By default this is not activated.
 
-*`-HP / --host_port`*
+#### *`-HP / --host_port`*
 
 The application provides a websocket-service. Other extensions like autodarts-extern or autodarts-wled can connect to this service (wss://ip:port).
 For a list of json-examples look at 'broadcast-examples.dat' - who knows maybe you build your own extension upon this?!
 
-*`-DEB / --debug`*
+#### *`-DEB / --debug`*
 
 Set this to value '1', to output extended event-information on console. By default this is '0'.
 

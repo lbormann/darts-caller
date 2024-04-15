@@ -1,8 +1,14 @@
+## 2.12.5
+
+- improve README
+
+
+
 ## 2.12.4
 
 - change sound-file-key 'lobby_ambient_in' to 'ambient_lobby_in'
 - change sound-file-key 'lobby_ambient_out' to 'ambient_lobby_out'
-- remove -BLP
+- remove argument -BLP
 - add caller fav mechanismn
 - fix bug for option -C
 - reposition inputs on web-caller (for better practical use)

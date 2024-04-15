@@ -607,13 +607,20 @@ def load_callers():
         
     # load callers
     for root, dirs, files in os.walk(AUDIO_MEDIA_PATH):
+
+        isCallerProfile = False
+        for value in CALLER_PROFILES.values():
+            if value in root:
+                isCallerProfile = True
+                break
+
         file_dict = {}
         for filename in files:
             if filename.endswith(tuple(SUPPORTED_SOUND_FORMATS)):
                 base = os.path.splitext(filename)[0]
                 key = base.split('+', 1)[0]
 
-                if key in BLACKLISTED_SOUND_FILE_KEYS:
+                if isCallerProfile and key in BLACKLISTED_SOUND_FILE_KEYS:
                     continue
 
                 full_path = os.path.join(root, filename)
