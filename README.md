@@ -444,13 +444,7 @@ Default: '0'
 
 #### *`-DL / --downloads`*
 
-If you set this to '1' the application will download available voice-packs that are not already installed. Installation path is the value of -M. 
-
-Default: '1'
-
-#### *`-DLL / --downloads_limit`*
-
-If you want to limit download-count, you can set it to x most recent.
+The application will download 'x' available voice-packs that are not already installed. Installation path is the value of -M. 
 
 Default: '3'
 
