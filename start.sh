@@ -52,14 +52,8 @@ call_current_player=
 # -E
 call_every_dart=
 
-# -ESF
-call_every_dart_single_files=
-
 # -PCC
 possible_checkout_call=
-
-# -PCCSF
-possible_checkout_call_single_files=
 
 # -PCCYO
 possible_checkout_call_yourself_only=
@@ -75,9 +69,6 @@ downloads=
 
 # -DLLA
 downloads_language=
-
-# -DLL
-downloads_limit=
 
 # -DLN
 downloads_name=
@@ -152,14 +143,8 @@ fi
 if [ -n "$call_every_dart" ]; then
   args="$args -E $call_every_dart"
 fi
-if [ -n "$call_every_dart_single_files" ]; then
-  args="$args -ESF $call_every_dart_single_files"
-fi
 if [ -n "$possible_checkout_call" ]; then
   args="$args -PCC $possible_checkout_call"
-fi
-if [ -n "$possible_checkout_call_single_files" ]; then
-  args="$args -PCCSF $possible_checkout_call_single_files"
 fi
 if [ -n "$possible_checkout_call_yourself_only" ]; then
   args="$args -PCCYO $possible_checkout_call_yourself_only"
@@ -175,9 +160,6 @@ if [ -n "$downloads" ]; then
 fi
 if [ -n "$downloads_language" ]; then
   args="$args -DLLA $downloads_language"
-fi
-if [ -n "$downloads_limit" ]; then
-  args="$args -DLL $downloads_limit"
 fi
 if [ -n "$downloads_name" ]; then
   args="$args -DLN $downloads_name"

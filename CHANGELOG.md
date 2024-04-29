@@ -1,7 +1,10 @@
 ## 2.12.5
 
-- improve README
-
+- simplify README (argument section)
+- remove argument -DLL (it is now covered by -DL)
+- remove argument -PCCSF (from now it will automatically fallback to "single-files" when sound-file-key 'you_require' is not available)
+- add sound-file-keys for particular checkout-numbers: 'c_2-c_170'
+- add sound-file-keys for particular bogey-numbers: 'ambient_bogey_number_{bogey_number}'
 
 
 ## 2.12.4

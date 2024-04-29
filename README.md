@@ -145,6 +145,7 @@ Disclaimer: For uninterrupted calling experience on mobile devices, ensure that 
 
 **MAIN:**
 
+- {playername} (-CCP > 0)
 - bulling_start
 - bulling_end
 - gameon
@@ -156,9 +157,9 @@ Disclaimer: For uninterrupted calling experience on mobile devices, ensure that 
 - set_{x}
 - busted
 - 0-180
-- {playername} (-CCP > 0)
-- you_require (-PCC = 1 and -PCCSF = 0)
-- yr_2-yr_170 (-PCC = 1 and -PCCSF = 1)
+- c_2-c_170 (-PCC > 0)
+- you_require (-PCC > 0)
+- yr_2-yr_170 (-PCC > 0) [fallback for 'you_require']
 
 **LOBBY**
 
@@ -195,7 +196,6 @@ Disclaimer: For uninterrupted calling experience on mobile devices, ensure that 
 - ambient_setshot_{playername} [overrides: ambient_setshot] 
 - ambient_matchshot
 - ambient_matchshot_{playername} [overrides: ambient_matchshot]
-- ambient_bogey_number
 - ambient_noscore
 - ambient_1more
 - ambient_50more  
@@ -210,6 +210,8 @@ Disclaimer: For uninterrupted calling experience on mobile devices, ensure that 
 - ambient_group_good
 - ambient_group_normal
 - ambient_checkout_call_limit
+- ambient_bogey_number
+- ambient_bogey_number_{bogey_number} [overrides: ambient_bogey_number]
 - ambient_lobby_in
 - ambient_lobby_out
 
@@ -405,20 +407,15 @@ Default: '1'
 
 #### *`-PCC / --possible_checkout_call`*
 
-The application will call possible checkout every turn until given value is reached.
+The application will call and repeat 'x' times a particular checkout until configured value 'x' is reached. 
+If configured value 'x' is reached it will playback sound-file-key 'ambient_checkout_call_limit' instead. 
+If possible-checkout`s remaining value changes it will call and repeat 'x' times a particular checkout until configured value 'x' is reached.
 
-Default: '1'
+For playback the application uses two sound-file-keys: 'you_require' and 'c_2-c_170' (fallback to '2-170'). If 'you_require' is not available it will fallback to single sound-file-key: 'yr_2 to yr_170'.
+
+Default: '1' (x = 1 => call a particular possible checkout one time)
 
 Side note: You can change that option anytime in the web-caller.
-
-#### *`-PCCSF / --possible_checkout_call_single_file`*
-
-Specify which sound-file-keys should be used for "you require"-event.
-
-- '0' = The application uses two separated sound-file-keys: 'you_require' and 'x' (score-value)
-- '1' = The application uses one sound-file-key: 'yr_2 to yr_170'
-
-Default: '0'
 
 #### *`-PCCYO / --possible_checkout_call_yourself_only`*
 
@@ -666,7 +663,7 @@ EVERY sound-file is optional! If you don't like a specific sound just delete it!
 
 There are multiple ways to ban an undesired voice-pack:
 
-- Option 1) Visist web-caller and press "Ban Caller!"
+- Option 1) Visit web-caller and press "Ban Caller!"
 - Option 2) Delete ALL audio-files of voice-pack-folder.
 - Option 3) use [autodarts-voice](https://github.com/lbormann/autodarts-voice).
 

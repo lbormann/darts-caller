@@ -44,9 +44,6 @@ fi
 if [ -n "$POSSIBLE_CHECKOUT_CALL" ]; then
   args="$args -PCC $POSSIBLE_CHECKOUT_CALL"
 fi
-if [ -n "$POSSIBLE_CHECKOUT_CALL_SINGLE_FILES" ]; then
-  args="$args -PCCSF $POSSIBLE_CHECKOUT_CALL_SINGLE_FILES"
-fi
 if [ -n "$POSSIBLE_CHECKOUT_CALL_YOURSELF_ONLY" ]; then
   args="$args -PCCYO $POSSIBLE_CHECKOUT_CALL_YOURSELF_ONLY"
 fi
@@ -61,9 +58,6 @@ if [ -n "$DOWNLOADS" ]; then
 fi
 if [ -n "$DOWNLOADS_LANGUAGE" ]; then
   args="$args -DLLA $DOWNLOADS_LANGUAGE"
-fi
-if [ -n "$DOWNLOADS_LIMIT" ]; then
-  args="$args -DLL $DOWNLOADS_LIMIT"
 fi
 if [ -n "$DOWNLOADS_NAME" ]; then
   args="$args -DLN $DOWNLOADS_NAME"

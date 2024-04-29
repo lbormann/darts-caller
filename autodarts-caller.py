@@ -56,7 +56,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.12.4'
+VERSION = '2.12.5'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -69,12 +69,10 @@ DEFAULT_CALL_CURRENT_PLAYER = 1
 DEFAULT_CALL_EVERY_DART = 0
 DEFAULT_CALL_EVERY_DART_TOTAL_SCORE = True
 DEFAULT_POSSIBLE_CHECKOUT_CALL = 1
-DEFAULT_POSSIBLE_CHECKOUT_CALL_SINGLE_FILES = 0
 DEFAULT_POSSIBLE_CHECKOUT_CALL_YOURSELF_ONLY = 0
 DEFAULT_AMBIENT_SOUNDS = 0.0
 DEFAULT_AMBIENT_SOUNDS_AFTER_CALLS = 0
-DEFAULT_DOWNLOADS = True
-DEFAULT_DOWNLOADS_LIMIT = 3
+DEFAULT_DOWNLOADS = 3
 DEFAULT_DOWNLOADS_LANGUAGE = 1
 DEFAULT_DOWNLOADS_NAME = None
 DEFAULT_BACKGROUND_AUDIO_VOLUME = 0.0
@@ -326,7 +324,7 @@ def versionize_speaker(speaker_name, speaker_version):
     return speaker_versionized
 
 def download_callers(): 
-    if DOWNLOADS:
+    if DOWNLOADS > 0:
         download_list = CALLER_PROFILES
 
         # versionize, exclude bans, force download-name
@@ -356,11 +354,10 @@ def download_callers():
 
         
         if dl_name != DEFAULT_DOWNLOADS_NAME:
-            ppi("Downloader: filter for name: " + str(dl_name))
+            pass
         else:
             # filter for language
             if DOWNLOADS_LANGUAGE > 0:
-                ppi("Downloader: filter for language: " + str(DOWNLOADS_LANGUAGE))
                 downloads_filtered = {}
                 for speaker_name, speaker_download_url in download_list.items():
                     caller_language_key = grab_caller_language(speaker_name)
@@ -370,9 +367,8 @@ def download_callers():
                 download_list = downloads_filtered
 
             # filter for limit
-            if DOWNLOADS_LIMIT > 0 and len(download_list) > 0 and DOWNLOADS_LIMIT < len(download_list):
-                ppi("Downloader: limit to: " + str(DOWNLOADS_LIMIT))
-                download_list = {k: download_list[k] for k in list(download_list.keys())[-DOWNLOADS_LIMIT:]}
+            if len(download_list) > 0 and DOWNLOADS < len(download_list):
+                download_list = {k: download_list[k] for k in list(download_list.keys())[-DOWNLOADS:]}
 
 
 
@@ -404,7 +400,7 @@ def download_callers():
                 # LOCAL-Download
                 # shutil.copyfile('C:\\Users\\Luca\\Desktop\\download.zip', os.path.join(DOWNLOADS_PATH, 'download.zip'))
 
-                ppi("Extracting voice-pack..")
+                ppi("EXTRACTING VOICE-PACK..")
 
                 shutil.unpack_archive(dest, DOWNLOADS_PATH)
                 os.remove(dest)
@@ -483,10 +479,10 @@ def download_callers():
                         os.remove(current_sound)
 
                 shutil.move(dest, AUDIO_MEDIA_PATH)
-                ppi('Voice-pack added: ' + cpr_name)
+                ppi('VOICE-PACK ADDED: ' + cpr_name)
 
             except Exception as e:
-                ppe('Failed to process voice-pack: ' + cpr_name, e)
+                ppe('FAILED TO PROCESS VOICE-PACK: ' + cpr_name, e)
             finally:
                 shutil.rmtree(DOWNLOADS_PATH, ignore_errors=True)
 
@@ -539,6 +535,9 @@ def favor_caller(unfavor):
         for cpf in caller_profiles_favoured:
             fcf.write(cpf.lower() + '\n')
 
+def delete_old_callers():
+    pass
+
 def load_callers_banned():
     global caller_profiles_banned
     caller_profiles_banned = []
@@ -549,11 +548,7 @@ def load_callers_banned():
         try:
             with open(path_to_callers_banned_file, 'r') as bcf:
                 caller_profiles_banned = list(set(line.strip() for line in bcf))
-                banned_info = f"Banned voice-packs: {len(caller_profiles_banned)} [ - "
-                for cpb in caller_profiles_banned:
-                    banned_info += cpb + " - "
-                banned_info += "]"
-                ppi(banned_info)
+                display_caller_list(caller_profiles_banned, "BANNED VOICE-PACKS")
         except FileExistsError:
             pass
     else:
@@ -573,11 +568,7 @@ def load_callers_favoured():
         try:
             with open(path_to_callers_favoured_file, 'r') as bcf:
                 caller_profiles_favoured = list(set(line.strip() for line in bcf))
-                favoured_info = f"Favoured voice-packs: {len(caller_profiles_favoured)} [ - "
-                for cpb in caller_profiles_favoured:
-                    favoured_info += cpb + " - "
-                favoured_info += "]"
-                ppi(favoured_info)
+                display_caller_list(caller_profiles_favoured, "FAVOURED VOICE-PACKS")
         except FileExistsError:
             pass
     else:
@@ -636,6 +627,16 @@ def load_callers():
         for (root, c_keys) in callers_profiles_all:
             c_keys[ss_k] = ss_v
 
+
+def display_caller_list(caller_list, text):
+    display = f"{text}: {len(caller_list)}"
+    ppi(display, None)
+
+    display = f"[ - "
+    for c in caller_list:
+        display += c + " - "
+    display += "]"
+    ppi(display)
 
 def grab_caller_name(caller_path):
     caller_name_with_version = os.path.basename(os.path.normpath(caller_path)).lower()
@@ -710,8 +711,6 @@ def setup_caller():
     caller_title_without_version = ''
 
 
-    ppi('Available voice-packs:')
-    
     # filter callers by blacklist, language, gender and most recent version
     callers_filtered = []
     for c in callers_profiles_all:
@@ -733,13 +732,14 @@ def setup_caller():
         callers_filtered.append(c)
     if len(callers_filtered) > 0:
         callers_filtered = filter_most_recent_versions(callers_filtered)
-    
-        
+            
     # store available caller names
     callers_available = []
     for cf in callers_filtered:
         (caller_name, caller_name_with_version) = grab_caller_name(cf[0])
         callers_available.append(caller_name)
+    
+    display_caller_list(callers_available, "AVAILABLE VOICE-PACKS")
 
 
     # specific caller
@@ -747,21 +747,18 @@ def setup_caller():
         (wished_caller, wished_caller_with_version) = grab_caller_name(CALLER)
         for cf in callers_filtered:
             (caller_name, caller_name_with_version) = grab_caller_name(cf[0])         
-            ppi(caller_name, None, '')
-            if caller == None:
-                if caller_name_with_version.startswith(wished_caller_with_version):
-                    caller = cf
-                elif caller_name_with_version.startswith(wished_caller):
-                    ppi("NOTICE: '" + wished_caller_with_version + "' is an older voice-pack version. I am now using most recent version: " + "'" + caller_name_with_version + "'", None, '')
-                    caller = cf
+
+            if caller_name_with_version.startswith(wished_caller_with_version):
+                caller = cf
+                break
+            elif caller_name_with_version.startswith(wished_caller):
+                ppi("NOTICE: '" + wished_caller_with_version + "' is an older voice-pack version. I am now using most recent version: " + "'" + caller_name_with_version + "'", None, '')
+                caller = cf
+                break
 
 
     # random caller
     else:
-        for cf in callers_filtered: 
-            (caller_name, caller_name_with_version) = grab_caller_name(cf[0])  
-            ppi(caller_name, None, '')
-
         if len(callers_filtered) > 0:
             if RANDOM_CALLER == 0:
                 caller = callers_filtered[0]
@@ -781,7 +778,10 @@ def setup_caller():
         (caller_name, caller_name_with_version) = grab_caller_name(caller[0])  
         caller_title = caller_name_with_version
         caller_title_without_version = caller_name
-        ppi("Current voice-pack: " + caller_title + " (" + str(len(caller[1].values())) + " Sound-file-keys)")
+
+        ppi("", None)
+        ppi("CURRENT VOICE-PACK: " + caller_title + " (" + str(len(caller[1].values())) + " Sound-file-keys)", None)
+        ppi("", None)
         # ppi(caller[1])
         caller = caller[1]
 
@@ -793,7 +793,7 @@ def setup_caller():
         }
         broadcast(welcome_event)
     else:
-        ppi('No callers available.')
+        ppi('NO CALLERS AVAILABLE')
 
 
 def check_sounds(sounds_list):
@@ -1285,9 +1285,6 @@ def process_match_x01(m):
     matchon = (m['settings'][base] == m['gameScores'][0] and turns['throws'] == [] and m['leg'] == 1 and m['set'] == 1)
     gameon = (m['settings'][base] == m['gameScores'][0] and turns['throws'] == [])
 
-    # ppi('matchon: '+ str(matchon) )
-    # ppi('gameon: '+ str(gameon) )
-    # ppi('isGameFinished: ' + str(isGameFinished))
 
     pcc_success = False
     isGameFin = False
@@ -1343,17 +1340,18 @@ def process_match_x01(m):
                         if CALL_CURRENT_PLAYER >= 1:
                             play_sound_effect(currentPlayerName)
 
-                        if POSSIBLE_CHECKOUT_CALL_SINGLE_FILE:
-                            pcc_success = play_sound_effect('yr_' + remaining, True)
-                            if pcc_success == False:
-                                pcc_success = play_sound_effect(remaining, True)
+                        pcc_success = play_sound_effect('you_require', True)
+                        if pcc_success:
+                            if play_sound_effect('c_' + remaining, True) == False:
+                                play_sound_effect(remaining, True)
                         else:
-                            pcc_success = (play_sound_effect('you_require', True) and play_sound_effect(remaining, True))
+                            pcc_success = play_sound_effect('yr_' + remaining, True)
                         
                         ppi('Checkout possible: ' + remaining)
                     else:
                         if AMBIENT_SOUNDS != 0.0:
-                            play_sound_effect('ambient_bogey_number', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
+                            if play_sound_effect('ambient_bogey_number_' + remaining, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False) == False:
+                                play_sound_effect('ambient_bogey_number', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
                         ppi('bogey-number: ' + remaining)
 
             if pcc_success == False and CALL_CURRENT_PLAYER == 2 and numberOfPlayers > 1:
@@ -2973,12 +2971,10 @@ if __name__ == "__main__":
     ap.add_argument("-E", "--call_every_dart", type=int, choices=range(0, 3), default=DEFAULT_CALL_EVERY_DART, required=False, help="If '1', the application will call every thrown dart")
     ap.add_argument("-ETS", "--call_every_dart_total_score", type=int, choices=range(0, 2), default=DEFAULT_CALL_EVERY_DART_TOTAL_SCORE, required=False, help="If '1', the application will call total-score if call-every-dart is active")
     ap.add_argument("-PCC", "--possible_checkout_call", type=int, default=DEFAULT_POSSIBLE_CHECKOUT_CALL, required=False, help="If '1', the application will call a possible checkout starting at 170")
-    ap.add_argument("-PCCSF", "--possible_checkout_call_single_files", type=int, choices=range(0, 2), default=DEFAULT_POSSIBLE_CHECKOUT_CALL_SINGLE_FILES, required=False, help="If '1', the application will call a possible checkout by using yr_2-yr_170, else it uses two separated sounds: you_require + x")
     ap.add_argument("-PCCYO", "--possible_checkout_call_yourself_only", type=int, choices=range(0, 2), default=DEFAULT_POSSIBLE_CHECKOUT_CALL_YOURSELF_ONLY, required=False, help="If '1' the caller will only call if there is a checkout possibility if the current player is you")
     ap.add_argument("-A", "--ambient_sounds", type=float, default=DEFAULT_AMBIENT_SOUNDS, required=False, help="If > '0.0' (volume), the application will call a ambient_*-Sounds")
     ap.add_argument("-AAC", "--ambient_sounds_after_calls", type=int, choices=range(0, 2), default=DEFAULT_AMBIENT_SOUNDS_AFTER_CALLS, required=False, help="If '1', the ambient sounds will appear after calling is finished") 
-    ap.add_argument("-DL", "--downloads", type=int, choices=range(0, 2), default=DEFAULT_DOWNLOADS, required=False, help="If '1', the application will try to download a curated list of caller-voices")
-    ap.add_argument("-DLL", "--downloads_limit", type=int, default=DEFAULT_DOWNLOADS_LIMIT, required=False, help="If '1', the application will try to download a only the X newest caller-voices. -DLN needs to be activated.")
+    ap.add_argument("-DL", "--downloads", type=int, choices=range(0, 101), default=DEFAULT_DOWNLOADS, required=False, help="If > '1', the application will download specified number of available voice-packs")
     ap.add_argument("-DLLA", "--downloads_language", type=int, choices=range(0, len(CALLER_LANGUAGES) + 1), default=DEFAULT_DOWNLOADS_LANGUAGE, required=False, help="If '0', the application will download speakers of every language.., else it will limit speaker downloads by specific language")
     ap.add_argument("-DLN", "--downloads_name", default=DEFAULT_DOWNLOADS_NAME, required=False, help="Sets a specific caller (voice-pack) for download")
     ap.add_argument("-BAV","--background_audio_volume", required=False, type=float, default=DEFAULT_BACKGROUND_AUDIO_VOLUME, help="Set background-audio-volume between 0.1 (silent) and 1.0 (no mute)")
@@ -3023,15 +3019,13 @@ if __name__ == "__main__":
     CALL_EVERY_DART_TOTAL_SCORE = args['call_every_dart_total_score']
     POSSIBLE_CHECKOUT_CALL = args['possible_checkout_call']
     if POSSIBLE_CHECKOUT_CALL < 0: POSSIBLE_CHECKOUT_CALL = 0
-    POSSIBLE_CHECKOUT_CALL_SINGLE_FILE = args['possible_checkout_call_single_files']
     POSSIBLE_CHECKOUT_CALL_YOURSELF_ONLY = args['possible_checkout_call_yourself_only']
     AMBIENT_SOUNDS = args['ambient_sounds']
     AMBIENT_SOUNDS_AFTER_CALLS = args['ambient_sounds_after_calls']
     DOWNLOADS = args['downloads']
+    if DOWNLOADS < 0: DOWNLOADS = DEFAULT_DOWNLOADS
     DOWNLOADS_LANGUAGE = args['downloads_language']
     if DOWNLOADS_LANGUAGE < 0: DOWNLOADS_LANGUAGE = DEFAULT_DOWNLOADS_LANGUAGE
-    DOWNLOADS_LIMIT = args['downloads_limit']
-    if DOWNLOADS_LIMIT < 0: DOWNLOADS_LIMIT = DEFAULT_DOWNLOADS_LIMIT
     DOWNLOADS_PATH = DEFAULT_DOWNLOADS_PATH
     DOWNLOADS_NAME = args['downloads_name']
     BACKGROUND_AUDIO_VOLUME = args['background_audio_volume']
@@ -3173,6 +3167,11 @@ if __name__ == "__main__":
         ppe("Download voice-packs failed", e)
 
     try:
+        delete_old_callers()
+    except Exception as e:
+        ppe("Delete old voice-packs failed", e)
+
+    try:
         load_callers()
     except Exception as e:
         ppe("Load voice-packs failed!", e)  
@@ -3209,6 +3208,5 @@ if __name__ == "__main__":
         start_webserver(DEFAULT_HOST_IP, HOST_PORT, ssl_context)
 
         kc.stop()
-
     except Exception as e:
         ppe("Connect failed: ", e)
