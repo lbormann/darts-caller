@@ -388,7 +388,6 @@
             lastCall.style.display='block';
             button.remove();
 
-            // "{{ ws_port }}"
             ws = io.connect(`${protocol}://${hostname}:${port}`);
             ws.on('connect', onWsOpen);
             ws.on('disconnect', onWsClose);
@@ -513,29 +512,29 @@
         });
         function renderAvailableCallers(){
             caller.innerHTML = "";
-                callersAvailable.forEach(function(ca) {
-                    if (callersFavoured.includes(ca)) {
-                        const callerElement = document.createElement("option");
-                        callerElement.textContent = ca;
-                        callerElement.value = ca;
-                        callerElement.classList.add("favorite");
-                        if (ca.toLowerCase() == name) {
-                            callerElement.selected = true;
-                        }
-                        caller.appendChild(callerElement);
+            callersAvailable.forEach(function(ca) {
+                if (callersFavoured.includes(ca)) {
+                    const callerElement = document.createElement("option");
+                    callerElement.textContent = ca;
+                    callerElement.value = ca;
+                    callerElement.classList.add("favorite");
+                    if (ca.toLowerCase() == name) {
+                        callerElement.selected = true;
                     }
-                });
-                callersAvailable.forEach(function(ca) {
-                    if (!callersFavoured.includes(ca)) {
-                        const callerElement = document.createElement("option");
-                        callerElement.textContent = ca;
-                        callerElement.value = ca;
-                        if (ca.toLowerCase() == name) {
-                            callerElement.selected = true;
-                        }
-                        caller.appendChild(callerElement);
+                    caller.appendChild(callerElement);
+                }
+            });
+            callersAvailable.forEach(function(ca) {
+                if (!callersFavoured.includes(ca)) {
+                    const callerElement = document.createElement("option");
+                    callerElement.textContent = ca;
+                    callerElement.value = ca;
+                    if (ca.toLowerCase() == name) {
+                        callerElement.selected = true;
                     }
-                });
+                    caller.appendChild(callerElement);
+                }
+            });
         }
 
         // mods

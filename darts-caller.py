@@ -56,7 +56,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.12.5'
+VERSION = '2.13.0'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -86,8 +86,8 @@ DEFAULT_MIXER_SIZE = 32
 DEFAULT_MIXER_CHANNELS = 2
 DEFAULT_MIXER_BUFFERSIZE = 4096
 DEFAULT_DOWNLOADS_PATH = 'caller-downloads-temp'
-DEFAULT_CALLERS_BANNED_FILE = 'autodarts-caller-banned.txt'
-DEFAULT_CALLERS_FAVOURED_FILE = 'autodarts-caller-favoured.txt'
+DEFAULT_CALLERS_BANNED_FILE = 'banned.txt'
+DEFAULT_CALLERS_FAVOURED_FILE = 'favoured.txt'
 DEFAULT_HOST_IP = '0.0.0.0'
 
 
@@ -513,10 +513,7 @@ def ban_caller(only_change):
                 bcf.write(cpb.lower() + '\n')
 
     mirror_sounds()
-    setup_caller()
-
-    if play_sound_effect('hi', wait_for_last = False):
-        mirror_sounds()
+    setup_caller(hi=True)
     
 def favor_caller(unfavor):
     global caller_title_without_version
@@ -697,7 +694,7 @@ def filter_most_recent_versions(voices):
     
     return filtered_voices
 
-def setup_caller():
+def setup_caller(hi = False):
     global callers_profiles_all
     global caller_profiles_banned
     global CALLER
@@ -721,14 +718,15 @@ def setup_caller():
 
         if CALLER != DEFAULT_CALLER and CALLER != '' and caller_name_with_version.startswith(CALLER.lower()):
             pass
-        elif RANDOM_CALLER_LANGUAGE != 0:
-            caller_language_key = grab_caller_language(caller_name)
-            if caller_language_key != RANDOM_CALLER_LANGUAGE:
-                continue
-        elif RANDOM_CALLER_GENDER != 0:
-            caller_gender_key = grab_caller_gender(caller_name)
-            if caller_gender_key != RANDOM_CALLER_GENDER:
-                continue      
+        else:
+            if RANDOM_CALLER_LANGUAGE != 0:
+                caller_language_key = grab_caller_language(caller_name)
+                if caller_language_key != RANDOM_CALLER_LANGUAGE:
+                    continue
+            if RANDOM_CALLER_GENDER != 0:
+                caller_gender_key = grab_caller_gender(caller_name)
+                if caller_gender_key != RANDOM_CALLER_GENDER:
+                    continue      
         callers_filtered.append(c)
     if len(callers_filtered) > 0:
         callers_filtered = filter_most_recent_versions(callers_filtered)
@@ -792,6 +790,9 @@ def setup_caller():
             "caller": caller_title_without_version
         }
         broadcast(welcome_event)
+
+        if hi and play_sound_effect('hi', wait_for_last=False):
+            mirror_sounds()
     else:
         ppi('NO CALLERS AVAILABLE')
 
@@ -2334,7 +2335,7 @@ def mute_audio_background(vol):
     for session in background_audios:
         try:
             volume = session.SimpleAudioVolume
-            if session.Process and session.Process.name() != "autodarts-caller.exe":
+            if session.Process and session.Process.name() != "darts-caller.exe":
                 volume.SetMasterVolume(vol, None)
         # Exception as e:
         except:
@@ -2353,7 +2354,7 @@ def unmute_audio_background(mute_vol):
         current_master += steps
         for session in background_audios:
             try:
-                if session.Process and session.Process.name() != "autodarts-caller.exe":
+                if session.Process and session.Process.name() != "darts-caller.exe":
                     volume = session.SimpleAudioVolume
                     volume.SetMasterVolume(current_master, None)
             #  Exception as e:
@@ -2819,9 +2820,7 @@ def handle_message(message):
                 if len(messsageSplitted) > 1:
                     RANDOM_CALLER = 0
                     CALLER = messsageSplitted[1]
-                    setup_caller()
-                    if play_sound_effect('hi', wait_for_last=False):
-                        mirror_sounds()
+                    setup_caller(hi=True)
 
             elif message.startswith('language'):
                 messsageSplitted = message.split(':')
@@ -2829,19 +2828,15 @@ def handle_message(message):
                     CALLER = DEFAULT_CALLER
                     RANDOM_CALLER = 1
                     RANDOM_CALLER_LANGUAGE = int(messsageSplitted[1])
-                    setup_caller()
-                    if play_sound_effect('hi', wait_for_last=False):
-                        mirror_sounds()
+                    setup_caller(hi = True)
 
             elif message.startswith('gender'):
                 messsageSplitted = message.split(':')
                 if len(messsageSplitted) > 1:
                     CALLER = DEFAULT_CALLER
                     RANDOM_CALLER = 1
-                    RANDOM_CALLER_GENDER = int(messsageSplitted[1])
-                    setup_caller()
-                    if play_sound_effect('hi', wait_for_last=False):
-                        mirror_sounds()
+                    RANDOM_CALLER_GENDER = int(messsageSplitted[1])                   
+                    setup_caller(hi = True)
 
             elif message.startswith('fav'):
                 messsageSplitted = message.split(':')
@@ -3122,7 +3117,7 @@ if __name__ == "__main__":
     osRelease = platform.release()
     ppi('\r\n', None, '')
     ppi('##########################################', None, '')
-    ppi('       WELCOME TO AUTODARTS-CALLER', None, '')
+    ppi('       WELCOME TO DARTS-CALLER', None, '')
     ppi('##########################################', None, '')
     ppi('VERSION: ' + VERSION, None, '')
     ppi('RUNNING OS: ' + osType + ' | ' + osName + ' | ' + osRelease, None, '')

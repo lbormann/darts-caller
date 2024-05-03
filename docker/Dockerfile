@@ -1,5 +1,5 @@
 ARG REF \
-    REPOSITORY="lbormann/autodarts-caller"
+    REPOSITORY="lbormann/darts-caller"
 
 FROM --platform=${BUILDPLATFORM} alpine:latest AS build
 
@@ -14,17 +14,17 @@ RUN apk update && \
         "linux/amd64")  DOWNLOAD_ARCH=""  ;; \
         "linux/arm64") DOWNLOAD_ARCH="-arm64"  ;; \
     esac && \
-    ASSETNAME="autodarts-caller$DOWNLOAD_ARCH" && \
+    ASSETNAME="darts-caller$DOWNLOAD_ARCH" && \
     wget "https://github.com/${REPOSITORY}/releases/download/${REF}/$ASSETNAME" && \
-    mv $ASSETNAME autodarts-caller
+    mv $ASSETNAME darts-caller
 
 FROM debian:bookworm-slim
 ARG TARGETPLATFORM
 ENV AUTODARTS_EMAIL= \
     AUTODARTS_PASSWORD= \
     AUTODARTS_BOARD_ID= \
-    MEDIA_PATH='/usr/share/autodarts-caller/media' \
-    MEDIA_PATH_SHARED='/usr/share/autodarts-caller/media-shared' \
+    MEDIA_PATH='/usr/share/darts-caller/media' \
+    MEDIA_PATH_SHARED='/usr/share/darts-caller/media-shared' \
     CALLER_VOLUME= \
     CALLER= \
     RANDOM_CALLER= \
@@ -51,10 +51,10 @@ ENV AUTODARTS_EMAIL= \
     MIXER_CHANNELS= \
     MIXER_BUFFERSIZE=
 
-WORKDIR /usr/bin/autodarts-caller
-COPY --from=build /autodarts-caller* ./autodarts-caller
+WORKDIR /usr/bin/darts-caller
+COPY --from=build /darts-caller* ./darts-caller
 COPY ./entrypoint.sh ./entrypoint.sh
-RUN chmod +x autodarts-caller && \
+RUN chmod +x darts-caller && \
     chmod +x entrypoint.sh && \
     apt update && \
     apt install -y libglib2.0-0 alsa-utils && \

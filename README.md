@@ -1,7 +1,7 @@
-# AUTODARTS-CALLER
-[![Downloads](https://img.shields.io/github/downloads/lbormann/autodarts-caller/total.svg)](https://github.com/lbormann/autodarts-caller/releases/latest)
+# DARTS-CALLER
+[![Downloads](https://img.shields.io/github/downloads/lbormann/darts-caller/total.svg)](https://github.com/lbormann/darts-caller/releases/latest)
 
-Autodarts-caller plays back sound-files accordingly to the state of a https://autodarts.io game. Furthermore it acts as a central hub by forwarding game-events to connected clients like https://github.com/lbormann/autodarts-extern that process incoming data to automate other dart-web-platforms like https://lidarts.org.
+Darts-caller plays back sound-files accordingly to the state of a https://autodarts.io game. Furthermore it acts as a central hub by forwarding game-events to connected clients like https://github.com/lbormann/darts-extern that process incoming data to automate other dart-web-platforms like https://lidarts.org.
 
 Learn more about the [Features!](#workflow--functionality)
 
@@ -23,9 +23,9 @@ Learn more about the [Features!](#workflow--functionality)
 
 <div style="display: flex;">
   <h2> Preview - Web-Caller </h2>
-  <img src="https://github.com/lbormann/autodarts-caller/blob/master/images/chat.jpg" alt="chat preview 1" style="width:250px;margin-right:15px;margin-top:15px;"/>
-  <img src="https://github.com/lbormann/autodarts-caller/blob/master/images/chat2.jpg" alt="chat preview 2" style="width:250px;margin-right:15px;margin-top:15px;"/>
-  <img src="https://github.com/lbormann/autodarts-caller/blob/master/images/chat3.jpg" alt="chat preview 3" style="width:250px;margin-right:15px;margin-top:15px;"/>
+  <img src="https://github.com/lbormann/darts-caller/blob/master/images/chat.jpg" alt="chat preview 1" style="width:250px;margin-right:15px;margin-top:15px;"/>
+  <img src="https://github.com/lbormann/darts-caller/blob/master/images/chat2.jpg" alt="chat preview 2" style="width:250px;margin-right:15px;margin-top:15px;"/>
+  <img src="https://github.com/lbormann/darts-caller/blob/master/images/chat3.jpg" alt="chat preview 3" style="width:250px;margin-right:15px;margin-top:15px;"/>
 </div>
 
 
@@ -33,7 +33,7 @@ Learn more about the [Features!](#workflow--functionality)
 
 ### Desktop-OS:
 
-- If you're running a desktop-driven OS it's recommended to use [autodarts-desktop](https://github.com/lbormann/autodarts-desktop) as it takes care of starting, updating, configurating and managing multiple apps.
+- If you're running a desktop-driven OS it's recommended to use [darts-hub](https://github.com/lbormann/darts-hub) as it takes care of starting, updating, configurating and managing multiple apps.
 
 
 ### Headless-OS:
@@ -50,7 +50,7 @@ Learn more about the [Features!](#workflow--functionality)
 
 #### Get the project
 
-    git clone https://github.com/lbormann/autodarts-caller.git
+    git clone https://github.com/lbormann/darts-caller.git
 
 Go to download-directory and type:
 
@@ -257,7 +257,7 @@ You can run by source or run an os-specific executable (recommended).
 
 Create a shortcut of the executable; right click on the shortcut -> select properties -> add [Arguments](#Arguments) in the target input at the end of the text field.
 
-Example: C:\Downloads\autodarts-caller.exe -U "your-autodarts-email" -P "your-autodarts-password" -B "your-autodarts-board-id" -M "absolute-path-to-your-media-files"
+Example: C:\Downloads\darts-caller.exe -U "your-autodarts-email" -P "your-autodarts-password" -B "your-autodarts-board-id" -M "absolute-path-to-your-media-files"
 
 Save changes.
 Click on the shortcut to start the application.
@@ -304,18 +304,18 @@ Start the script:
 
 **REQUIRED:** Setup an absolute-path where voice-packs should be located.
 
-Make sure the given path doesn't reside inside main-directory (autodarts-caller).
+Make sure the given path doesn't reside inside main-directory (darts-caller).
 
 Examples: 
-- (Windows): C:\Users\Luca\Desktop\Programme\autodarts\autodarts-caller-speaker
-- (Linux): /home/luca/autodarts/autodarts-caller-speaker
+- (Windows): C:\Users\Luca\Desktop\Programme\autodarts\darts-caller-speaker
+- (Linux): /home/luca/autodarts/darts-caller-speaker
 
 Side note: this folder will be targeted for voice-pack-downloads/installs (-DL).
 
 
 #### *`-MS / --media_path_shared`*
 
-If you do not want to configure same sounds again for every individual voice-pack, you can specify an absolute path to a shared directory. Every voice-pack will use the sounds of that directory. Have a look at [supported Sound-file-keys](#Sound-file-keys). Moreover make sure the given path neither resides inside main-directory (autodarts-caller) nor inside media-path (-M).
+If you do not want to configure same sounds again for every individual voice-pack, you can specify an absolute path to a shared directory. Every voice-pack will use the sounds of that directory. Have a look at [supported Sound-file-keys](#Sound-file-keys). Moreover make sure the given path neither resides inside main-directory (darts-caller) nor inside media-path (-M).
 
 Side note: sounds located in that directory will override sounds located in voice-pack(s).
 
@@ -489,7 +489,7 @@ Default: '0'
 
 #### *`-HP / --host_port`*
 
-The application provides a websocket-service. Other extensions like autodarts-extern or autodarts-wled can connect to this service (wss://ip:port).
+The application provides a websocket-service. Other extensions like darts-extern or darts-wled can connect to this service (wss://ip:port).
 For a list of json-examples look at 'broadcast-examples.dat' - who knows maybe you build your own extension upon this?!
 
 Default: '8079'
@@ -513,7 +513,7 @@ There are endless possibilities to manage an autostart. You find two ways to do 
 
 At the end of the file add (Replace USER):
 
-    @reboot sleep 30 && cd /home/USER/autodarts-caller && ./start-custom.sh > /home/USER/autodarts-caller.log 2>&1
+    @reboot sleep 30 && cd /home/USER/darts-caller && ./start-custom.sh > /home/USER/darts-caller.log 2>&1
 
 Reboot your system:
 
@@ -521,7 +521,7 @@ Reboot your system:
 
 Check log:
 
-    tail /home/USER/autodarts-caller.log
+    tail /home/USER/darts-caller.log
 
 
 
@@ -536,35 +536,35 @@ if you are facing problems with the crontab-solution try this:
 
 One can now manually test whether the whole thing starts with the following command (adjust USER):
 
-    xterm -e "cd /home/USER/autodarts-caller && ./start-custom.sh"
+    xterm -e "cd /home/USER/darts-caller && ./start-custom.sh"
 
 A terminal-like window should now open with the running program.
 
 To enable autostart, a .desktop file now needs to be created:
 
-    sudo nano ~/.config/autostart/autodartscaller.desktop
+    sudo nano ~/.config/autostart/dartscaller.desktop
 
 Insert the following into this file and adjust the USER in the path:
 
     [Desktop Entry]
     Type=Application
-    Exec=xterm -e "cd /home/USER/autodarts-caller && ./start-custom.sh > /home/USER/autodarts-caller.log 2>&1"
+    Exec=xterm -e "cd /home/USER/darts-caller && ./start-custom.sh > /home/USER/darts-caller.log 2>&1"
     Hidden=false
     NoDisplay=false
     X-GNOME-Autostart-enabled=true
     X-GNOME-Autostart-Delay=10
-    Name[de_DE]=Autodarts-Caller
-    Name=Autodarts-Caller
-    Comment[de_DE]=Autostart Autodarts-Caller
-    Comment=Autostart Autodarts-Caller
+    Name[de_DE]=Darts-Caller
+    Name=Darts-Caller
+    Comment[de_DE]=Autostart Darts-Caller
+    Comment=Autostart Darts-Caller
 
 Afterwards, save the file (Ctrl + O) and close the file (Ctrl + X).
 
 Now the file permissions need to be set for the file (again, adjust USER!):
 
-    sudo chmod u=rw-,g=rw-,o=r-- ~/.config/autostart/autodartscaller.desktop
-    sudo chmod +x ~/.config/autostart/autodartscaller.desktop
-    sudo chown USER ~/.config/autostart/autodartscaller.desktop
+    sudo chmod u=rw-,g=rw-,o=r-- ~/.config/autostart/dartscaller.desktop
+    sudo chmod +x ~/.config/autostart/dartscaller.desktop
+    sudo chown USER ~/.config/autostart/dartscaller.desktop
 
 Reboot your system:
 
@@ -572,7 +572,7 @@ Reboot your system:
 
 Check log:
 
-    tail /home/USER/autodarts-caller.log
+    tail /home/USER/darts-caller.log
 
 
 
@@ -582,9 +582,9 @@ To install the caller inside a docker container, use a compose file that looks l
 version: '3.3'
 
 services:
-  autodarts-caller:
-    image: lbormann/autodarts-caller
-    container_name: autodarts-caller
+  darts-caller:
+    image: lbormann/darts-caller
+    container_name: darts-caller
     restart: unless-stopped
     ports:
     - 8079:8079 #Host Port
@@ -597,9 +597,9 @@ services:
       AUTODARTS_BOARD_ID: '' #Your autodarts board id
       
     volumes:
-    - ./autodarts-caller/media:/usr/share/autodarts-caller/media
-    - ./autodarts-caller/media-shared:/usr/share/autodarts-caller/media-shared
-    - ./autodarts-caller:/usr/share/autodarts-caller
+    - ./darts-caller/media:/usr/share/darts-caller/media
+    - ./darts-caller/media-shared:/usr/share/darts-caller/media-shared
+    - ./darts-caller:/usr/share/darts-caller
 ```
 If you want additional parameters, add them as environment variables:
 
@@ -659,10 +659,10 @@ There are multiple ways to ban an undesired voice-pack:
 
 - Option 1) Visit web-caller and press "Ban Caller!"
 - Option 2) Delete ALL audio-files of voice-pack-folder.
-- Option 3) use [autodarts-voice](https://github.com/lbormann/autodarts-voice).
+- Option 3) use [darts-voice](https://github.com/lbormann/darts-voice).
 
 All options forcing the application to either download files again nor using a voice-pack for calling.
-If you wish to revoke a ban, open 'autodarts-caller-banned.txt' and remove the line from the list.
+If you wish to revoke a ban, open 'darts-caller-banned.txt' and remove the line from the list.
 
 ### App starts and stops immediately?!
 
@@ -689,7 +689,7 @@ Try https://www.audacity.de/ to modify your sound-files.
     - **Template file:**
     A UTF8-(with a BOM)-encoded CSV file (*.csv) (filename irrelevant), which is structured as follows:
     Column 1 contains a phrase that a sound file is based on. For example: "The game is over."
-    All other filled columns (separated by semicolon ';') specify [Sound-file-keys](#Sound-file-keys) that are used by autodarts-caller.
+    All other filled columns (separated by semicolon ';') specify [Sound-file-keys](#Sound-file-keys) that are used by darts-caller.
     For an example have a look at 'en-US-v1.csv' template.
 
     - **Sounds archive:**

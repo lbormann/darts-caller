@@ -93,4 +93,4 @@ if [ -n "$MIXER_BUFFERSIZE" ]; then
   args="$args -MIB $MIXER_BUFFERSIZE"
 fi
 
-./autodarts-caller $args
+./darts-caller $args

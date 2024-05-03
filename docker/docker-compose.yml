@@ -1,9 +1,9 @@
 version: '3.3'
 
 services:
-  autodarts-caller:
-    image: lbormann/autodarts-caller
-    container_name: autodarts-caller
+  darts-caller:
+    image: lbormann/darts-caller
+    container_name: darts-caller
     restart: unless-stopped
     ports:
     - 8079:8079 #Host Port
@@ -15,7 +15,7 @@ services:
       AUTODARTS_PASSWORD: '' #Your autodarts password
       AUTODARTS_BOARD_ID: '' #Your autodarts board id
 
-      #optional settings, leave them empty if you don't want to use them. For explanations see https://github.com/lbormann/autodarts-caller
+      #optional settings, leave them empty if you don't want to use them. For explanations see https://github.com/lbormann/darts-caller
       CALLER_VOLUME:
       CALLER:
       RANDOM_CALLER:
@@ -42,4 +42,4 @@ services:
       MIXER_BUFFERSIZE:
 
     volumes:
-    - ./autodarts-caller:/usr/share/autodarts-caller
+    - ./darts-caller:/usr/share/darts-caller

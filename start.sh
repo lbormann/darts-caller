@@ -5,7 +5,7 @@
 # ARGUMENTS
 # Please fill out following arguments. There are required ones and optional ones. 
 # If you do not want to fill an optional argument just leave it blank after the equal-sign ("=").
-# In case you need specific argument explaination visit https://github.com/lbormann/autodarts-caller#arguments
+# In case you need specific argument explaination visit https://github.com/lbormann/darts-caller#arguments
 
 
 # REQUIRED:
@@ -194,4 +194,4 @@ fi
 
 echo "Arguments: $args"
 
-"$py" autodarts-caller.py $args
+"$py" darts-caller.py $args

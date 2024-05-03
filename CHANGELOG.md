@@ -1,3 +1,9 @@
+## 2.13.0
+
+- rename application to darts-caller
+- fix gender selection when selected language is not 'every language'
+
+
 ## 2.12.5
 
 - simplify README (argument section)
