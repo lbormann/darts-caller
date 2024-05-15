@@ -13,13 +13,14 @@
 - add voice-pack 'TODO'
 - add voice-pack 'TODO'
 - add voice-pack 'TODO'
-- add argument -DOVP --delete_old_voice_packs (default '0') (will automatically delete old voice-packs, based on its version-number)
-- add argument -CBA --call_bot_actions (default '1')
+- add voice-pack 'TODO'
+- add voice-pack 'TODO'
+- add voice-pack 'TODO'
 - improve web-caller compatibility for ios, especially IPhone15 Pro (iOS 17.2.1)
 - remove deleted sounds from web-caller cache
+- add setshot for main-calling
 - stop grabbing every audio file if -M is /home
 - rework code
-- add setshot for main-calling
 - use userID instead of boardID
 - extend score-control to not only correction
 - fix audio device hdmi

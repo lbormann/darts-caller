@@ -49,6 +49,9 @@ random_caller_gender=
 # -CCP
 call_current_player=
 
+# -CBA
+call_bot_actions=
+
 # -E
 call_every_dart=
 
@@ -72,6 +75,9 @@ downloads_language=
 
 # -DLN
 downloads_name=
+
+# -ROVP
+remove_old_voice_packs=
 
 # -LPB
 local_playback=
@@ -140,6 +146,9 @@ fi
 if [ -n "$call_current_player" ]; then
   args="$args -CCP $call_current_player"
 fi
+if [ -n "$call_bot_actions" ]; then
+  args="$args -CBA $call_bot_actions"
+fi
 if [ -n "$call_every_dart" ]; then
   args="$args -E $call_every_dart"
 fi
@@ -163,6 +172,9 @@ if [ -n "$downloads_language" ]; then
 fi
 if [ -n "$downloads_name" ]; then
   args="$args -DLN $downloads_name"
+fi
+if [ -n "$remove_old_voice_packs" ]; then
+  args="$args -ROVP $remove_old_voice_packs"
 fi
 #if [ -n "$background_audio_volume" ]; then
 #  args="$args -BAV $background_audio_volume"

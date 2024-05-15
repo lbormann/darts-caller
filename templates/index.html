@@ -103,37 +103,6 @@
         <div id="container-mod">
             
             <div class="area-mod">
-                <h2>Call every dart</h2>
-                <p>
-                    <div id="slider-every-dart-value" class="mod-value"></div>
-                    <input id="slider-every-dart" class="ranger" type="range" min="0" max="2" step="1" value="{{ every_dart }}">
-                </p>
-            </div>
-
-            <div class="area-mod">
-                <h2>Call current player</h2>
-                <p>
-                    <div id="slider-call-current-player-value" class="mod-value"></div>
-                    <input id="slider-call-current-player" class="ranger" type="range" min="0" max="2" step="1" value="{{ call_current_player }}">
-                </p>
-            </div>
-
-            <div class="area-mod">
-                <h2>Call possible checkout</h2>
-                <p>
-                    <div id="slider-possible-checkout-value" class="mod-value"></div>
-                    <input id="slider-possible-checkout" class="ranger" type="range" min="0" max="100" step="1" value="{{ checkout_call }}">
-                </p>
-            </div>
-
-            <div class="area-mod">
-                <h2>Call possible checkout - only Yourself</h2>
-                <p>
-                    <input type="checkbox" id="checkbox-possible-checkout-yourself" {% if checkout_call_yourself %}checked{% endif %}>
-                </p>
-            </div>
-            
-            <div class="area-mod">
                 <h2>Web-Caller Volume</h2>
                 <p>
                     <div id="slider-volume-value" class="mod-value"></div>
@@ -172,6 +141,47 @@
                 </p>
                 <button id="button-detune-reset" class="reset">Reset</button>
             </div>
+
+            <hr>
+            
+            <div class="area-mod">
+                <h2>Call every dart</h2>
+                <p>
+                    <div id="slider-every-dart-value" class="mod-value"></div>
+                    <input id="slider-every-dart" class="ranger" type="range" min="0" max="3" step="1" value="{{ every_dart }}">
+                </p>
+            </div>
+
+            <div class="area-mod">
+                <h2>Call current player</h2>
+                <p>
+                    <div id="slider-call-current-player-value" class="mod-value"></div>
+                    <input id="slider-call-current-player" class="ranger" type="range" min="0" max="2" step="1" value="{{ call_current_player }}">
+                </p>
+            </div>
+
+            <div class="area-mod">
+                <h2>Call bot actions</h2>
+                <p>
+                    <input type="checkbox" id="checkbox-call-bot-actions" {% if call_bot_actions %}checked{% endif %}>
+                </p>
+            </div>
+
+            <div class="area-mod">
+                <h2>Call possible checkout</h2>
+                <p>
+                    <div id="slider-possible-checkout-value" class="mod-value"></div>
+                    <input id="slider-possible-checkout" class="ranger" type="range" min="0" max="100" step="1" value="{{ checkout_call }}">
+                </p>
+            </div>
+
+            <div class="area-mod">
+                <h2>Call possible checkout - only Yourself</h2>
+                <p>
+                    <input type="checkbox" id="checkbox-possible-checkout-yourself" {% if checkout_call_yourself %}checked{% endif %}>
+                </p>
+            </div>
+
         </div>
     </div>
 
@@ -260,6 +270,8 @@
 
         const sliderCallCurrentPlayer = document.getElementById('slider-call-current-player');
         const sliderCallCurrentPlayerValue = document.getElementById('slider-call-current-player-value');
+
+        const checkboxCallBotActions = document.getElementById('checkbox-call-bot-actions');
 
         const sliderPossibleCheckout = document.getElementById('slider-possible-checkout');
         const sliderPossibleCheckoutValue = document.getElementById('slider-possible-checkout-value');
@@ -553,10 +565,13 @@
                     sliderEveryDartValue.innerHTML = this.value + " = inactive";
                     break;
                 case "1":
-                    sliderEveryDartValue.innerHTML = this.value + " = active";
+                    sliderEveryDartValue.innerHTML = this.value + " = active (SINGLE-DART-SCORE)";
                     break;
                 case "2":
-                    sliderEveryDartValue.innerHTML = this.value + " = active (sound-effects)";
+                    sliderEveryDartValue.innerHTML = this.value + " = active (SINGLE-DART-NAME)";
+                    break;
+                case "3":
+                    sliderEveryDartValue.innerHTML = this.value + " = active (SINGLE-DART-EFFECT)";
                     break;
             }
             ws.emit('message', `arg:e:${this.value}`);
@@ -574,6 +589,13 @@
                     break;
             }
             ws.emit('message', `arg:ccp:${this.value}`);
+        });
+        checkboxCallBotActions.addEventListener('change', function() {
+            if (this.checked) {
+                ws.emit('message', `arg:cba:1`);
+            } else {
+                ws.emit('message', `arg:cba:0`);
+            }
         });
         sliderPossibleCheckout.addEventListener('input', function() {
             sliderPossibleCheckoutValue.innerHTML = this.value + " times";

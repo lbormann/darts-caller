@@ -38,7 +38,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-latest
+          - os: macos-12
             TARGET: macos
             CMD_BUILD: pyinstaller -F -n darts-caller-mac -i resources/darts-caller.icns --add-data "templates:templates" --add-data "static:static" --collect-all certifi darts-caller.py 
             OUT_FILE_NAME: darts-caller-mac

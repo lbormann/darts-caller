@@ -70,21 +70,21 @@ The following section elucidates the procedure and individual components of the 
 ### Downloads & Voice-packs
 
 After launching the application, "voice-packs" are automatically downloaded. A voice-pack represents a specific speaker, comprised of a collection of audio files. These audio files can be accessed by the application to announce your scored points. The application features a wide variety of voice-packs, encompassing different languages and genders. 
-Due to the potentially lengthy process of downloading and extracting all voice-packs, the number of downloads is initially limited to a small selection of English-speaking speakers. However, you can lift this restriction. During the download phase, there is no calling functionality. Returning to the definition of a "voice-pack": it contains all the audio files necessary to ensure a complete "calling experience." Each audio file within it is named according to a specific schema, enabling the application to recognize the content (or intended content) based on the file name. For instance, the file "gameon.mp3" contains an audio track where the speaker announces the start of the game. If, hypothetically, this file were renamed "game.mp3," the application would fail to interpret it since the content association would be lost. "gameon" serves as a valid "sound-file-key," whereas "game" does not. The application is equipped with an extensive repertoire of valid [sound-file-keys](#Sound-file-keys). 
+Due to the potentially lengthy process of downloading and extracting all voice-packs, the number of downloads is initially limited to a small selection of English-speaking speakers. However, you can lift this restriction. During the download phase, there is no calling functionality. Returning to the definition of a "voice-pack": it contains all the audio files necessary to ensure a complete "calling experience." Each audio file within it is named according to a specific schema, enabling the application to recognize the content (or intended content) based on the file name. For instance, the file "gameon.mp3" contains an audio track where the speaker announces the start of the game. If, hypothetically, this file were renamed "game.mp3," the application would fail to interpret it since the content association would be lost. "gameon" serves as a valid "sound-file-key," whereas "game" does not. The application is equipped with an extensive repertoire of valid [SOUND-FILE-KEYS](#SOUND-FILE-KEYS). 
 The available voice-packs for download are periodically expanded, such as with the addition of new audio files for player names (gathered separately through a process on autodarts.io). If you're interested in knowing how to ensure your player name is included in future voice-packs, please read the [rules](https://discord.com/channels/802528604067201055/1146376616264597647/1148254133963477044) on Discord and adjust your name accordingly.
 
 
 ### How can I add sounds to a voice-pack?
 
-Every voice-pack contain all sound-files of category 'MAIN' and 'LOBBY'. So you're good to go by default without changing anything.
+Every downloaded voice-pack contain all sound-files of category 'MAIN', 'LOBBY', 'SINGLE-DART-SCORE' and 'SINGLE-DART-NAME'. So you're good to go without the need to add extra sounds.
 If you would like to extend a voice-pack, for example to add sound-files-keys of category 'AMBIENT' like "ambient_gameshot" or "ambient_playerchange", copy them into --media_path_shared (-MS) to make them usable for every voice-pack.
-In addition you can place multiple sounds for a sound-file-key. Therefor you have to add a "+" to the filename. After the "+" you can add whatever text you prefer; as an example: let`s say we want multiple sounds for the 'ambient_gameshot' sound-file-key. Our default file is 'ambient_gameshot.mp3'. Now we add some more: 'ambient_gameshot+1.mp3', 'ambient_gameshot+2.mp3', 'ambient_gameshot+BEST.mp3'. Of course you are not limited to the "ambient_gameshot" sound-file-key - this rule applies to every sound-file-key.
+In addition you can place multiple sounds for a sound-file-key. Therefor you have to add a "+" to the filename. After the "+" you can add whatever text you prefer; as an example: let`s say we want multiple sounds for the 'ambient_gameshot' sound-file-key. Our default file is 'ambient_gameshot.mp3'. Now we add some more: 'ambient_gameshot+1.mp3', 'ambient_gameshot+2.mp3', 'ambient_gameshot+BEST.mp3'. This logic is not limited to the "ambient_gameshot" sound-file-key - this logic applies to every sound-file-key.
 
 
 ### How can I add my own voice-pack?
 
-Create a folder in path you defined for -M (--media_path) containing every audio file you wish to be included. Make sure you follow the [rules of valid sound-file-keys](#Sound-file-keys).
-It is advantageous for the folder to adhere to the naming convention. For example: "en-GB-russ-bray-male" (country-region-name-gender).
+Create or copy a folder in the path you defined for -M (--media_path) containing every sound-file-key you wish to be included. Make sure you follow the [rules of valid SOUND-FILE-KEYS](#SOUND-FILE-KEYS).
+It is advantageous for the folder to adhere to the naming convention. For example: "en-gb-russ-bray-male" (country-region-name-gender).
 
 
 
@@ -139,12 +139,21 @@ Disclaimer: For uninterrupted calling experience on mobile devices, ensure that 
 
 
 
-### Sound-file-keys
+### SOUND-FILE-KEYS
 
 ***EVERY SOUND-FILE NEEDS TO BE .mp3 or .wav***
 
+
+**LOBBY**
+
+- {playername}
+- average
+- 0-180
+- left
+
 **MAIN:**
 
+- hi
 - {playername} (-CCP > 0)
 - bulling_start
 - bulling_end
@@ -161,29 +170,42 @@ Disclaimer: For uninterrupted calling experience on mobile devices, ensure that 
 - you_require (-PCC > 0)
 - yr_2-yr_170 (-PCC > 0) [fallback for 'you_require']
 
-**LOBBY**
+**SINGLE-DART-SCORE (Argument -E = 1):**
 
-- {playername}
-- average
-- 0-180
-- left
+- 0-60
 
-**SINGLE-DART-SOUND-EFFECTS (Argument -E = 2):**
+**SINGLE-DART-NAME (Argument -E = 2):**
 
-- single 
-- singleinner [overrides: single]
-- singleouter [overrides: single]
+- bull
+- bullseye
+- 1-20
+- s1-s20 [overrides: 1-20]
 - double
+- d1-d20 [overrides: double 1-20]
 - triple
-- s1-s20 [overrides: single, singleinner, singleouter]
-- d1-d20 [overrides: double]
-- t1-t20 [overrides: triple]
-- sbull [overrides: single]
-- bull [overrides: double]
+- t1-t20 [overrides: triple 1-20]
 - outside
+- m1-m20 [overrides: outside]
+
+**SINGLE-DART-EFFECT (Argument -E = 3):**
+
+- effect_single 
+- effect_singleinner [overrides: effect_single]
+- effect_singleouter [overrides: effect_single]
+- effect_bull [overrides: effect_single]
+- effect_s1-effect_s20 [overrides: effect_single, effect_singleinner, effect_singleouter]
+- effect_double
+- effect_bullseye [overrides: effect_double]
+- effect_d1-effect_d20 [overrides: effect_double]
+- effect_triple
+- effect_t1-effect_t20 [overrides: effect_triple]
+- effect_outside
+- effect_m1-effect_m20 [overrides: effect_outside]
 
 **AMBIENT (Argument -A > 0.0):**
 
+- ambient_lobby_in
+- ambient_lobby_out
 - ambient_playerchange
 - ambient_playerchange_{playername} [overrides: ambient_playerchange]
 - ambient_gameon 
@@ -196,6 +218,7 @@ Disclaimer: For uninterrupted calling experience on mobile devices, ensure that 
 - ambient_setshot_{playername} [overrides: ambient_setshot] 
 - ambient_matchshot
 - ambient_matchshot_{playername} [overrides: ambient_matchshot]
+- ambient_matchcancel
 - ambient_noscore
 - ambient_1more
 - ambient_50more  
@@ -212,8 +235,6 @@ Disclaimer: For uninterrupted calling experience on mobile devices, ensure that 
 - ambient_checkout_call_limit
 - ambient_bogey_number
 - ambient_bogey_number_{bogey_number} [overrides: ambient_bogey_number]
-- ambient_lobby_in
-- ambient_lobby_out
 
 **ATC (Around the clock)**
 
@@ -315,7 +336,7 @@ Side note: this folder will be targeted for voice-pack-downloads/installs (-DL).
 
 #### *`-MS / --media_path_shared`*
 
-If you do not want to configure same sounds again for every individual voice-pack, you can specify an absolute path to a shared directory. Every voice-pack will use the sounds of that directory. Have a look at [supported Sound-file-keys](#Sound-file-keys). Moreover make sure the given path neither resides inside main-directory (darts-caller) nor inside media-path (-M).
+If you do not want to configure same sounds again for every individual voice-pack, you can specify an absolute path to a shared directory. Every voice-pack will use the sounds of that directory. Have a look at [supported SOUND-FILE-KEYS](#SOUND-FILE-KEYS). Moreover make sure the given path neither resides inside main-directory (darts-caller) nor inside media-path (-M).
 
 Side note: sounds located in that directory will override sounds located in voice-pack(s).
 
@@ -384,13 +405,25 @@ Default: '1'
 
 Side note: You can change that option anytime in the web-caller.
 
+#### *`-CBA / --call_bot_actions`*
+
+The application will call bot actions.
+
+- '0' = call bot actions deactivated
+- '1' = call bot actions activated
+
+Default: '1'
+
+Side note: You can change that option anytime in the web-caller.
+
 #### *`-E / --call_every_dart`*
 
 The application will call every thrown dart.
 
 - '0' = call every dart deactivated
-- '1' = call every dart by calculating the multiplication of field value and multiplier (for example: you hit a triple 20, resulting in calling 60) 
-- '2' = call every dart by calling sound-effects you setup. s1, d1, t1 to s20, d20, t20, outside, sbull, bull. If particular sound-file-key can't be found, it will fallback to: singleinner, singleouter, single, double, triple
+- '1' = SINGLE-DART-SCORE: call every dart by multiplicated score of field-number and field-multiplier (for example: you hit a triple 20, resulting in calling sound-file-key '60') 
+- '2' = SINGLE-DART-NAME: call every dart by field-name (for example: you hit a triple 20, resulting in calling sound-file-key 't20' if available, else falls back to sound-file-key 'triple' and sound-file-key '20') 
+- '3' = SINGLE-DART-EFFECT: call every dart by using sound-effects (for example: you hit a triple 20, resulting in calling sound-file-key 'effect_t20' if available, else falls back to 'effect_triple')
 
 Default: '0'
 
@@ -411,7 +444,7 @@ The application will call and repeat 'x' times a particular checkout until confi
 If configured value 'x' is reached it will playback sound-file-key 'ambient_checkout_call_limit' instead. 
 If possible-checkout`s remaining value changes it will call and repeat 'x' times a particular checkout until configured value 'x' is reached.
 
-For playback the application uses two sound-file-keys: 'you_require' and 'c_2-c_170' (fallback to '2-170'). If 'you_require' is not available it will fallback to single sound-file-key: 'yr_2 to yr_170'.
+For playback the application uses two SOUND-FILE-KEYS: 'you_require' and 'c_2-c_170' (fallback to '2-170'). If 'you_require' is not available it will fallback to single sound-file-key: 'yr_2 to yr_170'.
 
 Default: '1' (x = 1 => call a particular possible checkout one time)
 
@@ -431,14 +464,14 @@ Side note: You can change that option anytime in the web-caller.
 
 #### *`-A / --ambient_sounds`*
 
-If you set this to value between '0.1' and '1.0' the application will playback sound-file-keys ambient_*. 
+If you set this to value between '0.1' and '1.0' the application will playback SOUND-FILE-KEYS ambient_*. 
 The configured value will be multiplied by caller-volume (-V). As an example: caller-volume = '0.8' and ambient-sounds = '1.0' resultung in '0.8' relative to your system-volume.
 
 Default: '0.0'
 
 #### *`-AAC / --ambient_sounds_after_calls`*
 
-If you set this to '1', sound-file-keys ambient_* will wait until main-calls are finished.
+If you set this to '1', SOUND-FILE-KEYS ambient_* will wait until main-calls are finished.
 
 Default: '0'
 
@@ -465,6 +498,12 @@ Default: '1'
 #### *`-DLN / --downloads_name`*
 
 If you want to filter downloads to a specific voice-pack. For example you could set a value 'en-US-Joey-Male'.
+
+#### *`-ROVP / --remove_old_voice_packs`*
+
+The application will remove old voice-packs folders from your disk.
+
+Default: '0'
 
 #### *`-BAV / --background_audio_volume`*
 
@@ -632,9 +671,8 @@ AUTODARTS_BOARD_ID=123-456-789
 ### failed keycloakauthentication Error (401 invalid_grant)
 
 - Disable Two-Factor-Auth (2FA).
-- Make sure you use your email-addres.
-- Check your password.
-- Else try to change your password.
+- Make sure your email-address ist correct.
+- Make sure your password ist correct. (Else: try to change your password)
 
 ### Can not play sound for sound-file-key 'X' -> Ignore this or check existance; otherwise convert your file appropriate
 
@@ -645,7 +683,7 @@ If you rename any of your sound-files while the application is running you need 
 ### Sound is not playing?!
 
 - Check if the filename exists on your drive
-- Check that the filename is a supported [Sound-file-key](#Sound-file-keys)
+- Check that the filename is a supported [Sound-file-key](#SOUND-FILE-KEYS)
 - Sometimes there are sounds that are not playable. In this case you can convert that sound-file with the help of an additional program like (https://www.heise.de/download/product/mp3-quality-modifier-66202) Make sure you configurate 44100HZ, Stereo.
 - Check the console output: in case you do not receive any messages (only 'Receiving live information from ..') -> you should check the given Board-ID (-B) for correctness.
 
@@ -662,7 +700,7 @@ There are multiple ways to ban an undesired voice-pack:
 - Option 3) use [darts-voice](https://github.com/lbormann/darts-voice).
 
 All options forcing the application to either download files again nor using a voice-pack for calling.
-If you wish to revoke a ban, open 'darts-caller-banned.txt' and remove the line from the list.
+If you wish to revoke a ban, open 'banned.txt' and remove the line from the list.
 
 ### App starts and stops immediately?!
 
@@ -671,7 +709,7 @@ Start application out of terminal to check whats going on.
 ### Sound does not match up calls?!
 Try https://www.audacity.de/ to modify your sound-files.
 
-## Where can I find additional sounds for ambient or every-dart-sound-effects?
+## Where can I download additional sounds?
 
 - https://www.101soundboards.com/
 - https://freesound.org
@@ -689,7 +727,7 @@ Try https://www.audacity.de/ to modify your sound-files.
     - **Template file:**
     A UTF8-(with a BOM)-encoded CSV file (*.csv) (filename irrelevant), which is structured as follows:
     Column 1 contains a phrase that a sound file is based on. For example: "The game is over."
-    All other filled columns (separated by semicolon ';') specify [Sound-file-keys](#Sound-file-keys) that are used by darts-caller.
+    All other filled columns (separated by semicolon ';') specify [SOUND-FILE-KEYS](#SOUND-FILE-KEYS) that are used by darts-caller.
     For an example have a look at 'en-US-v1.csv' template.
 
     - **Sounds archive:**

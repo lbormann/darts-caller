@@ -1,3 +1,18 @@
+## 2.14.0
+
+- add argument -ROVP --remove_old_voice_packs (default '0')
+- add argument -CBA --call_bot_actions (default '1')
+- extend argument -E (The former E = 2 is now E = 3. The "new E = 2" calls a single dart by its field-name / category "SINGLE-DART-NAME")
+- rename sound-file-keys of category "SINGLE-DART-EFFECT": add prefix "effects_" to every sound-file-key. Examples: 't20' is now 'effect_t20', 'single' is now 'effect_single' (You need to rename your files accordingly)
+- rename sound-file-key 'sbull' to 'effect_bull' (You need to rename your file accordingly)
+- rename sound-file-key 'bull' to 'effect_bullseye' (You need to rename your file accordingly)
+- add sound-file-key 'ambient_matchcancel'
+- fix bug where checkout-counter wasn't reset properly
+- update all existing amazon/aws voice-packs (containing sounds for "E = 2")
+- rearrange preference-buttons on web-caller
+- adjust README to changes
+
+
 ## 2.13.0
 
 - rename application to darts-caller

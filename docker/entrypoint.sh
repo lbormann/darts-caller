@@ -35,6 +35,9 @@ fi
 if [ -n "$CALL_CURRENT_PLAYER" ]; then
   args="$args -CCP $CALL_CURRENT_PLAYER"
 fi
+if [ -n "$CALL_BOT_ACTIONS" ]; then
+  args="$args -CBA $CALL_BOT_ACTIONS"
+fi
 if [ -n "$CALL_EVERY_DART" ]; then
   args="$args -E $CALL_EVERY_DART"
 fi
@@ -61,6 +64,9 @@ if [ -n "$DOWNLOADS_LANGUAGE" ]; then
 fi
 if [ -n "$DOWNLOADS_NAME" ]; then
   args="$args -DLN $DOWNLOADS_NAME"
+fi
+if [ -n "$REMOVE_OLD_VOICE_PACKS" ]; then
+  args="$args -ROVP $REMOVE_OLD_VOICE_PACKS"
 fi
 if [ -n "$BACKGROUND_AUDIO_VOLUME" ]; then
  args="$args -BAV $BACKGROUND_AUDIO_VOLUME"
