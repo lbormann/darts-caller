@@ -431,7 +431,7 @@ Side note: You can change that option anytime in the web-caller.
 
 #### *`-ETS / --call_every_dart_total_score`*
 
-The application will call total score if call-every-dart is active ('1' or '2').
+The application will call total score if call-every-dart is active ('1', '2', '3').
 
 - '0' = call total score deactivated
 - '1' = call total score activated
