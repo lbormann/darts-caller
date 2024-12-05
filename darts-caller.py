@@ -2121,14 +2121,7 @@ def process_match_tactics(m):
     currentPlayerIsBot = (m['players'][currentPlayerIndex]['cpuPPR'] is not None)
     turns = m['turns'][0]
     variant = m['variant']
-    settings = m['settings']
-    gamemode = settings['gameMode']
-
-    if gamemode == "Tactics":
-        logger.critical(f"2172 - Variant: {variant} - GameMode: {gamemode}")
-
-    # ppi(gamemode)
-
+    
     isGameOn = False
     isGameFin = False
     global isGameFinished
