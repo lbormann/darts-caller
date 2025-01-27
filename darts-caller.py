@@ -460,9 +460,9 @@ def download_callers():
                     current_sound = sounds[i]
                     current_sound_splitted = os.path.splitext(current_sound)
                     current_sound_extension = current_sound_splitted[1]
+                    row = san_list[i]
 
                     try:
-                        row = san_list[i]
                         caller_keys = row[1:]
                         # ppi(caller_keys)
 
@@ -1249,6 +1249,11 @@ def listen_to_match(m, ws):
         #     "topic": m['id'] + ".game-events"
         # }
         # ws.send(json.dumps(paramsUnsubscribeMatchEvents))
+        unsubscribedMatchEvent = {
+            "event": "unsubscribed",
+            "matchId": m['id']
+        }
+        broadcast(unsubscribedMatchEvent)
 
         if m['event'] == 'delete':
             play_sound_effect('matchcancel')
