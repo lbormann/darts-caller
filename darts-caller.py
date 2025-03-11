@@ -58,7 +58,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.14.0'
+VERSION = '2.15.0'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -1099,14 +1099,19 @@ def listen_to_match(m, ws):
     #     },
     #     "topic": "1ba2df53-9a04-51bc-9a5f-667b2c5f315f.matches"  
     # }
-
+    ppi(json.dumps(m, indent = 4, sort_keys = True))
     if 'event' not in m:
         return
 
     if m['event'] == 'start':
         currentMatch = m['id']
         ppi('Listen to match: ' + currentMatch)
-
+        paramsSubscribeTakeOut = {
+            "channel": "autodarts.boards",
+            "type": "subscribe",
+            "topic": AUTODART_USER_BOARD_ID + ".events"
+        }
+        ws.send(json.dumps(paramsSubscribeTakeOut))
         reset_checkouts_counter()
 
         try:
@@ -1249,12 +1254,74 @@ def listen_to_match(m, ws):
         #     "topic": m['id'] + ".game-events"
         # }
         # ws.send(json.dumps(paramsUnsubscribeMatchEvents))
-
+        paramsSubscribeTakeOut = {
+            "channel": "autodarts.boards",
+            "type": "unsubscribe",
+            "topic": AUTODART_USER_BOARD_ID + ".events"
+        }
+        ws.send(json.dumps(paramsSubscribeTakeOut))
         if m['event'] == 'delete':
             play_sound_effect('matchcancel')
             play_sound_effect('ambient_matchcancel', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
             mirror_sounds()
-
+# BROADCAST BOARD STATUS FOR WLED
+def board_status_message(m):
+    if m['data']['event'] == 'Takeout started':
+        takeoutStarted = {
+            "event": "Board Status",
+            "data":{
+                "status": "Takeout Started"
+            }
+        }
+        broadcast(takeoutStarted)
+    elif m['data']['event'] == 'Takeout finished':
+        takeoutFinished = {
+            "event": "Board Status",
+            "data":{
+                "status": "Takeout Finished"
+            }
+        }
+        broadcast(takeoutFinished)
+    elif m['data']['event'] == 'Manual reset':
+        manualReset = {
+            "event": "Board Status",
+            "data":{
+                "status": "Manual reset"
+            }
+        }
+        broadcast(manualReset)
+    elif m['data']['event'] == 'Stopped':
+        boardStopped = {
+            "event": "Board Status",
+            "data":{
+                "status": "Board Stopped"
+            }
+        }
+        broadcast(boardStopped)
+    elif m['data']['event'] == 'Started':
+        boardStarted = {
+            "event": "Board Status",
+            "data":{
+                "status": "Board Started"
+            }
+        }
+        broadcast(boardStarted)
+    elif m['data']['event'] == 'Calibration started':
+        calibrationStarted= {
+            "event": "Board Status",
+            "data":{
+                "status": "Calibration Started"
+            }
+        }
+        broadcast(calibrationStarted)
+    elif m['data']['event'] == 'Calibration finished':
+        calibrationFinished = {
+            "event": "Board Status",
+            "data":{
+                "status": "Calibration Finished"
+            }
+        }
+        broadcast(calibrationFinished)
 
 def reset_checkouts_counter():
     global checkoutsCounter
@@ -2580,7 +2647,7 @@ def on_message_autodarts(ws, message):
             global lobbyPlayers
             global lastMessage
             m = json.loads(message)
-            # ppi(json.dumps(m, indent = 4, sort_keys = True))
+           # ppi(json.dumps(m, indent = 4, sort_keys = True))
   
             if m['channel'] == 'autodarts.matches':
                 data = m['data']
@@ -2622,7 +2689,10 @@ def on_message_autodarts(ws, message):
             elif m['channel'] == 'autodarts.boards':
                 data = m['data']
                 # ppi(json.dumps(data, indent = 4, sort_keys = True))
-
+                # GET BOARD STATUS
+                if data['event'] == 'Manual reset' or data['event'] == 'Started' or data['event'] == 'Stopped' or data['event'] == 'Takeout Started' or data['event'] == 'Takeout finished' or data['event'] == 'Calibration started' or data['event'] == 'Calibration finished':
+                    board_status_message(m)
+                    # ppi('New Params')
                 listen_to_match(data, ws)
             
             elif m['channel'] == 'autodarts.users':

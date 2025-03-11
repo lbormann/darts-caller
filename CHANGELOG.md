@@ -1,3 +1,6 @@
+## 2.15.0
+ - implement board status messages for wled (Takeout Status, Calibration, Board start/stop....)
+
 ## 2.14.0
 
 - add argument -ROVP --remove_old_voice_packs (default '0')
