@@ -1099,7 +1099,7 @@ def listen_to_match(m, ws):
     #     },
     #     "topic": "1ba2df53-9a04-51bc-9a5f-667b2c5f315f.matches"  
     # }
-    ppi(json.dumps(m, indent = 4, sort_keys = True))
+    # ppi(json.dumps(m, indent = 4, sort_keys = True))
     if 'event' not in m:
         return
 
@@ -1273,6 +1273,7 @@ def board_status_message(m):
                 "status": "Takeout Started"
             }
         }
+        ppi('Broadcast Takeout Started')
         broadcast(takeoutStarted)
     elif m['data']['event'] == 'Takeout finished':
         takeoutFinished = {
@@ -1281,6 +1282,7 @@ def board_status_message(m):
                 "status": "Takeout Finished"
             }
         }
+        ppi('Broadcast Takeout Finished')
         broadcast(takeoutFinished)
     elif m['data']['event'] == 'Manual reset':
         manualReset = {
@@ -1289,6 +1291,7 @@ def board_status_message(m):
                 "status": "Manual reset"
             }
         }
+        ppi('Broadcast Manual Reset')
         broadcast(manualReset)
     elif m['data']['event'] == 'Stopped':
         boardStopped = {
@@ -1297,6 +1300,7 @@ def board_status_message(m):
                 "status": "Board Stopped"
             }
         }
+        ppi('Broadcast Board Stop')
         broadcast(boardStopped)
     elif m['data']['event'] == 'Started':
         boardStarted = {
@@ -1305,6 +1309,7 @@ def board_status_message(m):
                 "status": "Board Started"
             }
         }
+        ppi('Broadcast Board Started')
         broadcast(boardStarted)
     elif m['data']['event'] == 'Calibration started':
         calibrationStarted= {
@@ -1313,6 +1318,7 @@ def board_status_message(m):
                 "status": "Calibration Started"
             }
         }
+        ppi('Broadcast Calibration Started')
         broadcast(calibrationStarted)
     elif m['data']['event'] == 'Calibration finished':
         calibrationFinished = {
@@ -1321,6 +1327,7 @@ def board_status_message(m):
                 "status": "Calibration Finished"
             }
         }
+        ppi('Broadcast Calibration Finished')
         broadcast(calibrationFinished)
 
 def reset_checkouts_counter():
@@ -2690,7 +2697,7 @@ def on_message_autodarts(ws, message):
                 data = m['data']
                 # ppi(json.dumps(data, indent = 4, sort_keys = True))
                 # GET BOARD STATUS
-                if data['event'] == 'Manual reset' or data['event'] == 'Started' or data['event'] == 'Stopped' or data['event'] == 'Takeout Started' or data['event'] == 'Takeout finished' or data['event'] == 'Calibration started' or data['event'] == 'Calibration finished':
+                if data['event'] == 'Manual reset' or data['event'] == 'Started' or data['event'] == 'Stopped' or data['event'] == 'Takeout started' or data['event'] == 'Takeout finished' or data['event'] == 'Calibration started' or data['event'] == 'Calibration finished':
                     board_status_message(m)
                     # ppi('New Params')
                 listen_to_match(data, ws)
