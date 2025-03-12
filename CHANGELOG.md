@@ -1,5 +1,6 @@
 ## 2.15.0
  - implement board status messages for wled (Takeout Status, Calibration, Board start/stop....)
+ - implement match-end broadcast for wled off parameter
 
 ## 2.14.0
 

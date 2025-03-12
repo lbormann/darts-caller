@@ -1264,6 +1264,13 @@ def listen_to_match(m, ws):
             play_sound_effect('matchcancel')
             play_sound_effect('ambient_matchcancel', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
             mirror_sounds()
+        # USED TO TURN WLED OFF
+        matchEnded = {
+            "event": "match-ended",
+            "me": AUTODART_USER_BOARD_ID
+            }
+        broadcast(matchEnded)
+
 # BROADCAST BOARD STATUS FOR WLED
 def board_status_message(m):
     if m['data']['event'] == 'Takeout started':
