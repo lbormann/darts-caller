@@ -1369,6 +1369,9 @@ def process_match_x01(m):
     global currentMatchPlayers
     global isGameFinished
     global lastPoints
+    global dart1score
+    global dart2score
+    global dart3score
     
     variant = m['variant']
     players = m['players']
@@ -1743,15 +1746,53 @@ def process_match_x01(m):
     # Check for 1. Dart
     elif turns != None and turns['throws'] != [] and len(turns['throws']) == 1:
         isGameFinished = False
+        dart1score = points
+        dart1Thrown = {
+            "event": "dart1-thrown",
+            "player": currentPlayerName,
+            "playerIsBot": str(currentPlayerIsBot),
+            "game": {
+                "mode": variant,
+                "pointsLeft": str(remainingPlayerScore),
+                "dartNumber": "1",
+                "dartValue": points       
+            }
+        }
+        broadcast(dart1Thrown)
 
     # Check for 2. Dart
     elif turns != None and turns['throws'] != [] and len(turns['throws']) == 2:
         isGameFinished = False
+        dart2score = str(int(points) - int(dart1score))
+        dart2Thrown = {
+            "event": "dart2-thrown",
+            "player": currentPlayerName,
+            "playerIsBot": str(currentPlayerIsBot),
+            "game": {
+                "mode": variant,
+                "pointsLeft": str(remainingPlayerScore),
+                "dartNumber": "2",
+                "dartValue": dart2score        
+            }
+        }
+        broadcast(dart2Thrown)
 
     # Check for 3. Dart - Score-call
     elif turns != None and turns['throws'] != [] and len(turns['throws']) == 3:
         isGameFinished = False
-
+        dart3score = str(int(points) - int(dart1score) - int(dart2score))
+        dart3Thrown = {
+            "event": "dart3-thrown",
+            "player": currentPlayerName,
+            "playerIsBot": str(currentPlayerIsBot),
+            "game": {
+                "mode": variant,
+                "pointsLeft": str(remainingPlayerScore),
+                "dartNumber": "3",
+                "dartValue": dart3score        
+            }
+        }
+        broadcast(dart3Thrown)
         dartsThrown = {
             "event": "darts-thrown",
             "player": currentPlayerName,
