@@ -1,3 +1,6 @@
+## 2.16.2
+ - bugfix
+
 ## 2.16.1
  - adds user stats
 

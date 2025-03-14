@@ -60,7 +60,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.16.1'
+VERSION = '2.16.2'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -3144,6 +3144,47 @@ def handle_message(message):
                 unicast(cid, welcome_event)
 
         elif type(message) == dict:
+            
+            
+            event = message['event']
+
+            if event == 'sync' and caller is not None:                    
+                if 'parted' in message:
+                    webCallerSyncs[cid].put(message['exists'])
+
+                    partsNeeded = message['parted']
+                    
+                    existing = []
+                    if webCallerSyncs[cid].qsize() == partsNeeded:
+                        while partsNeeded > 0:
+                            partsNeeded -= 1
+                            existing += webCallerSyncs[cid].get()
+                        webCallerSyncs[cid].task_done()
+                    else:
+                        return
+                    
+                    new = []
+                    for key, value in caller.items():
+                        for sound_file in value:
+                            base_name = os.path.basename(sound_file)
+                            if base_name not in existing:
+                                with open(sound_file, 'rb') as file:
+                                    encoded_file = (base64.b64encode(file.read())).decode('ascii')
+                                new.append({"name": base_name, "path": quote(sound_file, safe=""), "file": encoded_file})
+
+                    unicast(cid, {"exists": new})
+
+                else:
+                    new = [{"name": os.path.basename(sound_file), "path": quote(sound_file, safe=""), "file": (base64.b64encode(open(sound_file, 'rb').read())).decode('ascii')} for key, value in caller.items() for sound_file in value if os.path.basename(sound_file) not in message['exists']]
+                    message['exists'] = new
+                    unicast(cid, message)
+            
+            
+
+    except Exception as e:
+        ppe('WS-Client-Message failed.', e)
+    if type(message) == dict:
+        if 'status' in message:
             if message['status'] == 'WLED connected':
                 ppi('WLED connected')
                 EXT_WLED = True
@@ -3154,43 +3195,6 @@ def handle_message(message):
                 EXT_PIXEL = True
                 DB_ARGS['pixel_version'] = message['version']
                 send_arguments_to_php(DB_INSERT, DB_ARGS)
-            else:
-                event = message['event']
-
-                if event == 'sync' and caller is not None:                    
-                    if 'parted' in message:
-                        webCallerSyncs[cid].put(message['exists'])
-
-                        partsNeeded = message['parted']
-                        
-                        existing = []
-                        if webCallerSyncs[cid].qsize() == partsNeeded:
-                            while partsNeeded > 0:
-                                partsNeeded -= 1
-                                existing += webCallerSyncs[cid].get()
-                            webCallerSyncs[cid].task_done()
-                        else:
-                            return
-                        
-                        new = []
-                        for key, value in caller.items():
-                            for sound_file in value:
-                                base_name = os.path.basename(sound_file)
-                                if base_name not in existing:
-                                    with open(sound_file, 'rb') as file:
-                                        encoded_file = (base64.b64encode(file.read())).decode('ascii')
-                                    new.append({"name": base_name, "path": quote(sound_file, safe=""), "file": encoded_file})
-
-                        unicast(cid, {"exists": new})
-
-                    else:
-                        new = [{"name": os.path.basename(sound_file), "path": quote(sound_file, safe=""), "file": (base64.b64encode(open(sound_file, 'rb').read())).decode('ascii')} for key, value in caller.items() for sound_file in value if os.path.basename(sound_file) not in message['exists']]
-                        message['exists'] = new
-                        unicast(cid, message)
-
-    except Exception as e:
-        ppe('WS-Client-Message failed.', e)
-
 
 @app.route('/')
 def index():
