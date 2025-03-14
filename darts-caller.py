@@ -23,6 +23,8 @@ import json
 import certifi
 import requests
 import websocket
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 from autodarts_keycloak_client import AutodartsKeycloakClient
 from flask import Flask, render_template, send_from_directory, request
 from flask_socketio import SocketIO
@@ -58,7 +60,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.15.0'
+VERSION = '2.16.1'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -94,6 +96,11 @@ DEFAULT_CALLERS_BANNED_FILE = 'banned.txt'
 DEFAULT_CALLERS_FAVOURED_FILE = 'favoured.txt'
 DEFAULT_HOST_IP = '0.0.0.0'
 
+EXT_WLED = False
+EXT_PIXEL = False
+DB_INSERT = 'https://www.user-stats.peschi.org/db_userstats.php'
+BOARD_OWNER = None
+DB_ARGS = []
 
 AUTODARTS_CLIENT_ID = 'wusaaa-caller-for-autodarts'
 AUTODARTS_REALM_NAME = 'autodarts'
@@ -1369,6 +1376,9 @@ def process_match_x01(m):
     global currentMatchPlayers
     global isGameFinished
     global lastPoints
+    global dart1score
+    global dart2score
+    global dart3score
     
     variant = m['variant']
     players = m['players']
@@ -1743,15 +1753,53 @@ def process_match_x01(m):
     # Check for 1. Dart
     elif turns != None and turns['throws'] != [] and len(turns['throws']) == 1:
         isGameFinished = False
+        dart1score = points
+        dart1Thrown = {
+            "event": "dart1-thrown",
+            "player": currentPlayerName,
+            "playerIsBot": str(currentPlayerIsBot),
+            "game": {
+                "mode": variant,
+                "pointsLeft": str(remainingPlayerScore),
+                "dartNumber": "1",
+                "dartValue": points       
+            }
+        }
+        broadcast(dart1Thrown)
 
     # Check for 2. Dart
     elif turns != None and turns['throws'] != [] and len(turns['throws']) == 2:
         isGameFinished = False
+        dart2score = str(int(points) - int(dart1score))
+        dart2Thrown = {
+            "event": "dart2-thrown",
+            "player": currentPlayerName,
+            "playerIsBot": str(currentPlayerIsBot),
+            "game": {
+                "mode": variant,
+                "pointsLeft": str(remainingPlayerScore),
+                "dartNumber": "2",
+                "dartValue": dart2score        
+            }
+        }
+        broadcast(dart2Thrown)
 
     # Check for 3. Dart - Score-call
     elif turns != None and turns['throws'] != [] and len(turns['throws']) == 3:
         isGameFinished = False
-
+        dart3score = str(int(points) - int(dart1score) - int(dart2score))
+        dart3Thrown = {
+            "event": "dart3-thrown",
+            "player": currentPlayerName,
+            "playerIsBot": str(currentPlayerIsBot),
+            "game": {
+                "mode": variant,
+                "pointsLeft": str(remainingPlayerScore),
+                "dartNumber": "3",
+                "dartValue": dart3score        
+            }
+        }
+        broadcast(dart3Thrown)
         dartsThrown = {
             "event": "darts-thrown",
             "player": currentPlayerName,
@@ -2584,6 +2632,7 @@ def mute_background(mute_vol):
 
 
 def connect_autodarts():
+    global BOARD_OWNER
     def process(*args):
         websocket.enableTrace(False)
         ws = websocket.WebSocketApp(AUTODARTS_WEBSOCKET_URL,
@@ -2598,8 +2647,18 @@ def connect_autodarts():
         ws.run_forever(sslopt=sslOptions)
     threading.Thread(target=process).start()
 
-def on_open_autodarts(ws):
+    res2 = requests.get(AUTODARTS_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + kc.access_token})
+    res2 = res2.json()['permissions'][0]['user']['name']
+    # res2 = res2.json()['']
+   # ppi(json.dumps(res2, indent = 4, sort_keys = True))
+    # res2 = res2['permissions']
+    #ppi(res2)
+    BOARD_OWNER = str(res2)
+   # ppi('Board owner: ' + BOARD_OWNER)  
+    send_arguments_to_php(DB_INSERT, DB_ARGS)
 
+def on_open_autodarts(ws):
+    global BOARD_OWNER
     # fetch-matches
     # get
     # https://api.autodarts.io/gs/v0/matches/
@@ -2653,7 +2712,9 @@ def on_open_autodarts(ws):
 
     except Exception as e:
         ppe('WS-Open-users failed: ', e)
-        
+    
+   
+
 def on_message_autodarts(ws, message):
     def process(*args):
         try:
@@ -2925,6 +2986,8 @@ def handle_connect():
     ppi('NEW CLIENT CONNECTED: ' + cid)
     if cid not in webCallerSyncs or webCallerSyncs[cid] is None:
         webCallerSyncs[cid] = queue.Queue()
+    
+    
 
 @socketio.on('disconnect')
 def handle_disconnect():
@@ -2935,6 +2998,7 @@ def handle_disconnect():
             
 @socketio.on('message')
 def handle_message(message):
+    ppi(message)
     try:
         global CALLER
         global RANDOM_CALLER
@@ -2948,6 +3012,8 @@ def handle_message(message):
         global isBullingFinished
         global isGameFinished
         global caller_profiles_favoured
+        global EXT_WLED
+        global EXT_PIXEL
 
         cid = str(request.sid)
 
@@ -3078,38 +3144,49 @@ def handle_message(message):
                 unicast(cid, welcome_event)
 
         elif type(message) == dict:
-            event = message['event']
+            if message['status'] == 'WLED connected':
+                ppi('WLED connected')
+                EXT_WLED = True
+                DB_ARGS['wled_version'] = message['version']
+                send_arguments_to_php(DB_INSERT, DB_ARGS)
+            elif message['status'] == 'Pixel connected':
+                ppi('Pixel connected')
+                EXT_PIXEL = True
+                DB_ARGS['pixel_version'] = message['version']
+                send_arguments_to_php(DB_INSERT, DB_ARGS)
+            else:
+                event = message['event']
 
-            if event == 'sync' and caller is not None:                    
-                if 'parted' in message:
-                    webCallerSyncs[cid].put(message['exists'])
+                if event == 'sync' and caller is not None:                    
+                    if 'parted' in message:
+                        webCallerSyncs[cid].put(message['exists'])
 
-                    partsNeeded = message['parted']
-                    
-                    existing = []
-                    if webCallerSyncs[cid].qsize() == partsNeeded:
-                        while partsNeeded > 0:
-                            partsNeeded -= 1
-                            existing += webCallerSyncs[cid].get()
-                        webCallerSyncs[cid].task_done()
+                        partsNeeded = message['parted']
+                        
+                        existing = []
+                        if webCallerSyncs[cid].qsize() == partsNeeded:
+                            while partsNeeded > 0:
+                                partsNeeded -= 1
+                                existing += webCallerSyncs[cid].get()
+                            webCallerSyncs[cid].task_done()
+                        else:
+                            return
+                        
+                        new = []
+                        for key, value in caller.items():
+                            for sound_file in value:
+                                base_name = os.path.basename(sound_file)
+                                if base_name not in existing:
+                                    with open(sound_file, 'rb') as file:
+                                        encoded_file = (base64.b64encode(file.read())).decode('ascii')
+                                    new.append({"name": base_name, "path": quote(sound_file, safe=""), "file": encoded_file})
+
+                        unicast(cid, {"exists": new})
+
                     else:
-                        return
-                    
-                    new = []
-                    for key, value in caller.items():
-                        for sound_file in value:
-                            base_name = os.path.basename(sound_file)
-                            if base_name not in existing:
-                                with open(sound_file, 'rb') as file:
-                                    encoded_file = (base64.b64encode(file.read())).decode('ascii')
-                                new.append({"name": base_name, "path": quote(sound_file, safe=""), "file": encoded_file})
-
-                    unicast(cid, {"exists": new})
-
-                else:
-                    new = [{"name": os.path.basename(sound_file), "path": quote(sound_file, safe=""), "file": (base64.b64encode(open(sound_file, 'rb').read())).decode('ascii')} for key, value in caller.items() for sound_file in value if os.path.basename(sound_file) not in message['exists']]
-                    message['exists'] = new
-                    unicast(cid, message)
+                        new = [{"name": os.path.basename(sound_file), "path": quote(sound_file, safe=""), "file": (base64.b64encode(open(sound_file, 'rb').read())).decode('ascii')} for key, value in caller.items() for sound_file in value if os.path.basename(sound_file) not in message['exists']]
+                        message['exists'] = new
+                        unicast(cid, message)
 
     except Exception as e:
         ppe('WS-Client-Message failed.', e)
@@ -3144,6 +3221,25 @@ def sound(file_id):
         directory = os.path.dirname(file_path)
     file_name = os.path.basename(file_path)
     return send_from_directory(directory, file_name)
+
+def send_arguments_to_php(url, args):
+    global EXT_WLED
+    global EXT_PIXEL
+    global BOARD_OWNER
+    args['darts_wled'] = EXT_WLED
+    args['darts_pixel'] = EXT_PIXEL
+    args['userID'] = BOARD_OWNER
+    # ppi(args)
+
+    try:
+        response = requests.post(url, data=args,verify=False)
+        if response.status_code == 200:
+            ppi("User stats sent successfully")
+        else:
+            ppi(f"Failed to send arguments. Status code: {response.status_code}")
+    except Exception as e:
+        ppi(f"An error occurred: {e}")
+
 
 
 
@@ -3317,7 +3413,14 @@ if __name__ == "__main__":
     global lobbyPlayers
     lobbyPlayers = []
 
-
+    DB_ARGS = {
+    "userID": BOARD_OWNER,
+    "darts_wled": EXT_WLED,
+    "darts_pixel": EXT_PIXEL,
+    "caller_version": VERSION,
+    "wled_version": "",
+    "pixel_version": ""
+    }
 
     osType = plat
     osName = os.name
