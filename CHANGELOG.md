@@ -1,3 +1,6 @@
+## 2.16.1
+ - adds user stats
+
 ## 2.16.0
  - implement single dart broadcast when call every dart 1
 
