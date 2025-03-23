@@ -12,13 +12,13 @@ Learn more about the [Features!](#workflow--functionality)
 | ------------- | ------------- |
 | X01 | :heavy_check_mark: |
 | Cricket | :heavy_check_mark: |
-| Bermuda | |
-| Shanghai | |
+| Bermuda | :heavy_check_mark: |
+| Shanghai | :heavy_check_mark: |
 | Gotcha | |
 | Around the Clock | :heavy_check_mark: |
 | Round the World | :heavy_check_mark: |
 | Random Checkout | :heavy_check_mark: |
-| Count Up | |
+| Count Up | :heavy_check_mark: |
 | Segment Training | |
 
 <div style="display: flex;">

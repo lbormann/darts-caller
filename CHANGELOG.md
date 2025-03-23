@@ -1,3 +1,8 @@
+## 2.17.0
+ - Count Up implemented
+ - Bermuda implemented
+ - Shanghai implemented
+
 ## 2.16.2
  - bugfix
 
