@@ -1,4 +1,4 @@
-## 2.17.2
+## 2.17.3
  - Count Up implemented
  - Bermuda implemented (Soundfile for minus score required | minus.mp3)
  - Shanghai implemented
