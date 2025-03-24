@@ -60,7 +60,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.17.0'
+VERSION = '2.17.1'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -343,7 +343,6 @@ def check_already_running():
                 ppi(f"{me} is already running. Exit")
                 sys.exit()  
     # ppi("Start info: " + str(count))
-
 
 def versionize_speaker(speaker_name, speaker_version):
     speaker_versionized = speaker_name

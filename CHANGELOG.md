@@ -1,8 +1,9 @@
-## 2.17.0
+## 2.17.1
  - Count Up implemented
  - Bermuda implemented (Soundfile for minus score required | minus.mp3)
  - Shanghai implemented
  - Gotcha implemented (Soundfile for opponend score reset required | score_denied.mp3)
+ - bugfix
 
 ## 2.16.2
  - bugfix

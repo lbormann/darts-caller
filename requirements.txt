@@ -1,10 +1,10 @@
-pyinstaller==6.3.0
+pyinstaller==6.12.0
 python-keycloak==2.13.2
 websocket-client==1.7.0
 the-mask==0.0.1
 Flask==3.0.2
 Flask-SocketIO==5.3.6
-certifi==2023.7.22
+certifi==2025.1.31
 Werkzeug==3.0.0
 pygame==2.5.2
 download==0.3.5
