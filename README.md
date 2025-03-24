@@ -14,12 +14,13 @@ Learn more about the [Features!](#workflow--functionality)
 | Cricket | :heavy_check_mark: |
 | Bermuda | :heavy_check_mark: |
 | Shanghai | :heavy_check_mark: |
-| Gotcha | |
+| Gotcha | :heavy_check_mark: |
 | Around the Clock | :heavy_check_mark: |
 | Round the World | :heavy_check_mark: |
 | Random Checkout | :heavy_check_mark: |
 | Count Up | :heavy_check_mark: |
 | Segment Training | |
+| Bobs 27 | |
 
 <div style="display: flex;">
   <h2> Preview - Web-Caller </h2>
@@ -248,6 +249,14 @@ Disclaimer: For uninterrupted calling experience on mobile devices, ensure that 
 - rtw_target_hit_double
 - rtw_target_hit_triple
 - rtw_target_missed
+
+**Bermuda**
+
+- minus
+
+**Gotcha**
+
+-score_denied
 
 **CONTROL**
 
