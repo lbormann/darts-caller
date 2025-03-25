@@ -60,7 +60,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.17.5'
+VERSION = '2.17.6'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -3943,7 +3943,7 @@ def process_match_gotcha(m):
             # SINGLE-DART-SCORE
             if CALL_EVERY_DART == 1:
                 score = field_number * field_multiplier
-                play_sound_effect(str(score))
+                play_sound_effect(str(score), wait_for_last = True)
 
             # SINGLE-DART-NAME
             elif CALL_EVERY_DART == 2:
@@ -3960,11 +3960,11 @@ def process_match_gotcha(m):
                     field_number = str(field_number)
 
                     if type == 'singleouter' or type == 'singleinner':
-                        play_sound_effect(field_number)
+                        play_sound_effect(field_number, wait_for_last=True)
                     elif type == 'outside':
                         play_sound_effect(type)
                     else:
-                        if play_sound_effect(type):
+                        if play_sound_effect(type, wait_for_last=True):
                             play_sound_effect(field_number, wait_for_last=True)
 
             # SINGLE-DART-EFFECT

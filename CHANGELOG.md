@@ -1,5 +1,7 @@
-## 2.17.5
+## 2.17.6
 - Soundfile Updates and Hoster change
+- Gotscha Bugfix
+
 
 ## 2.17.4
  - Count Up implemented
