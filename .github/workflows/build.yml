@@ -21,8 +21,15 @@ jobs:
       with:
         tag_name: ${{ github.ref }}
         release_name: Release ${{ github.ref }}
+        body: |
+            Changes in this Release
+            - Updated new Gamemodes: Bermuda, Gotcha, Count Up, Shanghai
+            - changed Soundfile host
+            - Soundfiles Updated
+              - Bermuda and Gotcha needs two aditional soudfiles to call score reset
         draft: false
         prerelease: false
+        
     - name: Output Release URL File
       run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
     - name: Save Release URL File for publish

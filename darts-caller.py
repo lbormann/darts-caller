@@ -60,7 +60,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.17.4'
+VERSION = '2.17.5'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -227,41 +227,41 @@ CALLER_PROFILES = {
     # 'ru-RU-TODO': ('https://add.arnes-design.de/ADC/TODOLINK.zip', 1), 
     
     # -- nl-NL --
-    'nl-NL-Laura-Female': ('https://add.arnes-design.de/ADC/nl-NL-Laura-Female-v4.zip', 4),
+    'nl-NL-Laura-Female': ('https://darts-downloads.peschi.org/soundfiles/nl-NL-Laura-Female-v5.zip', 5),
 
     # -- fr-FR --
-    'fr-FR-Remi-Male': ('https://add.arnes-design.de/ADC/fr-FR-Remi-Male-v2.zip', 2), 
-    'fr-FR-Lea-Female': ('https://add.arnes-design.de/ADC/fr-FR-Lea-Female-v2.zip', 2), 
+    'fr-FR-Remi-Male': ('https://darts-downloads.peschi.org/soundfiles/fr-FR-Remi-Male-v3.zip', 3), 
+    'fr-FR-Lea-Female': ('https://darts-downloads.peschi.org/soundfiles/fr-FR-Lea-Female-v3.zip', 3), 
     
     # -- es-ES --
-    'es-ES-Lucia-Female': ('https://add.arnes-design.de/ADC/es-ES-Lucia-Female-v2.zip', 2), 
-    'es-ES-Sergio-Male': ('https://add.arnes-design.de/ADC/es-ES-Sergio-Male-v2.zip', 2), 
+    'es-ES-Lucia-Female': ('https://darts-downloads.peschi.org/soundfiles/es-ES-Lucia-Female-v3.zip', 3), 
+    'es-ES-Sergio-Male': ('https://darts-downloads.peschi.org/soundfiles/es-ES-Sergio-Male-v3.zip', 3), 
 
     # -- de-AT --
-    'de-AT-Hannah-Female': ('https://add.arnes-design.de/ADC/de-AT-Hannah-Female-v4.zip', 4),
+    'de-AT-Hannah-Female': ('https://darts-downloads.peschi.org/soundfiles/de-AT-Hannah-Female-v5.zip', 5),
     
     # -- de-DE --
-    'de-DE-Vicki-Female': ('https://add.arnes-design.de/ADC/de-DE-Vicki-Female-v7.zip', 7),  
+    'de-DE-Vicki-Female': ('https://darts-downloads.peschi.org/soundfiles/de-DE-Vicki-Female-v8.zip', 8),  
     'de-DE-Daniel-Male': ('https://darts-downloads.peschi.org/soundfiles/de-DE-Daniel-Male-v8.zip', 8),
     
     # -- en-US --
-    'en-US-Ivy-Female': ('https://add.arnes-design.de/ADC/en-US-Ivy-Female-v7.zip', 7),
-    'en-US-Joey-Male': ('https://add.arnes-design.de/ADC/en-US-Joey-Male-v8.zip', 8),
-    'en-US-Joanna-Female': ('https://add.arnes-design.de/ADC/en-US-Joanna-Female-v8.zip', 8),
-    'en-US-Matthew-Male': ('https://add.arnes-design.de/ADC/en-US-Matthew-Male-v5.zip', 5),
-    'en-US-Danielle-Female': ('https://add.arnes-design.de/ADC/en-US-Danielle-Female-v5.zip', 5),
-    'en-US-Kimberly-Female': ('https://add.arnes-design.de/ADC/en-US-Kimberly-Female-v4.zip', 4),
-    'en-US-Ruth-Female': ('https://add.arnes-design.de/ADC/en-US-Ruth-Female-v4.zip', 4),
-    'en-US-Salli-Female': ('https://add.arnes-design.de/ADC/en-US-Salli-Female-v4.zip', 4),
-    'en-US-Kevin-Male': ('https://add.arnes-design.de/ADC/en-US-Kevin-Male-v4.zip', 4),
-    'en-US-Justin-Male': ('https://add.arnes-design.de/ADC/en-US-Justin-Male-v4.zip', 4),
-    'en-US-Stephen-Male': ('https://add.arnes-design.de/ADC/en-US-Stephen-Male-v7.zip', 7),  
-    'en-US-Kendra-Female': ('https://add.arnes-design.de/ADC/en-US-Kendra-Female-v8.zip', 8),
-    'en-US-Gregory-Male': ('https://add.arnes-design.de/ADC/en-US-Gregory-Male-v5.zip', 5),
+    'en-US-Ivy-Female': ('https://darts-downloads.peschi.org/soundfiles/en-US-Ivy-Female-v8.zip', 8),
+    'en-US-Joey-Male': ('https://darts-downloads.peschi.org/soundfiles/en-US-Joey-Male-v9.zip', 9),
+    'en-US-Joanna-Female': ('https://darts-downloads.peschi.org/soundfiles/en-US-Joanna-Female-v9.zip', 9),
+    'en-US-Matthew-Male': ('https://darts-downloads.peschi.org/soundfiles/en-US-Matthew-Male-v6.zip', 6),
+    'en-US-Danielle-Female': ('https://darts-downloads.peschi.org/soundfiles/en-US-Danielle-Female-v6.zip', 6),
+    'en-US-Kimberly-Female': ('https://darts-downloads.peschi.org/soundfiles/en-US-Kimberly-Female-v5.zip', 5),
+    'en-US-Ruth-Female': ('https://darts-downloads.peschi.org/soundfiles/en-US-Ruth-Female-v5.zip', 5),
+    'en-US-Salli-Female': ('https://darts-downloads.peschi.org/soundfiles/en-US-Salli-Female-v5.zip', 5),
+    'en-US-Kevin-Male': ('https://darts-downloads.peschi.org/soundfiles/en-US-Kevin-Male-v5.zip', 5),
+    'en-US-Justin-Male': ('https://darts-downloads.peschi.org/soundfiles/en-US-Justin-Male-v5.zip', 5),
+    'en-US-Stephen-Male': ('https://darts-downloads.peschi.org/soundfiles/en-US-Stephen-Male-v8.zip', 8),  
+    'en-US-Kendra-Female': ('https://darts-downloads.peschi.org/soundfiles/en-US-Kendra-Female-v9.zip', 9),
+    'en-US-Gregory-Male': ('https://darts-downloads.peschi.org/soundfiles/en-US-Gregory-Male-v6.zip', 6),
     
     # -- en-GB --
-    'en-GB-Amy-Female': ('https://add.arnes-design.de/ADC/en-GB-Amy-Female-v3.zip', 3),
-    'en-GB-Arthur-Male': ('https://add.arnes-design.de/ADC/en-GB-Arthur-Male-v3.zip', 3),
+    'en-GB-Amy-Female': ('https://darts-downloads.peschi.org/soundfiles/en-GB-Amy-Female-v4.zip', 4),
+    'en-GB-Arthur-Male': ('https://darts-downloads.peschi.org/soundfiles/en-GB-Arthur-Male-v4.zip', 4),
 
 
     #------------------------------------------------------------------------------------------------

@@ -1,3 +1,6 @@
+## 2.17.5
+- Soundfile Updates and Hoster change
+
 ## 2.17.4
  - Count Up implemented
  - Bermuda implemented (Soundfile for minus score required | minus.mp3)
