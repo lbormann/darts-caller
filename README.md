@@ -373,7 +373,9 @@ Side note: You can change the caller/voice-pack anytime in the web-caller.</p>
 <p>The application will randomly choose a voice-pack. If you use this functionality, the application only considers most recent version of a voice-pack by finding its highest version number by name. Example: 'en-US-Joey-Male-v3'. Because there is no voice-pack with name 'en-US-Joey-Male-v4', version is 'v3' (en-US-Joey-Male-v3).
 
 - '0' = random caller deactivated (instead use -C to set your favorite caller)
+  
 - '1' = random caller for every match-start
+  
 - '2' = random caller for every leg
 
 Default: '1'</p>
@@ -411,7 +413,9 @@ Side note: You can change that option anytime in the web-caller.</p>
 <p>The application will call playernames for certain events like "you require", "leg/set start", "leg/set end".
 
 - '0' = call current playername deactivated
+  
 - '1' = call current playername activated
+  
 - '2' = call current playername activated also on every playerchange
 
 Default: '1'
@@ -423,6 +427,7 @@ Side note: You can change that option anytime in the web-caller.</p>
 <p>The application will call bot actions.
 
 - '0' = call bot actions deactivated
+  
 - '1' = call bot actions activated
 
 Default: '1'
@@ -434,8 +439,11 @@ Side note: You can change that option anytime in the web-caller.</p>
 <p>The application will call every thrown dart.
 
 - '0' = call every dart deactivated
-- '1' = SINGLE-DART-SCORE: call every dart by multiplicated score of field-number and field-multiplier (for example: you hit a triple 20, resulting in calling sound-file-key '60') 
-- '2' = SINGLE-DART-NAME: call every dart by field-name (for example: you hit a triple 20, resulting in calling sound-file-key 't20' if available, else falls back to sound-file-key 'triple' and sound-file-key '20') 
+ 
+- '1' = SINGLE-DART-SCORE: call every dart by multiplicated score of field-number and field-multiplier (for example: you hit a triple 20, resulting in calling sound-file-key '60')
+ 
+- '2' = SINGLE-DART-NAME: call every dart by field-name (for example: you hit a triple 20, resulting in calling sound-file-key 't20' if available, else falls back to sound-file-key 'triple' and sound-file-key '20')
+ 
 - '3' = SINGLE-DART-EFFECT: call every dart by using sound-effects (for example: you hit a triple 20, resulting in calling sound-file-key 'effect_t20' if available, else falls back to 'effect_triple')
 
 Default: '0'
@@ -447,6 +455,7 @@ Side note: You can change that option anytime in the web-caller.</p>
 <p>The application will call total score if call-every-dart is active ('1', '2', '3').
 
 - '0' = call total score deactivated
+  
 - '1' = call total score activated
 
 Default: '1'</p>
@@ -469,6 +478,7 @@ Side note: You can change that option anytime in the web-caller.</p>
 This functionality won't work if your board is offline.
 
 - '0' = call possible checkout for every player
+  
 - '1' = call possible checkout only for yourself
 
 Default: '0'
