@@ -23,11 +23,7 @@ jobs:
         release_name: Release ${{ github.ref }}
         body: |
             **Changes in this Release**
-            - Updated new Gamemodes: Bermuda, Gotcha, Count Up, Shanghai
-            - changed Soundfile host
-            - Soundfiles Updated
-              - Bermuda and Gotcha needs two aditional soudfiles to call score reset
-              - PLEASE ACTIVATE -DOWNLOAD TO UPDATE YOU SOUNDPACKS
+            - Bermuda: if you dont hit target, Broadcast Busted for extensions
         draft: false
         prerelease: false
         

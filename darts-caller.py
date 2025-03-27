@@ -60,7 +60,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.17.6'
+VERSION = '2.17.7'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -2951,6 +2951,8 @@ def process_match_Bermuda(m):
     global currentMatchHost
     global currentMatchPlayers
     global isGameFinished
+    global oneGoodDart
+    global bermudaBusted
     variant = m['variant']
     players = m['players']
     currentPlayerIndex = m['player']
@@ -2986,6 +2988,34 @@ def process_match_Bermuda(m):
     matchon = (turns['throws'] == [] and m['leg'] == 1 and m['set'] == 1 and rounds == 1)
     gameon = (turns['throws'] == [] and rounds == 1)
 
+    # CHECK FOR BUSTED TURN
+    if turns != None and turns['throws'] == []:
+        oneGoodDart = False
+    if turns != None and turns['throws'] != []:
+        field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
+        field_multiplier = turns['throws'][throwAmount - 1]['segment']['multiplier']
+        field_number = turns['throws'][throwAmount - 1]['segment']['number']
+        if str(field_number) == target:
+            # ppi('hit: ' + str(field_number) + ' target: ' + str(target))
+            oneGoodDart = True
+            bermudaBusted = "False"
+        elif field_multiplier == 3 and target =='T' :
+            # ppi('hit: ' + str(field_name) + ' target: ' + str(target))
+            oneGoodDart = True
+            bermudaBusted = "False"
+        elif field_multiplier == 2 and target =='D' :
+            # ppi('hit: ' + str(field_name) + ' target: ' + str(target))
+            oneGoodDart = True
+            bermudaBusted = "False"
+        elif field_multiplier == 2 and field_number == 25 and target =='50' :
+            # ppi('hit: ' + str(field_name) + ' target: ' + str(target))
+            oneGoodDart = True
+            bermudaBusted = "False"
+        elif oneGoodDart == False:
+            # ppi('BUSTED')
+            bermudaBusted = "True"
+    
+
     # Darts pulled (Playerchange and Possible-checkout)
     if gameon == False and turns != None and turns['throws'] == [] or isGameFinished == True:
         dartsPulled = {
@@ -2996,7 +3026,8 @@ def process_match_Bermuda(m):
                 # TODO: fix
                 "dartsThrown": "3",
                 "round": str(rounds),
-                "target": BERMUDA_ROUNDS[rounds]
+                "target": BERMUDA_ROUNDS[rounds],
+                "busted": bermudaBusted
                 # TODO: fix
                 # "darts": [
                 #     {"number": "1", "value": "60"},
@@ -3008,7 +3039,7 @@ def process_match_Bermuda(m):
         }
         # ppi(dartsPulled)
         broadcast(dartsPulled)
-
+        bermudaBusted = "False"
         
         if gameon == False and isGameFinished == False:
 
@@ -4016,8 +4047,8 @@ def process_match_gotcha(m):
             }
         broadcast(matchWon)
 
-        if play_sound_effect('matchshot') == False:
-            play_sound_effect('gameshot')
+        if play_sound_effect('matchshot', wait_for_last=True) == False:
+            play_sound_effect('gameshot', wait_for_last=True)
         play_sound_effect(currentPlayerName, True)
         
         if AMBIENT_SOUNDS != 0.0:
@@ -5090,6 +5121,12 @@ if __name__ == "__main__":
 
     global gotcha_last_player_points
     gotcha_last_player_points = []
+
+    global oneGoodDart
+    oneGoodDart = False
+
+    global bermudaBusted
+    bermudaBusted = ''
 
     DB_ARGS = {
     "userID": BOARD_OWNER,

@@ -30,3 +30,9 @@
 - add support for more game variants
 - add license
 - show used audio-device on start
+
+
+I3uLL3t Backlock
+- Calls " Winner is $NAME$"
+- Calls "First set, first leg...$NAME$ to throw first, Gameon"
+- Bermuda Busted turns

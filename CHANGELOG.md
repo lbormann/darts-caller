@@ -1,3 +1,6 @@
+## 2.17.7
+- Bermuda: if you dont hit target, Broadcast Busted for extensions
+
 ## 2.17.6
 - Soundfile Updates and Hoster change
 - Gotscha Bugfix
