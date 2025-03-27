@@ -398,7 +398,7 @@ Side note: You can change that option anytime in the web-caller.</p>
 
 #### *`-RG / --random_caller_gender`*
 
-</p>Filters randomly chosen voice-pack by its gender.
+<p>Filters randomly chosen voice-pack by its gender.
 
 - '0' = every gender
 - '1' = female
@@ -410,7 +410,7 @@ Side note: You can change that option anytime in the web-caller.</p>
 
 #### *`-CCP / --call_current_player`*
 
-<p>The application will call playernames for certain events like "you require", "leg/set start", "leg/set end".
+<p> The application will call playernames for certain events like 'you require' 'legset start' 'legset end'.
 
 - '0' = call current playername deactivated
   
@@ -420,7 +420,7 @@ Side note: You can change that option anytime in the web-caller.</p>
 
 Default: '1'
 
-Side note: You can change that option anytime in the web-caller.</p>
+Side note: You can change that option anytime in the web-caller. </p>
 
 #### *`-CBA / --call_bot_actions`*
 
