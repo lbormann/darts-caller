@@ -398,7 +398,7 @@ Side note: You can change that option anytime in the web-caller.</p>
 
 #### *`-RG / --random_caller_gender`*
 
-</p>Filters randomly chosen voice-pack by its gender.
+<p>Filters randomly chosen voice-pack by its gender.
 
 - '0' = every gender
 - '1' = female
