@@ -1,4 +1,4 @@
-## 2.17.7
+## 2.17.8
 - Bermuda: if you dont hit target, Broadcast Busted for extensions
 
 ## 2.17.6

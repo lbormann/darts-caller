@@ -60,7 +60,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.17.7'
+VERSION = '2.17.8'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -3039,7 +3039,7 @@ def process_match_Bermuda(m):
         }
         # ppi(dartsPulled)
         broadcast(dartsPulled)
-        bermudaBusted = "False"
+        
         
         if gameon == False and isGameFinished == False:
 
@@ -3362,19 +3362,23 @@ def process_match_Bermuda(m):
                         points = "0"
                 play_sound_effect(points, wait_for_last=CALL_EVERY_DART > 0)
 
+            if bermudaBusted == "True":
+                busted = { 
+                "event": "busted",
+                "player": currentPlayerName,
+                "playerIsBot": str(currentPlayerIsBot),
+                "game": {
+                    "mode": variant
+                    }       
+                }
+                broadcast(busted)
+                ppi('Busted')
+                bermudaBusted = "False"
+
             if AMBIENT_SOUNDS != 0.0:
                 ambient_x_success = False
 
-                throw_combo = ''
-                for t in turns['throws']:
-                    throw_combo += t['segment']['name'].lower()
-                # ppi(throw_combo)
-
-                if turns['points'] != 0:
-                    ambient_x_success = play_sound_effect('ambient_' + str(throw_combo), AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
-                    if ambient_x_success == False:
-                        ambient_x_success = play_sound_effect('ambient_' + str(turns['points']), AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
-
+                
                 if ambient_x_success == False:
                     if turns['points'] >= 150:
                         play_sound_effect('ambient_150more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)   
