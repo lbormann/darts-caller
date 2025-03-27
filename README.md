@@ -410,7 +410,7 @@ Side note: You can change that option anytime in the web-caller.</p>
 
 #### *`-CCP / --call_current_player`*
 
-<p>The application will call playernames for certain events like "you require", "leg/set start", "leg/set end".
+<p>The application will call playernames for certain events like "you require" "leg/set start" "leg/set end".
 
 - '0' = call current playername deactivated
   
