@@ -60,7 +60,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.17.8'
+VERSION = '2.17.9'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -117,6 +117,7 @@ AUTODARTS_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe'
 SUPPORTED_SOUND_FORMATS = ['.mp3', '.wav']
 SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket', 'Random Checkout', 'ATC', 'RTW', 'Count Up', "Bermuda", "Shanghai", "Gotcha"]
 SUPPORTED_CRICKET_FIELDS = [15, 16, 17, 18, 19, 20, 25]
+SUPPORTED_TACTICS_FIELDS = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 25]
 BERMUDA_ROUNDS = {
     1: '12',
     2: '13',
@@ -1982,6 +1983,7 @@ def process_match_cricket(m):
     currentPlayerIsBot = (m['players'][currentPlayerIndex]['cpuPPR'] is not None)
     turns = m['turns'][0]
     variant = m['variant']
+    gameMode = m['settings']['gameMode']
 
     isGameOn = False
     isGameFin = False
@@ -2001,9 +2003,12 @@ def process_match_cricket(m):
             field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
             field_number = turns['throws'][throwAmount - 1]['segment']['number']
             field_multiplier = turns['throws'][throwAmount - 1]['segment']['multiplier']
-    
-            if field_number not in SUPPORTED_CRICKET_FIELDS:
-                return
+            if gameMode == 'Cricket':
+                if field_number not in SUPPORTED_CRICKET_FIELDS:
+                    return
+            elif gameMode == 'Tactics':
+                if field_number not in SUPPORTED_TACTICS_FIELDS:
+                    return
             
 
             # TODO fields already closed?
@@ -2073,7 +2078,7 @@ def process_match_cricket(m):
         lastPoints = ''
         for t in turns['throws']:
             number = t['segment']['number']
-            if number in SUPPORTED_CRICKET_FIELDS:
+            if number in SUPPORTED_CRICKET_FIELDS or number in SUPPORTED_TACTICS_FIELDS:
                 throwPoints += (t['segment']['multiplier'] * number)
                 lastPoints += 'x' + str(t['segment']['name'])
         lastPoints = lastPoints[1:]
@@ -2113,7 +2118,7 @@ def process_match_cricket(m):
         lastPoints = ''
         for t in turns['throws']:
             number = t['segment']['number']
-            if number in SUPPORTED_CRICKET_FIELDS:
+            if number in SUPPORTED_CRICKET_FIELDS or number in SUPPORTED_CRICKET_FIELDS:
                 throwPoints += (t['segment']['multiplier'] * number)
                 lastPoints += 'x' + str(t['segment']['name'])
         lastPoints = lastPoints[1:]
@@ -2235,7 +2240,7 @@ def process_match_cricket(m):
         lastPoints = ''
         for t in turns['throws']:
             number = t['segment']['number']
-            if number in SUPPORTED_CRICKET_FIELDS:
+            if number in SUPPORTED_CRICKET_FIELDS or number in SUPPORTED_TACTICS_FIELDS:
                 throwPoints += (t['segment']['multiplier'] * number)
                 lastPoints += 'x' + str(t['segment']['name'])
         lastPoints = lastPoints[1:]
@@ -4431,7 +4436,7 @@ def on_message_autodarts(ws, message):
                 if lastMessage != data and currentMatch != None and 'id' in data and data['id'] == currentMatch:
                     lastMessage = data
 
-                    # ppi(json.dumps(data, indent = 4, sort_keys = True))
+                    ppi(json.dumps(data, indent = 4, sort_keys = True))
 
                     # process_common(data)
 

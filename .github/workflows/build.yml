@@ -23,7 +23,7 @@ jobs:
         release_name: Release ${{ github.ref }}
         body: |
             **Changes in this Release**
-            - Bermuda: if you dont hit target, Broadcast Busted for extensions
+            - Implement Tactics
         draft: false
         prerelease: false
         
