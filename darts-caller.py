@@ -60,7 +60,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.17.9'
+VERSION = '2.17.10'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -4436,7 +4436,7 @@ def on_message_autodarts(ws, message):
                 if lastMessage != data and currentMatch != None and 'id' in data and data['id'] == currentMatch:
                     lastMessage = data
 
-                    ppi(json.dumps(data, indent = 4, sort_keys = True))
+                    # ppi(json.dumps(data, indent = 4, sort_keys = True))
 
                     # process_common(data)
 
