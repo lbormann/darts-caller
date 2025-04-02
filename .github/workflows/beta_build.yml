@@ -51,7 +51,7 @@ jobs:
             ASSET_MIME: application/zip
 
           - os: macos-14
-            TARGET: macos
+            TARGET: —target-arch X86_64
             CMD_BUILD: pyinstaller -F -n darts-caller-macARM -i resources/darts-caller.icns --add-data "templates:templates" --add-data "static:static" --collect-all certifi darts-caller.py 
             OUT_FILE_NAME: darts-caller-macARM
             ASSET_MIME: application/zip
