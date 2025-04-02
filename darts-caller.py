@@ -60,7 +60,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.17.10'
+VERSION = '2.17.11'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -1447,6 +1447,7 @@ def process_match_x01(m):
     global dart1score
     global dart2score
     global dart3score
+    global indexNameMacro
     
     variant = m['variant']
     players = m['players']
@@ -1456,7 +1457,7 @@ def process_match_x01(m):
     currentPlayerIsBot = (m['players'][currentPlayerIndex]['cpuPPR'] is not None)
     remainingPlayerScore = m['gameScores'][currentPlayerIndex]
     numberOfPlayers = len(m['players'])
-
+    ppi(indexNameMacro)
     turns = m['turns'][0]
     points = str(turns['points'])
     busted = (turns['busted'] == True)
@@ -1488,6 +1489,7 @@ def process_match_x01(m):
         dartsPulled = {
             "event": "darts-pulled",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -1629,9 +1631,11 @@ def process_match_x01(m):
         matchWon = {
                 "event": "match-won",
                 "player": currentPlayerName,
+                "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                 "game": {
                     "mode": variant,
                     "dartsThrownValue": points
+                    
                 } 
             }
         broadcast(matchWon)
@@ -1664,6 +1668,7 @@ def process_match_x01(m):
         gameWon = {
                 "event": "game-won",
                 "player": currentPlayerName,
+                "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                 "game": {
                     "mode": variant,
                     "dartsThrownValue": points
@@ -1740,6 +1745,7 @@ def process_match_x01(m):
             # "meHost": currentMatchHost,
             # "players": currentMatchPlayers,
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 "pointsStart": str(m['settings'][base]),
@@ -1774,6 +1780,7 @@ def process_match_x01(m):
         gameStarted = {
             "event": "game-started",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 "pointsStart": str(m['settings'][base]),
@@ -1803,6 +1810,7 @@ def process_match_x01(m):
         busted = { 
                     "event": "busted",
                     "player": currentPlayerName,
+                    "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                     "playerIsBot": str(currentPlayerIsBot),
                     "game": {
                         "mode": variant
@@ -1825,6 +1833,7 @@ def process_match_x01(m):
         dart1Thrown = {
             "event": "dart1-thrown",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
@@ -1842,6 +1851,7 @@ def process_match_x01(m):
         dart2Thrown = {
             "event": "dart2-thrown",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
@@ -1859,6 +1869,7 @@ def process_match_x01(m):
         dart3Thrown = {
             "event": "dart3-thrown",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
@@ -1871,6 +1882,7 @@ def process_match_x01(m):
         dartsThrown = {
             "event": "darts-thrown",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
@@ -1977,6 +1989,7 @@ def process_match_x01(m):
         isGameFinished = True
 
 def process_match_cricket(m):
+    global indexNameMacro
     currentPlayerIndex = m['player']
     currentPlayer = m['players'][currentPlayerIndex]
     currentPlayerName = str(currentPlayer['name']).lower()
@@ -2086,6 +2099,7 @@ def process_match_cricket(m):
         matchWon = {
                 "event": "match-won",
                 "player": currentPlayerName,
+                "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                 "game": {
                     "mode": variant,
                     "dartsThrownValue": throwPoints                    
@@ -2126,6 +2140,7 @@ def process_match_cricket(m):
         gameWon = {
                 "event": "game-won",
                 "player": currentPlayerName,
+                "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                 "game": {
                     "mode": variant,
                     "dartsThrownValue": throwPoints
@@ -2154,6 +2169,7 @@ def process_match_cricket(m):
         matchStarted = {
             "event": "match-started",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -2186,6 +2202,7 @@ def process_match_cricket(m):
         gameStarted = {
             "event": "game-started",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -2210,6 +2227,7 @@ def process_match_cricket(m):
         busted = { 
                     "event": "busted",
                     "player": currentPlayerName,
+                    "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                     "playerIsBot": str(currentPlayerIsBot),
                     "game": {
                         "mode": variant
@@ -2248,6 +2266,7 @@ def process_match_cricket(m):
         dartsThrown = {
             "event": "darts-thrown",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
@@ -2284,6 +2303,7 @@ def process_match_cricket(m):
         dartsPulled = {
             "event": "darts-pulled",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -2319,6 +2339,7 @@ def process_match_cricket(m):
 
 def process_match_atc(m):
     global isGameFinished
+    global indexNameMacro
 
     variant = m['variant']
     needHits = m['settings']['hits']
@@ -2328,7 +2349,7 @@ def process_match_atc(m):
     currentPlayerIsBot = (m['players'][currentPlayerIndex]['cpuPPR'] is not None)
     numberOfPlayers = len(m['players'])
     isRandomOrder = m['settings']['order'] == 'Random-Bull'
-
+    isGameOn = False
     turns = m['turns'][0]
     matchshot = (m['winner'] != -1 and isGameFinished == False)
 
@@ -2369,13 +2390,71 @@ def process_match_atc(m):
             else:
                 if play_sound_effect('atc_target_missed') == False:
                     play_sound_effect(str(targetHit))
+    # Check for matchon
+    # elif turns['throws'] == [] and m['round'] == 1 and m['leg'] == 1 and m['set'] == 1:
+    #     isGameOn = True
+    #     isGameFinished = False
 
+    #     matchStarted = {
+    #         "event": "match-started",
+    #         "player": currentPlayerName,
+    #         "playerIndex": str(currentPlayerIndex),
+    #         "game": {
+    #             "mode": variant,
+    #             # TODO: fix
+    #             "special": "TODO"
+    #             }     
+    #         }
+    #     broadcast(matchStarted)
+
+    #     play_sound_effect(currentPlayerName, False)
+    #     if play_sound_effect('matchon', True) == False:
+    #         play_sound_effect('gameon', True)
+        
+    #     # play only if it is a real match not just legs!
+    #     # if AMBIENT_SOUNDS != 0.0 and ('legs' in m and 'sets'):
+    #     #     if play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
+    #     #         play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+    #     if AMBIENT_SOUNDS != 0.0:
+    #         state = play_sound_effect('ambient_matchon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
+    #         if state == False and play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False) == False:
+    #             if play_sound_effect('ambient_gameon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False) == False:
+    #                 play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)    
+        
+    #     ppi('Matchon')
+
+    # # Check for gameon
+    # elif turns['throws'] == [] and m['round'] == 1:
+    #     isGameOn = True
+    #     isGameFinished = False
+        
+    #     gameStarted = {
+    #         "event": "game-started",
+    #         "player": currentPlayerName,
+    #         "playerIndex": str(currentPlayerIndex),
+    #         "game": {
+    #             "mode": variant,
+    #             # TODO: fix
+    #             "special": "TODO"
+    #             }     
+    #         }
+    #     broadcast(gameStarted)
+
+    #     play_sound_effect(currentPlayerName, False)
+    #     play_sound_effect('gameon', True)
+
+    #     if AMBIENT_SOUNDS != 0.0:
+    #         if play_sound_effect('ambient_gameon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False) == False:
+    #             play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
+
+    #     ppi('Gameon')
 
     if matchshot:
         isGameFinished = True
         matchWon = {
             "event": "match-won",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 "dartsThrownValue": "0"
@@ -2419,10 +2498,33 @@ def process_match_atc(m):
         if currentPlayerIsBot == False or CALL_BOT_ACTIONS:
             if CALL_CURRENT_PLAYER == 2 and numberOfPlayers > 1:
                 play_sound_effect(currentPlayerName, True)
+
+    # Playerchange
+    if turns != None and turns['throws'] == [] or isGameFinished == True:
+        dartsPulled = {
+            "event": "darts-pulled",
+            "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
+            "game": {
+                "mode": variant
+            }
+        }
+        broadcast(dartsPulled)
+
+        if currentPlayerIsBot == False or CALL_BOT_ACTIONS:
+            if CALL_CURRENT_PLAYER == 2:
+                play_sound_effect(currentPlayerName)
+
+        if AMBIENT_SOUNDS != 0.0:
+            if play_sound_effect('ambient_playerchange_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False) == False:
+                play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
+        
+        ppi("Next player")
     
     mirror_sounds()
 
 def process_match_rtw(m):
+    global indexNameMacro
     global isGameFinished
 
     variant = m['variant']
@@ -2458,6 +2560,7 @@ def process_match_rtw(m):
         dartsPulled = {
             "event": "darts-pulled",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -2506,6 +2609,7 @@ def process_match_rtw(m):
         dartsThrown = {
             "event": "darts-thrown",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
@@ -2540,6 +2644,7 @@ def process_match_rtw(m):
         matchWon = {
             "event": "match-won",
             "player": m['players'][winningPlayerIndex],
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 "dartsThrownValue": "0"
@@ -2573,6 +2678,7 @@ def process_match_rtw(m):
         gameStarted = {
             "event": "game-started",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -2605,10 +2711,31 @@ def process_match_rtw(m):
         if currentPlayerIsBot == False or CALL_BOT_ACTIONS:
             if CALL_CURRENT_PLAYER == 2 and numberOfPlayers > 1:
                 play_sound_effect(currentPlayerName, True)
-    
+    # Playerchange
+    if turn != None and turn['throws'] == [] or isGameFinished == True:
+        dartsPulled = {
+            "event": "darts-pulled",
+            "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
+            "game": {
+                "mode": variant
+            }
+        }
+        broadcast(dartsPulled)
+
+        if currentPlayerIsBot == False or CALL_BOT_ACTIONS:
+            if CALL_CURRENT_PLAYER == 2:
+                play_sound_effect(currentPlayerName)
+
+        if AMBIENT_SOUNDS != 0.0:
+            if play_sound_effect('ambient_playerchange_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False) == False:
+                play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
+        
+        ppi("Next player")
     mirror_sounds()
 
 def process_bulling(m):
+    global indexNameMacro
     global isBullingFinished
     currentPlayerIndex = m['player']
     currentPlayer = m['players'][currentPlayerIndex]
@@ -2621,6 +2748,7 @@ def process_bulling(m):
         bullingEnd = {
             "event": "bulling-end",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot)
         }
         broadcast(bullingEnd)
@@ -2634,6 +2762,7 @@ def process_bulling(m):
             bullingStart = {
                 "event": "bulling-start",
                 "player": currentPlayerName,
+                "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                 "playerIsBot": str(currentPlayerIsBot)
             }
             broadcast(bullingStart)
@@ -2642,10 +2771,8 @@ def process_bulling(m):
         
     mirror_sounds()
 
-def process_common(m):
-    broadcast(m)
-
 def process_match_CountUp(m):
+    global indexNameMacro
     currentPlayerIndex = m['player']
     currentPlayer = m['players'][currentPlayerIndex]
     currentPlayerName = str(currentPlayer['name']).lower()
@@ -2738,6 +2865,7 @@ def process_match_CountUp(m):
         matchWon = {
                 "event": "match-won",
                 "player": currentPlayerName,
+                "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                 "game": {
                     "mode": variant,
                     "dartsThrownValue": throwPoints                    
@@ -2777,6 +2905,7 @@ def process_match_CountUp(m):
         gameWon = {
                 "event": "game-won",
                 "player": currentPlayerName,
+                "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                 "game": {
                     "mode": variant,
                     "dartsThrownValue": throwPoints
@@ -2805,6 +2934,7 @@ def process_match_CountUp(m):
         matchStarted = {
             "event": "match-started",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -2837,6 +2967,7 @@ def process_match_CountUp(m):
         gameStarted = {
             "event": "game-started",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -2884,6 +3015,7 @@ def process_match_CountUp(m):
         dartsThrown = {
             "event": "darts-thrown",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
@@ -2920,6 +3052,7 @@ def process_match_CountUp(m):
         dartsPulled = {
             "event": "darts-pulled",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -2951,6 +3084,7 @@ def process_match_CountUp(m):
         isGameFinished = True
 
 def process_match_Bermuda(m):
+    global indexNameMacro
     global BERMUDA_ROUNDS
     global currentMatch
     global currentMatchHost
@@ -3026,6 +3160,7 @@ def process_match_Bermuda(m):
         dartsPulled = {
             "event": "darts-pulled",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -3134,6 +3269,7 @@ def process_match_Bermuda(m):
         matchWon = {
                 "event": "match-won",
                 "player": currentPlayerName,
+                "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                 "game": {
                     "mode": variant,
                     "dartsThrownValue": points
@@ -3169,6 +3305,7 @@ def process_match_Bermuda(m):
         gameWon = {
                 "event": "game-won",
                 "player": currentPlayerName,
+                "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                 "game": {
                     "mode": variant,
                     "dartsThrownValue": points
@@ -3243,6 +3380,7 @@ def process_match_Bermuda(m):
             # "meHost": currentMatchHost,
             # "players": currentMatchPlayers,
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -3274,6 +3412,7 @@ def process_match_Bermuda(m):
         gameStarted = {
             "event": "game-started",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -3300,6 +3439,7 @@ def process_match_Bermuda(m):
         dart1Thrown = {
             "event": "dart1-thrown",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
@@ -3317,6 +3457,7 @@ def process_match_Bermuda(m):
         dart2Thrown = {
             "event": "dart2-thrown",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
@@ -3334,6 +3475,7 @@ def process_match_Bermuda(m):
         dart3Thrown = {
             "event": "dart3-thrown",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
@@ -3346,6 +3488,7 @@ def process_match_Bermuda(m):
         dartsThrown = {
             "event": "darts-thrown",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
@@ -3371,6 +3514,7 @@ def process_match_Bermuda(m):
                 busted = { 
                 "event": "busted",
                 "player": currentPlayerName,
+                "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                 "playerIsBot": str(currentPlayerIsBot),
                 "game": {
                     "mode": variant
@@ -3463,6 +3607,7 @@ def process_match_Bermuda(m):
         isGameFinished = True
 
 def process_match_shanghai(m):
+    global indexNameMacro
     global currentMatch
     global currentMatchHost
     global currentMatchPlayers
@@ -3506,6 +3651,7 @@ def process_match_shanghai(m):
         dartsPulled = {
             "event": "darts-pulled",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -3612,6 +3758,7 @@ def process_match_shanghai(m):
         matchWon = {
                 "event": "match-won",
                 "player": currentPlayerName,
+                "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                 "game": {
                     "mode": variant,
                     "dartsThrownValue": points
@@ -3647,6 +3794,7 @@ def process_match_shanghai(m):
         gameWon = {
                 "event": "game-won",
                 "player": currentPlayerName,
+                "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                 "game": {
                     "mode": variant,
                     "dartsThrownValue": points
@@ -3721,6 +3869,7 @@ def process_match_shanghai(m):
             # "meHost": currentMatchHost,
             # "players": currentMatchPlayers,
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -3752,6 +3901,7 @@ def process_match_shanghai(m):
         gameStarted = {
             "event": "game-started",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -3778,6 +3928,7 @@ def process_match_shanghai(m):
         dart1Thrown = {
             "event": "dart1-thrown",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
@@ -3794,6 +3945,7 @@ def process_match_shanghai(m):
         dart2Thrown = {
             "event": "dart2-thrown",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
@@ -3810,6 +3962,7 @@ def process_match_shanghai(m):
         dart3Thrown = {
             "event": "dart3-thrown",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
@@ -3821,6 +3974,7 @@ def process_match_shanghai(m):
         dartsThrown = {
             "event": "darts-thrown",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
@@ -3930,6 +4084,7 @@ def process_match_shanghai(m):
         isGameFinished = True
 
 def process_match_gotcha(m):
+    global indexNameMacro
     global gotcha_last_player_points
     global isGameFinished
     global lastPoints
@@ -4049,6 +4204,7 @@ def process_match_gotcha(m):
         matchWon = {
                 "event": "match-won",
                 "player": currentPlayerName,
+                "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                 "game": {
                     "mode": variant,
                     "dartsThrownValue": throwPoints                    
@@ -4088,6 +4244,7 @@ def process_match_gotcha(m):
         gameWon = {
                 "event": "game-won",
                 "player": currentPlayerName,
+                "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                 "game": {
                     "mode": variant,
                     "dartsThrownValue": throwPoints
@@ -4116,6 +4273,7 @@ def process_match_gotcha(m):
         matchStarted = {
             "event": "match-started",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -4148,6 +4306,7 @@ def process_match_gotcha(m):
         gameStarted = {
             "event": "game-started",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -4195,6 +4354,7 @@ def process_match_gotcha(m):
         dartsThrown = {
             "event": "darts-thrown",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
@@ -4231,6 +4391,7 @@ def process_match_gotcha(m):
         dartsPulled = {
             "event": "darts-pulled",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -4261,6 +4422,8 @@ def process_match_gotcha(m):
     if isGameFin == True:
         isGameFinished = True
 
+def process_common(m):
+    broadcast(m)
 
 def mute_audio_background(vol):
     global background_audios
@@ -4415,11 +4578,15 @@ def on_message_autodarts(ws, message):
             global lobbyPlayers
             global lastMessage
             global gotcha_last_player_points
+            global indexNameMacro
             m = json.loads(message)
+            
             # ppi(json.dumps(m, indent = 4, sort_keys = True))
-  
             if m['channel'] == 'autodarts.matches':
                 data = m['data']
+                # ppi(json.dumps(data, indent = 4, sort_keys = True))
+                if indexNameMacro == {}:
+                    map_playerIndex_to_name(data, False)
 
                 # ppi(json.dumps(data, indent = 4, sort_keys = True))
                 # if m['topic'].endswith('game-events'):
@@ -4435,7 +4602,7 @@ def on_message_autodarts(ws, message):
 
                 if lastMessage != data and currentMatch != None and 'id' in data and data['id'] == currentMatch:
                     lastMessage = data
-
+                    
                     # ppi(json.dumps(data, indent = 4, sort_keys = True))
 
                     # process_common(data)
@@ -4536,6 +4703,8 @@ def on_message_autodarts(ws, message):
                 
                 if 'event' in data:
                     if data['event'] == 'start':
+                        # ppi(json.dumps(data, indent = 4, sort_keys = True))
+                        map_playerIndex_to_name(data, True)
                         pass
 
                     elif data['event'] == 'finish' or data['event'] == 'delete':
@@ -4554,6 +4723,7 @@ def on_message_autodarts(ws, message):
                         ws.send(json.dumps(paramsUnsubscribeLobbyEvents))
                         lobbyPlayers = []
                         gotcha_last_player_points=[]
+                        indexNameMacro = {}
                         # currentMatch = None
                         if play_sound_effect("ambient_lobby_out", False, mod = False):
                             mirror_sounds()
@@ -4658,6 +4828,33 @@ def on_message_autodarts(ws, message):
             ppe('WS-Message failed: ', e)
 
     threading.Thread(target=process).start()
+
+def map_playerIndex_to_name(msg,lobby):
+    global indexNameMacro
+    if lobby == True:
+        if msg != None and 'body' in msg:
+            playerAmount = len(msg['body']['players'])
+            if playerAmount > 0:
+                for i in range(0, playerAmount):
+                    playerName = msg['body']['players'][i]['name']
+                    # playerIndex = msg['players'][i]['index']
+                    if playerName != None:
+                        playerName = str(playerName).lower()
+                        indexNameMacro[playerName] = i
+                    else:
+                        indexNameMacro[i] = None
+    else:
+        if msg != None and 'players' in msg:
+            playerAmount = len(msg['players'])
+            if playerAmount > 0:
+                for i in range(0, playerAmount):
+                    playerName = msg['players'][i]['name']
+                    # playerIndex = msg['players'][i]['index']
+                    if playerName != None:
+                        playerName = str(playerName).lower()
+                        indexNameMacro[playerName] = i
+                    else:
+                        indexNameMacro[i] = None
 
 def on_close_autodarts(ws, close_status_code, close_msg):
     try:
@@ -5136,6 +5333,9 @@ if __name__ == "__main__":
 
     global bermudaBusted
     bermudaBusted = ''
+
+    global indexNameMacro
+    indexNameMacro = {}
 
     DB_ARGS = {
     "userID": BOARD_OWNER,
