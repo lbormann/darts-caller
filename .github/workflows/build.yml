@@ -22,8 +22,11 @@ jobs:
         tag_name: ${{ github.ref }}
         release_name: Release ${{ github.ref }}
         body: |
-            **Changes in this Release**
-            - Implement Tactics
+            # Changes in this Release
+            - forward Player Index to extensions
+              - Useable for Player Colors in WLED extension. WLED update required.
+            
+            - add mac intel build
         draft: false
         prerelease: false
         

@@ -1,6 +1,6 @@
 ## 2.17.11
 - forward Player Index to extensions
-    - Useable for Player Colors in WLED extension
+    - Useable for Player Colors in WLED extension. WLED update required.
 
 ## 2.17.10
 - Implement Tactics
