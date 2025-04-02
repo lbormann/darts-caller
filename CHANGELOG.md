@@ -1,3 +1,6 @@
+## 2.17.12
+- Bugfix playercolors Turnament mode
+
 ## 2.17.11
 - forward Player Index to extensions
     - Useable for Player Colors in WLED extension. WLED update required.

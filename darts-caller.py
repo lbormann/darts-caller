@@ -60,7 +60,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.17.11'
+VERSION = '2.17.12'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -1111,6 +1111,8 @@ def listen_to_match(m, ws):
     global currentMatch
     global currentMatchHost
     global currentMatchPlayers
+    global indexNameMacro
+    global gotcha_last_player_points
 
     # EXAMPLE
     # {
@@ -1315,6 +1317,9 @@ def listen_to_match(m, ws):
         currentMatch = None
         currentMatchHost = None
         currentMatchPlayers = []
+        ppi ("Player index reset")
+        gotcha_last_player_points=[]
+        indexNameMacro = {}
 
         paramsUnsubscribeMatchEvents = {  
             "channel": "autodarts.matches",
@@ -1457,7 +1462,6 @@ def process_match_x01(m):
     currentPlayerIsBot = (m['players'][currentPlayerIndex]['cpuPPR'] is not None)
     remainingPlayerScore = m['gameScores'][currentPlayerIndex]
     numberOfPlayers = len(m['players'])
-    ppi(indexNameMacro)
     turns = m['turns'][0]
     points = str(turns['points'])
     busted = (turns['busted'] == True)
@@ -4722,6 +4726,7 @@ def on_message_autodarts(ws, message):
                         }
                         ws.send(json.dumps(paramsUnsubscribeLobbyEvents))
                         lobbyPlayers = []
+                        ppi ("Player index reset")
                         gotcha_last_player_points=[]
                         indexNameMacro = {}
                         # currentMatch = None

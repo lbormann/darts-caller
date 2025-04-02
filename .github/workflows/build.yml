@@ -23,10 +23,7 @@ jobs:
         release_name: Release ${{ github.ref }}
         body: |
             # Changes in this Release
-            - forward Player Index to extensions
-              - Useable for Player Colors in WLED extension. WLED update required.
-            
-            - add mac intel build
+            - Bugfix playercolors Turnament mode
         draft: false
         prerelease: false
         
