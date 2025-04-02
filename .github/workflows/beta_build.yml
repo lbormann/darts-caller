@@ -52,20 +52,8 @@ jobs:
 
           - os: macos-13
             TARGET: macos
-            CMD_BUILD: pyinstaller -F -n darts-caller-mac13 -i resources/darts-caller.icns --add-data "templates:templates" --add-data "static:static" --collect-all certifi darts-caller.py 
-            OUT_FILE_NAME: darts-caller-mac13
-            ASSET_MIME: application/zip
-
-          - os: macos-14
-            TARGET: macos-arm64
-            CMD_BUILD: pyinstaller -F -n darts-caller-mac14 -i resources/darts-caller.icns --add-data "templates:templates" --add-data "static:static" --collect-all certifi darts-caller.py 
-            OUT_FILE_NAME: darts-caller-mac14
-            ASSET_MIME: application/zip
-
-          - os: macos-15
-            TARGET: macos
-            CMD_BUILD: pyinstaller -F -n darts-caller-mac15 -i resources/darts-caller.icns --add-data "templates:templates" --add-data "static:static" --collect-all certifi darts-caller.py 
-            OUT_FILE_NAME: darts-caller-mac15
+            CMD_BUILD: pyinstaller -F -n darts-caller-mac64 -i resources/darts-caller.icns --add-data "templates:templates" --add-data "static:static" --collect-all certifi darts-caller.py 
+            OUT_FILE_NAME: darts-caller-mac64
             ASSET_MIME: application/zip
 
           - os: ubuntu-20.04
