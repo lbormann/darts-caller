@@ -1,4 +1,4 @@
-## 2.17.12
+## 2.17.13
 - Bugfix playercolors Turnament mode
 - Bugfix Random Checkout
 
