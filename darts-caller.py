@@ -4616,7 +4616,7 @@ def on_message_autodarts(ws, message):
                     if variant == 'Bull-off':
                         process_bulling(data)
 
-                    elif variant == 'X01':
+                    elif variant == 'X01' or variant == 'Random Checkout':
                         process_match_x01(data)
                         
                     elif variant == 'Cricket':
@@ -4897,6 +4897,7 @@ def handle_connect():
     ppi('NEW CLIENT CONNECTED: ' + cid)
     if cid not in webCallerSyncs or webCallerSyncs[cid] is None:
         webCallerSyncs[cid] = queue.Queue()
+    ppi (webCallerSyncs)
     
     
 

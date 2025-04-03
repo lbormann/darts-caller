@@ -24,6 +24,7 @@ jobs:
         body: |
             # Changes in this Release
             - Bugfix playercolors Turnament mode
+            - Bugfix Random Checkout
         draft: false
         prerelease: false
         

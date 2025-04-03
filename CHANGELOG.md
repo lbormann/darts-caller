@@ -1,5 +1,7 @@
 ## 2.17.12
 - Bugfix playercolors Turnament mode
+- Bugfix Random Checkout
+
 
 ## 2.17.11
 - forward Player Index to extensions
