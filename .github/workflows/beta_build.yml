@@ -60,13 +60,13 @@ jobs:
 
           - os: ubuntu-22.04
             TARGET: ubuntu
-            CMD_BUILD: pyinstaller -F -n darts-caller -i resources/darts-caller.svg --add-data "templates:templates" --add-data "static:static" --add-data ".env;.env" --collect-all certifi darts-caller.py
+            CMD_BUILD: pyinstaller -F -n darts-caller -i resources/darts-caller.svg --add-data "templates:templates" --add-data "static:static" --add-data ".env:.env" --collect-all certifi darts-caller.py
             OUT_FILE_NAME: darts-caller
             ASSET_MIME: application/octet-stream
 
           - os: windows-latest
             TARGET: windows
-            CMD_BUILD: pyinstaller -F -n darts-caller -i resources/darts-caller.ico --add-data "templates;templates" --add-data "static;static" --add-data ".env:.env" --collect-all certifi darts-caller.py
+            CMD_BUILD: pyinstaller -F -n darts-caller -i resources/darts-caller.ico --add-data "templates;templates" --add-data "static;static" --add-data ".env;.env" --collect-all certifi darts-caller.py
             OUT_FILE_NAME: darts-caller.exe
             ASSET_MIME: application/vnd.microsoft.portable-executable
 
