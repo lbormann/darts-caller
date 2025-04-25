@@ -98,7 +98,7 @@ jobs:
         echo "AUTODARTS_CLIENT_ID=${{ secrets.AUTODARTS_CLIENT_ID }}" > .env
         echo "AUTODARTS_CLIENT_SECRET=${{ secrets.AUTODARTS_CLIENT_SECRET }}" >> .env
         chmod 755 .env  # Set permissions to be readable
-        echo "ID and Secret stored
+        echo "ID and Secret stored"
 
     - name: Build with pyinstaller for ${{matrix.TARGET}}
       run: ${{matrix.CMD_BUILD}}

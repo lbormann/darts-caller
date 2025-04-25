@@ -1,4 +1,4 @@
-## 2.18.0
+## 2.18.1
 - add messages for Debug Stop Listening during the match
 - implement Broadcast messages for new Extension Darts-Stats
 - change client secret and ID implementation
