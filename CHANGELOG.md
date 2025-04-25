@@ -1,3 +1,9 @@
+## 2.18.0
+- add messages for Debug Stop Listening during the match
+- implement Broadcast messages for new Extension Darts-Stats
+- change client secret and ID implementation
+- USER NEED TO UPDATE TO GET CALLER RUNNING IN THE FUTURE
+
 ## 2.17.13
 - Bugfix playercolors Turnament mode
 - Bugfix Random Checkout

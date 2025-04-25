@@ -1,4 +1,5 @@
 import os
+from dotenv import load_dotenv
 import sys
 from pathlib import Path
 import time
@@ -60,7 +61,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.17.13'
+VERSION = '2.18.0'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -103,9 +104,22 @@ DB_INSERT = 'https://www.user-stats.peschi.org/db_userstats.php'
 BOARD_OWNER = None
 DB_ARGS = []
 
-AUTODARTS_CLIENT_ID = 'wusaaa-caller-for-autodarts'
+
+# Prüfe, ob das Programm als One-File-Build ausgeführt wird
+if hasattr(sys, "_MEIPASS"):
+    # Pfad zur extrahierten .env-Datei
+    env_path = Path(sys._MEIPASS) / ".env/.env"
+else:
+    # Lokaler Pfad für Entwicklungsumgebungen
+    env_path = Path(".env")
+load_dotenv(dotenv_path=env_path)
+
+client_id = os.getenv("AUTODARTS_CLIENT_ID")
+client_secret = os.getenv("AUTODARTS_CLIENT_SECRET")
+AUTODARTS_CLIENT_ID = client_id
 AUTODARTS_REALM_NAME = 'autodarts'
-AUTODARTS_CLIENT_SECRET = "4hg5d4fddW7rqgoY8gZ42aMpi2vjLkzf"
+AUTODARTS_CLIENT_SECRET = client_secret
+
 AUTODARTS_URL = 'https://autodarts.io'
 AUTODARTS_AUTH_URL = 'https://login.autodarts.io/'
 AUTODARTS_LOBBIES_URL = 'https://api.autodarts.io/gs/v0/lobbies/'
@@ -1313,6 +1327,7 @@ def listen_to_match(m, ws):
         
     elif m['event'] == 'finish' or m['event'] == 'delete':
         ppi('Stop listening to match: ' + m['id'])
+        ppi('listen to match message'+ 'event: ')
 
         currentMatch = None
         currentMatchHost = None
@@ -1482,14 +1497,14 @@ def process_match_x01(m):
 
     if turns != None and turns['throws'] != []:
         lastPoints = points
-
+    ppi(json.dumps(turns, indent = 4, sort_keys = True))
     # Darts pulled (Playerchange and Possible-checkout)
     if gameon == False and turns != None and turns['throws'] == [] or isGameFinished == True:
         busted = "False"
         if lastPoints == "B":
             lastPoints = "0"
             busted = "True"
-
+        
         dartsPulled = {
             "event": "darts-pulled",
             "player": currentPlayerName,
@@ -1631,14 +1646,31 @@ def process_match_x01(m):
     # Check for matchshot
     if matchshot == True:
         isGameFin = True
-        
+        # TEST FÜR DARTS STATS
+        throwAmount = len(turns['throws'])
+        type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
+        field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
+        field_multiplier = turns['throws'][throwAmount - 1]['segment']['multiplier']
+        field_number = turns['throws'][throwAmount - 1]['segment']['number']
+        field_cords_x = turns['throws'][throwAmount - 1]['coords']['x']
+        field_cords_y = turns['throws'][throwAmount - 1]['coords']['y']
+        # TEST FÜR DARTS STATS
         matchWon = {
                 "event": "match-won",
                 "player": currentPlayerName,
                 "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                 "game": {
                     "mode": variant,
-                    "dartsThrownValue": points
+                    "dartsThrown": str(throwAmount),
+                    "dartsThrownValue": points,
+                    "fieldName": field_name,
+                    "fieldNumber": field_number,
+                    "fieldMultiplier": field_multiplier,
+                    "coords": {
+                        "x": field_cords_x,
+                        "y": field_cords_y
+                    },
+                    "type": type
                     
                 } 
             }
@@ -1668,6 +1700,11 @@ def process_match_x01(m):
     # Check for gameshot
     elif gameshot == True:
         isGameFin = True
+        throwAmount = len(turns['throws'])
+        type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
+        field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
+        field_multiplier = turns['throws'][throwAmount - 1]['segment']['multiplier']
+        field_number = turns['throws'][throwAmount - 1]['segment']['number']
         
         gameWon = {
                 "event": "game-won",
@@ -1675,7 +1712,11 @@ def process_match_x01(m):
                 "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                 "game": {
                     "mode": variant,
-                    "dartsThrownValue": points
+                    "dartsThrown": str(throwAmount),
+                    "dartsThrownValue": points,
+                    "fieldName": field_name,
+                    "fieldNumber": field_number,
+                    "fieldMultiplier": field_multiplier
                 } 
             }
         broadcast(gameWon)
@@ -1746,7 +1787,7 @@ def process_match_x01(m):
             "event": "match-started",
             "id": currentMatch,
             "me": AUTODART_USER_BOARD_ID,
-            # "meHost": currentMatchHost,
+            "meHost": currentMatchHost,
             # "players": currentMatchPlayers,
             "player": currentPlayerName,
             "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
@@ -1810,6 +1851,10 @@ def process_match_x01(m):
     elif busted == True:
         lastPoints = "B"
         isGameFinished = False
+        type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
+        field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
+        field_multiplier = turns['throws'][throwAmount - 1]['segment']['multiplier']
+        field_number = turns['throws'][throwAmount - 1]['segment']['number']
 
         busted = { 
                     "event": "busted",
@@ -1817,7 +1862,12 @@ def process_match_x01(m):
                     "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                     "playerIsBot": str(currentPlayerIsBot),
                     "game": {
-                        "mode": variant
+                        "mode": variant,
+                        "field_name": field_name,
+                        "field_number": field_number,
+                        "field_multiplier": field_multiplier,
+                        "type": type,
+                        "busted": "True",
                     }       
                 }
         broadcast(busted)
@@ -1833,6 +1883,13 @@ def process_match_x01(m):
     # Check for 1. Dart
     elif turns != None and turns['throws'] != [] and len(turns['throws']) == 1:
         isGameFinished = False
+        throwAmount = len(turns['throws'])
+        type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
+        field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
+        field_multiplier = turns['throws'][throwAmount - 1]['segment']['multiplier']
+        field_number = turns['throws'][throwAmount - 1]['segment']['number']
+        field_cords_x = turns['throws'][throwAmount - 1]['coords']['x']
+        field_cords_y = turns['throws'][throwAmount - 1]['coords']['y']
         dart1score = points
         dart1Thrown = {
             "event": "dart1-thrown",
@@ -1843,7 +1900,15 @@ def process_match_x01(m):
                 "mode": variant,
                 "pointsLeft": str(remainingPlayerScore),
                 "dartNumber": "1",
-                "dartValue": points       
+                "dartValue": points,
+                "fieldName": field_name,
+                "fieldNumber": field_number,
+                "fieldMultiplier": field_multiplier,
+                "coords": {
+                        "x": field_cords_x,
+                        "y": field_cords_y
+                    },
+                "type": type    
             }
         }
         broadcast(dart1Thrown)
@@ -1851,6 +1916,12 @@ def process_match_x01(m):
     # Check for 2. Dart
     elif turns != None and turns['throws'] != [] and len(turns['throws']) == 2:
         isGameFinished = False
+        type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
+        field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
+        field_multiplier = turns['throws'][throwAmount - 1]['segment']['multiplier']
+        field_number = turns['throws'][throwAmount - 1]['segment']['number']
+        field_cords_x = turns['throws'][throwAmount - 1]['coords']['x']
+        field_cords_y = turns['throws'][throwAmount - 1]['coords']['y']
         dart2score = str(int(points) - int(dart1score))
         dart2Thrown = {
             "event": "dart2-thrown",
@@ -1861,7 +1932,15 @@ def process_match_x01(m):
                 "mode": variant,
                 "pointsLeft": str(remainingPlayerScore),
                 "dartNumber": "2",
-                "dartValue": dart2score        
+                "dartValue": dart2score,
+                "fieldName": field_name,
+                "fieldNumber": field_number,
+                "fieldMultiplier": field_multiplier,
+                "coords": {
+                        "x": field_cords_x,
+                        "y": field_cords_y
+                    },
+                "type": type         
             }
         }
         broadcast(dart2Thrown)
@@ -1869,6 +1948,12 @@ def process_match_x01(m):
     # Check for 3. Dart - Score-call
     elif turns != None and turns['throws'] != [] and len(turns['throws']) == 3:
         isGameFinished = False
+        type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
+        field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
+        field_multiplier = turns['throws'][throwAmount - 1]['segment']['multiplier']
+        field_number = turns['throws'][throwAmount - 1]['segment']['number']
+        field_cords_x = turns['throws'][throwAmount - 1]['coords']['x']
+        field_cords_y = turns['throws'][throwAmount - 1]['coords']['y']
         dart3score = str(int(points) - int(dart1score) - int(dart2score))
         dart3Thrown = {
             "event": "dart3-thrown",
@@ -1879,7 +1964,15 @@ def process_match_x01(m):
                 "mode": variant,
                 "pointsLeft": str(remainingPlayerScore),
                 "dartNumber": "3",
-                "dartValue": dart3score        
+                "dartValue": dart3score,
+                "fieldName": field_name,
+                "fieldNumber": field_number,
+                "fieldMultiplier": field_multiplier,
+                "coords": {
+                        "x": field_cords_x,
+                        "y": field_cords_y
+                    },
+                "type": type         
             }
         }
         broadcast(dart3Thrown)
@@ -4684,6 +4777,7 @@ def on_message_autodarts(ws, message):
                         currentMatch = None
 
                         ppi('Stop Listen to lobby: ' + lobby_id)
+                        ppi('I left the lobby, message from autodarts.users')
                         paramsUnsubscribeLobbyEvents = {
                                 "channel": "autodarts.lobbies",
                                 "type": "unsubscribe",
@@ -4713,6 +4807,7 @@ def on_message_autodarts(ws, message):
 
                     elif data['event'] == 'finish' or data['event'] == 'delete':
                         ppi('Stop listening to lobby: ' + m['id'])
+                        ppi('Lobby finished or deleted, message from autodarts.lobbies')
                         paramsUnsubscribeLobbyEvents = {
                             "type": "unsubscribe",
                             "channel": "autodarts.lobbies",
@@ -4745,6 +4840,7 @@ def on_message_autodarts(ws, message):
                         lobby_id = data['id']
 
                         ppi('Stop Listen to lobby: ' + lobby_id)
+                        ppi('I left the lobby, message from autodarts.lobbies')
                         paramsUnsubscribeLobbyEvents = {
                                 "channel": "autodarts.lobbies",
                                 "type": "unsubscribe",
@@ -5057,39 +5153,39 @@ def handle_message(message):
 
         elif type(message) == dict:
             
-            
-            event = message['event']
+            if 'event' in message:
+                event = message['event']
 
-            if event == 'sync' and caller is not None:                    
-                if 'parted' in message:
-                    webCallerSyncs[cid].put(message['exists'])
+                if event == 'sync' and caller is not None:                    
+                    if 'parted' in message:
+                        webCallerSyncs[cid].put(message['exists'])
 
-                    partsNeeded = message['parted']
-                    
-                    existing = []
-                    if webCallerSyncs[cid].qsize() == partsNeeded:
-                        while partsNeeded > 0:
-                            partsNeeded -= 1
-                            existing += webCallerSyncs[cid].get()
-                        webCallerSyncs[cid].task_done()
+                        partsNeeded = message['parted']
+                        
+                        existing = []
+                        if webCallerSyncs[cid].qsize() == partsNeeded:
+                            while partsNeeded > 0:
+                                partsNeeded -= 1
+                                existing += webCallerSyncs[cid].get()
+                            webCallerSyncs[cid].task_done()
+                        else:
+                            return
+                        
+                        new = []
+                        for key, value in caller.items():
+                            for sound_file in value:
+                                base_name = os.path.basename(sound_file)
+                                if base_name not in existing:
+                                    with open(sound_file, 'rb') as file:
+                                        encoded_file = (base64.b64encode(file.read())).decode('ascii')
+                                    new.append({"name": base_name, "path": quote(sound_file, safe=""), "file": encoded_file})
+
+                        unicast(cid, {"exists": new})
+
                     else:
-                        return
-                    
-                    new = []
-                    for key, value in caller.items():
-                        for sound_file in value:
-                            base_name = os.path.basename(sound_file)
-                            if base_name not in existing:
-                                with open(sound_file, 'rb') as file:
-                                    encoded_file = (base64.b64encode(file.read())).decode('ascii')
-                                new.append({"name": base_name, "path": quote(sound_file, safe=""), "file": encoded_file})
-
-                    unicast(cid, {"exists": new})
-
-                else:
-                    new = [{"name": os.path.basename(sound_file), "path": quote(sound_file, safe=""), "file": (base64.b64encode(open(sound_file, 'rb').read())).decode('ascii')} for key, value in caller.items() for sound_file in value if os.path.basename(sound_file) not in message['exists']]
-                    message['exists'] = new
-                    unicast(cid, message)
+                        new = [{"name": os.path.basename(sound_file), "path": quote(sound_file, safe=""), "file": (base64.b64encode(open(sound_file, 'rb').read())).decode('ascii')} for key, value in caller.items() for sound_file in value if os.path.basename(sound_file) not in message['exists']]
+                        message['exists'] = new
+                        unicast(cid, message)
             
             
 

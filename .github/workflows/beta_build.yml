@@ -23,9 +23,11 @@ jobs:
         release_name: Release ${{ github.ref }}
         body: |
             # Changes in this Release
-            - Implement Tactics
-            - forward Player Index to extensions
-              - Useable for Player Colors in WLED extension
+            - add messages for Debug Stop Listening during the match
+            - implement Broadcast messages for new Extension Darts-Stats
+            - change client secret and ID implementation
+            
+            ## USER NEED TO UPDATE TO GET CALLER RUNNING IN THE FUTURE
         draft: false
         prerelease: true
         
@@ -46,25 +48,25 @@ jobs:
         include:
           - os: macos-latest
             TARGET: macos
-            CMD_BUILD: pyinstaller -F -n darts-caller-mac -i resources/darts-caller.icns --add-data "templates:templates" --add-data "static:static" --collect-all certifi darts-caller.py 
+            CMD_BUILD: pyinstaller -F -n darts-caller-mac -i resources/darts-caller.icns --add-data "templates:templates" --add-data "static:static" --add-data ".env:.env" --collect-all certifi darts-caller.py 
             OUT_FILE_NAME: darts-caller-mac
             ASSET_MIME: application/zip
 
           - os: macos-13
             TARGET: macos
-            CMD_BUILD: pyinstaller -F -n darts-caller-mac64 -i resources/darts-caller.icns --add-data "templates:templates" --add-data "static:static" --collect-all certifi darts-caller.py 
+            CMD_BUILD: pyinstaller -F -n darts-caller-mac64 -i resources/darts-caller.icns --add-data "templates:templates" --add-data "static:static" --add-data ".env:.env" --collect-all certifi darts-caller.py 
             OUT_FILE_NAME: darts-caller-mac64
             ASSET_MIME: application/zip
 
           - os: ubuntu-20.04
             TARGET: ubuntu
-            CMD_BUILD: pyinstaller -F -n darts-caller -i resources/darts-caller.svg --add-data "templates:templates" --add-data "static:static" --collect-all certifi darts-caller.py
+            CMD_BUILD: pyinstaller -F -n darts-caller -i resources/darts-caller.svg --add-data "templates:templates" --add-data "static:static" --add-data ".env;.env" --collect-all certifi darts-caller.py
             OUT_FILE_NAME: darts-caller
             ASSET_MIME: application/octet-stream
 
           - os: windows-latest
             TARGET: windows
-            CMD_BUILD: pyinstaller -F -n darts-caller -i resources/darts-caller.ico --add-data "templates;templates" --add-data "static;static" --collect-all certifi darts-caller.py
+            CMD_BUILD: pyinstaller -F -n darts-caller -i resources/darts-caller.ico --add-data "templates;templates" --add-data "static;static" --add-data ".env:.env" --collect-all certifi darts-caller.py
             OUT_FILE_NAME: darts-caller.exe
             ASSET_MIME: application/vnd.microsoft.portable-executable
 
@@ -74,7 +76,7 @@ jobs:
               sudo apt-get update
               sudo apt-get install -y qemu-user-static binfmt-support
               docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-              docker run --rm -v /usr/bin/qemu-arm-static:/usr/bin/qemu-arm-static --platform linux/arm64/v8 -v $(pwd):/workdir -w /workdir arm64v8/ubuntu:20.04 bash -c "apt-get update -y && apt-get install -y python3-pip && pip install -r requirements.txt && pyinstaller -F -n darts-caller-arm64 -i resources/darts-caller.svg --add-data 'templates:templates' --add-data 'static:static' --collect-all certifi darts-caller.py"
+              docker run --rm -v /usr/bin/qemu-arm-static:/usr/bin/qemu-arm-static --platform linux/arm64/v8 -v $(pwd):/workdir -w /workdir arm64v8/ubuntu:20.04 bash -c "apt-get update -y && apt-get install -y python3-pip && pip install -r requirements.txt && pyinstaller -F -n darts-caller-arm64 -i resources/darts-caller.svg --add-data 'templates:templates' --add-data 'static:static' --add-data ".env:.env" --collect-all certifi darts-caller.py"
             OUT_FILE_NAME: darts-caller-arm64
             ASSET_MIME: application/octet-stream
 
@@ -92,6 +94,11 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+        touch .env
+        echo "AUTODARTS_CLIENT_ID=${{ secrets.AUTODARTS_CLIENT_ID }}" > .env
+        echo "AUTODARTS_CLIENT_SECRET=${{ secrets.AUTODARTS_CLIENT_SECRET }}" >> .env
+        chmod 755 .env  # Set permissions to be readable
+        echo "ID and Secret stored
 
     - name: Build with pyinstaller for ${{matrix.TARGET}}
       run: ${{matrix.CMD_BUILD}}
