@@ -61,7 +61,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.18.3'
+VERSION = '2.18.4'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -1497,7 +1497,7 @@ def process_match_x01(m):
 
     if turns != None and turns['throws'] != []:
         lastPoints = points
-    ppi(json.dumps(turns, indent = 4, sort_keys = True))
+    # ppi(json.dumps(turns, indent = 4, sort_keys = True))
     # Darts pulled (Playerchange and Possible-checkout)
     if gameon == False and turns != None and turns['throws'] == [] or isGameFinished == True:
         busted = "False"
