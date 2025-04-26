@@ -5,6 +5,8 @@ Darts-caller plays back sound-files accordingly to the state of a https://autoda
 
 Learn more about the [Features!](#workflow--functionality)
 
+> [!IMPORTANT]
+> CALLER VERSION BELOW v2.8.0 WILL NOT WORK ANYMORE AFTER MIDDLE OF MAY 2025
 
 ## COMPATIBILITY
 

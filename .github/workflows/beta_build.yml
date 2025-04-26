@@ -22,6 +22,8 @@ jobs:
         tag_name: ${{ github.ref }}
         release_name: Release ${{ github.ref }}
         body: |
+            # THIS IS A BETA RELEASE USING AT YOUR OWN RISK
+            
             # Changes in this Release
             - add messages for Debug Stop Listening during the match
             - implement Broadcast messages for new Extension Darts-Stats
