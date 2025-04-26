@@ -61,7 +61,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.18.4'
+VERSION = '2.18.5'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -1105,7 +1105,7 @@ def receive_local_board_address():
             res = requests.get(AUTODARTS_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + kc.access_token})
             board_ip = res.json()['ip']
             if board_ip != None and board_ip != '':  
-                boardManagerAddress = 'http://' + board_ip
+                boardManagerAddress = board_ip
                 ppi('Board-address: ' + boardManagerAddress) 
             else:
                 boardManagerAddress = None
@@ -1851,6 +1851,7 @@ def process_match_x01(m):
     elif busted == True:
         lastPoints = "B"
         isGameFinished = False
+        throwAmount = len(turns['throws'])
         type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
         field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
         field_multiplier = turns['throws'][throwAmount - 1]['segment']['multiplier']
@@ -1916,6 +1917,7 @@ def process_match_x01(m):
     # Check for 2. Dart
     elif turns != None and turns['throws'] != [] and len(turns['throws']) == 2:
         isGameFinished = False
+        throwAmount = len(turns['throws'])
         type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
         field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
         field_multiplier = turns['throws'][throwAmount - 1]['segment']['multiplier']
@@ -1948,6 +1950,7 @@ def process_match_x01(m):
     # Check for 3. Dart - Score-call
     elif turns != None and turns['throws'] != [] and len(turns['throws']) == 3:
         isGameFinished = False
+        throwAmount = len(turns['throws'])
         type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
         field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
         field_multiplier = turns['throws'][throwAmount - 1]['segment']['multiplier']
@@ -4599,9 +4602,9 @@ def connect_autodarts():
     threading.Thread(target=process).start()
 
     res2 = requests.get(AUTODARTS_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + kc.access_token})
-    # ppi(json.dumps(res2.json(), indent = 4, sort_keys = True))
+    ppi(json.dumps(res2.json(), indent = 4, sort_keys = True))
     USER_LOCATION  = res2.json()['permissions'][0]['user']['country']
-    res2 = res2.json()['permissions'][0]['user']['name']
+    res2 = res2.json()['permissions'][0]['user']['id']
     # res2 = res2.json()['']
     # ppi(json.dumps(res2, indent = 4, sort_keys = True))
     # res2 = res2['permissions']

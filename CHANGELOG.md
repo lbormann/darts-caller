@@ -1,7 +1,9 @@
-## 2.18.4
+## 2.18.5
 - add messages for Debug Stop Listening during the match
 - implement Broadcast messages for new Extension Darts-Stats
 - change client secret and ID implementation
+- Bugfix Board IP
+- Bugfix WS Message failed
 - USER NEED TO UPDATE TO GET CALLER RUNNING IN THE FUTURE
 
 ## 2.17.13
