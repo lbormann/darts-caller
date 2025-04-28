@@ -765,6 +765,15 @@ Try https://www.audacity.de/ to modify your sound-files.
 
 3) Sent me a your link by PM on Discord - Wait for a new release :) 
 
+## STATISTICS
+The darts caller collects data and stores it in a database. The data is NOT sold or used for advertising purposes. The reason for the data collection is to continuously develop the caller, to have the user settings for debugging purposes and to get an overview of which features are used and worth developing further. 
+
+All arguments are collected except for user sensitive data such as e-mail address, password, board or UserID. 
+
+With the increasing number of users >2000 we want to create a possibility to provide faster support. This collection enables us to see directly which settings may be incorrect and could lead to a problem. 
+
+None of this data will be passed on to third parties!
+
 
 ## RESOURCES
 

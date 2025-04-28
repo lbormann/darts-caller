@@ -1,3 +1,10 @@
+## 2.18.6
+- implementet more detailes user Stats to debug faster
+    - no personal data will be stored
+- prepare for new soundpacks and languages
+    - new variable voices
+    - RU, IT will come in the future
+
 ## 2.18.5
 - add messages for Debug Stop Listening during the match
 - implement Broadcast messages for new Extension Darts-Stats

@@ -61,7 +61,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.18.5'
+VERSION = '2.18.6'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -100,9 +100,12 @@ DEFAULT_HOST_IP = '0.0.0.0'
 EXT_WLED = False
 EXT_PIXEL = False
 USER_LOCATION = ""
-DB_INSERT = 'https://www.user-stats.peschi.org/db_userstats.php'
+DB_INSERT = 'https://www.user-stats.peschi.org/db_newuserstats.php'
 BOARD_OWNER = None
+USER_ID = None
 DB_ARGS = []
+WLED_SETTINGS_ARGS = {}
+CALLER_SETTINGS_ARGS = {}
 
 
 # Prüfe, ob das Programm als One-File-Build ausgeführt wird
@@ -4587,6 +4590,8 @@ def mute_background(mute_vol):
 def connect_autodarts():
     global BOARD_OWNER
     global USER_LOCATION
+    global USER_ID
+    global USER_NAME
     def process(*args):
         websocket.enableTrace(False)
         ws = websocket.WebSocketApp(AUTODARTS_WEBSOCKET_URL,
@@ -4602,16 +4607,29 @@ def connect_autodarts():
     threading.Thread(target=process).start()
 
     res2 = requests.get(AUTODARTS_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + kc.access_token})
-    ppi(json.dumps(res2.json(), indent = 4, sort_keys = True))
-    USER_LOCATION  = res2.json()['permissions'][0]['user']['country']
-    res2 = res2.json()['permissions'][0]['user']['id']
+    # ppi(json.dumps(res2.json(), indent = 4, sort_keys = True))
+    if 'country' in res2.json()['permissions'][0]['user']:
+        userlocationtemp = res2.json()['permissions'][0]['user']['country']
+        USER_LOCATION = str(userlocationtemp)
+    else:
+        USER_LOCATION = "undefined"
+    if 'name' in res2.json()['permissions'][0]['user']:
+        usernametemp = res2.json()['permissions'][0]['user']['name']
+        USER_NAME = str(usernametemp)
+    else:
+        USER_NAME = None
+    if 'id' in res2.json()['permissions'][0]['user']:
+        useridtemp = res2.json()['permissions'][0]['user']['id']
+        USER_ID = str(useridtemp)
+    else:
+        USER_ID = None
     # res2 = res2.json()['']
     # ppi(json.dumps(res2, indent = 4, sort_keys = True))
     # res2 = res2['permissions']
     #ppi(res2)
-    BOARD_OWNER = str(res2)
+    BOARD_OWNER = str(usernametemp)
    # ppi('Board owner: ' + BOARD_OWNER)  
-    send_arguments_to_php(DB_INSERT, DB_ARGS)
+    send_arguments_to_php(DB_INSERT, DB_ARGS,CALLER_SETTINGS_ARGS)
 
 def on_open_autodarts(ws):
     global BOARD_OWNER
@@ -5200,12 +5218,29 @@ def handle_message(message):
                 ppi('WLED connected')
                 EXT_WLED = True
                 DB_ARGS['wled_version'] = message['version']
-                send_arguments_to_php(DB_INSERT, DB_ARGS)
+
+                if 'settings' in message:
+                    try:
+                        wledsettings_json = json.dumps(message['settings'])
+                        # ppi(f"Processed WLED settings:\n{wledsettings_json}")
+                        DB_ARGS['wled_settings'] = wledsettings_json  # WLED-Settings hinzufügen
+                        # ppi(f"DB_ARGS: {DB_ARGS}")
+                    except Exception as e:
+                        ppe("Failed to process WLED settings.", e)
+                send_arguments_to_php(DB_INSERT, DB_ARGS, CALLER_SETTINGS_ARGS)
             elif message['status'] == 'Pixel connected':
                 ppi('Pixel connected')
                 EXT_PIXEL = True
                 DB_ARGS['pixel_version'] = message['version']
-                send_arguments_to_php(DB_INSERT, DB_ARGS)
+                if 'settings' in message:
+                    try:
+                        pixelsettings_json = json.dumps(message['settings'])
+                        # ppi(f"Processed WLED settings:\n{wledsettings_json}")
+                        DB_ARGS['pixel_settings'] = pixelsettings_json  # WLED-Settings hinzufügen
+                        # ppi(f"DB_ARGS: {DB_ARGS}")
+                    except Exception as e:
+                        ppe("Failed to process WLED settings.", e)
+                send_arguments_to_php(DB_INSERT, DB_ARGS, CALLER_SETTINGS_ARGS)
 
 @app.route('/')
 def index():
@@ -5237,25 +5272,70 @@ def sound(file_id):
     file_name = os.path.basename(file_path)
     return send_from_directory(directory, file_name)
 
-def send_arguments_to_php(url, args):
+def send_arguments_to_php(url, args_version, args_caller):
     global EXT_WLED
     global EXT_PIXEL
     global BOARD_OWNER
+    global USER_ID
+    global USER_NAME
     global USER_LOCATION
-    args['darts_wled'] = EXT_WLED
-    args['darts_pixel'] = EXT_PIXEL
-    args['userID'] = BOARD_OWNER
-    args['location'] = USER_LOCATION
-    # ppi(args)
+    args_version['darts_wled'] = EXT_WLED
+    args_version['darts_pixel'] = EXT_PIXEL
+    args_version['userID'] = USER_NAME
+    args_version['location'] = USER_LOCATION
+    # ppi(json.dumps(args_caller, indent=4, sort_keys=True))
 
-    try:
-        response = requests.post(url, data=args,verify=False)
-        if response.status_code == 200:
-            ppi("User stats sent successfully")
-        else:
-            ppi(f"Failed to send arguments. Status code: {response.status_code}")
-    except Exception as e:
-        ppi(f"An error occurred: {e}")
+    # ppi(f"Sending args_version: {args_version}")
+    # ppi(f"Sending args_caller: {args_caller}")
+    # args_caller = json.dumps(args_caller)
+    
+    # URL-Validierung
+    if not url.startswith("http"):
+        ppi(f"Invalid URL: {url}")
+        return
+    
+    if not args_version or not args_caller:
+        ppi("Error: args_version or args_caller is empty!")
+        return
+    if USER_NAME is not None:
+        try:
+            # Debugging: Ausgabe der Anfrage-Details
+            # ppi(f"Debugging POST Request:")
+            # ppi(f"URL: {url}")
+            # ppi(f"Data: {json.dumps({**args_version, **args_caller})}")
+    
+            # POST-Anfrage mit JSON und Formulardaten senden
+            response = requests.post(
+                url,
+                data={**args_version, **args_caller},  # Kombiniere beide Dictionaries
+                verify=False
+            )
+            if response.status_code == 200:
+                if DEBUG == 1:
+                    ppi("User stats sent successfully")
+                    ppi(f"Response: {response.text}")  # Antwortinhalt ausgeben
+            else:
+                if DEBUG == 1:
+                    ppi(f"Failed to send arguments. Status code: {response.status_code}")
+                    ppi(f"Response: {response.text}")  # Antwortinhalt ausgeben
+        except Exception as e:
+            if DEBUG == 1:
+                ppi(f"An error occurred: {e}")
+    else:
+        if DEBUG == 1:
+            ppi("User stats not sent, as user-name is unknown")
+    # ppi(args)
+    # if USER_NAME != None:
+    #     try:
+    #         response = requests.post(url, data=args_version,json=args_caller,verify=False)
+    #         if response.status_code == 200:
+    #             ppi("User stats sent successfully")
+    #         else:
+    #             ppi(f"Failed to send arguments. Status code: {response.status_code}")
+    #     except Exception as e:
+    #         ppi(f"An error occurred: {e}")
+    # else:
+    #     ppi("User stats not sent, as user-name is unknown")
 
 
 
@@ -5312,6 +5392,38 @@ if __name__ == "__main__":
     global POSSIBLE_CHECKOUT_CALL
     global POSSIBLE_CHECKOUT_CALL_YOURSELF_ONLY
     
+    CALLER_SETTINGS_ARGS = {
+        'media_path': str(args['media_path']),
+        'media_path_shared': str(args['media_path_shared']),
+        'caller': args['caller'],
+        'caller_volume': args['caller_volume'],
+        'random_caller': args['random_caller'],
+        'random_caller_language': args['random_caller_language'],
+        'random_caller_gender': args['random_caller_gender'],
+        'call_current_player': args['call_current_player'],
+        'call_bot_actions': args['call_bot_actions'],
+        'call_every_dart': args['call_every_dart'],
+        'call_every_dart_total_score': args['call_every_dart_total_score'],
+        'possible_checkout_call': args['possible_checkout_call'],
+        'possible_checkout_call_yourself_only': args['possible_checkout_call_yourself_only'],
+        'ambient_sounds': args['ambient_sounds'],
+        'ambient_sounds_after_calls': args['ambient_sounds_after_calls'],
+        'downloads': args['downloads'],
+        'downloads_language': args['downloads_language'],
+        'downloads_name': args['downloads_name'],
+        'remove_old_voice_packs': args['remove_old_voice_packs'],
+        'background_audio_volume': args['background_audio_volume'],
+        'local_playback': args['local_playback'],
+        'web_caller_disable_https': args['web_caller_disable_https'],
+        'host_port': args['host_port'],
+        'debug': args['debug'],
+        'cert_check': args['cert_check'],
+        'mixer_frequency': args['mixer_frequency'],
+        'mixer_size': args['mixer_size'],
+        'mixer_channels': args['mixer_channels'],
+        'mixer_buffersize': args['mixer_buffersize']
+    }
+
     AUTODART_USER_EMAIL = args['autodarts_email']                          
     AUTODART_USER_PASSWORD = args['autodarts_password']              
     AUTODART_USER_BOARD_ID = args['autodarts_board_id']        

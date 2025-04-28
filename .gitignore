@@ -14,3 +14,5 @@ dist
 caller-downloads-temp
 .env
 .venv
+*.php
+.stats-page
