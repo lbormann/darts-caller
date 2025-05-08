@@ -44,7 +44,7 @@ Learn more about the [Features!](#workflow--functionality)
 - Download the appropriate executable in the release section.
 
 
-~~ By Source: ~~
+~ By Source: ~
 > [!NOTE]
 > running by source is not supported anymore!
 
