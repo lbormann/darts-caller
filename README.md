@@ -44,12 +44,11 @@ Learn more about the [Features!](#workflow--functionality)
 - Download the appropriate executable in the release section.
 
 
-~### By Source:~
+### By Source:
 > [!NOTE]
 > running by source is not supported anymore!
 
-
-#### Setup python3
+~~Setup python3
 
 - Download and install python 3.x.x for your specific os.
 
@@ -64,7 +63,7 @@ Go to download-directory and type:
 
 Optional for Linux: If you encounter problems local playback:
 
-    sudo apt-get install python3-sdl2
+    sudo apt-get install python3-sdl2~~
 
 
 
