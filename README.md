@@ -48,22 +48,22 @@ Learn more about the [Features!](#workflow--functionality)
 > [!NOTE]
 > running by source is not supported anymore!
 
-~~Setup python3
+~~Setup python3~~
 
 - Download and install python 3.x.x for your specific os.
 
 
-#### Get the project
+~~#### Get the project~~
 
     git clone https://github.com/lbormann/darts-caller.git
 
-Go to download-directory and type:
+~~Go to download-directory and type:~~
 
     pip3 install -r requirements.txt
 
-Optional for Linux: If you encounter problems local playback:
+~~Optional for Linux: If you encounter problems local playback:~~
 
-    sudo apt-get install python3-sdl2~~
+    sudo apt-get install python3-sdl2
 
 
 
