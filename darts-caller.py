@@ -26,7 +26,8 @@ import requests
 import websocket
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-from autodarts_keycloak_client import AutodartsKeycloakClient
+# from autodarts_keycloak_client import AutodartsKeycloakClient
+from autodarts_nodejs_keycloak_client import AutodartsKeycloakClient
 from flask import Flask, render_template, send_from_directory, request
 from flask_socketio import SocketIO
 from werkzeug.serving import make_ssl_devcert
@@ -61,7 +62,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.18.6'
+VERSION = '2.19.0'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -96,6 +97,7 @@ DEFAULT_DOWNLOADS_PATH = 'caller-downloads-temp'
 DEFAULT_CALLERS_BANNED_FILE = 'banned.txt'
 DEFAULT_CALLERS_FAVOURED_FILE = 'favoured.txt'
 DEFAULT_HOST_IP = '0.0.0.0'
+DEFAULT_CALLER_REAL_LIFE = 0
 
 EXT_WLED = False
 EXT_PIXEL = False
@@ -109,19 +111,19 @@ CALLER_SETTINGS_ARGS = {}
 
 
 # Prüfe, ob das Programm als One-File-Build ausgeführt wird
-if hasattr(sys, "_MEIPASS"):
-    # Pfad zur extrahierten .env-Datei
-    env_path = Path(sys._MEIPASS) / ".env/.env"
-else:
-    # Lokaler Pfad für Entwicklungsumgebungen
-    env_path = Path(".env")
-load_dotenv(dotenv_path=env_path)
+# if hasattr(sys, "_MEIPASS"):
+#     # Pfad zur extrahierten .env-Datei
+#     env_path = Path(sys._MEIPASS) / ".env/.env"
+# else:
+#     # Lokaler Pfad für Entwicklungsumgebungen
+#     env_path = Path(".env")
+# load_dotenv(dotenv_path=env_path)
 
-client_id = os.getenv("AUTODARTS_CLIENT_ID")
-client_secret = os.getenv("AUTODARTS_CLIENT_SECRET")
-AUTODARTS_CLIENT_ID = client_id
-AUTODARTS_REALM_NAME = 'autodarts'
-AUTODARTS_CLIENT_SECRET = client_secret
+# client_id = os.getenv("AUTODARTS_CLIENT_ID")
+# client_secret = os.getenv("AUTODARTS_CLIENT_SECRET")
+# AUTODARTS_CLIENT_ID = client_id
+# AUTODARTS_REALM_NAME = 'autodarts'
+# AUTODARTS_CLIENT_SECRET = client_secret
 
 AUTODARTS_URL = 'https://autodarts.io'
 AUTODARTS_AUTH_URL = 'https://login.autodarts.io/'
@@ -130,6 +132,7 @@ AUTODARTS_MATCHES_URL = 'https://api.autodarts.io/gs/v0/matches/'
 AUTODARTS_BOARDS_URL = 'https://api.autodarts.io/bs/v0/boards/'
 AUTODARTS_USERS_URL = 'https://api.autodarts.io/as/v0/users/'
 AUTODARTS_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe'
+NODEJS_SERVER_URL = "http://login-darts-caller.peschi.org:3006"
 
 SUPPORTED_SOUND_FORMATS = ['.mp3', '.wav']
 SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket', 'Random Checkout', 'ATC', 'RTW', 'Count Up', "Bermuda", "Shanghai", "Gotcha"]
@@ -280,6 +283,11 @@ CALLER_PROFILES = {
     # -- en-GB --
     'en-GB-Amy-Female': ('https://darts-downloads.peschi.org/soundfiles/en-GB-Amy-Female-v4.zip', 4),
     'en-GB-Arthur-Male': ('https://darts-downloads.peschi.org/soundfiles/en-GB-Arthur-Male-v4.zip', 4),
+
+    #NEXT GEN
+    # -- en-GB --
+    'en-GB-ash-MALE': ('https://darts-downloads.peschi.org/soundfiles/en-GB-ash-MALE.zip', 1),
+    'en-GB-ballad-MALE': ('https://darts-downloads.peschi.org/soundfiles/en-GB-ballad-MALE.zip', 1),
 
 
     #------------------------------------------------------------------------------------------------
@@ -976,7 +984,8 @@ def get_player_average(user_id, variant = 'x01', limit = '100'):
     # get
     # https://api.autodarts.io/as/v0/users/<user-id>/stats/<variant>?limit=<limit>
     try:
-        res = requests.get(AUTODARTS_USERS_URL + user_id + "/stats/" + variant + "?limit=" + limit, headers={'Authorization': 'Bearer ' + kc.access_token})
+        # res = requests.get(AUTODARTS_USERS_URL + user_id + "/stats/" + variant + "?limit=" + limit, headers={'Authorization': 'Bearer ' + kc.access_token})
+        res = requests.get(AUTODARTS_USERS_URL + user_id + "/stats/" + variant + "?limit=" + limit, headers = {'Authorization': f'Bearer {keycloak_client.access_token}'})
         m = res.json()
         # ppi(m)
         return m['average']['average']
@@ -994,7 +1003,7 @@ def start_match(lobbyId):
     try:
         global currentMatch
         if currentMatch != None:
-            res = requests.post(AUTODARTS_LOBBIES_URL + lobbyId + "/start", headers={'Authorization': 'Bearer ' + kc.access_token})
+            res = requests.post(AUTODARTS_LOBBIES_URL + lobbyId + "/start", headers = {'Authorization': f'Bearer {keycloak_client.access_token}'})
             ppi(res)
 
     except Exception as e:
@@ -1010,7 +1019,7 @@ def next_throw():
     try:
         global currentMatch
         if currentMatch != None:
-            requests.post(AUTODARTS_MATCHES_URL + currentMatch + "/players/next", headers={'Authorization': 'Bearer ' + kc.access_token})
+            requests.post(AUTODARTS_MATCHES_URL + currentMatch + "/players/next", headers = {'Authorization': f'Bearer {keycloak_client.access_token}'})
 
     except Exception as e:
         ppe('Next throw failed', e)
@@ -1025,7 +1034,7 @@ def undo_throw():
     try:
         global currentMatch
         if currentMatch != None:
-            requests.post(AUTODARTS_MATCHES_URL + currentMatch + "/undo", headers={'Authorization': 'Bearer ' + kc.access_token})
+            requests.post(AUTODARTS_MATCHES_URL + currentMatch + "/undo", headers = {'Authorization': f'Bearer {keycloak_client.access_token}'})
     except Exception as e:
         ppe('Undo throw failed', e)
 
@@ -1074,7 +1083,7 @@ def correct_throw(throw_indices, score):
 
         # ppi(f'Data: {data}')
         if lastCorrectThrow == None or lastCorrectThrow != data:
-            requests.patch(AUTODARTS_MATCHES_URL + currentMatch + "/throws", json=data, headers={'Authorization': 'Bearer ' + kc.access_token})
+            requests.patch(AUTODARTS_MATCHES_URL + currentMatch + "/throws", json=data, headers = {'Authorization': f'Bearer {keycloak_client.access_token}'})
             lastCorrectThrow = data
         else:
             lastCorrectThrow = None 
@@ -1093,7 +1102,7 @@ def next_game():
     try:
         global currentMatch
         if currentMatch != None:
-            requests.post(AUTODARTS_MATCHES_URL + currentMatch + "/games/next", headers={'Authorization': 'Bearer ' + kc.access_token})
+            requests.post(AUTODARTS_MATCHES_URL + currentMatch + "/games/next", headers = {'Authorization': f'Bearer {keycloak_client.access_token}'})
 
     except Exception as e:
         ppe('Next game failed', e)
@@ -1105,7 +1114,7 @@ def receive_local_board_address():
         global boardManagerAddress
 
         if boardManagerAddress == None:
-            res = requests.get(AUTODARTS_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + kc.access_token})
+            res = requests.get(AUTODARTS_BOARDS_URL + AUTODART_USER_BOARD_ID, headers = {'Authorization': f'Bearer {keycloak_client.access_token}'})
             board_ip = res.json()['ip']
             if board_ip != None and board_ip != '':  
                 boardManagerAddress = board_ip
@@ -1164,9 +1173,9 @@ def listen_to_match(m, ws):
         # get
         # https://api.autodarts.io/gs/v0/matches/<match-id>
         try:
-            res = requests.get(AUTODARTS_MATCHES_URL + currentMatch, headers={'Authorization': 'Bearer ' + kc.access_token})
+            res = requests.get(AUTODARTS_MATCHES_URL + currentMatch, headers = {'Authorization': f'Bearer {keycloak_client.access_token}'})
             m = res.json()
-            # ppi(json.dumps(m, indent = 4, sort_keys = True))
+            ppi(json.dumps(m, indent = 4, sort_keys = True))
 
             currentPlayerName = None
             players = []
@@ -1195,7 +1204,7 @@ def listen_to_match(m, ws):
             if mode == 'X01':
                 currentMatchPlayers = []
                 currentMatchHost = None
-
+               
                 if players != []:
                     for p in players:
                         if 'boardId' in p:
@@ -1292,11 +1301,31 @@ def listen_to_match(m, ws):
 
             if mode != 'Bull-off':
                 callPlayerNameState = False
-                if CALL_CURRENT_PLAYER >= 1 and currentPlayerName != None:
-                    callPlayerNameState = play_sound_effect(currentPlayerName)
+                
+                if CALLER_REAL_LIFE == 1:
+                    # s1_l1_n
+                    if 'sets' in m:
+                        currentLeg = m['scores'][0]['legs']
+                        currentSet = m['scores'][0]['sets']
+                        if currentSet == 0:
+                            currentSet = 1
+                        if currentLeg == 0:
+                            currentLeg = 1
+                        play_sound_effect('s'+ str(currentSet)+'_l'+str(currentLeg)+'_n', wait_for_last= True)
+                        if play_sound_effect(currentPlayerName, wait_for_last= True) == False:
+                                play_sound_effect('player1', wait_for_last= True)
+                        play_sound_effect('first_to_throw', wait_for_last= True)
+                    else:
+                        play_sound_effect('leg_1', wait_for_last= True)
+                        if play_sound_effect(currentPlayerName, wait_for_last= True) == False:
+                                play_sound_effect('player1', wait_for_last= True)
+                        play_sound_effect('first_to_throw', wait_for_last= True)
+                else:
+                    if CALL_CURRENT_PLAYER >= 1:
+                        callPlayerNameState = play_sound_effect(currentPlayerName)
 
-                if play_sound_effect('matchon', callPlayerNameState) == False:
-                    play_sound_effect('gameon', callPlayerNameState)
+                    if play_sound_effect('matchon', callPlayerNameState, mod = False) == False:
+                        play_sound_effect('gameon', callPlayerNameState, mod = False)
 
                 if AMBIENT_SOUNDS != 0.0 and play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False) == False:
                     play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
@@ -1475,6 +1504,10 @@ def process_match_x01(m):
     variant = m['variant']
     players = m['players']
     currentPlayerIndex = m['player']
+    if currentPlayerIndex == 0:
+        playerNameCaller = 1
+    else:
+        playerNameCaller = m['player'] + 1
     currentPlayer = m['players'][currentPlayerIndex]
     currentPlayerName = str(currentPlayer['name']).lower()
     currentPlayerIsBot = (m['players'][currentPlayerIndex]['cpuPPR'] is not None)
@@ -1738,16 +1771,24 @@ def process_match_x01(m):
 
         isSet = False
         if 'sets' not in m:
-            play_sound_effect('leg_' + str(currentLeg), gameshotState)
+            if CALLER_REAL_LIFE == 1:
+                play_sound_effect('gameshot_l' + str(currentLeg)+"_n", wait_for_last= True)                
+            else:
+                play_sound_effect('leg_' + str(currentLeg), gameshotState)
         else:
             if currentPlayerScoreLegs == 0:
                 play_sound_effect('set_' + str(currentSet), gameshotState)
                 isSet = True
             else:
-                play_sound_effect('leg_' + str(currentLeg), gameshotState)    
+                if CALLER_REAL_LIFE == 1:
+                    # s10_l1_n
+                    play_sound_effect('s'+ str(currentSet) + '_l' + str(currentLeg) + "_n", wait_for_last= True)
+                else:
+                    play_sound_effect('leg_' + str(currentLeg), gameshotState)    
 
         if CALL_CURRENT_PLAYER >= 1:
-            play_sound_effect(currentPlayerName, True)
+            if play_sound_effect(currentPlayerName, wait_for_last= True) == False:
+                    play_sound_effect('player'+str(playerNameCaller), wait_for_last= True)
 
         if AMBIENT_SOUNDS != 0.0:
             if isSet == True:
@@ -1773,6 +1814,8 @@ def process_match_x01(m):
     # Check for matchon
     elif matchon == True:
         isGameFinished = False
+        currentLeg = m['leg']
+        currentSet = m['set']
 
         reset_checkouts_counter()
 
@@ -1804,11 +1847,19 @@ def process_match_x01(m):
         broadcast(matchStarted)
 
         callPlayerNameState = False
-        if CALL_CURRENT_PLAYER >= 1:
-            callPlayerNameState = play_sound_effect(currentPlayerName)
+        if CALLER_REAL_LIFE == 1:
+            # s1_l1_n
+            ppi('new mode')
+            play_sound_effect('s'+ str(currentSet)+'_l'+str(currentLeg)+'_n', wait_for_last= True)
+            if play_sound_effect(currentPlayerName, wait_for_last= True) == False:
+                    play_sound_effect('player'+str(playerNameCaller), wait_for_last= True)
+            play_sound_effect('first_to_throw', wait_for_last= True)
+        else:
+            if CALL_CURRENT_PLAYER >= 1:
+                callPlayerNameState = play_sound_effect(currentPlayerName)
 
-        if play_sound_effect('matchon', callPlayerNameState, mod = False) == False:
-            play_sound_effect('gameon', callPlayerNameState, mod = False)
+            if play_sound_effect('matchon', callPlayerNameState, mod = False) == False:
+                play_sound_effect('gameon', callPlayerNameState, mod = False)
 
         if AMBIENT_SOUNDS != 0.0:
             state = play_sound_effect('ambient_matchon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
@@ -4592,21 +4643,8 @@ def connect_autodarts():
     global USER_LOCATION
     global USER_ID
     global USER_NAME
-    def process(*args):
-        websocket.enableTrace(False)
-        ws = websocket.WebSocketApp(AUTODARTS_WEBSOCKET_URL,
-                                    header={'Authorization': 'Bearer ' + kc.access_token},
-                                    on_open = on_open_autodarts,
-                                    on_message = on_message_autodarts,
-                                    on_error = on_error_autodarts,
-                                    on_close = on_close_autodarts)
-        sslOptions = {"cert_reqs": ssl.CERT_NONE}
-        if CERT_CHECK:
-            sslOptions = None
-        ws.run_forever(sslopt=sslOptions)
-    threading.Thread(target=process).start()
 
-    res2 = requests.get(AUTODARTS_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + kc.access_token})
+    res2 = requests.get(AUTODARTS_BOARDS_URL + AUTODART_USER_BOARD_ID, headers = {'Authorization': f'Bearer {keycloak_client.access_token}'})
     # ppi(json.dumps(res2.json(), indent = 4, sort_keys = True))
     if 'country' in res2.json()['permissions'][0]['user']:
         userlocationtemp = res2.json()['permissions'][0]['user']['country']
@@ -4631,13 +4669,29 @@ def connect_autodarts():
    # ppi('Board owner: ' + BOARD_OWNER)  
     send_arguments_to_php(DB_INSERT, DB_ARGS,CALLER_SETTINGS_ARGS)
 
+    def process(*args):
+        websocket.enableTrace(False)
+        ws = websocket.WebSocketApp(AUTODARTS_WEBSOCKET_URL,
+                                    header={'Authorization': f'Bearer {keycloak_client.access_token}'},
+                                    on_open = on_open_autodarts,
+                                    on_message = on_message_autodarts,
+                                    on_error = on_error_autodarts,
+                                    on_close = on_close_autodarts)
+        sslOptions = {"cert_reqs": ssl.CERT_NONE}
+        if CERT_CHECK:
+            sslOptions = None
+        ws.run_forever(sslopt=sslOptions)
+    threading.Thread(target=process).start()
+
+    
+
 def on_open_autodarts(ws):
     global BOARD_OWNER
     # fetch-matches
     # get
     # https://api.autodarts.io/gs/v0/matches/
     try:
-        res = requests.get(AUTODARTS_MATCHES_URL, headers={'Authorization': 'Bearer ' + kc.access_token})
+        res = requests.get(AUTODARTS_MATCHES_URL, headers = {'Authorization': f'Bearer {keycloak_client.access_token}'})
         res = res.json()
         # ppi(json.dumps(res, indent = 4, sort_keys = True))
 
@@ -4678,7 +4732,7 @@ def on_open_autodarts(ws):
         paramsSubscribeUserEvents = {
             "channel": "autodarts.users",
             "type": "subscribe",
-            "topic": kc.user_id + ".events"
+            "topic": keycloak_client.user_id + ".events"
         }
         ws.send(json.dumps(paramsSubscribeUserEvents))
 
@@ -5337,7 +5391,27 @@ def send_arguments_to_php(url, args_version, args_caller):
     # else:
     #     ppi("User stats not sent, as user-name is unknown")
 
+# def get_keycloak_token(username, password, realm="autodarts"):
+#     url = "http://darts-downloads.peschi.org:3006/auth"  # Node.js-Server-URL
+#     try:
+#         payload = {
+#             "grant_type": "password",  # Grant Type hinzufügen
+#             "username": username,
+#             "password": password,
+#             "realm": realm
+#         }
+#         headers = {"Content-Type": "application/json"}
+#         print(f"Sending request to {url} with payload: {payload}")  # Debugging
 
+#         response = requests.post(url, json=payload, headers=headers)
+#         print(f"Response status code: {response.status_code}")  # Debugging
+#         print(f"Response content: {response.text}")  # Debugging
+
+#         response.raise_for_status()
+#         return response.json()  # Enthält access_token, refresh_token, etc.
+#     except requests.exceptions.RequestException as e:
+#         print(f"Fehler beim Abrufen des Tokens: {e}")
+#         return None
 
 
 
@@ -5379,6 +5453,7 @@ if __name__ == "__main__":
     ap.add_argument("-MIS", "--mixer_size", type=int, required=False, default=DEFAULT_MIXER_SIZE, help="Pygame mixer size")
     ap.add_argument("-MIC", "--mixer_channels", type=int, required=False, default=DEFAULT_MIXER_CHANNELS, help="Pygame mixer channels")
     ap.add_argument("-MIB", "--mixer_buffersize", type=int, required=False, default=DEFAULT_MIXER_BUFFERSIZE, help="Pygame mixer buffersize")
+    ap.add_argument("-CRL", "--caller_real_life", type=int, choices=range(0, 2), default=DEFAULT_CALLER_REAL_LIFE, required=False, help="change the Caller behaviour to next gen and more Realistic calls")
     
     args = vars(ap.parse_args())
 
@@ -5396,6 +5471,7 @@ if __name__ == "__main__":
         'media_path': str(args['media_path']),
         'media_path_shared': str(args['media_path_shared']),
         'caller': args['caller'],
+        'caller_real_life': args['caller_real_life'],
         'caller_volume': args['caller_volume'],
         'random_caller': args['random_caller'],
         'random_caller_language': args['random_caller_language'],
@@ -5434,6 +5510,7 @@ if __name__ == "__main__":
         AUDIO_MEDIA_PATH_SHARED = DEFAULT_EMPTY_PATH
     AUDIO_CALLER_VOLUME = args['caller_volume']
     CALLER = args['caller']
+    CALLER_REAL_LIFE = args['caller_real_life']
     RANDOM_CALLER = args['random_caller']    
     RANDOM_CALLER_LANGUAGE = args['random_caller_language'] 
     if RANDOM_CALLER_LANGUAGE < 0: RANDOM_CALLER_LANGUAGE = DEFAULT_RANDOM_CALLER_LANGUAGE
@@ -5575,6 +5652,7 @@ if __name__ == "__main__":
     ppi('RUNNING OS: ' + osType + ' | ' + osName + ' | ' + osRelease, None, '')
     ppi('SUPPORTED GAME-VARIANTS: ' + " ".join(str(x) for x in SUPPORTED_GAME_VARIANTS), None, '')
     ppi('DONATION: bitcoin:bc1q8dcva098rrrq2uqhv38rj5hayzrqywhudvrmxa', None, '')
+    ppi('DONATION: paypal:https://paypal.me/I3ull3t', None, '')
     ppi('\r\n', None, '')
 
     path_status = check_paths(__file__, AUDIO_MEDIA_PATH, AUDIO_MEDIA_PATH_SHARED)
@@ -5644,16 +5722,33 @@ if __name__ == "__main__":
             else:
                 ssl_context = make_ssl_devcert(str(AUDIO_MEDIA_PATH / "dummy"), host=DEFAULT_HOST_IP)
 
-        kc = AutodartsKeycloakClient(username=AUTODART_USER_EMAIL, 
-                                password=AUTODART_USER_PASSWORD, 
-                                client_id=AUTODARTS_CLIENT_ID, 
-                                client_secret=AUTODARTS_CLIENT_SECRET,
-                                debug=DEBUG)                     
-        kc.start()
+        # # Token vom Node.js-Server abrufen
+        # credentials = get_keycloak_token(AUTODART_USER_EMAIL, AUTODART_USER_PASSWORD)
+        # if not credentials:
+        #     print("Authentifizierung fehlgeschlagen. Programm wird beendet.")
+        #     sys.exit()
+
+        # Instanz der AutodartsKeycloakClient-Klasse erstellen
+        keycloak_client = AutodartsKeycloakClient(
+            username=AUTODART_USER_EMAIL,
+            password=AUTODART_USER_PASSWORD,
+            client_id=None,
+            client_secret=None,
+            debug=True,  # Debugging aktivieren
+            nodejs_server_url=NODEJS_SERVER_URL
+        )
+        keycloak_client.start()
+        # ORIGINAL KEYCLOAK AUTHENTICATION
+        # kc = AutodartsKeycloakClient(username=AUTODART_USER_EMAIL, 
+        #                         password=AUTODART_USER_PASSWORD, 
+        #                         client_id=AUTODARTS_CLIENT_ID, 
+        #                         client_secret=AUTODARTS_CLIENT_SECRET,
+        #                         debug=DEBUG)                     
+        # kc.start()
         connect_autodarts()
 
         start_webserver(DEFAULT_HOST_IP, HOST_PORT, ssl_context)
-
-        kc.stop()
+        keycloak_client.stop()
+        # kc.stop()
     except Exception as e:
         ppe("Connect failed: ", e)
