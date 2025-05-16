@@ -3,7 +3,7 @@ name: Build
 on:
   push:
     tags:
-    - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+    - 'b*' # Push events to matching v*, i.e. v1.0, v20.15.10
     # branches:
     #   - master
 
@@ -22,16 +22,18 @@ jobs:
         tag_name: ${{ github.ref }}
         release_name: Release ${{ github.ref }}
         body: |
+            # THIS IS A BETA RELEASE USING AT YOUR OWN RISK
+            
             # Changes in this Release
             - implementet more detailes user Stats to debug faster
               - no personal data will be stored
             - prepare for new soundpacks and languages
               - new variable voices
               - RU, IT will come in the future
-
+            
             ## USER NEED TO UPDATE TO GET CALLER RUNNING IN THE FUTURE
         draft: false
-        prerelease: false
+        prerelease: true
         
     - name: Output Release URL File
       run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
@@ -59,7 +61,7 @@ jobs:
             CMD_BUILD: pyinstaller -F -n darts-caller-mac64 -i resources/darts-caller.icns --add-data "templates:templates" --add-data "static:static" --add-data ".env:.env" --collect-all certifi darts-caller.py 
             OUT_FILE_NAME: darts-caller-mac64
             ASSET_MIME: application/zip
-          
+
           - os: ubuntu-22.04
             TARGET: ubuntu
             CMD_BUILD: pyinstaller -F -n darts-caller -i resources/darts-caller.svg --add-data "templates:templates" --add-data "static:static" --add-data ".env:.env" --collect-all certifi darts-caller.py
@@ -78,7 +80,7 @@ jobs:
               sudo apt-get update
               sudo apt-get install -y qemu-user-static binfmt-support
               docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-              docker run --rm -v /usr/bin/qemu-arm-static:/usr/bin/qemu-arm-static --platform linux/arm64/v8 -v $(pwd):/workdir -w /workdir arm64v8/ubuntu:22.04 bash -c "apt-get update -y && apt-get install -y python3-pip && pip install -r requirements.txt && pyinstaller -F -n darts-caller-arm64 -i resources/darts-caller.svg --add-data 'templates:templates' --add-data 'static:static' --add-data '.env:.env' --collect-all certifi darts-caller.py"
+              docker run --rm -v /usr/bin/qemu-arm-static:/usr/bin/qemu-arm-static --platform linux/arm64/v8 -v $(pwd):/workdir -w /workdir arm64v8/ubuntu:22.04 bash -c "apt-get update -y && apt-get install -y python3-pip && pip install -r requirements.txt && pyinstaller -F -n darts-caller-arm64 -i resources/darts-caller.svg --add-data 'templates:templates' --add-data 'static:static' --add-data ".env:.env" --collect-all certifi darts-caller.py"
             OUT_FILE_NAME: darts-caller-arm64
             ASSET_MIME: application/octet-stream
 

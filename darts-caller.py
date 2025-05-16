@@ -1,4 +1,5 @@
 import os
+from dotenv import load_dotenv
 import sys
 from pathlib import Path
 import time
@@ -60,7 +61,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.17.5'
+VERSION = '2.18.6'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -99,13 +100,29 @@ DEFAULT_HOST_IP = '0.0.0.0'
 EXT_WLED = False
 EXT_PIXEL = False
 USER_LOCATION = ""
-DB_INSERT = 'https://www.user-stats.peschi.org/db_userstats.php'
+DB_INSERT = 'https://www.user-stats.peschi.org/db_newuserstats.php'
 BOARD_OWNER = None
+USER_ID = None
 DB_ARGS = []
+WLED_SETTINGS_ARGS = {}
+CALLER_SETTINGS_ARGS = {}
 
-AUTODARTS_CLIENT_ID = 'wusaaa-caller-for-autodarts'
+
+# Prüfe, ob das Programm als One-File-Build ausgeführt wird
+if hasattr(sys, "_MEIPASS"):
+    # Pfad zur extrahierten .env-Datei
+    env_path = Path(sys._MEIPASS) / ".env/.env"
+else:
+    # Lokaler Pfad für Entwicklungsumgebungen
+    env_path = Path(".env")
+load_dotenv(dotenv_path=env_path)
+
+client_id = os.getenv("AUTODARTS_CLIENT_ID")
+client_secret = os.getenv("AUTODARTS_CLIENT_SECRET")
+AUTODARTS_CLIENT_ID = client_id
 AUTODARTS_REALM_NAME = 'autodarts'
-AUTODARTS_CLIENT_SECRET = "4hg5d4fddW7rqgoY8gZ42aMpi2vjLkzf"
+AUTODARTS_CLIENT_SECRET = client_secret
+
 AUTODARTS_URL = 'https://autodarts.io'
 AUTODARTS_AUTH_URL = 'https://login.autodarts.io/'
 AUTODARTS_LOBBIES_URL = 'https://api.autodarts.io/gs/v0/lobbies/'
@@ -117,6 +134,7 @@ AUTODARTS_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe'
 SUPPORTED_SOUND_FORMATS = ['.mp3', '.wav']
 SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket', 'Random Checkout', 'ATC', 'RTW', 'Count Up', "Bermuda", "Shanghai", "Gotcha"]
 SUPPORTED_CRICKET_FIELDS = [15, 16, 17, 18, 19, 20, 25]
+SUPPORTED_TACTICS_FIELDS = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 25]
 BERMUDA_ROUNDS = {
     1: '12',
     2: '13',
@@ -1090,7 +1108,7 @@ def receive_local_board_address():
             res = requests.get(AUTODARTS_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + kc.access_token})
             board_ip = res.json()['ip']
             if board_ip != None and board_ip != '':  
-                boardManagerAddress = 'http://' + board_ip
+                boardManagerAddress = board_ip
                 ppi('Board-address: ' + boardManagerAddress) 
             else:
                 boardManagerAddress = None
@@ -1110,6 +1128,8 @@ def listen_to_match(m, ws):
     global currentMatch
     global currentMatchHost
     global currentMatchPlayers
+    global indexNameMacro
+    global gotcha_last_player_points
 
     # EXAMPLE
     # {
@@ -1310,10 +1330,14 @@ def listen_to_match(m, ws):
         
     elif m['event'] == 'finish' or m['event'] == 'delete':
         ppi('Stop listening to match: ' + m['id'])
+        ppi('listen to match message'+ 'event: ')
 
         currentMatch = None
         currentMatchHost = None
         currentMatchPlayers = []
+        ppi ("Player index reset")
+        gotcha_last_player_points=[]
+        indexNameMacro = {}
 
         paramsUnsubscribeMatchEvents = {  
             "channel": "autodarts.matches",
@@ -1446,6 +1470,7 @@ def process_match_x01(m):
     global dart1score
     global dart2score
     global dart3score
+    global indexNameMacro
     
     variant = m['variant']
     players = m['players']
@@ -1455,7 +1480,6 @@ def process_match_x01(m):
     currentPlayerIsBot = (m['players'][currentPlayerIndex]['cpuPPR'] is not None)
     remainingPlayerScore = m['gameScores'][currentPlayerIndex]
     numberOfPlayers = len(m['players'])
-
     turns = m['turns'][0]
     points = str(turns['points'])
     busted = (turns['busted'] == True)
@@ -1476,17 +1500,18 @@ def process_match_x01(m):
 
     if turns != None and turns['throws'] != []:
         lastPoints = points
-
+    # ppi(json.dumps(turns, indent = 4, sort_keys = True))
     # Darts pulled (Playerchange and Possible-checkout)
     if gameon == False and turns != None and turns['throws'] == [] or isGameFinished == True:
         busted = "False"
         if lastPoints == "B":
             lastPoints = "0"
             busted = "True"
-
+        
         dartsPulled = {
             "event": "darts-pulled",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -1624,13 +1649,32 @@ def process_match_x01(m):
     # Check for matchshot
     if matchshot == True:
         isGameFin = True
-        
+        # TEST FÜR DARTS STATS
+        throwAmount = len(turns['throws'])
+        type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
+        field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
+        field_multiplier = turns['throws'][throwAmount - 1]['segment']['multiplier']
+        field_number = turns['throws'][throwAmount - 1]['segment']['number']
+        field_cords_x = turns['throws'][throwAmount - 1]['coords']['x']
+        field_cords_y = turns['throws'][throwAmount - 1]['coords']['y']
+        # TEST FÜR DARTS STATS
         matchWon = {
                 "event": "match-won",
                 "player": currentPlayerName,
+                "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                 "game": {
                     "mode": variant,
-                    "dartsThrownValue": points
+                    "dartsThrown": str(throwAmount),
+                    "dartsThrownValue": points,
+                    "fieldName": field_name,
+                    "fieldNumber": field_number,
+                    "fieldMultiplier": field_multiplier,
+                    "coords": {
+                        "x": field_cords_x,
+                        "y": field_cords_y
+                    },
+                    "type": type
+                    
                 } 
             }
         broadcast(matchWon)
@@ -1659,13 +1703,23 @@ def process_match_x01(m):
     # Check for gameshot
     elif gameshot == True:
         isGameFin = True
+        throwAmount = len(turns['throws'])
+        type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
+        field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
+        field_multiplier = turns['throws'][throwAmount - 1]['segment']['multiplier']
+        field_number = turns['throws'][throwAmount - 1]['segment']['number']
         
         gameWon = {
                 "event": "game-won",
                 "player": currentPlayerName,
+                "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                 "game": {
                     "mode": variant,
-                    "dartsThrownValue": points
+                    "dartsThrown": str(throwAmount),
+                    "dartsThrownValue": points,
+                    "fieldName": field_name,
+                    "fieldNumber": field_number,
+                    "fieldMultiplier": field_multiplier
                 } 
             }
         broadcast(gameWon)
@@ -1736,9 +1790,10 @@ def process_match_x01(m):
             "event": "match-started",
             "id": currentMatch,
             "me": AUTODART_USER_BOARD_ID,
-            # "meHost": currentMatchHost,
+            "meHost": currentMatchHost,
             # "players": currentMatchPlayers,
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 "pointsStart": str(m['settings'][base]),
@@ -1773,6 +1828,7 @@ def process_match_x01(m):
         gameStarted = {
             "event": "game-started",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 "pointsStart": str(m['settings'][base]),
@@ -1798,13 +1854,24 @@ def process_match_x01(m):
     elif busted == True:
         lastPoints = "B"
         isGameFinished = False
+        throwAmount = len(turns['throws'])
+        type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
+        field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
+        field_multiplier = turns['throws'][throwAmount - 1]['segment']['multiplier']
+        field_number = turns['throws'][throwAmount - 1]['segment']['number']
 
         busted = { 
                     "event": "busted",
                     "player": currentPlayerName,
+                    "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                     "playerIsBot": str(currentPlayerIsBot),
                     "game": {
-                        "mode": variant
+                        "mode": variant,
+                        "field_name": field_name,
+                        "field_number": field_number,
+                        "field_multiplier": field_multiplier,
+                        "type": type,
+                        "busted": "True",
                     }       
                 }
         broadcast(busted)
@@ -1820,16 +1887,32 @@ def process_match_x01(m):
     # Check for 1. Dart
     elif turns != None and turns['throws'] != [] and len(turns['throws']) == 1:
         isGameFinished = False
+        throwAmount = len(turns['throws'])
+        type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
+        field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
+        field_multiplier = turns['throws'][throwAmount - 1]['segment']['multiplier']
+        field_number = turns['throws'][throwAmount - 1]['segment']['number']
+        field_cords_x = turns['throws'][throwAmount - 1]['coords']['x']
+        field_cords_y = turns['throws'][throwAmount - 1]['coords']['y']
         dart1score = points
         dart1Thrown = {
             "event": "dart1-thrown",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
                 "pointsLeft": str(remainingPlayerScore),
                 "dartNumber": "1",
-                "dartValue": points       
+                "dartValue": points,
+                "fieldName": field_name,
+                "fieldNumber": field_number,
+                "fieldMultiplier": field_multiplier,
+                "coords": {
+                        "x": field_cords_x,
+                        "y": field_cords_y
+                    },
+                "type": type    
             }
         }
         broadcast(dart1Thrown)
@@ -1837,16 +1920,32 @@ def process_match_x01(m):
     # Check for 2. Dart
     elif turns != None and turns['throws'] != [] and len(turns['throws']) == 2:
         isGameFinished = False
+        throwAmount = len(turns['throws'])
+        type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
+        field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
+        field_multiplier = turns['throws'][throwAmount - 1]['segment']['multiplier']
+        field_number = turns['throws'][throwAmount - 1]['segment']['number']
+        field_cords_x = turns['throws'][throwAmount - 1]['coords']['x']
+        field_cords_y = turns['throws'][throwAmount - 1]['coords']['y']
         dart2score = str(int(points) - int(dart1score))
         dart2Thrown = {
             "event": "dart2-thrown",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
                 "pointsLeft": str(remainingPlayerScore),
                 "dartNumber": "2",
-                "dartValue": dart2score        
+                "dartValue": dart2score,
+                "fieldName": field_name,
+                "fieldNumber": field_number,
+                "fieldMultiplier": field_multiplier,
+                "coords": {
+                        "x": field_cords_x,
+                        "y": field_cords_y
+                    },
+                "type": type         
             }
         }
         broadcast(dart2Thrown)
@@ -1854,22 +1953,39 @@ def process_match_x01(m):
     # Check for 3. Dart - Score-call
     elif turns != None and turns['throws'] != [] and len(turns['throws']) == 3:
         isGameFinished = False
+        throwAmount = len(turns['throws'])
+        type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
+        field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
+        field_multiplier = turns['throws'][throwAmount - 1]['segment']['multiplier']
+        field_number = turns['throws'][throwAmount - 1]['segment']['number']
+        field_cords_x = turns['throws'][throwAmount - 1]['coords']['x']
+        field_cords_y = turns['throws'][throwAmount - 1]['coords']['y']
         dart3score = str(int(points) - int(dart1score) - int(dart2score))
         dart3Thrown = {
             "event": "dart3-thrown",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
                 "pointsLeft": str(remainingPlayerScore),
                 "dartNumber": "3",
-                "dartValue": dart3score        
+                "dartValue": dart3score,
+                "fieldName": field_name,
+                "fieldNumber": field_number,
+                "fieldMultiplier": field_multiplier,
+                "coords": {
+                        "x": field_cords_x,
+                        "y": field_cords_y
+                    },
+                "type": type         
             }
         }
         broadcast(dart3Thrown)
         dartsThrown = {
             "event": "darts-thrown",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
@@ -1976,12 +2092,14 @@ def process_match_x01(m):
         isGameFinished = True
 
 def process_match_cricket(m):
+    global indexNameMacro
     currentPlayerIndex = m['player']
     currentPlayer = m['players'][currentPlayerIndex]
     currentPlayerName = str(currentPlayer['name']).lower()
     currentPlayerIsBot = (m['players'][currentPlayerIndex]['cpuPPR'] is not None)
     turns = m['turns'][0]
     variant = m['variant']
+    gameMode = m['settings']['gameMode']
 
     isGameOn = False
     isGameFin = False
@@ -2001,9 +2119,12 @@ def process_match_cricket(m):
             field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
             field_number = turns['throws'][throwAmount - 1]['segment']['number']
             field_multiplier = turns['throws'][throwAmount - 1]['segment']['multiplier']
-    
-            if field_number not in SUPPORTED_CRICKET_FIELDS:
-                return
+            if gameMode == 'Cricket':
+                if field_number not in SUPPORTED_CRICKET_FIELDS:
+                    return
+            elif gameMode == 'Tactics':
+                if field_number not in SUPPORTED_TACTICS_FIELDS:
+                    return
             
 
             # TODO fields already closed?
@@ -2073,7 +2194,7 @@ def process_match_cricket(m):
         lastPoints = ''
         for t in turns['throws']:
             number = t['segment']['number']
-            if number in SUPPORTED_CRICKET_FIELDS:
+            if number in SUPPORTED_CRICKET_FIELDS or number in SUPPORTED_TACTICS_FIELDS:
                 throwPoints += (t['segment']['multiplier'] * number)
                 lastPoints += 'x' + str(t['segment']['name'])
         lastPoints = lastPoints[1:]
@@ -2081,6 +2202,7 @@ def process_match_cricket(m):
         matchWon = {
                 "event": "match-won",
                 "player": currentPlayerName,
+                "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                 "game": {
                     "mode": variant,
                     "dartsThrownValue": throwPoints                    
@@ -2113,7 +2235,7 @@ def process_match_cricket(m):
         lastPoints = ''
         for t in turns['throws']:
             number = t['segment']['number']
-            if number in SUPPORTED_CRICKET_FIELDS:
+            if number in SUPPORTED_CRICKET_FIELDS or number in SUPPORTED_CRICKET_FIELDS:
                 throwPoints += (t['segment']['multiplier'] * number)
                 lastPoints += 'x' + str(t['segment']['name'])
         lastPoints = lastPoints[1:]
@@ -2121,6 +2243,7 @@ def process_match_cricket(m):
         gameWon = {
                 "event": "game-won",
                 "player": currentPlayerName,
+                "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                 "game": {
                     "mode": variant,
                     "dartsThrownValue": throwPoints
@@ -2149,6 +2272,7 @@ def process_match_cricket(m):
         matchStarted = {
             "event": "match-started",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -2181,6 +2305,7 @@ def process_match_cricket(m):
         gameStarted = {
             "event": "game-started",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -2205,6 +2330,7 @@ def process_match_cricket(m):
         busted = { 
                     "event": "busted",
                     "player": currentPlayerName,
+                    "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                     "playerIsBot": str(currentPlayerIsBot),
                     "game": {
                         "mode": variant
@@ -2235,7 +2361,7 @@ def process_match_cricket(m):
         lastPoints = ''
         for t in turns['throws']:
             number = t['segment']['number']
-            if number in SUPPORTED_CRICKET_FIELDS:
+            if number in SUPPORTED_CRICKET_FIELDS or number in SUPPORTED_TACTICS_FIELDS:
                 throwPoints += (t['segment']['multiplier'] * number)
                 lastPoints += 'x' + str(t['segment']['name'])
         lastPoints = lastPoints[1:]
@@ -2243,6 +2369,7 @@ def process_match_cricket(m):
         dartsThrown = {
             "event": "darts-thrown",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
@@ -2279,6 +2406,7 @@ def process_match_cricket(m):
         dartsPulled = {
             "event": "darts-pulled",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -2314,6 +2442,7 @@ def process_match_cricket(m):
 
 def process_match_atc(m):
     global isGameFinished
+    global indexNameMacro
 
     variant = m['variant']
     needHits = m['settings']['hits']
@@ -2323,7 +2452,7 @@ def process_match_atc(m):
     currentPlayerIsBot = (m['players'][currentPlayerIndex]['cpuPPR'] is not None)
     numberOfPlayers = len(m['players'])
     isRandomOrder = m['settings']['order'] == 'Random-Bull'
-
+    isGameOn = False
     turns = m['turns'][0]
     matchshot = (m['winner'] != -1 and isGameFinished == False)
 
@@ -2364,13 +2493,71 @@ def process_match_atc(m):
             else:
                 if play_sound_effect('atc_target_missed') == False:
                     play_sound_effect(str(targetHit))
+    # Check for matchon
+    # elif turns['throws'] == [] and m['round'] == 1 and m['leg'] == 1 and m['set'] == 1:
+    #     isGameOn = True
+    #     isGameFinished = False
 
+    #     matchStarted = {
+    #         "event": "match-started",
+    #         "player": currentPlayerName,
+    #         "playerIndex": str(currentPlayerIndex),
+    #         "game": {
+    #             "mode": variant,
+    #             # TODO: fix
+    #             "special": "TODO"
+    #             }     
+    #         }
+    #     broadcast(matchStarted)
+
+    #     play_sound_effect(currentPlayerName, False)
+    #     if play_sound_effect('matchon', True) == False:
+    #         play_sound_effect('gameon', True)
+        
+    #     # play only if it is a real match not just legs!
+    #     # if AMBIENT_SOUNDS != 0.0 and ('legs' in m and 'sets'):
+    #     #     if play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS) == False:
+    #     #         play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS)
+    #     if AMBIENT_SOUNDS != 0.0:
+    #         state = play_sound_effect('ambient_matchon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
+    #         if state == False and play_sound_effect('ambient_matchon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False) == False:
+    #             if play_sound_effect('ambient_gameon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False) == False:
+    #                 play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)    
+        
+    #     ppi('Matchon')
+
+    # # Check for gameon
+    # elif turns['throws'] == [] and m['round'] == 1:
+    #     isGameOn = True
+    #     isGameFinished = False
+        
+    #     gameStarted = {
+    #         "event": "game-started",
+    #         "player": currentPlayerName,
+    #         "playerIndex": str(currentPlayerIndex),
+    #         "game": {
+    #             "mode": variant,
+    #             # TODO: fix
+    #             "special": "TODO"
+    #             }     
+    #         }
+    #     broadcast(gameStarted)
+
+    #     play_sound_effect(currentPlayerName, False)
+    #     play_sound_effect('gameon', True)
+
+    #     if AMBIENT_SOUNDS != 0.0:
+    #         if play_sound_effect('ambient_gameon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False) == False:
+    #             play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
+
+    #     ppi('Gameon')
 
     if matchshot:
         isGameFinished = True
         matchWon = {
             "event": "match-won",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 "dartsThrownValue": "0"
@@ -2414,10 +2601,33 @@ def process_match_atc(m):
         if currentPlayerIsBot == False or CALL_BOT_ACTIONS:
             if CALL_CURRENT_PLAYER == 2 and numberOfPlayers > 1:
                 play_sound_effect(currentPlayerName, True)
+
+    # Playerchange
+    if turns != None and turns['throws'] == [] or isGameFinished == True:
+        dartsPulled = {
+            "event": "darts-pulled",
+            "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
+            "game": {
+                "mode": variant
+            }
+        }
+        broadcast(dartsPulled)
+
+        if currentPlayerIsBot == False or CALL_BOT_ACTIONS:
+            if CALL_CURRENT_PLAYER == 2:
+                play_sound_effect(currentPlayerName)
+
+        if AMBIENT_SOUNDS != 0.0:
+            if play_sound_effect('ambient_playerchange_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False) == False:
+                play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
+        
+        ppi("Next player")
     
     mirror_sounds()
 
 def process_match_rtw(m):
+    global indexNameMacro
     global isGameFinished
 
     variant = m['variant']
@@ -2453,6 +2663,7 @@ def process_match_rtw(m):
         dartsPulled = {
             "event": "darts-pulled",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -2501,6 +2712,7 @@ def process_match_rtw(m):
         dartsThrown = {
             "event": "darts-thrown",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
@@ -2535,6 +2747,7 @@ def process_match_rtw(m):
         matchWon = {
             "event": "match-won",
             "player": m['players'][winningPlayerIndex],
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 "dartsThrownValue": "0"
@@ -2568,6 +2781,7 @@ def process_match_rtw(m):
         gameStarted = {
             "event": "game-started",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -2600,10 +2814,31 @@ def process_match_rtw(m):
         if currentPlayerIsBot == False or CALL_BOT_ACTIONS:
             if CALL_CURRENT_PLAYER == 2 and numberOfPlayers > 1:
                 play_sound_effect(currentPlayerName, True)
-    
+    # Playerchange
+    if turn != None and turn['throws'] == [] or isGameFinished == True:
+        dartsPulled = {
+            "event": "darts-pulled",
+            "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
+            "game": {
+                "mode": variant
+            }
+        }
+        broadcast(dartsPulled)
+
+        if currentPlayerIsBot == False or CALL_BOT_ACTIONS:
+            if CALL_CURRENT_PLAYER == 2:
+                play_sound_effect(currentPlayerName)
+
+        if AMBIENT_SOUNDS != 0.0:
+            if play_sound_effect('ambient_playerchange_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False) == False:
+                play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
+        
+        ppi("Next player")
     mirror_sounds()
 
 def process_bulling(m):
+    global indexNameMacro
     global isBullingFinished
     currentPlayerIndex = m['player']
     currentPlayer = m['players'][currentPlayerIndex]
@@ -2616,6 +2851,7 @@ def process_bulling(m):
         bullingEnd = {
             "event": "bulling-end",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot)
         }
         broadcast(bullingEnd)
@@ -2629,6 +2865,7 @@ def process_bulling(m):
             bullingStart = {
                 "event": "bulling-start",
                 "player": currentPlayerName,
+                "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                 "playerIsBot": str(currentPlayerIsBot)
             }
             broadcast(bullingStart)
@@ -2637,10 +2874,8 @@ def process_bulling(m):
         
     mirror_sounds()
 
-def process_common(m):
-    broadcast(m)
-
 def process_match_CountUp(m):
+    global indexNameMacro
     currentPlayerIndex = m['player']
     currentPlayer = m['players'][currentPlayerIndex]
     currentPlayerName = str(currentPlayer['name']).lower()
@@ -2733,6 +2968,7 @@ def process_match_CountUp(m):
         matchWon = {
                 "event": "match-won",
                 "player": currentPlayerName,
+                "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                 "game": {
                     "mode": variant,
                     "dartsThrownValue": throwPoints                    
@@ -2772,6 +3008,7 @@ def process_match_CountUp(m):
         gameWon = {
                 "event": "game-won",
                 "player": currentPlayerName,
+                "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                 "game": {
                     "mode": variant,
                     "dartsThrownValue": throwPoints
@@ -2800,6 +3037,7 @@ def process_match_CountUp(m):
         matchStarted = {
             "event": "match-started",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -2832,6 +3070,7 @@ def process_match_CountUp(m):
         gameStarted = {
             "event": "game-started",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -2879,6 +3118,7 @@ def process_match_CountUp(m):
         dartsThrown = {
             "event": "darts-thrown",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
@@ -2915,6 +3155,7 @@ def process_match_CountUp(m):
         dartsPulled = {
             "event": "darts-pulled",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -2946,11 +3187,14 @@ def process_match_CountUp(m):
         isGameFinished = True
 
 def process_match_Bermuda(m):
+    global indexNameMacro
     global BERMUDA_ROUNDS
     global currentMatch
     global currentMatchHost
     global currentMatchPlayers
     global isGameFinished
+    global oneGoodDart
+    global bermudaBusted
     variant = m['variant']
     players = m['players']
     currentPlayerIndex = m['player']
@@ -2986,17 +3230,47 @@ def process_match_Bermuda(m):
     matchon = (turns['throws'] == [] and m['leg'] == 1 and m['set'] == 1 and rounds == 1)
     gameon = (turns['throws'] == [] and rounds == 1)
 
+    # CHECK FOR BUSTED TURN
+    if turns != None and turns['throws'] == []:
+        oneGoodDart = False
+    if turns != None and turns['throws'] != []:
+        field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
+        field_multiplier = turns['throws'][throwAmount - 1]['segment']['multiplier']
+        field_number = turns['throws'][throwAmount - 1]['segment']['number']
+        if str(field_number) == target:
+            # ppi('hit: ' + str(field_number) + ' target: ' + str(target))
+            oneGoodDart = True
+            bermudaBusted = "False"
+        elif field_multiplier == 3 and target =='T' :
+            # ppi('hit: ' + str(field_name) + ' target: ' + str(target))
+            oneGoodDart = True
+            bermudaBusted = "False"
+        elif field_multiplier == 2 and target =='D' :
+            # ppi('hit: ' + str(field_name) + ' target: ' + str(target))
+            oneGoodDart = True
+            bermudaBusted = "False"
+        elif field_multiplier == 2 and field_number == 25 and target =='50' :
+            # ppi('hit: ' + str(field_name) + ' target: ' + str(target))
+            oneGoodDart = True
+            bermudaBusted = "False"
+        elif oneGoodDart == False:
+            # ppi('BUSTED')
+            bermudaBusted = "True"
+    
+
     # Darts pulled (Playerchange and Possible-checkout)
     if gameon == False and turns != None and turns['throws'] == [] or isGameFinished == True:
         dartsPulled = {
             "event": "darts-pulled",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
                 "dartsThrown": "3",
                 "round": str(rounds),
-                "target": BERMUDA_ROUNDS[rounds]
+                "target": BERMUDA_ROUNDS[rounds],
+                "busted": bermudaBusted
                 # TODO: fix
                 # "darts": [
                 #     {"number": "1", "value": "60"},
@@ -3008,7 +3282,7 @@ def process_match_Bermuda(m):
         }
         # ppi(dartsPulled)
         broadcast(dartsPulled)
-
+        
         
         if gameon == False and isGameFinished == False:
 
@@ -3098,6 +3372,7 @@ def process_match_Bermuda(m):
         matchWon = {
                 "event": "match-won",
                 "player": currentPlayerName,
+                "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                 "game": {
                     "mode": variant,
                     "dartsThrownValue": points
@@ -3133,6 +3408,7 @@ def process_match_Bermuda(m):
         gameWon = {
                 "event": "game-won",
                 "player": currentPlayerName,
+                "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                 "game": {
                     "mode": variant,
                     "dartsThrownValue": points
@@ -3207,6 +3483,7 @@ def process_match_Bermuda(m):
             # "meHost": currentMatchHost,
             # "players": currentMatchPlayers,
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -3238,6 +3515,7 @@ def process_match_Bermuda(m):
         gameStarted = {
             "event": "game-started",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -3264,6 +3542,7 @@ def process_match_Bermuda(m):
         dart1Thrown = {
             "event": "dart1-thrown",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
@@ -3281,6 +3560,7 @@ def process_match_Bermuda(m):
         dart2Thrown = {
             "event": "dart2-thrown",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
@@ -3298,6 +3578,7 @@ def process_match_Bermuda(m):
         dart3Thrown = {
             "event": "dart3-thrown",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
@@ -3310,6 +3591,7 @@ def process_match_Bermuda(m):
         dartsThrown = {
             "event": "darts-thrown",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
@@ -3331,19 +3613,24 @@ def process_match_Bermuda(m):
                         points = "0"
                 play_sound_effect(points, wait_for_last=CALL_EVERY_DART > 0)
 
+            if bermudaBusted == "True":
+                busted = { 
+                "event": "busted",
+                "player": currentPlayerName,
+                "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
+                "playerIsBot": str(currentPlayerIsBot),
+                "game": {
+                    "mode": variant
+                    }       
+                }
+                broadcast(busted)
+                ppi('Busted')
+                bermudaBusted = "False"
+
             if AMBIENT_SOUNDS != 0.0:
                 ambient_x_success = False
 
-                throw_combo = ''
-                for t in turns['throws']:
-                    throw_combo += t['segment']['name'].lower()
-                # ppi(throw_combo)
-
-                if turns['points'] != 0:
-                    ambient_x_success = play_sound_effect('ambient_' + str(throw_combo), AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
-                    if ambient_x_success == False:
-                        ambient_x_success = play_sound_effect('ambient_' + str(turns['points']), AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
-
+                
                 if ambient_x_success == False:
                     if turns['points'] >= 150:
                         play_sound_effect('ambient_150more', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)   
@@ -3423,6 +3710,7 @@ def process_match_Bermuda(m):
         isGameFinished = True
 
 def process_match_shanghai(m):
+    global indexNameMacro
     global currentMatch
     global currentMatchHost
     global currentMatchPlayers
@@ -3466,6 +3754,7 @@ def process_match_shanghai(m):
         dartsPulled = {
             "event": "darts-pulled",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -3572,6 +3861,7 @@ def process_match_shanghai(m):
         matchWon = {
                 "event": "match-won",
                 "player": currentPlayerName,
+                "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                 "game": {
                     "mode": variant,
                     "dartsThrownValue": points
@@ -3607,6 +3897,7 @@ def process_match_shanghai(m):
         gameWon = {
                 "event": "game-won",
                 "player": currentPlayerName,
+                "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                 "game": {
                     "mode": variant,
                     "dartsThrownValue": points
@@ -3681,6 +3972,7 @@ def process_match_shanghai(m):
             # "meHost": currentMatchHost,
             # "players": currentMatchPlayers,
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -3712,6 +4004,7 @@ def process_match_shanghai(m):
         gameStarted = {
             "event": "game-started",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -3738,6 +4031,7 @@ def process_match_shanghai(m):
         dart1Thrown = {
             "event": "dart1-thrown",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
@@ -3754,6 +4048,7 @@ def process_match_shanghai(m):
         dart2Thrown = {
             "event": "dart2-thrown",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
@@ -3770,6 +4065,7 @@ def process_match_shanghai(m):
         dart3Thrown = {
             "event": "dart3-thrown",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
@@ -3781,6 +4077,7 @@ def process_match_shanghai(m):
         dartsThrown = {
             "event": "darts-thrown",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
@@ -3890,6 +4187,7 @@ def process_match_shanghai(m):
         isGameFinished = True
 
 def process_match_gotcha(m):
+    global indexNameMacro
     global gotcha_last_player_points
     global isGameFinished
     global lastPoints
@@ -3943,7 +4241,7 @@ def process_match_gotcha(m):
             # SINGLE-DART-SCORE
             if CALL_EVERY_DART == 1:
                 score = field_number * field_multiplier
-                play_sound_effect(str(score))
+                play_sound_effect(str(score), wait_for_last = True)
 
             # SINGLE-DART-NAME
             elif CALL_EVERY_DART == 2:
@@ -3960,11 +4258,11 @@ def process_match_gotcha(m):
                     field_number = str(field_number)
 
                     if type == 'singleouter' or type == 'singleinner':
-                        play_sound_effect(field_number)
+                        play_sound_effect(field_number, wait_for_last=True)
                     elif type == 'outside':
                         play_sound_effect(type)
                     else:
-                        if play_sound_effect(type):
+                        if play_sound_effect(type, wait_for_last=True):
                             play_sound_effect(field_number, wait_for_last=True)
 
             # SINGLE-DART-EFFECT
@@ -4009,6 +4307,7 @@ def process_match_gotcha(m):
         matchWon = {
                 "event": "match-won",
                 "player": currentPlayerName,
+                "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                 "game": {
                     "mode": variant,
                     "dartsThrownValue": throwPoints                    
@@ -4016,8 +4315,8 @@ def process_match_gotcha(m):
             }
         broadcast(matchWon)
 
-        if play_sound_effect('matchshot') == False:
-            play_sound_effect('gameshot')
+        if play_sound_effect('matchshot', wait_for_last=True) == False:
+            play_sound_effect('gameshot', wait_for_last=True)
         play_sound_effect(currentPlayerName, True)
         
         if AMBIENT_SOUNDS != 0.0:
@@ -4048,6 +4347,7 @@ def process_match_gotcha(m):
         gameWon = {
                 "event": "game-won",
                 "player": currentPlayerName,
+                "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
                 "game": {
                     "mode": variant,
                     "dartsThrownValue": throwPoints
@@ -4076,6 +4376,7 @@ def process_match_gotcha(m):
         matchStarted = {
             "event": "match-started",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -4108,6 +4409,7 @@ def process_match_gotcha(m):
         gameStarted = {
             "event": "game-started",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -4155,6 +4457,7 @@ def process_match_gotcha(m):
         dartsThrown = {
             "event": "darts-thrown",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "playerIsBot": str(currentPlayerIsBot),
             "game": {
                 "mode": variant,
@@ -4191,6 +4494,7 @@ def process_match_gotcha(m):
         dartsPulled = {
             "event": "darts-pulled",
             "player": currentPlayerName,
+            "playerIndex": str(indexNameMacro[currentPlayerName.lower()]),
             "game": {
                 "mode": variant,
                 # TODO: fix
@@ -4221,6 +4525,8 @@ def process_match_gotcha(m):
     if isGameFin == True:
         isGameFinished = True
 
+def process_common(m):
+    broadcast(m)
 
 def mute_audio_background(vol):
     global background_audios
@@ -4284,6 +4590,8 @@ def mute_background(mute_vol):
 def connect_autodarts():
     global BOARD_OWNER
     global USER_LOCATION
+    global USER_ID
+    global USER_NAME
     def process(*args):
         websocket.enableTrace(False)
         ws = websocket.WebSocketApp(AUTODARTS_WEBSOCKET_URL,
@@ -4300,15 +4608,28 @@ def connect_autodarts():
 
     res2 = requests.get(AUTODARTS_BOARDS_URL + AUTODART_USER_BOARD_ID, headers={'Authorization': 'Bearer ' + kc.access_token})
     # ppi(json.dumps(res2.json(), indent = 4, sort_keys = True))
-    USER_LOCATION  = res2.json()['permissions'][0]['user']['country']
-    res2 = res2.json()['permissions'][0]['user']['name']
+    if 'country' in res2.json()['permissions'][0]['user']:
+        userlocationtemp = res2.json()['permissions'][0]['user']['country']
+        USER_LOCATION = str(userlocationtemp)
+    else:
+        USER_LOCATION = "undefined"
+    if 'name' in res2.json()['permissions'][0]['user']:
+        usernametemp = res2.json()['permissions'][0]['user']['name']
+        USER_NAME = str(usernametemp)
+    else:
+        USER_NAME = None
+    if 'id' in res2.json()['permissions'][0]['user']:
+        useridtemp = res2.json()['permissions'][0]['user']['id']
+        USER_ID = str(useridtemp)
+    else:
+        USER_ID = None
     # res2 = res2.json()['']
     # ppi(json.dumps(res2, indent = 4, sort_keys = True))
     # res2 = res2['permissions']
     #ppi(res2)
-    BOARD_OWNER = str(res2)
+    BOARD_OWNER = str(usernametemp)
    # ppi('Board owner: ' + BOARD_OWNER)  
-    send_arguments_to_php(DB_INSERT, DB_ARGS)
+    send_arguments_to_php(DB_INSERT, DB_ARGS,CALLER_SETTINGS_ARGS)
 
 def on_open_autodarts(ws):
     global BOARD_OWNER
@@ -4375,11 +4696,15 @@ def on_message_autodarts(ws, message):
             global lobbyPlayers
             global lastMessage
             global gotcha_last_player_points
+            global indexNameMacro
             m = json.loads(message)
+            
             # ppi(json.dumps(m, indent = 4, sort_keys = True))
-  
             if m['channel'] == 'autodarts.matches':
                 data = m['data']
+                # ppi(json.dumps(data, indent = 4, sort_keys = True))
+                if indexNameMacro == {}:
+                    map_playerIndex_to_name(data, False)
 
                 # ppi(json.dumps(data, indent = 4, sort_keys = True))
                 # if m['topic'].endswith('game-events'):
@@ -4395,7 +4720,7 @@ def on_message_autodarts(ws, message):
 
                 if lastMessage != data and currentMatch != None and 'id' in data and data['id'] == currentMatch:
                     lastMessage = data
-
+                    
                     # ppi(json.dumps(data, indent = 4, sort_keys = True))
 
                     # process_common(data)
@@ -4405,7 +4730,7 @@ def on_message_autodarts(ws, message):
                     if variant == 'Bull-off':
                         process_bulling(data)
 
-                    elif variant == 'X01':
+                    elif variant == 'X01' or variant == 'Random Checkout':
                         process_match_x01(data)
                         
                     elif variant == 'Cricket':
@@ -4473,6 +4798,7 @@ def on_message_autodarts(ws, message):
                         currentMatch = None
 
                         ppi('Stop Listen to lobby: ' + lobby_id)
+                        ppi('I left the lobby, message from autodarts.users')
                         paramsUnsubscribeLobbyEvents = {
                                 "channel": "autodarts.lobbies",
                                 "type": "unsubscribe",
@@ -4496,10 +4822,13 @@ def on_message_autodarts(ws, message):
                 
                 if 'event' in data:
                     if data['event'] == 'start':
+                        # ppi(json.dumps(data, indent = 4, sort_keys = True))
+                        map_playerIndex_to_name(data, True)
                         pass
 
                     elif data['event'] == 'finish' or data['event'] == 'delete':
                         ppi('Stop listening to lobby: ' + m['id'])
+                        ppi('Lobby finished or deleted, message from autodarts.lobbies')
                         paramsUnsubscribeLobbyEvents = {
                             "type": "unsubscribe",
                             "channel": "autodarts.lobbies",
@@ -4513,7 +4842,9 @@ def on_message_autodarts(ws, message):
                         }
                         ws.send(json.dumps(paramsUnsubscribeLobbyEvents))
                         lobbyPlayers = []
+                        ppi ("Player index reset")
                         gotcha_last_player_points=[]
+                        indexNameMacro = {}
                         # currentMatch = None
                         if play_sound_effect("ambient_lobby_out", False, mod = False):
                             mirror_sounds()
@@ -4530,6 +4861,7 @@ def on_message_autodarts(ws, message):
                         lobby_id = data['id']
 
                         ppi('Stop Listen to lobby: ' + lobby_id)
+                        ppi('I left the lobby, message from autodarts.lobbies')
                         paramsUnsubscribeLobbyEvents = {
                                 "channel": "autodarts.lobbies",
                                 "type": "unsubscribe",
@@ -4619,6 +4951,33 @@ def on_message_autodarts(ws, message):
 
     threading.Thread(target=process).start()
 
+def map_playerIndex_to_name(msg,lobby):
+    global indexNameMacro
+    if lobby == True:
+        if msg != None and 'body' in msg:
+            playerAmount = len(msg['body']['players'])
+            if playerAmount > 0:
+                for i in range(0, playerAmount):
+                    playerName = msg['body']['players'][i]['name']
+                    # playerIndex = msg['players'][i]['index']
+                    if playerName != None:
+                        playerName = str(playerName).lower()
+                        indexNameMacro[playerName] = i
+                    else:
+                        indexNameMacro[i] = None
+    else:
+        if msg != None and 'players' in msg:
+            playerAmount = len(msg['players'])
+            if playerAmount > 0:
+                for i in range(0, playerAmount):
+                    playerName = msg['players'][i]['name']
+                    # playerIndex = msg['players'][i]['index']
+                    if playerName != None:
+                        playerName = str(playerName).lower()
+                        indexNameMacro[playerName] = i
+                    else:
+                        indexNameMacro[i] = None
+
 def on_close_autodarts(ws, close_status_code, close_msg):
     try:
         ppi("Websocket [" + str(ws.url) + "] closed! " + str(close_msg) + " - " + str(close_status_code))
@@ -4655,6 +5014,7 @@ def handle_connect():
     ppi('NEW CLIENT CONNECTED: ' + cid)
     if cid not in webCallerSyncs or webCallerSyncs[cid] is None:
         webCallerSyncs[cid] = queue.Queue()
+    ppi (webCallerSyncs)
     
     
 
@@ -4814,39 +5174,39 @@ def handle_message(message):
 
         elif type(message) == dict:
             
-            
-            event = message['event']
+            if 'event' in message:
+                event = message['event']
 
-            if event == 'sync' and caller is not None:                    
-                if 'parted' in message:
-                    webCallerSyncs[cid].put(message['exists'])
+                if event == 'sync' and caller is not None:                    
+                    if 'parted' in message:
+                        webCallerSyncs[cid].put(message['exists'])
 
-                    partsNeeded = message['parted']
-                    
-                    existing = []
-                    if webCallerSyncs[cid].qsize() == partsNeeded:
-                        while partsNeeded > 0:
-                            partsNeeded -= 1
-                            existing += webCallerSyncs[cid].get()
-                        webCallerSyncs[cid].task_done()
+                        partsNeeded = message['parted']
+                        
+                        existing = []
+                        if webCallerSyncs[cid].qsize() == partsNeeded:
+                            while partsNeeded > 0:
+                                partsNeeded -= 1
+                                existing += webCallerSyncs[cid].get()
+                            webCallerSyncs[cid].task_done()
+                        else:
+                            return
+                        
+                        new = []
+                        for key, value in caller.items():
+                            for sound_file in value:
+                                base_name = os.path.basename(sound_file)
+                                if base_name not in existing:
+                                    with open(sound_file, 'rb') as file:
+                                        encoded_file = (base64.b64encode(file.read())).decode('ascii')
+                                    new.append({"name": base_name, "path": quote(sound_file, safe=""), "file": encoded_file})
+
+                        unicast(cid, {"exists": new})
+
                     else:
-                        return
-                    
-                    new = []
-                    for key, value in caller.items():
-                        for sound_file in value:
-                            base_name = os.path.basename(sound_file)
-                            if base_name not in existing:
-                                with open(sound_file, 'rb') as file:
-                                    encoded_file = (base64.b64encode(file.read())).decode('ascii')
-                                new.append({"name": base_name, "path": quote(sound_file, safe=""), "file": encoded_file})
-
-                    unicast(cid, {"exists": new})
-
-                else:
-                    new = [{"name": os.path.basename(sound_file), "path": quote(sound_file, safe=""), "file": (base64.b64encode(open(sound_file, 'rb').read())).decode('ascii')} for key, value in caller.items() for sound_file in value if os.path.basename(sound_file) not in message['exists']]
-                    message['exists'] = new
-                    unicast(cid, message)
+                        new = [{"name": os.path.basename(sound_file), "path": quote(sound_file, safe=""), "file": (base64.b64encode(open(sound_file, 'rb').read())).decode('ascii')} for key, value in caller.items() for sound_file in value if os.path.basename(sound_file) not in message['exists']]
+                        message['exists'] = new
+                        unicast(cid, message)
             
             
 
@@ -4858,12 +5218,29 @@ def handle_message(message):
                 ppi('WLED connected')
                 EXT_WLED = True
                 DB_ARGS['wled_version'] = message['version']
-                send_arguments_to_php(DB_INSERT, DB_ARGS)
+
+                if 'settings' in message:
+                    try:
+                        wledsettings_json = json.dumps(message['settings'])
+                        # ppi(f"Processed WLED settings:\n{wledsettings_json}")
+                        DB_ARGS['wled_settings'] = wledsettings_json  # WLED-Settings hinzufügen
+                        # ppi(f"DB_ARGS: {DB_ARGS}")
+                    except Exception as e:
+                        ppe("Failed to process WLED settings.", e)
+                send_arguments_to_php(DB_INSERT, DB_ARGS, CALLER_SETTINGS_ARGS)
             elif message['status'] == 'Pixel connected':
                 ppi('Pixel connected')
                 EXT_PIXEL = True
                 DB_ARGS['pixel_version'] = message['version']
-                send_arguments_to_php(DB_INSERT, DB_ARGS)
+                if 'settings' in message:
+                    try:
+                        pixelsettings_json = json.dumps(message['settings'])
+                        # ppi(f"Processed WLED settings:\n{wledsettings_json}")
+                        DB_ARGS['pixel_settings'] = pixelsettings_json  # WLED-Settings hinzufügen
+                        # ppi(f"DB_ARGS: {DB_ARGS}")
+                    except Exception as e:
+                        ppe("Failed to process WLED settings.", e)
+                send_arguments_to_php(DB_INSERT, DB_ARGS, CALLER_SETTINGS_ARGS)
 
 @app.route('/')
 def index():
@@ -4895,25 +5272,70 @@ def sound(file_id):
     file_name = os.path.basename(file_path)
     return send_from_directory(directory, file_name)
 
-def send_arguments_to_php(url, args):
+def send_arguments_to_php(url, args_version, args_caller):
     global EXT_WLED
     global EXT_PIXEL
     global BOARD_OWNER
+    global USER_ID
+    global USER_NAME
     global USER_LOCATION
-    args['darts_wled'] = EXT_WLED
-    args['darts_pixel'] = EXT_PIXEL
-    args['userID'] = BOARD_OWNER
-    args['location'] = USER_LOCATION
-    # ppi(args)
+    args_version['darts_wled'] = EXT_WLED
+    args_version['darts_pixel'] = EXT_PIXEL
+    args_version['userID'] = USER_NAME
+    args_version['location'] = USER_LOCATION
+    # ppi(json.dumps(args_caller, indent=4, sort_keys=True))
 
-    try:
-        response = requests.post(url, data=args,verify=False)
-        if response.status_code == 200:
-            ppi("User stats sent successfully")
-        else:
-            ppi(f"Failed to send arguments. Status code: {response.status_code}")
-    except Exception as e:
-        ppi(f"An error occurred: {e}")
+    # ppi(f"Sending args_version: {args_version}")
+    # ppi(f"Sending args_caller: {args_caller}")
+    # args_caller = json.dumps(args_caller)
+    
+    # URL-Validierung
+    if not url.startswith("http"):
+        ppi(f"Invalid URL: {url}")
+        return
+    
+    if not args_version or not args_caller:
+        ppi("Error: args_version or args_caller is empty!")
+        return
+    if USER_NAME is not None:
+        try:
+            # Debugging: Ausgabe der Anfrage-Details
+            # ppi(f"Debugging POST Request:")
+            # ppi(f"URL: {url}")
+            # ppi(f"Data: {json.dumps({**args_version, **args_caller})}")
+    
+            # POST-Anfrage mit JSON und Formulardaten senden
+            response = requests.post(
+                url,
+                data={**args_version, **args_caller},  # Kombiniere beide Dictionaries
+                verify=False
+            )
+            if response.status_code == 200:
+                if DEBUG == 1:
+                    ppi("User stats sent successfully")
+                    ppi(f"Response: {response.text}")  # Antwortinhalt ausgeben
+            else:
+                if DEBUG == 1:
+                    ppi(f"Failed to send arguments. Status code: {response.status_code}")
+                    ppi(f"Response: {response.text}")  # Antwortinhalt ausgeben
+        except Exception as e:
+            if DEBUG == 1:
+                ppi(f"An error occurred: {e}")
+    else:
+        if DEBUG == 1:
+            ppi("User stats not sent, as user-name is unknown")
+    # ppi(args)
+    # if USER_NAME != None:
+    #     try:
+    #         response = requests.post(url, data=args_version,json=args_caller,verify=False)
+    #         if response.status_code == 200:
+    #             ppi("User stats sent successfully")
+    #         else:
+    #             ppi(f"Failed to send arguments. Status code: {response.status_code}")
+    #     except Exception as e:
+    #         ppi(f"An error occurred: {e}")
+    # else:
+    #     ppi("User stats not sent, as user-name is unknown")
 
 
 
@@ -4970,6 +5392,38 @@ if __name__ == "__main__":
     global POSSIBLE_CHECKOUT_CALL
     global POSSIBLE_CHECKOUT_CALL_YOURSELF_ONLY
     
+    CALLER_SETTINGS_ARGS = {
+        'media_path': str(args['media_path']),
+        'media_path_shared': str(args['media_path_shared']),
+        'caller': args['caller'],
+        'caller_volume': args['caller_volume'],
+        'random_caller': args['random_caller'],
+        'random_caller_language': args['random_caller_language'],
+        'random_caller_gender': args['random_caller_gender'],
+        'call_current_player': args['call_current_player'],
+        'call_bot_actions': args['call_bot_actions'],
+        'call_every_dart': args['call_every_dart'],
+        'call_every_dart_total_score': args['call_every_dart_total_score'],
+        'possible_checkout_call': args['possible_checkout_call'],
+        'possible_checkout_call_yourself_only': args['possible_checkout_call_yourself_only'],
+        'ambient_sounds': args['ambient_sounds'],
+        'ambient_sounds_after_calls': args['ambient_sounds_after_calls'],
+        'downloads': args['downloads'],
+        'downloads_language': args['downloads_language'],
+        'downloads_name': args['downloads_name'],
+        'remove_old_voice_packs': args['remove_old_voice_packs'],
+        'background_audio_volume': args['background_audio_volume'],
+        'local_playback': args['local_playback'],
+        'web_caller_disable_https': args['web_caller_disable_https'],
+        'host_port': args['host_port'],
+        'debug': args['debug'],
+        'cert_check': args['cert_check'],
+        'mixer_frequency': args['mixer_frequency'],
+        'mixer_size': args['mixer_size'],
+        'mixer_channels': args['mixer_channels'],
+        'mixer_buffersize': args['mixer_buffersize']
+    }
+
     AUTODART_USER_EMAIL = args['autodarts_email']                          
     AUTODART_USER_PASSWORD = args['autodarts_password']              
     AUTODART_USER_BOARD_ID = args['autodarts_board_id']        
@@ -5090,6 +5544,15 @@ if __name__ == "__main__":
 
     global gotcha_last_player_points
     gotcha_last_player_points = []
+
+    global oneGoodDart
+    oneGoodDart = False
+
+    global bermudaBusted
+    bermudaBusted = ''
+
+    global indexNameMacro
+    indexNameMacro = {}
 
     DB_ARGS = {
     "userID": BOARD_OWNER,

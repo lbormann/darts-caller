@@ -1,5 +1,38 @@
-## 2.17.5
+## 2.18.6
+- implementet more detailes user Stats to debug faster
+    - no personal data will be stored
+- prepare for new soundpacks and languages
+    - new variable voices
+    - RU, IT will come in the future
+
+## 2.18.5
+- add messages for Debug Stop Listening during the match
+- implement Broadcast messages for new Extension Darts-Stats
+- change client secret and ID implementation
+- Bugfix Board IP
+- Bugfix WS Message failed
+- USER NEED TO UPDATE TO GET CALLER RUNNING IN THE FUTURE
+
+## 2.17.13
+- Bugfix playercolors Turnament mode
+- Bugfix Random Checkout
+
+
+## 2.17.11
+- forward Player Index to extensions
+    - Useable for Player Colors in WLED extension. WLED update required.
+
+## 2.17.10
+- Implement Tactics
+
+
+## 2.17.8
+- Bermuda: if you dont hit target, Broadcast Busted for extensions
+
+## 2.17.6
 - Soundfile Updates and Hoster change
+- Gotscha Bugfix
+
 
 ## 2.17.4
  - Count Up implemented
