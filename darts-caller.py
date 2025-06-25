@@ -26,8 +26,8 @@ import requests
 import websocket
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-# from autodarts_keycloak_client import AutodartsKeycloakClient
-from autodarts_nodejs_keycloak_client import AutodartsKeycloakClient
+from autodarts_keycloak_client import AutodartsKeycloakClient
+# from autodarts_nodejs_keycloak_client import AutodartsKeycloakClient
 from flask import Flask, render_template, send_from_directory, request
 from flask_socketio import SocketIO
 from werkzeug.serving import make_ssl_devcert
@@ -111,19 +111,19 @@ CALLER_SETTINGS_ARGS = {}
 
 
 # Prüfe, ob das Programm als One-File-Build ausgeführt wird
-# if hasattr(sys, "_MEIPASS"):
-#     # Pfad zur extrahierten .env-Datei
-#     env_path = Path(sys._MEIPASS) / ".env/.env"
-# else:
-#     # Lokaler Pfad für Entwicklungsumgebungen
-#     env_path = Path(".env")
-# load_dotenv(dotenv_path=env_path)
+if hasattr(sys, "_MEIPASS"):
+    # Pfad zur extrahierten .env-Datei
+    env_path = Path(sys._MEIPASS) / ".env/.env"
+else:
+    # Lokaler Pfad für Entwicklungsumgebungen
+    env_path = Path(".env")
+load_dotenv(dotenv_path=env_path)
 
-# client_id = os.getenv("AUTODARTS_CLIENT_ID")
-# client_secret = os.getenv("AUTODARTS_CLIENT_SECRET")
-# AUTODARTS_CLIENT_ID = client_id
-# AUTODARTS_REALM_NAME = 'autodarts'
-# AUTODARTS_CLIENT_SECRET = client_secret
+client_id = os.getenv("AUTODARTS_CLIENT_ID")
+client_secret = os.getenv("AUTODARTS_CLIENT_SECRET")
+AUTODARTS_CLIENT_ID = client_id
+AUTODARTS_REALM_NAME = 'autodarts'
+AUTODARTS_CLIENT_SECRET = client_secret
 
 AUTODARTS_URL = 'https://autodarts.io'
 AUTODARTS_AUTH_URL = 'https://login.autodarts.io/'
@@ -233,6 +233,7 @@ CALLER_LANGUAGES = {
     4: ['german', 'de', ],
     5: ['spanish', 'es', ],
     6: ['dutch', 'nl', ],
+    7: ['italian', 'it', ],
 }
 CALLER_GENDERS = {
     1: ['female', 'f'],
@@ -285,9 +286,140 @@ CALLER_PROFILES = {
     'en-GB-Arthur-Male': ('https://darts-downloads.peschi.org/soundfiles/en-GB-Arthur-Male-v4.zip', 4),
 
     #NEXT GEN
+    #amazon Polly
+    # -- nl-NL --
+    'V2-nl-NL-Laura-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/nl-NL-Laura-Female.zip', 1),
+    # -- fr-FR --
+    'V2-fr-FR-Remi-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/fr-FR-Remi-Male.zip', 1), 
+    'V2-fr-FR-Lea-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/fr-FR-Lea-Female.zip', 1), 
+    # -- es-ES --
+    'V2-es-ES-Lucia-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/es-ES-Lucia-Female.zip', 1), 
+    'V2-es-ES-Sergio-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/es-ES-Sergio-Male.zip', 1), 
+    # -- de-AT --
+    'V2-de-AT-Hannah-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/de-AT-Hannah-Female.zip', 1),
+    # -- de-DE --
+    'V2-de-DE-Vicki-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/de-DE-Vicki-Female.zip', 1),  
+    'V2-de-DE-Daniel-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/de-DE-Daniel-Male.zip', 1),
+    # -- en-US --
+    'V2-en-US-Ivy-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Ivy-Female.zip', 1),
+    'V2-en-US-Joey-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Joey-Male.zip', 1),
+    'V2-en-US-Joanna-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Joanna-Female.zip', 1),
+    'V2-en-US-Matthew-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Matthew-Male.zip', 1),
+    'V2-en-US-Danielle-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Danielle-Female.zip', 1),
+    'V2-en-US-Kimberly-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Kimberly-Female.zip', 1),
+    'V2-en-US-Ruth-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Ruth-Female.zip', 1),
+    'V2-en-US-Salli-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Salli-Female.zip', 1),
+    'V2-en-US-Kevin-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Kevin-Male.zip', 1),
+    'V2-en-US-Justin-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Justin-Male.zip', 1),
+    'V2-en-US-Stephen-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Stephen-Male.zip', 1),  
+    'V2-en-US-Kendra-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Kendra-Female.zip', 1),
+    'V2-en-US-Gregory-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Gregory-Male.zip', 1),
     # -- en-GB --
-    'en-GB-ash-MALE': ('https://darts-downloads.peschi.org/soundfiles/en-GB-ash-MALE.zip', 1),
-    'en-GB-ballad-MALE': ('https://darts-downloads.peschi.org/soundfiles/en-GB-ballad-MALE.zip', 1),
+    'V2-en-GB-Amy-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-GB-Amy-Female.zip', 1),
+    'V2-en-GB-Arthur-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-GB-Arthur-Male.zip', 1),
+    'V2-en-GB-Brian-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-GB-Brian-Male.zip', 1),
+    'V2-en-GB-Emma-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-GB-Emma-Female.zip', 1),
+    # ------------------------------------------------------------------------------------------------
+    
+    
+    #google
+    # -- de-DE --	
+    'de-DE-Chirp3-HD-Achird-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/de-DE-Chirp3-HD-Achird-MALE.zip', 1),
+    'de-DE-Chirp3-HD-Algenib-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/de-DE-Chirp3-HD-Algenib-MALE.zip', 1),
+    'de-DE-Chirp3-HD-Alnilam-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/de-DE-Chirp3-HD-Alnilam-MALE.zip', 1),
+    'de-DE-Chirp3-HD-Aoede-FEMALE': ('https://darts-downloads.peschi.org/soundfiles/google/de-DE-Chirp3-HD-Aoede-FEMALE.zip', 1),
+    'de-DE-Chirp3-HD-Enceladus-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/de-DE-Chirp3-HD-Enceladus-MALE.zip', 1),
+    'de-DE-Chirp3-HD-Puck-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/de-DE-Chirp3-HD-Puck-MALE.zip', 1),
+    'de-DE-Chirp3-HD-Schedar-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/de-DE-Chirp3-HD-Schedar-MALE.zip', 1),
+    # -- en-GB --
+    'en-GB-Chirp3-HD-Achird-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/en-GB-Chirp3-HD-Achird-MALE.zip', 1),
+    'en-GB-Chirp3-HD-Algenib-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/en-GB-Chirp3-HD-Algenib-MALE.zip', 1),
+    'en-GB-Chirp3-HD-Alnilam-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/en-GB-Chirp3-HD-Alnilam-MALE.zip', 1),
+    'en-GB-Chirp3-HD-Enceladus-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/en-GB-Chirp3-HD-Enceladus-MALE.zip', 1),
+    'en-GB-Chirp3-HD-Puck-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/en-GB-Chirp3-HD-Puck-MALE.zip', 1),
+    # -- en-US --
+    'en-US-Chirp3-HD-Achird-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/en-US-Chirp3-HD-Achird-MALE.zip', 1),
+    'en-US-Chirp3-HD-Algenib-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/en-US-Chirp3-HD-Algenib-MALE.zip', 1),
+    'en-US-Chirp3-HD-Alnilam-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/en-US-Chirp3-HD-Alnilam-MALE.zip', 1),
+    'en-US-Chirp3-HD-Enceladus-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/en-US-Chirp3-HD-Enceladus-MALE.zip', 1),
+    'en-US-Chirp3-HD-Puck-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/en-US-Chirp3-HD-Puck-MALE.zip', 1),
+    # -- es-ES --
+    'es-ES-Chirp3-HD-Achird-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/es-ES-Chirp3-HD-Achird-MALE.zip', 1),
+    'es-ES-Chirp3-HD-Algenib-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/es-ES-Chirp3-HD-Algenib-MALE.zip', 1),
+    'es-ES-Chirp3-HD-Alnilam-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/es-ES-Chirp3-HD-Alnilam-MALE.zip', 1),
+    'es-ES-Chirp3-HD-Enceladus-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/es-ES-Chirp3-HD-Enceladus-MALE.zip', 1),
+    'es-ES-Chirp3-HD-Puck-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/es-ES-Chirp3-HD-Puck-MALE.zip', 1),
+    # -- fr-FR --
+    'fr-FR-Chirp3-HD-Achird-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/fr-FR-Chirp3-HD-Achird-MALE.zip', 1),
+    'fr-FR-Chirp3-HD-Algenib-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/fr-FR-Chirp3-HD-Algenib-MALE.zip', 1),
+    'fr-FR-Chirp3-HD-Alnilam-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/fr-FR-Chirp3-HD-Alnilam-MALE.zip', 1),
+    'fr-FR-Chirp3-HD-Enceladus-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/fr-FR-Chirp3-HD-Enceladus-MALE.zip', 1),
+    'fr-FR-Chirp3-HD-Puck-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/fr-FR-Chirp3-HD-Puck-MALE.zip', 1),
+    # -- it-IT --
+    'it-IT-Chirp3-HD-Achird-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/it-IT-Chirp3-HD-Achird-MALE.zip', 1),
+    'it-IT-Chirp3-HD-Enceladus-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/it-IT-Chirp3-HD-Enceladus-MALE.zip', 1),
+    'it-IT-Chirp3-HD-Puck-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/it-IT-Chirp3-HD-Puck-MALE.zip', 1),
+    # -- nl-NL --
+    'nl-NL-Chirp3-HD-Achird-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/fr-FR-Chirp3-HD-Achird-MALE.zip', 1),
+    'nl-NL-Chirp3-HD-Algenib-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/fr-FR-Chirp3-HD-Algenib-MALE.zip', 1),
+    'nl-NL-Chirp3-HD-Alnilam-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/fr-FR-Chirp3-HD-Alnilam-MALE.zip', 1),
+    'nl-NL-Chirp3-HD-Enceladus-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/fr-FR-Chirp3-HD-Enceladus-MALE.zip', 1),
+    'nl-NL-Chirp3-HD-Puck-MALE': ('https://darts-downloads.peschi.org/soundfiles/google/fr-FR-Chirp3-HD-Puck-MALE.zip', 1),
+    # -- ru-RU --
+    'ru-RU-Chirp3-HD-Aoede-FEMALE': ('https://darts-downloads.peschi.org/soundfiles/google/ru-RU-Chirp3-HD-Aoede-FEMALE.zip', 1),
+    # ------------------------------------------------------------------------------------------------
+
+    #openai
+    # -- de-DE --
+    'de-DE-ash-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/de-DE-ash-MALE.zip', 1),
+    'de-DE-ballad-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/de-DE-ballad-MALE.zip', 1),
+    'de-DE-coral-FEMALE': ('https://darts-downloads.peschi.org/soundfiles/openai/de-DE-coral-FEMALE.zip', 1),
+    'de-DE-onyx-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/de-DE-onyx-MALE.zip', 1),
+    'de-DE-sage-FEMALE': ('https://darts-downloads.peschi.org/soundfiles/openai/de-DE-sage-FEMALE.zip', 1),
+    # -- en-GB --
+    'en-GB-ash-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/en-GB-ash-MALE.zip', 1),
+    'en-GB-ballad-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/en-GB-ballad-MALE.zip', 1),
+    'en-GB-coral-FEMALE': ('https://darts-downloads.peschi.org/soundfiles/openai/en-GB-coral-FEMALE.zip', 1),
+    'en-GB-onyx-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/en-GB-onyx-MALE.zip', 1),
+    'en-GB-sage-FEMALE': ('https://darts-downloads.peschi.org/soundfiles/openai/en-GB-sage-FEMALE.zip', 1),
+    'en-GB-verse-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/en-GB-verse-MALE.zip', 1),
+    # -- en-US --
+    'en-US-ash-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/en-US-ash-MALE.zip', 1),
+    'en-US-ballad-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/en-US-ballad-MALE.zip', 1),
+    'en-US-coral-FEMALE': ('https://darts-downloads.peschi.org/soundfiles/openai/en-US-coral-FEMALE.zip', 1),
+    'en-US-onyx-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/en-US-onyx-MALE.zip', 1),
+    'en-US-sage-FEMALE': ('https://darts-downloads.peschi.org/soundfiles/openai/en-US-sage-FEMALE.zip', 1),
+    # -- es-ES --
+    'es-ES-ash-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/es-ES-ash-MALE.zip', 1),
+    'es-ES-ballad-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/es-ES-ballad-MALE.zip', 1),
+    'es-ES-coral-FEMALE': ('https://darts-downloads.peschi.org/soundfiles/openai/es-ES-coral-FEMALE.zip', 1),
+    'es-ES-onyx-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/es-ES-onyx-MALE.zip', 1),
+    'es-ES-sage-FEMALE': ('https://darts-downloads.peschi.org/soundfiles/openai/es-ES-sage-FEMALE.zip', 1),
+    # -- fr-FR --
+    'fr-FR-ash-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/es-ES-ash-MALE.zip', 1),
+    'fr-FR-ballad-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/es-ES-ballad-MALE.zip', 1),
+    'fr-FR-coral-FEMALE': ('https://darts-downloads.peschi.org/soundfiles/openai/es-ES-coral-FEMALE.zip', 1),
+    'es-ES-onyx-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/es-ES-onyx-MALE.zip', 1),
+    'es-ES-sage-FEMALE': ('https://darts-downloads.peschi.org/soundfiles/openai/es-ES-sage-FEMALE.zip', 1),
+    # -- it-IT --
+    'it-IT-ash-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/it-IT-ash-MALE.zip', 1),
+    'it-IT-ballad-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/it-IT-ballad-MALE.zip', 1),
+    'it-IT-coral-FEMALE': ('https://darts-downloads.peschi.org/soundfiles/openai/it-IT-coral-FEMALE.zip', 1),
+    'it-IT-onyx-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/it-IT-onyx-MALE.zip', 1),
+    'it-IT-sage-FEMALE': ('https://darts-downloads.peschi.org/soundfiles/openai/it-IT-sage-FEMALE.zip', 1),
+    # -- nl-NL --
+    'nl-NL-ash-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/nl-NL-ash-MALE.zip', 1),
+    'nl-NL-ballad-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/nl-NL-ballad-MALE.zip', 1),
+    'nl-NL-coral-FEMALE': ('https://darts-downloads.peschi.org/soundfiles/openai/nl-NL-coral-FEMALE.zip', 1),
+    'nl-NL-onyx-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/nl-NL-onyx-MALE.zip', 1),
+    'nl-NL-sage-FEMALE': ('https://darts-downloads.peschi.org/soundfiles/openai/nl-NL-sage-FEMALE.zip', 1),
+    # -- ru-RU --
+    'ru-RU-ash-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/ru-RU-ash-MALE.zip', 1),
+    'ru-RU-ballad-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/ru-RU-ballad-MALE.zip', 1),
+    'ru-RU-coral-FEMALE': ('https://darts-downloads.peschi.org/soundfiles/openai/ru-RU-coral-FEMALE.zip', 1),
+    'ru-RU-onyx-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/ru-RU-onyx-MALE.zip', 1),
+    'ru-RU-sage-FEMALE': ('https://darts-downloads.peschi.org/soundfiles/openai/ru-RU-sage-FEMALE.zip', 1),
+    # ------------------------------------------------------------------------------------------------
 
 
     #------------------------------------------------------------------------------------------------
@@ -985,7 +1117,7 @@ def get_player_average(user_id, variant = 'x01', limit = '100'):
     # https://api.autodarts.io/as/v0/users/<user-id>/stats/<variant>?limit=<limit>
     try:
         # res = requests.get(AUTODARTS_USERS_URL + user_id + "/stats/" + variant + "?limit=" + limit, headers={'Authorization': 'Bearer ' + kc.access_token})
-        res = requests.get(AUTODARTS_USERS_URL + user_id + "/stats/" + variant + "?limit=" + limit, headers = {'Authorization': f'Bearer {keycloak_client.access_token}'})
+        res = requests.get(AUTODARTS_USERS_URL + user_id + "/stats/" + variant + "?limit=" + limit, headers = {'Authorization': f'Bearer {kc.access_token}'})
         m = res.json()
         # ppi(m)
         return m['average']['average']
@@ -1003,7 +1135,7 @@ def start_match(lobbyId):
     try:
         global currentMatch
         if currentMatch != None:
-            res = requests.post(AUTODARTS_LOBBIES_URL + lobbyId + "/start", headers = {'Authorization': f'Bearer {keycloak_client.access_token}'})
+            res = requests.post(AUTODARTS_LOBBIES_URL + lobbyId + "/start", headers = {'Authorization': f'Bearer {kc.access_token}'})
             ppi(res)
 
     except Exception as e:
@@ -1019,7 +1151,7 @@ def next_throw():
     try:
         global currentMatch
         if currentMatch != None:
-            requests.post(AUTODARTS_MATCHES_URL + currentMatch + "/players/next", headers = {'Authorization': f'Bearer {keycloak_client.access_token}'})
+            requests.post(AUTODARTS_MATCHES_URL + currentMatch + "/players/next", headers = {'Authorization': f'Bearer {kc.access_token}'})
 
     except Exception as e:
         ppe('Next throw failed', e)
@@ -1034,7 +1166,7 @@ def undo_throw():
     try:
         global currentMatch
         if currentMatch != None:
-            requests.post(AUTODARTS_MATCHES_URL + currentMatch + "/undo", headers = {'Authorization': f'Bearer {keycloak_client.access_token}'})
+            requests.post(AUTODARTS_MATCHES_URL + currentMatch + "/undo", headers = {'Authorization': f'Bearer {kc.access_token}'})
     except Exception as e:
         ppe('Undo throw failed', e)
 
@@ -1083,7 +1215,7 @@ def correct_throw(throw_indices, score):
 
         # ppi(f'Data: {data}')
         if lastCorrectThrow == None or lastCorrectThrow != data:
-            requests.patch(AUTODARTS_MATCHES_URL + currentMatch + "/throws", json=data, headers = {'Authorization': f'Bearer {keycloak_client.access_token}'})
+            requests.patch(AUTODARTS_MATCHES_URL + currentMatch + "/throws", json=data, headers = {'Authorization': f'Bearer {kc.access_token}'})
             lastCorrectThrow = data
         else:
             lastCorrectThrow = None 
@@ -1102,7 +1234,7 @@ def next_game():
     try:
         global currentMatch
         if currentMatch != None:
-            requests.post(AUTODARTS_MATCHES_URL + currentMatch + "/games/next", headers = {'Authorization': f'Bearer {keycloak_client.access_token}'})
+            requests.post(AUTODARTS_MATCHES_URL + currentMatch + "/games/next", headers = {'Authorization': f'Bearer {kc.access_token}'})
 
     except Exception as e:
         ppe('Next game failed', e)
@@ -1114,7 +1246,7 @@ def receive_local_board_address():
         global boardManagerAddress
 
         if boardManagerAddress == None:
-            res = requests.get(AUTODARTS_BOARDS_URL + AUTODART_USER_BOARD_ID, headers = {'Authorization': f'Bearer {keycloak_client.access_token}'})
+            res = requests.get(AUTODARTS_BOARDS_URL + AUTODART_USER_BOARD_ID, headers = {'Authorization': f'Bearer {kc.access_token}'})
             board_ip = res.json()['ip']
             if board_ip != None and board_ip != '':  
                 boardManagerAddress = board_ip
@@ -1173,7 +1305,7 @@ def listen_to_match(m, ws):
         # get
         # https://api.autodarts.io/gs/v0/matches/<match-id>
         try:
-            res = requests.get(AUTODARTS_MATCHES_URL + currentMatch, headers = {'Authorization': f'Bearer {keycloak_client.access_token}'})
+            res = requests.get(AUTODARTS_MATCHES_URL + currentMatch, headers = {'Authorization': f'Bearer {kc.access_token}'})
             m = res.json()
             ppi(json.dumps(m, indent = 4, sort_keys = True))
 
@@ -4644,7 +4776,7 @@ def connect_autodarts():
     global USER_ID
     global USER_NAME
 
-    res2 = requests.get(AUTODARTS_BOARDS_URL + AUTODART_USER_BOARD_ID, headers = {'Authorization': f'Bearer {keycloak_client.access_token}'})
+    res2 = requests.get(AUTODARTS_BOARDS_URL + AUTODART_USER_BOARD_ID, headers = {'Authorization': f'Bearer {kc.access_token}'})
     # ppi(json.dumps(res2.json(), indent = 4, sort_keys = True))
     if 'country' in res2.json()['permissions'][0]['user']:
         userlocationtemp = res2.json()['permissions'][0]['user']['country']
@@ -4672,7 +4804,7 @@ def connect_autodarts():
     def process(*args):
         websocket.enableTrace(False)
         ws = websocket.WebSocketApp(AUTODARTS_WEBSOCKET_URL,
-                                    header={'Authorization': f'Bearer {keycloak_client.access_token}'},
+                                    header={'Authorization': f'Bearer {kc.access_token}'},
                                     on_open = on_open_autodarts,
                                     on_message = on_message_autodarts,
                                     on_error = on_error_autodarts,
@@ -4691,7 +4823,7 @@ def on_open_autodarts(ws):
     # get
     # https://api.autodarts.io/gs/v0/matches/
     try:
-        res = requests.get(AUTODARTS_MATCHES_URL, headers = {'Authorization': f'Bearer {keycloak_client.access_token}'})
+        res = requests.get(AUTODARTS_MATCHES_URL, headers = {'Authorization': f'Bearer {kc.access_token}'})
         res = res.json()
         # ppi(json.dumps(res, indent = 4, sort_keys = True))
 
@@ -4732,7 +4864,7 @@ def on_open_autodarts(ws):
         paramsSubscribeUserEvents = {
             "channel": "autodarts.users",
             "type": "subscribe",
-            "topic": keycloak_client.user_id + ".events"
+            "topic": kc.user_id + ".events"
         }
         ws.send(json.dumps(paramsSubscribeUserEvents))
 
@@ -5729,26 +5861,26 @@ if __name__ == "__main__":
         #     sys.exit()
 
         # Instanz der AutodartsKeycloakClient-Klasse erstellen
-        keycloak_client = AutodartsKeycloakClient(
-            username=AUTODART_USER_EMAIL,
-            password=AUTODART_USER_PASSWORD,
-            client_id=None,
-            client_secret=None,
-            debug=True,  # Debugging aktivieren
-            nodejs_server_url=NODEJS_SERVER_URL
-        )
-        keycloak_client.start()
+        # keycloak_client = AutodartsKeycloakClient(
+        #     username=AUTODART_USER_EMAIL,
+        #     password=AUTODART_USER_PASSWORD,
+        #     client_id=None,
+        #     client_secret=None,
+        #     debug=True,  # Debugging aktivieren
+        #     nodejs_server_url=NODEJS_SERVER_URL
+        # )
+        # keycloak_client.start()
         # ORIGINAL KEYCLOAK AUTHENTICATION
-        # kc = AutodartsKeycloakClient(username=AUTODART_USER_EMAIL, 
-        #                         password=AUTODART_USER_PASSWORD, 
-        #                         client_id=AUTODARTS_CLIENT_ID, 
-        #                         client_secret=AUTODARTS_CLIENT_SECRET,
-        #                         debug=DEBUG)                     
-        # kc.start()
+        kc = AutodartsKeycloakClient(username=AUTODART_USER_EMAIL, 
+                                password=AUTODART_USER_PASSWORD, 
+                                client_id=AUTODARTS_CLIENT_ID, 
+                                client_secret=AUTODARTS_CLIENT_SECRET,
+                                debug=DEBUG)                     
+        kc.start()
         connect_autodarts()
 
         start_webserver(DEFAULT_HOST_IP, HOST_PORT, ssl_context)
-        keycloak_client.stop()
-        # kc.stop()
+        # keycloak_client.stop()
+        kc.stop()
     except Exception as e:
         ppe("Connect failed: ", e)

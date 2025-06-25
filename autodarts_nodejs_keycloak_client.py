@@ -53,7 +53,8 @@ class AutodartsKeycloakClient:
             token = response.json()
             self.__set_token(token)
             if self.debug:
-                print("Token received:", token)
+                # print("Token received:", token)
+                print("Token received, expires in: " + str(token['expires_in']) + " seconds")
         except Exception as e:
             print(f"Failed to get token: {e}")
             self.access_token = None
@@ -71,7 +72,8 @@ class AutodartsKeycloakClient:
             token = response.json()
             self.__set_token(token)
             if self.debug:
-                print("Token refreshed:", token)
+                # print("Token refreshed:", token)
+                print("Token refreshed, expires in: " + str(token['expires_in']) + " seconds")
         except Exception as e:
             print(f"Failed to refresh token: {e}")
             self.access_token = None
@@ -86,7 +88,8 @@ class AutodartsKeycloakClient:
             response.raise_for_status()
             userinfo = response.json()
             if self.debug:
-                print("User info received:", userinfo)
+                # print("User info received:", userinfo)
+                print("User info received")
             return userinfo.get("sub")
         except Exception as e:
             print(f"Failed to get user info: {e}")

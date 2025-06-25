@@ -17,3 +17,4 @@ caller-downloads-temp
 *.php
 .stats-page
 new_calls.csv
+autodarts_nodejs_keycloak_client.py
