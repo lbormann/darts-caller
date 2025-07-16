@@ -25,13 +25,13 @@ jobs:
             # THIS IS A BETA RELEASE USING AT YOUR OWN RISK
             
             # Changes in this Release
-            - implementet more detailes user Stats to debug faster
-              - no personal data will be stored
-            - prepare for new soundpacks and languages
-              - new variable voices
-              - RU, IT will come in the future
+              - reactivate possibility to use the Caller standalone via source
+              - changed webcaller design
+              - add new soundpacks
+              - add new languages IT, RU
+              - add more realistic caller behaviour arg -CRL "--caller-real-life" (just X01)
+              - add if no playername soundkey avaialble play "player one, two....." 
             
-            ## USER NEED TO UPDATE TO GET CALLER RUNNING IN THE FUTURE
         draft: false
         prerelease: true
         

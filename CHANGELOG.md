@@ -1,3 +1,11 @@
+## 2.19.0
+- reactivate possibility to use the Caller standalone via source
+- changed webcaller design
+- add new soundpacks
+- add new languages IT, RU
+- add more realistic caller behaviour arg -CRL "--caller-real-life" (just X01)
+- add if no playername soundkey avaialble play "player one, two....." 
+
 ## 2.18.6
 - implementet more detailes user Stats to debug faster
     - no personal data will be stored

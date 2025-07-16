@@ -1,36 +1,32 @@
-body{
-    background:
-    linear-gradient(
-      rgba(0, 0, 0, 0.77), 
-      rgba(0, 0, 0, 0.77)
-    ),
-    url("/static/images/background.png");
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    background-position: center;
-    background-color: black;
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background: linear-gradient(to bottom, #1e3c72, #2a5298);
+    color: #fff;
+    min-height: 100vh;
     text-align: center;
-    background-color: black;
-    color: white;
-    padding: 0 !important;
-    margin: 0 !important;
     overflow-x: hidden;
 }
-hr{
+
+hr {
     margin: 25px;
     margin-top: 40px;
     clear: both;
-    border: 1px solid dimgray;
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
+
 input[type=range] {
     height: 25px;
     -webkit-appearance: none;
     margin: 10px 0;
     width: 90%;
 }
+
 input[type=range]:focus {
     outline: none;
 }
+
 input[type=range]::-webkit-slider-runnable-track {
     width: 90%;
     height: 5px;
@@ -41,6 +37,7 @@ input[type=range]::-webkit-slider-runnable-track {
     border-radius: 10px;
     border: 0px solid #000000;
 }
+
 input[type=range]::-webkit-slider-thumb {
     box-shadow: 0px 0px 0px #000000;
     border: 1px solid #2497E3;
@@ -52,9 +49,11 @@ input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none;
     margin-top: -7px;
 }
+
 input[type=range]:focus::-webkit-slider-runnable-track {
     background: transparent;
 }
+
 input[type=range]::-moz-range-track {
     width: 90%;
     height: 5px;
@@ -65,6 +64,7 @@ input[type=range]::-moz-range-track {
     border-radius: 10px;
     border: 0px solid #000000;
 }
+
 input[type=range]::-moz-range-thumb {
     box-shadow: 0px 0px 0px #000000;
     border: 1px solid #2497E3;
@@ -74,6 +74,7 @@ input[type=range]::-moz-range-thumb {
     background: royalblue;
     cursor: pointer;
 }
+
 input[type=range]::-ms-track {
     width: 90%;
     height: 5px;
@@ -83,18 +84,21 @@ input[type=range]::-ms-track {
     border-color: transparent;
     color: transparent;
 }
+
 input[type=range]::-ms-fill-lower {
     background: transparent;
     border: 0px solid #000000;
     border-radius: 2px;
     box-shadow: 0px 0px 0px #000000;
 }
+
 input[type=range]::-ms-fill-upper {
     background: transparent;
     border: 0px solid #000000;
     border-radius: 2px;
     box-shadow: 0px 0px 0px #000000;
 }
+
 input[type=range]::-ms-thumb {
     margin-top: 1px;
     box-shadow: 0px 0px 0px #000000;
@@ -105,13 +109,17 @@ input[type=range]::-ms-thumb {
     background: royalblue;
     cursor: pointer;
 }
+
 input[type=range]:focus::-ms-fill-lower {
     background: transparent;
 }
+
 input[type=range]:focus::-ms-fill-upper {
     background: transparent;
 }
-button, select{
+
+button,
+select {
     width: auto;
     max-width: 90%;
     opacity: 0.95;
@@ -120,54 +128,75 @@ button, select{
     padding: 20px;
     color: white;
     height: auto;
-    background-color: rgb(30, 75, 207);
+    background: linear-gradient(to right, #4CAF50, #45a049);
     font-size: 26pt;
     margin-bottom: 15px;
     cursor: pointer;
     text-align: center;
     overflow: hidden;
     text-overflow: ellipsis;
+    border: none;
+    outline: none;
 }
+
 .favorite {
     color: #F9C917;
     font-weight: bold;
 }
-option, option:hover {
-    background-color: rgb(30, 75, 207);
+
+option,
+option:hover {
+    background-color: #2a5298;
+    color: #fff;
 }
-button:hover, select:hover {
-    background-color: rgb(35, 87, 245);
+
+button:hover,
+select:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
 }
-#button-calibrate-board, #button-reset-board{
-    background-color: darkkhaki;
+
+#button-calibrate-board,
+#button-reset-board {
+    background: linear-gradient(to right, #f7e600, #f9d423);
+    color: #000;
 }
-#button-calibrate-board:hover, #button-reset-board:hover{
-    background-color: rgb(219, 212, 114);
+
+#button-calibrate-board:hover,
+#button-reset-board:hover {
+    opacity: 0.9;
 }
-#button-next{
-    background-color: rgb(13, 136, 13);
+
+#button-next {
+    background: linear-gradient(to right, #4CAF50, #45a049);
 }
-#button-next:hover{
-    background-color: rgb(19, 168, 19);
+
+#button-next:hover {
+    opacity: 0.9;
 }
-.success{
+
+.success {
     color: greenyellow;
 }
-.failure{
+
+.failure {
     color: red;
 }
-.mod-value{
+
+.mod-value {
     margin: 0 auto;
     width: 100%;
     font-size: 14pt;
     vertical-align: sub;
 }
-.ranger{
+
+.ranger {
     margin: 0 auto;
     margin-bottom: 20px !important;
 }
-.reset{
-    background: orangered;
+
+.reset {
+    background: linear-gradient(to right, #ff6b35, #f7931e);
     border: 0px;
     border-radius: 20px;
     width: auto;
@@ -175,16 +204,18 @@ button:hover, select:hover {
     color: white;
     font-size: 20pt;
 }
+
 .tooltip {
     position: relative;
     display: inline-block;
     border-bottom: 1px dotted white;
 }
+
 .tooltip .tooltiptext {
     visibility: hidden;
     width: 120px;
-    background-color: white;
-    color: black;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
     text-align: center;
     border-radius: 6px;
     padding: 5px 0;
@@ -192,26 +223,33 @@ button:hover, select:hover {
     z-index: 1;
     top: -5px;
     right: 105%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
+
 .tooltip:hover .tooltiptext {
     visibility: visible;
 }
-.area-mod{
+
+.area-mod {
     border-radius: 10px;
-    background: #003399;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
     margin: 35px auto;
-    padding: 10px;
+    padding: 20px;
     width: 85%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
-#loader{
+
+#loader {
     margin: 0 auto;
     width: 48px;
     height: 48px;
     margin-bottom: 15px;
 }
-#app-info{
+
+#app-info {
     cursor: pointer;
-    color: darkgoldenrod;
+    color: #f7e600;
     position: absolute;
     font-weight: bold;
     top: 20px;
@@ -220,57 +258,72 @@ button:hover, select:hover {
     border: none;
     outline: none;
     z-index: 999;
+    padding: 10px;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
 }
-#caller-name{
+
+#caller-name {
     margin: 0 auto;
     margin-top: 40px;
     max-width: 90%;
 }
-#caller-call{
+
+#caller-call {
     margin: 0 auto;
     margin-bottom: 40px;
     max-width: 90%;
 }
-#button-start{
+
+#button-start {
     margin-top: 50px;
-    width: 80%;  
+    width: 80%;
     font-size: 33pt;
 }
-#button-say{
+
+#button-say {
     margin-top: 15px;
     width: 48px;
     height: 48px;
     cursor: pointer;
 }
-#button-favorite{
+
+#button-favorite {
     margin-bottom: 7px;
     margin-right: 15px;
     width: 38px;
     height: 38px;
     cursor: pointer;
 }
-#button-container-mod-toggle{
+
+#button-container-mod-toggle {
     width: 48px;
     height: 48px;
     display: none;
     cursor: pointer;
 }
-#container-mod{
+
+#container-mod {
     width: 85%;
     margin: 0 auto;
     opacity: 0.95;
     display: none;
-    padding: 5px;
+    padding: 20px;
     border-radius: 20px;
-    background-color: royalblue;;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 
 /* WebRTC */
+
 ::placeholder {
     color: lightgrey;
 }
-.web-rtc-chat-message-avatar{
+
+.web-rtc-chat-message-avatar {
     width: 48px;
     height: 48px;
     max-width: 48px;
@@ -282,7 +335,8 @@ button:hover, select:hover {
     user-select: none;
     border-radius: 5px;
 }
-.web-rtc-chat-message-time{
+
+.web-rtc-chat-message-time {
     margin-left: 10px;
     font-size: 8pt;
     color: #8F8F8F;
@@ -292,7 +346,9 @@ button:hover, select:hover {
     float: right;
     clear: both;
 }
-.web-rtc-chat-message-in, .web-rtc-chat-message-file-in{
+
+.web-rtc-chat-message-in,
+.web-rtc-chat-message-file-in {
     display: block;
     float: left;
     clear: both;
@@ -304,15 +360,22 @@ button:hover, select:hover {
     border-radius: 10px;
     max-width: 96%;
 }
-.web-rtc-chat-message-file-in, .web-rtc-chat-message-file-out{
+
+.web-rtc-chat-message-file-in,
+.web-rtc-chat-message-file-out {
     height: 96%;
     width: auto;
 }
-.web-rtc-chat-message-file-in > img, .web-rtc-chat-message-file-out > img{
+
+.web-rtc-chat-message-file-in>img,
+.web-rtc-chat-message-file-out>img {
     width: auto;
     height: 96%;
 }
-.web-rtc-chat-message-out, .web-rtc-chat-message-file-out, .web-rtc-chat-instant{
+
+.web-rtc-chat-message-out,
+.web-rtc-chat-message-file-out,
+.web-rtc-chat-instant {
     display: block;
     float: right;
     clear: both;
@@ -324,93 +387,112 @@ button:hover, select:hover {
     border-radius: 10px;
     max-width: 96%;
 }
-.web-rtc-chat-instant{
+
+.web-rtc-chat-instant {
     clear: none;
     cursor: pointer;
     margin: 5px;
     font-size: 16pt;
 }
-.web-rtc-chat-message-status-good{
+
+.web-rtc-chat-message-status-good {
     display: block;
     margin: 0 auto;
     text-align: center;
     font-weight: bold;
     margin-top: 10px;
-    background-color: whitesmoke;
-    color: royalblue;
+    background: rgba(76, 175, 80, 0.9);
+    color: white;
     padding: 10px;
     border-radius: 10px;
     clear: both;
     font-size: 17pt;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
-.web-rtc-chat-message-status-bad{
+
+.web-rtc-chat-message-status-bad {
     display: block;
     margin: 0 auto;
     text-align: center;
     font-weight: bold;
     margin-top: 10px;
-    background-color: whitesmoke;
-    color: red;
+    background: rgba(244, 67, 54, 0.9);
+    color: white;
     padding: 10px;
     border-radius: 10px;
     clear: both;
     font-size: 17pt;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
-#web-rtc-container{
+
+#web-rtc-container {
     width: 95%;
     margin: 0 auto;
     height: auto;
     padding: 0 !important;
 }
-#web-rtc-chat-instants{
+
+#web-rtc-chat-instants {
     width: 100%;
     margin: 0 auto;
 }
-#web-rtc-chat{
+
+#web-rtc-chat {
     width: 100%;
     margin-top: 20px;
     padding: 12px;
     font-size: 20pt;
     opacity: 90%;
-    background-color: #EBDFCE;
-    border: 3px solid black;
+    background: rgba(255, 255, 255, 0.9);
+    color: #000;
+    border: 3px solid rgba(255, 255, 255, 0.3);
     height: 350px;
     max-height: 350px;
     overflow-y: auto;
     border-radius: 15px;
     word-wrap: break-word;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
-#web-rtc-chat-stream-display{
+
+#web-rtc-chat-stream-display {
     width: auto;
     max-width: 90%;
     height: auto;
-    max-height: 90%; 
+    max-height: 90%;
     margin: 0 auto;
     margin-top: 20px;
     padding: 12px;
     font-size: 20pt;
     opacity: 100%;
-    background-color: #EBDFCE;
-    border: 3px solid black;
+    background: rgba(255, 255, 255, 0.9);
+    border: 3px solid rgba(255, 255, 255, 0.3);
     overflow-y: auto;
     border-radius: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
-#web-rtc-chat-add-instant, #web-rtc-chat-clear-instants{
+
+#web-rtc-chat-add-instant,
+#web-rtc-chat-clear-instants {
     position: relative;
     float: none;
-    background-color: green;
+    background: linear-gradient(to right, #4CAF50, #45a049);
     color: white;
-    padding: 3px;
+    padding: 10px 20px;
     font-size: 16pt;
     margin: 0 auto;
     margin-top: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
 }
+
 #web-rtc-chat-file {
     display: none;
 }
+
 .custom-file-input {
-    display: block; 
-    background-image: url('/static/images/upload.png'); 
+    display: block;
+    background-image: url('/static/images/upload.png');
     background-size: cover;
     background-position: center;
     background-color: transparent;
@@ -419,9 +501,10 @@ button:hover, select:hover {
     cursor: pointer;
     float: left;
 }
-#web-rtc-chat-settings-toggle{
+
+#web-rtc-chat-settings-toggle {
     float: right;
-    background-image: url('/static/images/mods.png'); 
+    background-image: url('/static/images/mods.png');
     background-size: cover;
     background-position: center;
     background-color: transparent;
@@ -429,8 +512,9 @@ button:hover, select:hover {
     height: 48px;
     cursor: pointer;
 }
-#web-rtc-chat-stream{
-    background-image: url('/static/images/stream.png'); 
+
+#web-rtc-chat-stream {
+    background-image: url('/static/images/stream.png');
     background-size: cover;
     background-position: center;
     background-color: transparent;
@@ -441,18 +525,113 @@ button:hover, select:hover {
     left: 5px;
     top: 10px;
 }
-#web-rtc-chat-send-message{
+
+#web-rtc-chat-send-message {
     width: 100%;
     font-size: 26pt;
     height: auto;
     margin-top: 5px;
-    padding: 5px;
-    background-color: white;
-    color: black;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #000;
+    border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: 10px;
+    outline: none;
 }
-.fix-bottom{
+
+.fix-bottom {
     position: fixed;
     bottom: 0;
-    left: 2%; 
+    left: 2%;
+}
+
+
+/* Modern enhancements and responsive design */
+
+h1,
+h2,
+h3 {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 120px;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 0;
+    position: absolute;
+    z-index: 1;
+    top: -5px;
+    right: 105%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+
+/* Add smooth transitions */
+
+button,
+select,
+input[type=range] {
+    transition: all 0.3s ease;
+}
+
+
+/* Responsive Design */
+
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    button,
+    select {
+        font-size: 20pt;
+        padding: 15px;
+    }
+    #button-start {
+        font-size: 28pt;
+    }
+    .area-mod {
+        width: 95%;
+        padding: 15px;
+    }
+    #container-mod {
+        width: 95%;
+        padding: 15px;
+    }
+    #web-rtc-chat {
+        font-size: 16pt;
+        height: 250px;
+        max-height: 250px;
+    }
+    #web-rtc-chat-send-message {
+        font-size: 20pt;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 5px;
+    }
+    button,
+    select {
+        font-size: 18pt;
+        padding: 12px;
+    }
+    #button-start {
+        font-size: 24pt;
+    }
+    .mod-value {
+        font-size: 12pt;
+    }
+    #web-rtc-chat {
+        font-size: 14pt;
+        height: 200px;
+        max-height: 200px;
+    }
+    #web-rtc-chat-send-message {
+        font-size: 18pt;
+    }
 }

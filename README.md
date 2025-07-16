@@ -46,22 +46,22 @@ Learn more about the [Features!](#workflow--functionality)
 
 ### By Source:
 > [!NOTE]
-> running by source is not supported anymore!
+> running by source i supported again since v2.19.0
 
-~~Setup python3~~
+Setup python3
 
 - Download and install python 3.x.x for your specific os.
 
 
-~~#### Get the project~~
+#### Get the project
 
     git clone https://github.com/lbormann/darts-caller.git
 
-~~Go to download-directory and type:~~
+Go to download-directory and type:
 
     pip3 install -r requirements.txt
 
-~~Optional for Linux: If you encounter problems local playback:~~
+Optional for Linux: If you encounter problems local playback:
 
     sudo apt-get install python3-sdl2
 
@@ -165,15 +165,18 @@ Disclaimer: For uninterrupted calling experience on mobile devices, ensure that 
 - gameon
 - matchon
 - gameshot
+- gameshot_l{x}_n
 - matchshot
 - matchcancel
 - leg_{x}
 - set_{x}
+- s{x}_l{x}_n
 - busted
 - 0-180
 - c_2-c_170 (-PCC > 0)
 - you_require (-PCC > 0)
 - yr_2-yr_170 (-PCC > 0) [fallback for 'you_require']
+- first_to_throw
 
 **SINGLE-DART-SCORE (Argument -E = 1):**
 
@@ -256,11 +259,11 @@ Disclaimer: For uninterrupted calling experience on mobile devices, ensure that 
 
 **Bermuda**
 
-- minus
+- ber_minus
 
 **Gotcha**
 
-- score_denied
+- got_score_denied
 
 **CONTROL**
 
@@ -383,6 +386,10 @@ Side note: You can change the caller/voice-pack anytime in the web-caller.</p>
 - '2' = random caller for every leg
 
 Default: '1'</p>
+
+#### *`-CRL / --caller_real_life`*
+
+<p>The caller switches to more realistic announcements to get the feeling of a real stage caller. More reference is made to the players, especially during leg or set changes. Still in the testing phase!</p>
 
 #### *`-RL / --random_caller_language`*
 

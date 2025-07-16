@@ -27,21 +27,16 @@ import websocket
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 from autodarts_keycloak_client import AutodartsKeycloakClient
-# from autodarts_nodejs_keycloak_client import AutodartsKeycloakClient
 from flask import Flask, render_template, send_from_directory, request
 from flask_socketio import SocketIO
 from werkzeug.serving import make_ssl_devcert
 from engineio.async_drivers import threading as th # IMPORTANT
-
-
-
 
 os.environ['SSL_CERT_FILE'] = certifi.where()
 
 plat = platform.system()
 if plat == 'Windows':
     from pycaw.pycaw import AudioUtilities
-
 
 sh = logging.StreamHandler()
 sh.setLevel(logging.INFO)
@@ -98,6 +93,7 @@ DEFAULT_CALLERS_BANNED_FILE = 'banned.txt'
 DEFAULT_CALLERS_FAVOURED_FILE = 'favoured.txt'
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_CALLER_REAL_LIFE = 0
+DEFAULT_NODEJS_SERVER_URL = "http://login-darts-caller.peschi.org:3006"
 
 EXT_WLED = False
 EXT_PIXEL = False
@@ -109,21 +105,85 @@ DB_ARGS = []
 WLED_SETTINGS_ARGS = {}
 CALLER_SETTINGS_ARGS = {}
 
-
-# Prüfe, ob das Programm als One-File-Build ausgeführt wird
-if hasattr(sys, "_MEIPASS"):
-    # Pfad zur extrahierten .env-Datei
-    env_path = Path(sys._MEIPASS) / ".env/.env"
-else:
-    # Lokaler Pfad für Entwicklungsumgebungen
-    env_path = Path(".env")
-load_dotenv(dotenv_path=env_path)
-
-client_id = os.getenv("AUTODARTS_CLIENT_ID")
-client_secret = os.getenv("AUTODARTS_CLIENT_SECRET")
-AUTODARTS_CLIENT_ID = client_id
+AUTODARTS_CLIENT_ID = None
+AUTODARTS_CLIENT_SECRET = None
 AUTODARTS_REALM_NAME = 'autodarts'
-AUTODARTS_CLIENT_SECRET = client_secret
+
+
+def get_client_credentials_from_nodejs_server(server_url="http://localhost:3006"):
+    try:
+        url = f"{server_url}/client-credentials"
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        credentials = response.json()
+        return credentials.get("client_id"), credentials.get("client_secret")
+    except Exception as e:
+        ppi('\r\n', None, '')
+        ppi('########################################################', None, '')
+        ppi('               WELCOME TO DARTS-CALLER', None, '')
+        ppi('########################################################', None, '')
+        ppi('VERSION: ' + VERSION, None, '')
+        ppi('DONATION: bitcoin:bc1q8dcva098rrrq2uqhv38rj5hayzrqywhudvrmxa', None, '')
+        ppi('DONATION: paypal:https://paypal.me/I3ull3t', None, '')
+        ppi('########################################################', None, '')
+        ppi('!                                                      !', None, '')
+        ppi('!       Credential Server seems to be Offline          !', None, '')
+        ppi('!     Contact I3uLL3t at Discord to get support        !', None, '')
+        ppi('!                                                      !', None, '')
+        ppi('!      IT IS NOT AN AUTODARTS ISSUE!!!!!!!!!!!         !', None, '')
+        ppi('########################################################', None, '')
+        exit(0)
+        return None, None
+
+def load_client_credentials(nodejs_server_url=DEFAULT_NODEJS_SERVER_URL):
+    # Prüfe, ob das Programm als One-File-Build ausgeführt wird
+    is_one_file_build = hasattr(sys, "_MEIPASS")
+    
+    if is_one_file_build:
+        # Pfad zur extrahierten .env-Datei
+        env_path = Path(sys._MEIPASS) / ".env/.env"
+    else:
+        # Lokaler Pfad für Entwicklungsumgebungen
+        env_path = Path(".env")
+    
+    # Prüfe, ob .env-Datei existiert
+    env_file_exists = env_path.exists()
+    
+    client_id = None
+    client_secret = None
+    
+    if env_file_exists:
+        load_dotenv(dotenv_path=env_path)
+        client_id = os.getenv("AUTODARTS_CLIENT_ID")
+        client_secret = os.getenv("AUTODARTS_CLIENT_SECRET")
+    
+    # Falls .env-Datei nicht existiert oder als One-File-Build läuft und keine Credentials vorhanden sind
+    if (not env_file_exists or is_one_file_build) and (not client_id or not client_secret):
+        # print("Keine .env-Datei gefunden oder One-File-Build erkannt. Versuche Client-Credentials vom Server abzurufen...")
+        nodejs_client_id, nodejs_client_secret = get_client_credentials_from_nodejs_server(nodejs_server_url)
+        
+        if nodejs_client_id and nodejs_client_secret:
+            # print("Client-Credentials erfolgreich vom Server abgerufen.")
+            client_id = nodejs_client_id
+            client_secret = nodejs_client_secret
+        else:
+            ppi('\r\n', None, '')
+            ppi('########################################################', None, '')
+            ppi('               WELCOME TO DARTS-CALLER', None, '')
+            ppi('########################################################', None, '')
+            ppi('VERSION: ' + VERSION, None, '')
+            ppi('DONATION: bitcoin:bc1q8dcva098rrrq2uqhv38rj5hayzrqywhudvrmxa', None, '')
+            ppi('DONATION: paypal:https://paypal.me/I3ull3t', None, '')
+            ppi('########################################################', None, '')
+            ppi('!                                                      !', None, '')
+            ppi('!       Credential Server seems to be Offline          !', None, '')
+            ppi('!     Contact I3uLL3t at Discord to get support        !', None, '')
+            ppi('!                                                      !', None, '')
+            ppi('!      IT IS NOT AN AUTODARTS ISSUE!!!!!!!!!!!         !', None, '')
+            ppi('########################################################', None, '')
+            exit(0)
+    
+    return client_id, client_secret
 
 AUTODARTS_URL = 'https://autodarts.io'
 AUTODARTS_AUTH_URL = 'https://login.autodarts.io/'
@@ -248,77 +308,77 @@ CALLER_PROFILES = {
     # 'ru-RU-TODO': ('https://add.arnes-design.de/ADC/TODOLINK.zip', 1), 
     # 'ru-RU-TODO': ('https://add.arnes-design.de/ADC/TODOLINK.zip', 1), 
     
-    # -- nl-NL --
-    'nl-NL-Laura-Female': ('https://darts-downloads.peschi.org/soundfiles/nl-NL-Laura-Female-v5.zip', 5),
+    # # -- nl-NL --
+    # 'nl-NL-Laura-Female': ('https://darts-downloads.peschi.org/soundfiles/nl-NL-Laura-Female-v5.zip', 5),
 
-    # -- fr-FR --
-    'fr-FR-Remi-Male': ('https://darts-downloads.peschi.org/soundfiles/fr-FR-Remi-Male-v3.zip', 3), 
-    'fr-FR-Lea-Female': ('https://darts-downloads.peschi.org/soundfiles/fr-FR-Lea-Female-v3.zip', 3), 
+    # # -- fr-FR --
+    # 'fr-FR-Remi-Male': ('https://darts-downloads.peschi.org/soundfiles/fr-FR-Remi-Male-v3.zip', 3), 
+    # 'fr-FR-Lea-Female': ('https://darts-downloads.peschi.org/soundfiles/fr-FR-Lea-Female-v3.zip', 3), 
     
-    # -- es-ES --
-    'es-ES-Lucia-Female': ('https://darts-downloads.peschi.org/soundfiles/es-ES-Lucia-Female-v3.zip', 3), 
-    'es-ES-Sergio-Male': ('https://darts-downloads.peschi.org/soundfiles/es-ES-Sergio-Male-v3.zip', 3), 
+    # # -- es-ES --
+    # 'es-ES-Lucia-Female': ('https://darts-downloads.peschi.org/soundfiles/es-ES-Lucia-Female-v3.zip', 3), 
+    # 'es-ES-Sergio-Male': ('https://darts-downloads.peschi.org/soundfiles/es-ES-Sergio-Male-v3.zip', 3), 
 
-    # -- de-AT --
-    'de-AT-Hannah-Female': ('https://darts-downloads.peschi.org/soundfiles/de-AT-Hannah-Female-v5.zip', 5),
+    # # -- de-AT --
+    # 'de-AT-Hannah-Female': ('https://darts-downloads.peschi.org/soundfiles/de-AT-Hannah-Female-v5.zip', 5),
     
-    # -- de-DE --
-    'de-DE-Vicki-Female': ('https://darts-downloads.peschi.org/soundfiles/de-DE-Vicki-Female-v8.zip', 8),  
-    'de-DE-Daniel-Male': ('https://darts-downloads.peschi.org/soundfiles/de-DE-Daniel-Male-v8.zip', 8),
+    # # -- de-DE --
+    # 'de-DE-Vicki-Female': ('https://darts-downloads.peschi.org/soundfiles/de-DE-Vicki-Female-v8.zip', 8),  
+    # 'de-DE-Daniel-Male': ('https://darts-downloads.peschi.org/soundfiles/de-DE-Daniel-Male-v8.zip', 8),
     
-    # -- en-US --
-    'en-US-Ivy-Female': ('https://darts-downloads.peschi.org/soundfiles/en-US-Ivy-Female-v8.zip', 8),
-    'en-US-Joey-Male': ('https://darts-downloads.peschi.org/soundfiles/en-US-Joey-Male-v9.zip', 9),
-    'en-US-Joanna-Female': ('https://darts-downloads.peschi.org/soundfiles/en-US-Joanna-Female-v9.zip', 9),
-    'en-US-Matthew-Male': ('https://darts-downloads.peschi.org/soundfiles/en-US-Matthew-Male-v6.zip', 6),
-    'en-US-Danielle-Female': ('https://darts-downloads.peschi.org/soundfiles/en-US-Danielle-Female-v6.zip', 6),
-    'en-US-Kimberly-Female': ('https://darts-downloads.peschi.org/soundfiles/en-US-Kimberly-Female-v5.zip', 5),
-    'en-US-Ruth-Female': ('https://darts-downloads.peschi.org/soundfiles/en-US-Ruth-Female-v5.zip', 5),
-    'en-US-Salli-Female': ('https://darts-downloads.peschi.org/soundfiles/en-US-Salli-Female-v5.zip', 5),
-    'en-US-Kevin-Male': ('https://darts-downloads.peschi.org/soundfiles/en-US-Kevin-Male-v5.zip', 5),
-    'en-US-Justin-Male': ('https://darts-downloads.peschi.org/soundfiles/en-US-Justin-Male-v5.zip', 5),
-    'en-US-Stephen-Male': ('https://darts-downloads.peschi.org/soundfiles/en-US-Stephen-Male-v8.zip', 8),  
-    'en-US-Kendra-Female': ('https://darts-downloads.peschi.org/soundfiles/en-US-Kendra-Female-v9.zip', 9),
-    'en-US-Gregory-Male': ('https://darts-downloads.peschi.org/soundfiles/en-US-Gregory-Male-v6.zip', 6),
+    # # -- en-US --
+    # 'en-US-Ivy-Female': ('https://darts-downloads.peschi.org/soundfiles/en-US-Ivy-Female-v8.zip', 8),
+    # 'en-US-Joey-Male': ('https://darts-downloads.peschi.org/soundfiles/en-US-Joey-Male-v9.zip', 9),
+    # 'en-US-Joanna-Female': ('https://darts-downloads.peschi.org/soundfiles/en-US-Joanna-Female-v9.zip', 9),
+    # 'en-US-Matthew-Male': ('https://darts-downloads.peschi.org/soundfiles/en-US-Matthew-Male-v6.zip', 6),
+    # 'en-US-Danielle-Female': ('https://darts-downloads.peschi.org/soundfiles/en-US-Danielle-Female-v6.zip', 6),
+    # 'en-US-Kimberly-Female': ('https://darts-downloads.peschi.org/soundfiles/en-US-Kimberly-Female-v5.zip', 5),
+    # 'en-US-Ruth-Female': ('https://darts-downloads.peschi.org/soundfiles/en-US-Ruth-Female-v5.zip', 5),
+    # 'en-US-Salli-Female': ('https://darts-downloads.peschi.org/soundfiles/en-US-Salli-Female-v5.zip', 5),
+    # 'en-US-Kevin-Male': ('https://darts-downloads.peschi.org/soundfiles/en-US-Kevin-Male-v5.zip', 5),
+    # 'en-US-Justin-Male': ('https://darts-downloads.peschi.org/soundfiles/en-US-Justin-Male-v5.zip', 5),
+    # 'en-US-Stephen-Male': ('https://darts-downloads.peschi.org/soundfiles/en-US-Stephen-Male-v8.zip', 8),  
+    # 'en-US-Kendra-Female': ('https://darts-downloads.peschi.org/soundfiles/en-US-Kendra-Female-v9.zip', 9),
+    # 'en-US-Gregory-Male': ('https://darts-downloads.peschi.org/soundfiles/en-US-Gregory-Male-v6.zip', 6),
     
-    # -- en-GB --
-    'en-GB-Amy-Female': ('https://darts-downloads.peschi.org/soundfiles/en-GB-Amy-Female-v4.zip', 4),
-    'en-GB-Arthur-Male': ('https://darts-downloads.peschi.org/soundfiles/en-GB-Arthur-Male-v4.zip', 4),
+    # # -- en-GB --
+    # 'en-GB-Amy-Female': ('https://darts-downloads.peschi.org/soundfiles/en-GB-Amy-Female-v4.zip', 4),
+    # 'en-GB-Arthur-Male': ('https://darts-downloads.peschi.org/soundfiles/en-GB-Arthur-Male-v4.zip', 4),
 
     #NEXT GEN
     #amazon Polly
     # -- nl-NL --
-    'V2-nl-NL-Laura-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/nl-NL-Laura-Female.zip', 1),
+    'nl-NL-Laura-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/nl-NL-Laura-Female.zip', 1),
     # -- fr-FR --
-    'V2-fr-FR-Remi-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/fr-FR-Remi-Male.zip', 1), 
-    'V2-fr-FR-Lea-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/fr-FR-Lea-Female.zip', 1), 
+    'fr-FR-Remi-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/fr-FR-Remi-Male.zip', 1), 
+    'fr-FR-Lea-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/fr-FR-Lea-Female.zip', 1), 
     # -- es-ES --
-    'V2-es-ES-Lucia-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/es-ES-Lucia-Female.zip', 1), 
-    'V2-es-ES-Sergio-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/es-ES-Sergio-Male.zip', 1), 
+    'es-ES-Lucia-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/es-ES-Lucia-Female.zip', 1), 
+    'es-ES-Sergio-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/es-ES-Sergio-Male.zip', 1), 
     # -- de-AT --
-    'V2-de-AT-Hannah-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/de-AT-Hannah-Female.zip', 1),
+    'de-AT-Hannah-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/de-AT-Hannah-Female.zip', 1),
     # -- de-DE --
-    'V2-de-DE-Vicki-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/de-DE-Vicki-Female.zip', 1),  
-    'V2-de-DE-Daniel-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/de-DE-Daniel-Male.zip', 1),
+    'de-DE-Vicki-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/de-DE-Vicki-Female.zip', 1),  
+    'de-DE-Daniel-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/de-DE-Daniel-Male.zip', 1),
     # -- en-US --
-    'V2-en-US-Ivy-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Ivy-Female.zip', 1),
-    'V2-en-US-Joey-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Joey-Male.zip', 1),
-    'V2-en-US-Joanna-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Joanna-Female.zip', 1),
-    'V2-en-US-Matthew-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Matthew-Male.zip', 1),
-    'V2-en-US-Danielle-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Danielle-Female.zip', 1),
-    'V2-en-US-Kimberly-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Kimberly-Female.zip', 1),
-    'V2-en-US-Ruth-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Ruth-Female.zip', 1),
-    'V2-en-US-Salli-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Salli-Female.zip', 1),
-    'V2-en-US-Kevin-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Kevin-Male.zip', 1),
-    'V2-en-US-Justin-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Justin-Male.zip', 1),
-    'V2-en-US-Stephen-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Stephen-Male.zip', 1),  
-    'V2-en-US-Kendra-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Kendra-Female.zip', 1),
-    'V2-en-US-Gregory-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Gregory-Male.zip', 1),
+    'en-US-Ivy-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Ivy-Female.zip', 1),
+    'en-US-Joey-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Joey-Male.zip', 1),
+    'en-US-Joanna-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Joanna-Female.zip', 1),
+    'en-US-Matthew-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Matthew-Male.zip', 1),
+    'en-US-Danielle-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Danielle-Female.zip', 1),
+    'en-US-Kimberly-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Kimberly-Female.zip', 1),
+    'en-US-Ruth-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Ruth-Female.zip', 1),
+    'en-US-Salli-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Salli-Female.zip', 1),
+    'en-US-Kevin-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Kevin-Male.zip', 1),
+    'en-US-Justin-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Justin-Male.zip', 1),
+    'en-US-Stephen-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Stephen-Male.zip', 1),  
+    'en-US-Kendra-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Kendra-Female.zip', 1),
+    'en-US-Gregory-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-US-Gregory-Male.zip', 1),
     # -- en-GB --
-    'V2-en-GB-Amy-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-GB-Amy-Female.zip', 1),
-    'V2-en-GB-Arthur-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-GB-Arthur-Male.zip', 1),
-    'V2-en-GB-Brian-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-GB-Brian-Male.zip', 1),
-    'V2-en-GB-Emma-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-GB-Emma-Female.zip', 1),
+    'en-GB-Amy-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-GB-Amy-Female.zip', 1),
+    'en-GB-Arthur-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-GB-Arthur-Male.zip', 1),
+    'en-GB-Brian-Male': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-GB-Brian-Male.zip', 1),
+    'en-GB-Emma-Female': ('https://darts-downloads.peschi.org/soundfiles/amazon/en-GB-Emma-Female.zip', 1),
     # ------------------------------------------------------------------------------------------------
     
     
@@ -1010,13 +1070,14 @@ def check_sounds(sounds_list):
         all_sounds_available = False
     return all_sounds_available
 
-def play_sound(sound, wait_for_last, volume_mult, mod):
+def play_sound(sound, wait_for_last, volume_mult, mod, break_last):
     volume = 1.0
     if AUDIO_CALLER_VOLUME is not None:
         volume = AUDIO_CALLER_VOLUME * volume_mult
 
     global mirror_files
     global caller_title_without_version
+    global sound_break_event
     
     mirror_file = {
                 "caller": caller_title_without_version,
@@ -1028,8 +1089,24 @@ def play_sound(sound, wait_for_last, volume_mult, mod):
     mirror_files.append(mirror_file)
 
     if LOCAL_PLAYBACK:
+        if break_last == True:
+            # Signal alle wartenden Schleifen zu stoppen
+            sound_break_event.set()
+            # stop last sound
+            try:
+                mixer.stop()
+            except Exception as e:
+                ppe('Failed to stop last sound', e)
+            # Event zurücksetzen für zukünftige Verwendung
+            time.sleep(0.02)  # Kurze Pause, damit wartende Schleifen das Signal verarbeiten können
+            sound_break_event.clear()
+            
         if wait_for_last == True:
             while mixer.get_busy():
+                # Prüfe ob ein Break-Signal empfangen wurde
+                if sound_break_event.is_set():
+                    ppi('Sound waiting loop interrupted by break_last signal')
+                    return  # Verlasse die Funktion ohne Sound abzuspielen
                 time.sleep(0.01)
 
         s = mixer.Sound(sound)
@@ -1038,10 +1115,10 @@ def play_sound(sound, wait_for_last, volume_mult, mod):
 
     ppi('Play: "' + sound + '"')
 
-def play_sound_effect(sound_file_key, wait_for_last = False, volume_mult = 1.0, mod = True):
+def play_sound_effect(sound_file_key, wait_for_last = False, volume_mult = 1.0, mod = True, break_last = False):
     try:
         global caller
-        play_sound(random.choice(caller[sound_file_key]), wait_for_last, volume_mult, mod)
+        play_sound(random.choice(caller[sound_file_key]), wait_for_last, volume_mult, mod, break_last)
         return True
     except Exception as e:
         ppe('Can not play sound for sound-file-key "' + sound_file_key + '" -> Ignore this or check existance; otherwise convert your file appropriate', e)
@@ -1436,7 +1513,7 @@ def listen_to_match(m, ws):
                 
                 if CALLER_REAL_LIFE == 1:
                     # s1_l1_n
-                    if 'sets' in m:
+                    if 'sets' in m and all(score['legs'] == 0 and score['sets'] == 0 for score in m['scores']):
                         currentLeg = m['scores'][0]['legs']
                         currentSet = m['scores'][0]['sets']
                         if currentSet == 0:
@@ -1447,7 +1524,7 @@ def listen_to_match(m, ws):
                         if play_sound_effect(currentPlayerName, wait_for_last= True) == False:
                                 play_sound_effect('player1', wait_for_last= True)
                         play_sound_effect('first_to_throw', wait_for_last= True)
-                    else:
+                    elif 'sets' not in m:
                         play_sound_effect('leg_1', wait_for_last= True)
                         if play_sound_effect(currentPlayerName, wait_for_last= True) == False:
                                 play_sound_effect('player1', wait_for_last= True)
@@ -1463,7 +1540,7 @@ def listen_to_match(m, ws):
                     play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
 
             mirror_sounds()
-            ppi('Matchon')
+            ppi('Matchon -listen to match: ' + currentMatch)
 
         except Exception as e:
             ppe('Fetching initial match-data failed', e)
@@ -1523,11 +1600,13 @@ def listen_to_match(m, ws):
             play_sound_effect('matchcancel')
             play_sound_effect('ambient_matchcancel', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
             mirror_sounds()
+            ppi('--------DEBUG Match delete')
         # USED TO TURN WLED OFF
         matchEnded = {
             "event": "match-ended",
             "me": AUTODART_USER_BOARD_ID
             }
+        ppi('--------DEBUG broadcast match ended')
         broadcast(matchEnded)
 
 # BROADCAST BOARD STATUS FOR WLED
@@ -1715,7 +1794,9 @@ def process_match_x01(m):
                         remaining = str(remainingPlayerScore)
                         if remainingPlayerScore not in BOGEY_NUMBERS:
                             if CALL_CURRENT_PLAYER >= 1:
-                                play_sound_effect(currentPlayerName)
+                                # play_sound_effect(currentPlayerName)
+                                if play_sound_effect(currentPlayerName, wait_for_last= True) == False:
+                                    play_sound_effect('player'+str(playerNameCaller), wait_for_last= True)
 
                             pcc_success = play_sound_effect('you_require', True)
                             if pcc_success:
@@ -1758,7 +1839,7 @@ def process_match_x01(m):
             # SINGLE-DART-SCORE
             if CALL_EVERY_DART == 1:
                 score = field_number * field_multiplier
-                play_sound_effect(str(score))
+                play_sound_effect(str(score), break_last = True)
 
             # SINGLE-DART-NAME
             elif CALL_EVERY_DART == 2:
@@ -1771,11 +1852,11 @@ def process_match_x01(m):
                 # bullseye 
                 # s1 to t20
                 # m1 to m20
-                if play_sound_effect(field_name) == False:
+                if play_sound_effect(field_name, break_last = True) == False:
                     field_number = str(field_number)
 
                     if type == 'singleouter' or type == 'singleinner':
-                        play_sound_effect(field_number)
+                        play_sound_effect(field_number, break_last = True)
                     elif type == 'outside':
                         play_sound_effect(type)
                     else:
@@ -1988,7 +2069,8 @@ def process_match_x01(m):
             play_sound_effect('first_to_throw', wait_for_last= True)
         else:
             if CALL_CURRENT_PLAYER >= 1:
-                callPlayerNameState = play_sound_effect(currentPlayerName)
+                if play_sound_effect(currentPlayerName, wait_for_last= True) == False:
+                    play_sound_effect('player'+str(playerNameCaller), wait_for_last= True)
 
             if play_sound_effect('matchon', callPlayerNameState, mod = False) == False:
                 play_sound_effect('gameon', callPlayerNameState, mod = False)
@@ -2005,6 +2087,7 @@ def process_match_x01(m):
     # Check for gameon
     elif gameon == True:
         isGameFinished = False
+        # ppi(json.dumps(m, indent = 4, sort_keys = True))
 
         reset_checkouts_counter()
 
@@ -2022,16 +2105,35 @@ def process_match_x01(m):
         broadcast(gameStarted)
 
         callPlayerNameState = False
-        if CALL_CURRENT_PLAYER >= 1:
-            callPlayerNameState = play_sound_effect(currentPlayerName)
+        #### nach legwechsel wird das hier ausgegeben
+        ### anpassen auf caller real life
+        currentLeg = m['leg']
+        currentSet = m['set']
+        # maxLeg = m['legs']
+        # maxSets = m['sets']
 
-        play_sound_effect('gameon', callPlayerNameState, mod = False)
+        # ppi('currentLeg: ' + str(currentLeg))
+        # ppi('currentSet: ' + str(currentSet))
+        if m['stats'][0]['legStats']['dartsThrown'] == 0:
+            if CALLER_REAL_LIFE == 1:
+                ppi('new mode')
+                play_sound_effect('s'+ str(currentSet)+'_l'+str(currentLeg)+'_n', wait_for_last= True)
+                
+                if play_sound_effect(currentPlayerName, wait_for_last= True) == False:
+                        play_sound_effect('player'+str(playerNameCaller), wait_for_last= True)
+                play_sound_effect('first_to_throw', wait_for_last= True)
+            else:
+                if CALL_CURRENT_PLAYER >= 1:
+                    if play_sound_effect(currentPlayerName, wait_for_last= True) == False:
+                        play_sound_effect('player'+str(playerNameCaller), wait_for_last= True)
 
-        if AMBIENT_SOUNDS != 0.0:
-            if play_sound_effect('ambient_gameon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False) == False:
-                play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
+                play_sound_effect('gameon', callPlayerNameState, mod = False)
 
-        ppi('Gameon')
+            if AMBIENT_SOUNDS != 0.0:
+                if play_sound_effect('ambient_gameon_' + currentPlayerName, AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False) == False:
+                    play_sound_effect('ambient_gameon', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
+
+            ppi('Gameon')
           
     # Check for busted turn
     elif busted == True:
@@ -3791,7 +3893,7 @@ def process_match_Bermuda(m):
             if CALL_EVERY_DART == 0 or CALL_EVERY_DART_TOTAL_SCORE == True:
                 if int(points) <= 0:
                     points = str(int(points) * -1)
-                    minuspoints = play_sound_effect("minus", wait_for_last=CALL_EVERY_DART > 0)
+                    minuspoints = play_sound_effect("ber_minus", wait_for_last=CALL_EVERY_DART > 0)
                     if minuspoints == False:
                         points = "0"
                 play_sound_effect(points, wait_for_last=CALL_EVERY_DART > 0)
@@ -4405,7 +4507,7 @@ def process_match_gotcha(m):
         while p <= (playerCount-1):
             if p != currentPlayerIndex:
                 if gotcha_last_player_points[p] == points:
-                    play_sound_effect("score_denied", wait_for_last = True)
+                    play_sound_effect("got_score_denied", wait_for_last = True)
             p += 1
     if gotcha_last_player_points != gameScores:
         gotcha_last_player_points = gameScores
@@ -5675,6 +5777,11 @@ if __name__ == "__main__":
     MIXER_CHANNELS = args['mixer_channels']
     MIXER_BUFFERSIZE = args['mixer_buffersize']
 
+    # Lade Client-Credentials basierend auf Konfiguration
+    client_id, client_secret = load_client_credentials(DEFAULT_NODEJS_SERVER_URL)
+    AUTODARTS_CLIENT_ID = client_id
+    AUTODARTS_REALM_NAME = 'autodarts'
+    AUTODARTS_CLIENT_SECRET = client_secret
 
 
     if DEBUG:
@@ -5741,6 +5848,10 @@ if __name__ == "__main__":
 
     global mirror_files
     mirror_files = []
+
+    # Threading Event zum Unterbrechen von wartenden Sound-Schleifen
+    global sound_break_event
+    sound_break_event = threading.Event()
 
     global checkoutsCounter
     checkoutsCounter = {}

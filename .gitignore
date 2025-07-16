@@ -12,9 +12,11 @@ build
 dist
 *.spec
 caller-downloads-temp
-.env
+*.env*
 .venv
 *.php
 .stats-page
+.caller-preview-page
 new_calls.csv
 autodarts_nodejs_keycloak_client.py
+NODEJS_SERVER_EXAMPLE.md

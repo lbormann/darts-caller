@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>web-caller</title>
+    <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- https://unpkg.com/dexie/dist/dexie.js -->
+    <script type="text/javascript" src="/static/js/dexie.min-3.2.4.js"></script>
+    <!-- https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js -->
+    <script type="text/javascript" src="/static/js/peerjs.min-1.5.2.js"></script>
+    <!-- https://cdn.socket.io/4.7.5/socket.io.min.js -->
+    <script type="text/javascript" src="/static/js/socket.io.min-4.7.5.js" crossorigin="anonymous"></script>
+
+    <link rel="stylesheet" href="/static/css/common.css?v=1.0.0">
+</head>
+
+<body>
+    <audio id="audio" src="/static/audio/incoming.mp3"></audio>
+    
+    <!-- meta -->
+    <div id="app-info" class="tooltip"> {{ app_version }} - {{ db_name }}
+        <span class="tooltiptext">Click to clear cached sounds and preferences</span>
+    </div>
+    <h3 id="status" style="display:none;">Disconnected!</h3>
+
+    <button id="button-start">Start!</button>
+
+
+    <!-- webrtc -->
+    <label for="web-rtc-chat-stream-display" id="web-rtc-chat-stream" style="display:none;"></label>
+    <video id="web-rtc-chat-stream-display" style="display:none;"></video>
+
+    <div id="web-rtc-container" style="display:none;">
+        <div id="web-rtc-chat"></div>
+        <button id="web-rtc-chat-add-instant">Remember!</button>
+        <button id="web-rtc-chat-clear-instants">Clear!</button>
+        <label for="web-rtc-chat-file" class="custom-file-input"></label>
+        <input id="web-rtc-chat-file" type="file" accept="image/*" capture="camera" />
+        <label id="web-rtc-chat-settings-toggle"></label>
+        <div id="web-rtc-chat-settings-container" style="display:none;">
+            <label for="web-rtc-chat-settings-discord">Discord id / username:</label>
+            <input id="web-rtc-chat-settings-discord" type="text" placeholder="your discord id or username" />
+        </div>
+        <input id="web-rtc-chat-send-message" type="text" placeholder="write a message" tabindex="-1"></input>
+        <div id="web-rtc-chat-instants"></div> 
+    </div>
+    
+    <hr>
+
+    <!-- caller -->
+    <div id="caller-container">
+        
+        <h2 id="caller-name" style="display:none;"></h2>
+        <image src="" id="button-favorite" style="display:none;"></image>
+        <image src="/static/images/say.png" id="button-say" style="display:none;"></image>
+        <h2 id="caller-call" style="display:none;"></h2>
+
+        <image src="/static/images/loading.gif" style="display:none;" id="loader"></image>
+        
+        <div id="select-caller" style="display:none;">
+            <select name="caller" id="caller" tabindex="-1">
+            </select>
+        </div>
+        
+        <button id="button-change" style="display:none;">Change caller!</button>
+
+        <!-- match -->
+        <button id="button-next" style="display:none;">Next!</button>
+
+        <!-- board -->
+        <button id="button-calibrate-board" style="display:none;">Calibrate Board!</button>
+
+        <div id="select-language" style="display:none;">
+            <select name="language" id="language" tabindex="-1">
+                <option value="0"{% if key == language %}selected{% endif %}>All languages</option>
+                {% for key, value in languages.items() %}
+                    <option value="{{ key }}" {% if key == language %}selected{% endif %}>{{ value[0] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div id="select-gender" style="display:none;">
+            <select name="gender" id="gender" tabindex="-1">
+                <option value="0"{% if key == gender %}selected{% endif %}>All genders</option>
+                {% for key, value in genders.items() %}
+                    <option value="{{ key }}" {% if key == gender %}selected{% endif %}>{{ value[0] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button id="button-ban" style="display:none;">Ban caller!</button>
+
+        <!-- board -->
+        <button id="button-reset-board" style="display:none;">Reset Board!</button>
+ 
+        
+
+
+        <!-- mods -->    
+        <image id="button-container-mod-toggle" src="/static/images/mods.png" style="display:none;"></image>
+        <div id="container-mod">
+            
+            <div class="area-mod">
+                <h2>Web-Caller Volume</h2>
+                <p>
+                    <div id="slider-volume-value" class="mod-value"></div>
+                    <input id="slider-volume" class="ranger" type="range" >
+                </p>
+                <button id="button-volume-reset" class="reset">Reset</button>
+            </div>
+
+            <div class="area-mod">
+                <h2>Web-Caller Auto-Randomizer</h2>
+                <p>
+                    <div id="slider-randomizer-value" class="mod-value"></div>
+                    <input id="slider-randomizer" class="ranger" type="range">
+                </p>
+                <button id="button-randomizer-reset" class="reset">Reset</button>
+            </div>
+
+            <div class="area-mod">
+                <h2>Web-Caller Playback-Rate</h2>
+                <p>
+                    <div id="slider-playback-rate-min-value" class="mod-value"></div>
+                    <input id="slider-playback-rate-min" class="ranger" type="range">
+                    <div id="slider-playback-rate-max-value" class="mod-value"></div>
+                    <input id="slider-playback-rate-max" class="ranger" type="range">         
+                </p>
+                <button id="button-playback-rate-reset" class="reset">Reset</button>
+            </div>
+
+            <div class="area-mod">
+                <h2>Web-Caller Detune</h2>
+                <p>
+                    <div id="slider-detune-min-value" class="mod-value"></div>
+                    <input id="slider-detune-min" class="ranger" type="range">
+                    <div id="slider-detune-max-value" class="mod-value"></div>
+                    <input id="slider-detune-max" class="ranger" type="range">  
+                </p>
+                <button id="button-detune-reset" class="reset">Reset</button>
+            </div>
+
+            <hr>
+            
+            <div class="area-mod">
+                <h2>Call every dart</h2>
+                <p>
+                    <div id="slider-every-dart-value" class="mod-value"></div>
+                    <input id="slider-every-dart" class="ranger" type="range" min="0" max="3" step="1" value="{{ every_dart }}">
+                </p>
+            </div>
+
+            <div class="area-mod">
+                <h2>Call current player</h2>
+                <p>
+                    <div id="slider-call-current-player-value" class="mod-value"></div>
+                    <input id="slider-call-current-player" class="ranger" type="range" min="0" max="2" step="1" value="{{ call_current_player }}">
+                </p>
+            </div>
+
+            <div class="area-mod">
+                <h2>Call bot actions</h2>
+                <p>
+                    <input type="checkbox" id="checkbox-call-bot-actions" {% if call_bot_actions %}checked{% endif %}>
+                </p>
+            </div>
+
+            <div class="area-mod">
+                <h2>Call possible checkout</h2>
+                <p>
+                    <div id="slider-possible-checkout-value" class="mod-value"></div>
+                    <input id="slider-possible-checkout" class="ranger" type="range" min="0" max="100" step="1" value="{{ checkout_call }}">
+                </p>
+            </div>
+
+            <div class="area-mod">
+                <h2>Call possible checkout - only Yourself</h2>
+                <p>
+                    <input type="checkbox" id="checkbox-possible-checkout-yourself" {% if checkout_call_yourself %}checked{% endif %}>
+                </p>
+            </div>
+
+        </div>
+    </div>
+
+
+
+    <script>
+        // CONNECTION
+        const protocol = window.location.protocol === 'http:' ? 'ws' : 'wss';
+        const hostname = window.location.hostname;
+        const port = window.location.port;
+
+        // DB
+        const localStorageAppKey = 'ADC';
+
+        // misc stuff
+        const audio = document.getElementById('audio');
+        const buttonClear = document.getElementById('app-info'); 
+
+        // webRTC Stuff
+        const webRtcContainer = document.getElementById('web-rtc-container');
+        const webRtcStreamDisplay = document.getElementById('web-rtc-chat-stream-display');
+        const webRtcChat = document.getElementById('web-rtc-chat');
+        const webRtcChatAddInstant = document.getElementById('web-rtc-chat-add-instant');
+        const webRtcChatClearInstants = document.getElementById('web-rtc-chat-clear-instants');
+        const webRtcChatSendMessage = document.getElementById('web-rtc-chat-send-message');
+        const webRtcChatFile = document.getElementById('web-rtc-chat-file');
+        const webRtcChatStream = document.getElementById('web-rtc-chat-stream');
+        const webRtcChatSettingsToggle = document.getElementById('web-rtc-chat-settings-toggle');
+        const webRtcChatSettingsContainer = document.getElementById('web-rtc-chat-settings-container');
+        const webRtcChatSettingsDiscord = document.getElementById('web-rtc-chat-settings-discord');
+        const webRtcChatInstants = document.getElementById('web-rtc-chat-instants');
+        
+        // caller stuff
+        const callerContainer = document.getElementById('caller-container');
+        const button = document.getElementById('button-start');
+        const buttonChange = document.getElementById('button-change');
+        const buttonBan = document.getElementById('button-ban');
+        const buttonFavorite = document.getElementById('button-favorite');
+        const buttonSay = document.getElementById('button-say');
+        const state = document.getElementById('status');
+        const callerName = document.getElementById('caller-name');
+        const lastCall = document.getElementById('caller-call');
+        const loader = document.getElementById('loader');
+        const callerSelect = document.getElementById('select-caller');
+        const languageSelect = document.getElementById('select-language');
+        const genderSelect = document.getElementById('select-gender');
+        const caller = document.getElementById('caller');
+        const language = document.getElementById('language');
+        const gender = document.getElementById('gender');
+        
+
+        // playback-rate
+        const playbackRateDefault = 1.00;
+        const playbackRateMinMin = 0.01;
+        const playbackRateMinMax = 2.00;
+        const playbackRateMaxMin = 0.01;
+        const playbackRateMaxMax = 2.00;
+        const playbackRateStep = 0.01;
+
+        // detune
+        const detuneDefault = 0.00;
+        const detuneMinMin = -2000.00;
+        const detuneMinMax = 2000.00;
+        const detuneMaxMin = -2000.00;
+        const detuneMaxMax = 2000.00;
+        const detuneStep = 1.00;
+        
+        // volume
+        const volumeDefault = 100.0;
+        const volumeMin = -0.00;
+        const volumeMax = 100.00;
+        const volumeStep = 1.00;
+
+        // randomizer
+        const randomizerDefault = 0.00;
+        const randomizerMin = -0.00;
+        const randomizerMax = 100.00;
+        const randomizerStep = 1.00;
+
+        // mod stuff
+        const buttonContainerModToggle = document.getElementById('button-container-mod-toggle');
+        const containerMod = document.getElementById('container-mod');
+
+        const sliderEveryDart = document.getElementById('slider-every-dart');
+        const sliderEveryDartValue = document.getElementById('slider-every-dart-value');
+
+        const sliderCallCurrentPlayer = document.getElementById('slider-call-current-player');
+        const sliderCallCurrentPlayerValue = document.getElementById('slider-call-current-player-value');
+
+        const checkboxCallBotActions = document.getElementById('checkbox-call-bot-actions');
+
+        const sliderPossibleCheckout = document.getElementById('slider-possible-checkout');
+        const sliderPossibleCheckoutValue = document.getElementById('slider-possible-checkout-value');
+
+        const checkboxPossibleCheckoutYourself = document.getElementById('checkbox-possible-checkout-yourself');
+
+        const sliderPlaybackRateMin = document.getElementById('slider-playback-rate-min');
+        const sliderPlaybackRateMinValue = document.getElementById('slider-playback-rate-min-value');
+        const sliderPlaybackRateMax = document.getElementById('slider-playback-rate-max');
+        const sliderPlaybackRateMaxValue = document.getElementById('slider-playback-rate-max-value');
+        const buttonPlaybackRateReset = document.getElementById('button-playback-rate-reset');
+
+        const sliderDetuneMin = document.getElementById('slider-detune-min');
+        const sliderDetuneMinValue = document.getElementById('slider-detune-min-value');
+        const sliderDetuneMax = document.getElementById('slider-detune-max');
+        const sliderDetuneMaxValue = document.getElementById('slider-detune-max-value');
+        const buttonDetuneReset = document.getElementById('button-detune-reset');
+
+        const sliderVolume = document.getElementById('slider-volume');
+        const sliderVolumeValue = document.getElementById('slider-volume-value');
+        const buttonVolumeReset = document.getElementById('button-volume-reset');
+
+        const sliderRandomizer = document.getElementById('slider-randomizer');
+        const sliderRandomizerValue = document.getElementById('slider-randomizer-value');
+        const buttonRandomizerReset = document.getElementById('button-randomizer-reset');
+    
+        // board stuff
+        const buttonCalibrateBoard = document.getElementById('button-calibrate-board');
+        const buttonResetBoard = document.getElementById('button-reset-board');
+
+        // match stuff
+        const buttonNext = document.getElementById('button-next');
+
+
+    
+        // VARS
+
+        // caller
+        let dexie, db, ws, loading, done;
+        let callersAvailable, callersFavoured, name;
+        let playbackRateMin, playbackRateMax, detuneMin, detuneMax, volume, randomizer;
+        let audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let audioQueue = Promise.resolve();
+        let previousWait = false;
+
+        // webRtc
+        const discordUrl = 'https://discordapp.com/users/';
+        let match, me, opponent;
+        let opponentName, opponentAvatar;
+        let peer, connOut, callOut;
+        let connEstablished = false;
+        let chat = [];
+        let chatOffline = [];
+        let instants = [];
+        let settingDiscord = "";
+
+        // volume
+        sliderVolume.min = volumeMin;
+        sliderVolume.max = volumeMax;
+        sliderVolume.step = volumeStep;
+
+        // playbackrate min
+        sliderPlaybackRateMin.min = playbackRateMinMin;
+        sliderPlaybackRateMin.max = playbackRateMinMax;
+        sliderPlaybackRateMin.step = playbackRateStep;
+
+        // playbackrate max
+        sliderPlaybackRateMax.min = playbackRateMaxMin;
+        sliderPlaybackRateMax.max = playbackRateMaxMax;
+        sliderPlaybackRateMax.step = playbackRateStep;
+
+        // detune min
+        sliderDetuneMin.min = detuneMinMin;
+        sliderDetuneMin.max = detuneMinMax;
+        sliderDetuneMin.step = detuneStep;
+
+        // detune max
+        sliderDetuneMax.min = detuneMaxMin;
+        sliderDetuneMax.max = detuneMaxMax;
+        sliderDetuneMax.step = detuneStep;
+
+        // randomizer
+        sliderRandomizer.min = randomizerMin;
+        sliderRandomizer.max = randomizerMax;
+        sliderRandomizer.step = randomizerStep;
+
+
+
+        // meta
+        document.addEventListener("DOMContentLoaded", function() {
+            console.log("APP-Version: '{{ app_version }}'");
+
+            if(!checkDBCompatibility){
+                return;
+            }
+
+            console.log("USING DB: '{{ db_name }}'");
+            initializeDB();
+
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('clear')) {
+                clearPreferences();
+            } 
+            
+            loadPreferences();
+
+            setTimeout(function() {
+                const id = JSON.parse('{{ id | tojson | safe}}');
+                const me = JSON.parse('{{ me | tojson | safe}}');
+                const meHost = JSON.parse('{{ meHost | tojson | safe}}');
+                let players = JSON.parse('{{ players | tojson | safe}}');
+                if(players == false || players == null || players == undefined || players == ''){
+                    players = null;
+                }
+                createPeer(id, me, meHost, players);
+            }, 1000);
+            
+        });
+        buttonClear.addEventListener('click', function() {
+            clearPreferences();          
+        });
+        button.addEventListener('click', function(){
+            audio.load();
+            name = undefined;
+            state.style.display='block'; 
+            lastCall.style.display='block';
+            button.remove();
+
+            ws = io.connect(`${protocol}://${hostname}:${port}`);
+            ws.on('connect', onWsOpen);
+            ws.on('disconnect', onWsClose);
+            ws.on('reconnect', onWsReconnect);
+            ws.on('message', onWsData);
+        });
+        
+        // webRtc
+        webRtcChatStream.addEventListener("click", function(){
+            if(callOut == null){
+                callOpponent();
+            }else{
+                callOut.close();      
+            }
+        });
+        webRtcChatSettingsToggle.addEventListener("click", function(){
+            if(webRtcChatSettingsContainer.style.display == 'block'){
+                webRtcChatSettingsContainer.style.display = 'none';
+            }else{
+                webRtcChatSettingsContainer.style.display = 'block';
+            }
+        });
+        webRtcChatSettingsDiscord.addEventListener("keydown", function() {  
+            if (event.keyCode === 13) {
+                settingDiscord = this.value;
+                updateWebRtcSettings();
+                webRtcChatSettingsContainer.style.display = 'none';
+                sendDiscord();
+            }
+        });
+        webRtcChatSettingsDiscord.addEventListener("blur", function() {  
+            settingDiscord = this.value;
+            updateWebRtcSettings();
+        });
+        webRtcChat.addEventListener("click", function() {
+            callerContainer.style.display = 'block';
+            webRtcContainer.classList.remove("fix-bottom");   
+        });
+        webRtcChatSendMessage.addEventListener("focus", function() {
+            callerContainer.style.display = 'none';
+            webRtcContainer.classList.add("fix-bottom");
+        });
+        webRtcChatSendMessage.addEventListener("click", function() {
+            callerContainer.style.display = 'none';
+            webRtcContainer.classList.add("fix-bottom");
+        });
+        webRtcChatSendMessage.addEventListener("keydown", function(event) {  
+            if (event.keyCode === 13) {
+                if(webRtcChatSendMessage.value != ''){
+                    if(connEstablished){
+                        connOut.send(webRtcChatSendMessage.value);
+                    }else{
+                        chatOffline.push(webRtcChatSendMessage.value);
+                    }
+                    addWebRtcChat(webRtcChatSendMessage.value, 2); 
+                    webRtcChatSendMessage.value = "";
+                }
+            }
+        });
+        webRtcChatAddInstant.addEventListener('click', function() {
+            if(webRtcChatSendMessage.value != ''){
+                instants.push(webRtcChatSendMessage.value);
+                updateInstants();
+                webRtcChatSendMessage.value = "";
+            }         
+        });
+        webRtcChatFile.onchange = function(event) {
+            if(event.target.files.length > 0) {
+                const file = event.target.files[0];
+                const blob = new Blob(event.target.files, { type: file.type });
+                const fileObj = {
+                    file: blob,
+                    filename: file.name,
+                    filetype: file.type
+                };
+                if(connEstablished){
+                    connOut.send(fileObj);
+                }else{
+                    chatOffline.push(fileObj);
+                }
+                addWebRtcChat(event.target.files[0], 2); 
+            }
+        }
+        webRtcChatClearInstants.addEventListener('click', function() {
+            instants = [];
+            updateInstants();
+            savePreferences();    
+        });
+
+        // caller
+        buttonChange.addEventListener('click', function() {
+            ws.emit('message', 'ban:change');            
+        });
+        buttonBan.addEventListener('click', function() {
+            ws.emit('message', 'ban');            
+        });
+        buttonSay.addEventListener('click', function() {
+            ws.emit('message', 'call:hi');            
+        });
+        caller.addEventListener('change', function() {
+            ws.emit('message', `caller:${caller.value}`);
+        });
+        language.addEventListener('change', function() {
+            ws.emit('message', `language:${language.value}`);
+        });
+        gender.addEventListener('change', function() {
+            ws.emit('message', `gender:${gender.value}`);
+        });
+        buttonFavorite.addEventListener('click', function() {
+            if(callersFavoured.includes(name)){
+                ws.emit('message', 'fav:0');
+                callersFavoured = callersFavoured.filter(item => item !== name);
+                buttonFavorite.src = "/static/images/star-no.png";
+                renderAvailableCallers();
+                
+            }else{
+                ws.emit('message', 'fav:1');
+                callersFavoured.push(name);
+                buttonFavorite.src = "/static/images/star.png";
+                renderAvailableCallers();
+            }
+        });
+        function renderAvailableCallers(){
+            caller.innerHTML = "";
+            callersAvailable.forEach(function(ca) {
+                if (callersFavoured.includes(ca)) {
+                    const callerElement = document.createElement("option");
+                    callerElement.textContent = ca;
+                    callerElement.value = ca;
+                    callerElement.classList.add("favorite");
+                    if (ca.toLowerCase() == name) {
+                        callerElement.selected = true;
+                    }
+                    caller.appendChild(callerElement);
+                }
+            });
+            callersAvailable.forEach(function(ca) {
+                if (!callersFavoured.includes(ca)) {
+                    const callerElement = document.createElement("option");
+                    callerElement.textContent = ca;
+                    callerElement.value = ca;
+                    if (ca.toLowerCase() == name) {
+                        callerElement.selected = true;
+                    }
+                    caller.appendChild(callerElement);
+                }
+            });
+        }
+
+        // mods
+        buttonContainerModToggle.addEventListener('click', function(){
+            if(containerMod.style.display == 'block'){
+                containerMod.style.display = 'none';
+            }else{
+                containerMod.style.display = 'block';
+                containerMod.scrollIntoView({ behavior: 'smooth' });
+                // containerMod.scrollTop = containerMod.scrollHeight;   
+            }
+        });
+        sliderEveryDart.addEventListener('input', function(){
+            switch(this.value) {
+                case "0":
+                    sliderEveryDartValue.innerHTML = this.value + " = inactive";
+                    break;
+                case "1":
+                    sliderEveryDartValue.innerHTML = this.value + " = active (SINGLE-DART-SCORE)";
+                    break;
+                case "2":
+                    sliderEveryDartValue.innerHTML = this.value + " = active (SINGLE-DART-NAME)";
+                    break;
+                case "3":
+                    sliderEveryDartValue.innerHTML = this.value + " = active (SINGLE-DART-EFFECT)";
+                    break;
+            }
+            ws.emit('message', `arg:e:${this.value}`);
+        });
+        sliderCallCurrentPlayer.addEventListener('input', function() {
+            switch(this.value) {
+                case "0":
+                    sliderCallCurrentPlayerValue.innerHTML = this.value + " = inactive";
+                    break;
+                case "1":
+                    sliderCallCurrentPlayerValue.innerHTML = this.value + " = active";
+                    break;
+                case "2":
+                    sliderCallCurrentPlayerValue.innerHTML = this.value + " = active (every turn)";
+                    break;
+            }
+            ws.emit('message', `arg:ccp:${this.value}`);
+        });
+        checkboxCallBotActions.addEventListener('change', function() {
+            if (this.checked) {
+                ws.emit('message', `arg:cba:1`);
+            } else {
+                ws.emit('message', `arg:cba:0`);
+            }
+        });
+        sliderPossibleCheckout.addEventListener('input', function() {
+            sliderPossibleCheckoutValue.innerHTML = this.value + " times";
+            ws.emit('message', `arg:pcc:${this.value}`);
+        });
+        checkboxPossibleCheckoutYourself.addEventListener('change', function() {
+            if (this.checked) {
+                ws.emit('message', `arg:pccyo:1`);
+            } else {
+                ws.emit('message', `arg:pccyo:0`);
+            }
+        });
+        sliderPlaybackRateMin.addEventListener('input', function() {
+            if(this.value <= playbackRateMax){
+                playbackRateMin = parseFloat(this.value);
+            } else {
+                playbackRateMax = parseFloat(this.value);
+            }
+            updatePlaybackRateSliders();
+        });
+        sliderPlaybackRateMax.addEventListener('input', function() {
+            if(this.value >= playbackRateMin){
+                playbackRateMax = parseFloat(this.value);
+            } else {
+                playbackRateMin = parseFloat(this.value);
+            }
+            updatePlaybackRateSliders();
+        });
+        buttonPlaybackRateReset.addEventListener('click', function() {
+            playbackRateMin = playbackRateDefault;
+            playbackRateMax = playbackRateDefault;
+            updatePlaybackRateSliders();
+        });  
+        sliderDetuneMin.addEventListener('input', function() {
+            if(this.value <= detuneMax){
+                detuneMin = parseInt(this.value);
+            } else {
+                detuneMax = parseFloat(this.value);
+            }
+            updateDetuneSliders();
+        });
+        sliderDetuneMax.addEventListener('input', function() {
+            if(this.value >= detuneMin){
+                detuneMax = parseFloat(this.value);
+            } else {
+                detuneMin = parseFloat(this.value);
+            }
+            updateDetuneSliders();
+        });
+        buttonDetuneReset.addEventListener('click', function() {
+            detuneMin = detuneDefault;
+            detuneMax = detuneDefault;
+            updateDetuneSliders();
+        });
+        sliderVolume.addEventListener('input', function() {
+            volume = parseFloat(this.value);
+            updateVolumeSlider();
+        });
+        buttonVolumeReset.addEventListener('click', function(){
+            volume = volumeDefault;
+            updateVolumeSlider();
+        });  
+        sliderRandomizer.addEventListener('input', function() {
+            randomizer = parseFloat(this.value);
+            updateRandomizerSlider();
+        });
+        buttonRandomizerReset.addEventListener('click', function(){
+            randomizer = randomizerDefault;
+            updateRandomizerSlider();
+        });
+
+        // board
+        buttonCalibrateBoard.addEventListener('click', function(){
+            ws.emit('message', 'board-calibrate');
+        });
+        buttonResetBoard.addEventListener('click', function(){
+            ws.emit('message', 'board-reset');
+        });
+
+        // match
+        buttonNext.addEventListener('click', function(){
+            ws.emit('message', 'next');
+        });
+
+        function updateWebRtcSettings(save = true){
+            webRtcChatSettingsDiscord.value = settingDiscord;
+            if(save){
+                savePreferences();
+            }
+        }
+        function updateInstants(save = true){
+            webRtcChatInstants.innerHTML = "";
+
+            instants.slice().reverse().forEach(instant => {
+                const ie = document.createElement('div');
+                ie.classList.add('web-rtc-chat-instant');
+                ie.innerText = instant;
+                ie.addEventListener('click', function(){
+                    msg = webRtcChatSendMessage.value + " " + instant;
+                    if(connEstablished){
+                        connOut.send(msg);
+                    }else{
+                        chatOffline.push(msg);
+                    }
+                    addWebRtcChat(msg, 2); 
+                    webRtcChatSendMessage.value = "";
+                });
+                webRtcChatInstants.appendChild(ie);
+            });
+            if(save){
+                savePreferences();
+            }
+        }
+        function updatePlaybackRateSliders(save = true) {
+            sliderPlaybackRateMin.value = playbackRateMin;
+            sliderPlaybackRateMax.value = playbackRateMax;
+            sliderPlaybackRateMinValue.innerHTML = playbackRateMin + " (MIN)";
+            sliderPlaybackRateMaxValue.innerHTML = playbackRateMax + " (MAX)";
+            if(save){
+                savePreferences();
+            }
+        } 
+        function updateDetuneSliders(save = true) {
+            sliderDetuneMin.value = detuneMin;
+            sliderDetuneMax.value = detuneMax;
+            sliderDetuneMinValue.innerHTML = detuneMin + " (MIN)";
+            sliderDetuneMaxValue.innerHTML = detuneMax + " (MAX)";
+            if(save){
+                savePreferences();
+            }
+        }
+        function updateVolumeSlider(save = true) {
+            sliderVolume.value = volume;
+            sliderVolumeValue.innerHTML = volume + " %";
+            if(save){
+                savePreferences();
+            }
+        }
+        function updateRandomizerSlider(save = true) {
+            sliderRandomizer.value = randomizer;
+            sliderRandomizerValue.innerHTML = "MAX " + randomizer + "%";
+            randomize();
+            if(save){
+                savePreferences();
+            }
+        }
+
+        function loadPreferences(){  
+            let lsADC_webRtcSettingsDiscord = localStorage.getItem(localStorageAppKey + '_webRtcSettingsDiscord');  
+            let lsADC_webRtcInstants = localStorage.getItem(localStorageAppKey + '_webRtcInstants');     
+            let lsADC_playbackRateMin = localStorage.getItem(localStorageAppKey + '_playbackRateMin');
+            let lsADC_playbackRateMax = localStorage.getItem(localStorageAppKey + '_playbackRateMax');
+            let lsADC_detuneMin = localStorage.getItem(localStorageAppKey + '_detuneMin');
+            let lsADC_detuneMax = localStorage.getItem(localStorageAppKey + '_detuneMax');
+            let lsADC_volume = localStorage.getItem(localStorageAppKey + '_volume');
+            let lsADC_randomizer = localStorage.getItem(localStorageAppKey + '_randomizer');
+
+            settingDiscord = (lsADC_webRtcSettingsDiscord !== null) ? lsADC_webRtcSettingsDiscord : "";
+            instants = (lsADC_webRtcInstants !== null) ? JSON.parse(lsADC_webRtcInstants) : [];
+            playbackRateMin = (lsADC_playbackRateMin !== null) ? parseFloat(lsADC_playbackRateMin) : playbackRateDefault;
+            playbackRateMax = (lsADC_playbackRateMax !== null) ? parseFloat(lsADC_playbackRateMax) : playbackRateDefault;
+            detuneMin = (lsADC_detuneMin !== null) ? parseFloat(lsADC_detuneMin): detuneDefault;
+            detuneMax = (lsADC_detuneMax !== null) ? parseFloat(lsADC_detuneMax) : detuneDefault;
+            volume = (lsADC_volume !== null) ? parseFloat(lsADC_volume) : volumeDefault;
+            randomizer = (lsADC_randomizer !== null) ? parseFloat(lsADC_randomizer) : randomizerDefault;
+
+            updateWebRtcSettings(false);
+            updateInstants(false);
+            updatePlaybackRateSliders(false);
+            updateDetuneSliders(false);
+            updateVolumeSlider(false);
+            updateRandomizerSlider(false);
+        }
+        function savePreferences(){
+            localStorage.setItem(localStorageAppKey + '_webRtcSettingsDiscord', settingDiscord);
+            localStorage.setItem(localStorageAppKey + '_webRtcInstants', JSON.stringify(instants));
+            localStorage.setItem(localStorageAppKey + '_playbackRateMin', playbackRateMin);
+            localStorage.setItem(localStorageAppKey + '_playbackRateMax', playbackRateMax);
+            localStorage.setItem(localStorageAppKey + '_detuneMin', detuneMin);
+            localStorage.setItem(localStorageAppKey + '_detuneMax', detuneMax);
+            localStorage.setItem(localStorageAppKey + '_volume', volume);
+            localStorage.setItem(localStorageAppKey + '_randomizer', randomizer);      
+        }
+        function clearPreferences(){
+            localStorage.removeItem(localStorageAppKey + '_webRtcSettingsDiscord');  
+            localStorage.removeItem(localStorageAppKey + '_webRtcInstants');            
+            localStorage.removeItem(localStorageAppKey + '_playbackRateMin');
+            localStorage.removeItem(localStorageAppKey + '_playbackRateMax');
+            localStorage.removeItem(localStorageAppKey + '_detuneMin');
+            localStorage.removeItem(localStorageAppKey + '_detuneMax');
+            localStorage.removeItem(localStorageAppKey + '_volume');
+            localStorage.removeItem(localStorageAppKey + '_randomizer');
+            
+            loadPreferences();
+            
+            if(!checkDBCompatibility){
+                return;
+            }
+
+            db.open().then(() => {
+                        db.delete().then(() => {
+                            console.log('Database cleared');
+                            callerName.innerText = "Database cleared. Sync.."
+                            initializeDB();
+                            if(ws){
+                                ws.emit('message', 'hello');
+                            }
+                        }).catch(error => {
+                            console.error('Failed to clear database', error);
+                        });
+                    }).catch(error => {
+                        console.error('Failed to open database for clearing', error);
+                    });
+        }
+
+
+        function randomize(){
+            if(randomizer.toFixed(2) != 0.00){
+                var playbackRateRandomized = Math.random() * (randomizer - 0.01) + 0.01;
+                console.warn("randomizer: playback-rate " + playbackRateRandomized + "%");
+
+                var detuneRandomized = Math.random() * (randomizer - 0.01) + 0.01;
+                console.warn("randomizer: detune " + detuneRandomized + "%");
+
+                playbackRateMin = (playbackRateDefault - (playbackRateDefault * playbackRateRandomized / 100.00)).toFixed(2);
+                playbackRateMax = (playbackRateDefault + (playbackRateDefault * playbackRateRandomized / 100.00)).toFixed(2);
+                detuneMin = (detuneMinMin * detuneRandomized / 100.00).toFixed(2);
+                detuneMax = (detuneMinMax * detuneRandomized / 100.00).toFixed(2);
+
+                updatePlaybackRateSliders(false);
+                updateDetuneSliders(false);
+            }      
+        }
+        function wait(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        } 
+        function checkDBCompatibility () {
+            if (!('indexedDB' in window)) {
+                console.log("This browser doesn't support IndexedDB");
+                dexie = False;
+                return false;
+            }
+            dexie = True;
+            return true;
+        }
+        function initializeDB(){
+            db = new Dexie("{{ db_name }}");
+            db.version(1).stores({
+                sounds: `
+                    [caller+name],
+                    path,
+                    file`,
+            });
+        }
+        function base64ToArrayBuffer(base64) {
+            const binaryString = window.atob(base64);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }    
+        async function downloadAndCacheSound(caller, file) {
+            if(!loading){
+                return;
+            }
+
+            const file_name = extractFilename(unescape(file));
+            
+            try {
+                const result = await db.sounds.get({caller: caller, name: file_name});
+                
+                if (result) {
+                    console.log(`Using cache for ${file_name}`);
+                } else {
+                    console.log(`No cache for ${file_name}`);
+                    
+                    await wait(Math.floor(Math.random() * 1000) + 1);
+
+                    const fileUrl = `/sounds/${file}`;
+                    const response = await fetch(fileUrl, {
+                        method: "GET",
+                        headers: {
+                            "Content-Type": "audio/mpeg"
+                        },
+                    });
+
+                    const arrayBuffer = await response.arrayBuffer();
+                    const copiedAudioBuffer = arrayBuffer.slice(0);
+
+                    await db.sounds.put({ caller: caller, name: file_name, path: file, file: copiedAudioBuffer });
+                    console.log(`Caching successful for ${file_name} -> ${file}`);  
+                }
+
+                done += 1;
+                lastCall.innerText = done;
+            } catch (error) {
+                console.error(`Error processing ${file}: ${error}`);
+            }
+        }
+        function processAudioEvent(audioEvent) {
+            return new Promise((resolve, reject) => {
+                let path = audioEvent.path;
+
+                getAudio(audioEvent)
+                .then(audioBlob => {
+
+                    // file in cache, play it!
+                    if (audioBlob) {
+                        playAudio(audioBlob, audioEvent, true)
+                            .then(() => {
+                                resolve();
+                            })
+                            .catch(error => {
+                                console.error(error);
+                                // lastCall.innerText = audioEvent.name
+                                lastCall.style.color = "red";
+                                reject(error);
+                            });
+                    } 
+                    // file not cached, fetch it this time!
+                    else {
+                        let fileUrl = `/sounds/${path}`;
+                        fetch(fileUrl, {
+                            method: "GET",
+                            headers: {
+                                "Content-Type": "audio/mpeg"
+                            },
+                        })
+                        .then(response => response.arrayBuffer())
+                        .then(arrayBuffer => {
+                            // cacheAudio(audioEvent, arrayBuffer);
+                            playAudio(arrayBuffer, audioEvent, false)
+                                .then(() => {
+                                    resolve();
+                                })
+                                .catch(error => {
+                                    console.error(error);
+                                    reject(error);
+                                });
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            reject(err);
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    reject(err);
+                });
+            });
+        }
+        function generateRandomOffset(baseValue, offsetMin, offsetMax) {
+            const randomOffset = (Math.random() * 0.1) - 0.05;
+            const clampedOffset = Math.max(Math.min(randomOffset, offsetMax), offsetMin);
+            const finalValue = parseFloat(baseValue + clampedOffset);
+            return finalValue;
+        }
+        function playAudio(audioBlob, audioEvent, fromCache) {
+            return new Promise((resolve, reject) => {
+                audioContext.decodeAudioData(audioBlob)
+                    .then(audioBuffer => {
+                        let source = audioContext.createBufferSource();
+                        source.buffer = audioBuffer;
+                        let gainNode = audioContext.createGain();
+                        // let vol = volume == 0 ? audioEvent.volume : audioEvent.volume  * volume / 100;
+                        let vol = audioEvent.volume  * volume / 100;
+                        console.warn('volume: ' + vol);
+                        gainNode.gain.value = vol;
+                        
+                        if('mod' in audioEvent && audioEvent.mod){
+                            // https://developer.mozilla.org/en-US/docs/Web/API/AudioBufferSourceNode/playbackRate
+
+                            // simple variant:
+                            // var randomPlaybackRate = playbackRateMin + Math.random() * (playbackRateMax - playbackRateMin);
+                            // randomPlaybackRate = randomPlaybackRate.toFixed(2);
+                            
+                            // base variant:
+                            randomPlaybackRate = generateRandomOffset(audioEvent.modBasePlaybackRate, audioEvent.modOffsetPlaybackRateMin, audioEvent.modOffsetPlaybackRateMax);
+                            source.playbackRate.value = randomPlaybackRate;
+                            console.warn("mod playback-rate: " + randomPlaybackRate);
+
+
+                            // https://developer.mozilla.org/en-US/docs/Web/API/AudioBufferSourceNode/detune
+
+                            // simple variant:
+                            // var randomDetune = Math.floor(Math.random() * (detuneMax - detuneMin + 1)) + detuneMin;
+
+                            // base-variant:
+                            randomDetune = generateRandomOffset(audioEvent.modBaseDetune, audioEvent.modOffsetDetuneMin, audioEvent.modOffsetDetuneMax);
+                            source.detune.value = randomDetune;
+                            console.warn("mod detune: " + randomDetune);
+                        }
+                        
+                        source.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+                        source.onended = () => {
+                            resolve();
+                        };
+                        source.start();
+
+                        lastCall.innerText = audioEvent.name;
+                        if(fromCache){
+                            lastCall.style = "color:orange;"
+                            console.log("Play sound (by cache)", audioEvent.name);
+                        }else{
+                            lastCall.style = "color:lightblue;"
+                            console.log("Play sound (by download)", audioEvent.name);
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        reject(err);
+                    });
+            });
+        }
+        function cacheAudio(audioEvent, audioBuffer) {
+            const copiedAudioBuffer = audioBuffer.slice(0);
+            db.open().then(() => {
+                db.sounds.put({ caller: audioEvent.caller, name: audioEvent.name, path: audioEvent.path, file: copiedAudioBuffer })
+                    .then(() => {
+                        console.log(`Caching successful for ${audioEvent.name} -> ${audioEvent.path})`);
+                    })
+                    .catch(error => {
+                        console.error(`Caching failed for ${audioEvent.name} -> ${audioEvent.path}: ${error}`);
+                    });
+            });
+        }
+        function getAudio(audioEvent) {
+            return db.open()
+                .then(() => db.sounds.get({caller: audioEvent.caller, name: audioEvent.name}))
+                .then(result => {
+                    if (result) {
+                        console.log(`Using cache for ${audioEvent.name}`);
+                        return result.file;
+                    } else {
+                        console.log(`No cache for ${audioEvent.name}`);
+                        return null;
+                    }
+                })
+                .catch(error => {
+                    console.error(`Cache-request failed for ${audioEvent.name}: ${error}`);
+                    return null;
+                });
+        }
+        function extractFilename(path) {
+            let separator = path.includes('/') ? '/' : '\\';
+            let parts = path.split(separator);
+            return parts[parts.length - 1];
+        }
+        function setLoading(state){
+            loading = state
+            if(!loading){
+                loader.style.display = 'none';
+
+                lastCall.style.display = 'block';
+                lastCall.innerText = 'Waiting for throws ..';
+                buttonSay.style.display = 'inline';
+                buttonFavorite.style.display = 'inline';
+                buttonChange.style.display = 'block';
+                callerSelect.style.display = 'block';
+                languageSelect.style.display = 'block';
+                genderSelect.style.display = 'block';
+                buttonBan.style.display = 'block';
+                buttonContainerModToggle.style.display = 'inline';   
+                        
+                buttonCalibrateBoard.style.display = 'block';
+                buttonResetBoard.style.display = 'block';   
+                
+                buttonNext.style.display = 'block'; 
+            }
+            else{
+                loader.style.display = 'block';
+
+                buttonSay.style.display = 'none';
+                buttonFavorite.style.display = 'none';
+                buttonChange.style.display = 'none';
+                callerSelect.style.display = 'none';
+                languageSelect.style.display = 'none';
+                genderSelect.style.display = 'none';
+                buttonBan.style.display = 'none';
+                buttonContainerModToggle.style.display = 'none';
+
+                buttonCalibrateBoard.style.display = 'none';
+                buttonResetBoard.style.display = 'none';   
+
+                buttonNext.style.display = 'none'; 
+            }
+        }
+
+        
+        async function getStreamConstraints(videoinputRequested = false, audioinputRequested = false){
+            let videoinput = false;
+            let audioinput = false;
+
+            if (!navigator.mediaDevices?.enumerateDevices) {
+                console.log("enumerateDevices() not supported.");
+                return Promise.reject("enumerateDevices() not supported.");
+            } else {
+                return navigator.mediaDevices
+                    .enumerateDevices()
+                    .then((devices) => {
+                        devices.forEach((device) => {
+                            console.log(`${device.kind}: ${device.label} id = ${device.deviceId}`);
+                            if(videoinputRequested && !videoinput && device.kind === 'videoinput' && device.id != '') videoinput = true;
+                            if(audioinputRequested && !audioinput && device.kind === 'audioinput' && device.id != '') audioinput = true;
+                        });
+                        if(videoinput && !confirm('Do you want to communicate with your camera?')) videoinput = false; 
+                        if(audioinput && !confirm('Do you want to communicate with your microphone?')) audioinput = false;
+                        return Promise.resolve({ video: videoinput, audio: audioinput });
+                    })
+                    .catch((err) => {
+                        console.error(`${err.name}: ${err.message}`);
+                        return Promise.reject(err);
+                    });
+            }
+        }
+        function checkStreamOptions(stream){
+            let video = false;
+            let audio = false; 
+            if(stream.getAudioTracks().length) audio = true;
+            if(stream.getVideoTracks().length) video = true;
+            return {metadata: {"video": video, "audio": audio}};
+        }
+        function startStream(stream, call) {
+            callOut = call;
+            const streamOptions = checkStreamOptions(stream);
+            if(streamOptions.metadata.video){
+                webRtcContainer.style.display = 'none';
+                webRtcStreamDisplay.style.display = 'block';
+            }
+            webRtcStreamDisplay.srcObject = stream;
+            webRtcStreamDisplay.addEventListener('loadedmetadata', () => {
+                webRtcStreamDisplay.play()
+            });
+        }
+        function endStream(){
+            callOut = null;
+            webRtcContainer.style.display = 'block';
+            webRtcStreamDisplay.style.display = 'none';     
+        }
+        async function callOpponent(){
+            var opponentPeerId = match + "-" + opponent;
+
+            navigator.mediaDevices.getUserMedia(await getStreamConstraints(true, true))
+            .then(function(stream) {
+                const myStreamOptions = checkStreamOptions(stream);
+                call = peer.call(opponentPeerId, stream, myStreamOptions);
+
+                call.on('stream', function(remoteStream) {
+                    startStream(remoteStream, call);
+                    addWebRtcChat('Stream started', 3);
+                });
+                call.on('close', function() {
+                    endStream();                      
+                    addWebRtcChat('Stream finished', 3);
+                });
+                call.on('error', function(error) {
+                    endStream();      
+                    addWebRtcChat('Stream error', 4);
+                });
+            })
+            .catch(function(err) {
+                endStream();
+                addWebRtcChat('No communication device available', 4);
+                console.log('Failed to get local stream', err);
+            });
+        }
+        function answerCallOpponent(){
+            peer.on('call', async function(call) {
+                let audioRequested = false;
+                let videoRequested = false;
+
+                console.log(call.metadata);
+                if(call.metadata){
+                    audioRequested = call.metadata.audio;
+                    videoRequested = call.metadata.video;   
+                }
+
+                navigator.mediaDevices.getUserMedia(await getStreamConstraints(videoRequested, audioRequested))
+                    .then(function(stream) {
+                        const myStreamOptions = checkStreamOptions(stream);
+                        call.answer(stream, myStreamOptions);
+                        call.on('stream', function(remoteStream) {
+                            startStream(remoteStream, call);
+                            addWebRtcChat('Stream started', 3);
+                        });
+                        call.on('close', function() {
+                            endStream();  
+                            addWebRtcChat('Stream finished', 3);
+                        });
+                        call.on('error', function(error) {
+                            endStream();  
+                            addWebRtcChat('Stream error', 4);
+                        });
+                    })
+                    .catch(function(err) {
+                        endStream();
+                        addWebRtcChat('No communication device available', 4);
+                        connOut.send('Sorry, the requested communication device is not available on my side.', 2);
+                        console.log('Failed to get local stream', err);
+                    });
+            });
+        }
+        function createPeer(matchId, meId, meHost, players){
+            if(matchId === null || meId === null || players === null) return;
+
+            console.log('Match-ID: ' + matchId);
+            console.log('My-ID: ' + meId);
+            console.log('Me-Host: ' + meHost);
+            console.log('Players: ' + players);
+
+            if(peer){
+                peer.destroy();
+            }
+
+            match = matchId;
+            me = meId;
+            opponent = players[0]['boardId'];
+            opponentName = players[0]['name'];
+            opponentAvatar = players[0]['avatarUrl'];
+
+            console.log('Opponent-ID: ' + opponent);
+
+            var mePeerId = match + "-" + me;
+            var opponentPeerId = match + "-" + opponent;
+
+            let config = { 'iceServers': [{ 'urls': ['stun:stun.l.google.com:19302'] }], 'debug': 2 };
+            peer = new Peer(mePeerId, config);
+
+            peer.on('open', function(id) {
+                console.log('My peer ID is: ' + id + ' - Host: ' + meHost);
+
+                if(meHost === 'True' || meHost == true){
+                    peer.on('error', function(err) {
+                        connectOpponent(false);
+                        console.log(err);
+                    });  
+                    connectOpponent(false);
+                }else{
+                    peer.on('connection', function(conn) {
+                        connOut = conn;
+                        webRtcContainer.style.display = 'block';
+
+                        conn.on('open', function(){
+                            connEstablished = true;
+                            webRtcContainer.style.display = 'block';
+                            if(protocol == "wss") webRtcChatStream.style.display = 'block';
+                            addWebRtcChat('Connected to ' + opponentName, 3);
+                            sendDiscord();
+                            
+                            while (chatOffline.length > 0) {
+                                conn.send(chatOffline.pop());
+                            }
+                        });
+                        conn.on('data', function(data){
+                            if(data != ''){
+                                addWebRtcChat(data, 1);
+                                audio.play();
+                            }
+                        });
+                        conn.on('close', function(){
+                            connEstablished = false;
+                            addWebRtcChat('Disconnected from ' + opponentName, 4);
+                        });
+                        conn.on('error', function(){
+                            connEstablished = false;
+                            addWebRtcChat('Disconnected from ' + opponentName, 4);
+                        });   
+
+                    }); 
+                }
+                answerCallOpponent();
+            });
+            peer.on('disconnected', function() {
+                console.log('Peer connection lost.');
+                peer.reconnect();
+            });
+            peer.on('close', function() {
+                console.log('Peer connection destroyed.');
+            });
+            // peer.on('error', function(err) {
+            //     console.log(err);
+            // });  
+        }
+        function connectOpponent(once){
+            if(connEstablished) return;
+
+            var mePeerId = match + "-" + me;
+            var opponentPeerId = match + "-" + opponent;
+
+            console.log('Trying to connect to opponent ' + opponentPeerId);
+
+            connOut = peer.connect(opponentPeerId);
+            connOut.on('open', function(){
+                connEstablished = true;
+                webRtcContainer.style.display = 'block';
+                if(protocol == "wss") webRtcChatStream.style.display = 'block';
+                addWebRtcChat('Connected to ' + opponentName, 3);
+                sendDiscord();
+                while (chatOffline.length > 0) {
+                    connOut.send(chatOffline.pop());
+                }
+            });
+            connOut.on('data', function(data){
+                if(data != ''){
+                    addWebRtcChat(data, 1);
+                    // console.log(data);
+                    audio.play();
+                }
+            });
+            connOut.on('close', function(){
+                connEstablished = false;
+                addWebRtcChat('Disconnected from ' + opponentName, 4);
+                if(once == false){
+                    setTimeout(function() {
+                        connectOpponent(once);
+                        // connOut = peer.connect(opponentPeerId);
+                    }, 2000);
+                }
+            });
+            connOut.on('error', function(){
+                connEstablished = false;
+                addWebRtcChat('Error on connection', 4);
+                if(once == false){
+                    setTimeout(function() {
+                        connectOpponent(once);
+                    }, 2000);
+                }
+            });  
+    }               
+        function sendDiscord(){
+            if(settingDiscord != ''){
+                let dc = discordUrl + settingDiscord;
+                addWebRtcChat(dc, 2);
+                if(connEstablished){
+                    connOut.send(dc);
+                }
+            }
+        }
+        function currentTime() {
+            let date = new Date();
+            let hours = ('0' + date.getHours()).slice(-2);
+            let minutes = ('0' + date.getMinutes()).slice(-2);
+            return `${hours}:${minutes}`;
+        }
+        const encode = input => {
+            const keyStr =
+                'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='
+            let output = ''
+            let chr1, chr2, chr3, enc1, enc2, enc3, enc4
+            let i = 0
+
+            while (i < input.length) {
+                chr1 = input[i++]
+                chr2 = i < input.length ? input[i++] : Number.NaN // Not sure if the index
+                chr3 = i < input.length ? input[i++] : Number.NaN // checks are needed here
+
+                enc1 = chr1 >> 2
+                enc2 = ((chr1 & 3) << 4) | (chr2 >> 4)
+                enc3 = ((chr2 & 15) << 2) | (chr3 >> 6)
+                enc4 = chr3 & 63
+
+                if (isNaN(chr2)) {
+                enc3 = enc4 = 64
+                } else if (isNaN(chr3)) {
+                enc4 = 64
+                }
+                output +=
+                keyStr.charAt(enc1) +
+                keyStr.charAt(enc2) +
+                keyStr.charAt(enc3) +
+                keyStr.charAt(enc4)
+            }
+            return output
+            }
+        function isURL(str) {
+            var urlPattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
+            '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
+            '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
+            '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
+            '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
+            '(\\#[-a-z\\d_]*)?$','i'); // fragment locator
+            return urlPattern.test(str);
+        }
+        function clearWebRtcChat(){
+            chatOffline = [];
+            chat = [];
+            webRtcChat.innerHTML = "";
+            renderWebRtcChat();
+        }
+        function addWebRtcChat(message, type){
+            let msgObject = {
+                text: message,
+                type: type,
+                timestamp: parseInt(Date.now()).toString(),
+                time: currentTime()
+            }
+            chat.push(msgObject);
+            renderWebRtcChat();
+        }
+        function renderWebRtcChat(){
+            chat.forEach(function(cm) {
+                if(document.getElementById(cm.timestamp)) return;
+
+                let message = document.createElement("div");
+                message.id = cm.timestamp;
+                
+                // MSG IN
+                if(cm.type === 1){
+                    if(opponentAvatar){
+                        const avatar = document.createElement("img");
+                        avatar.classList.add("web-rtc-chat-message-avatar");
+                        avatar.src = opponentAvatar;
+                        message.appendChild(avatar);
+                    }
+                    if(typeof(cm.text) === "string"){
+                        message.classList.add("web-rtc-chat-message-in");
+                        if(isURL(cm.text)){
+                            const link = document.createElement("a");
+                            link.href = cm.text;
+                            link.innerText = cm.text;
+                            link.setAttribute("target", "_blank");
+                            message.appendChild(link);
+                        }else{
+                            message.innerText = cm.text; 
+                        } 
+                    }else{
+                        message.classList.add("web-rtc-chat-message-file-in");
+                        let image = document.createElement("img");
+                        if (cm.text.filetype.includes('image')) {
+                            const bytes = new Uint8Array(cm.text.file);
+                            image.src = 'data:image/png;base64,' + encode(bytes);
+                            message.appendChild(image);
+                        }
+                    } 
+
+                // MSG OUT
+                }else if(cm.type === 2){
+                    if(typeof(cm.text) === "string"){
+                        message.classList.add("web-rtc-chat-message-out");
+                        if(isURL(cm.text)){
+                            const link = document.createElement("a");
+                            link.href = cm.text;
+                            link.innerText = cm.text;
+                            link.setAttribute("target", "_blank");
+                            message.appendChild(link);
+                        }else{
+                            message.innerText = cm.text; 
+                        }    
+                    }else{
+                        message.classList.add("web-rtc-chat-message-file-out");
+                        let image = document.createElement("img");
+                        var reader = new FileReader();
+                        reader.onload = function (e) { 
+                            image.setAttribute('src', e.target.result);
+                            message.appendChild(image); 
+                        };
+                        reader.readAsDataURL(cm.text);  
+                    } 
+
+                }else if(cm.type === 3){
+                    message.classList.add("web-rtc-chat-message-status-good");
+                    message.innerText = cm.text;
+                }else if(cm.type === 4){
+                    message.classList.add("web-rtc-chat-message-status-bad");
+                    message.innerText = cm.text; 
+                }
+
+                const time = document.createElement("span");
+                time.classList.add("web-rtc-chat-message-time");
+                time.innerText = cm.time;
+                message.appendChild(time);
+                
+                webRtcChat.appendChild(message);
+            });
+            webRtcChat.style.display = 'block';
+            webRtcChat.scrollTop = webRtcChat.scrollHeight;   
+        }
+
+
+        function onWsOpen(){
+            state.innerText = "CONNECTED!";
+            state.classList = "success";
+            ws.emit('message', 'hello');
+        }    
+        function onWsClose(){
+            state.innerText = "DISCONNECTED!";
+            state.classList = "failure";
+        }
+        function onWsReconnect(){
+            state.innerText = "RECONNECTING!";
+            state.classList = "success";
+        }
+        async function onWsData(data){
+            if(data.event === 'mirror'){
+                previousWait = true;
+
+                let modBasePlaybackRate = parseFloat(playbackRateMin + Math.random() * (playbackRateMax - playbackRateMin)).toFixed(2);
+                console.warn("mod base-playback-rate: " + modBasePlaybackRate);
+
+                let modBaseDetune = Math.floor(Math.random() * (detuneMax - detuneMin + 1.0)) + detuneMin;
+                console.warn("mod base-detune: " + modBaseDetune);
+
+                for(let file of data.files) {
+                    file['name'] = extractFilename(unescape(file.path));
+                    file['modBasePlaybackRate'] = modBasePlaybackRate;
+                    file['modBaseDetune'] = modBaseDetune;
+                    file['modOffsetPlaybackRateMin'] = playbackRateMin;
+                    file['modOffsetPlaybackRateMax'] = playbackRateMax;
+                    file['modOffsetDetuneMin'] = detuneMin;
+                    file['modOffsetDetuneMax'] = detuneMax;
+
+                    if(file.wait || previousWait) {
+                        audioQueue = audioQueue.then(() => processAudioEvent(file)).catch(err => console.error(err));
+                    } else {
+                        processAudioEvent(file).catch(err => console.error(err));
+                    }
+                    previousWait = file.wait;
+                }
+            }
+
+            else if(data.event === 'welcome'){
+                console.log('welcome by server');
+
+                done = 0;
+                callersAvailable = data.callersAvailable;
+                callersFavoured = data.callersFavoured;
+                name = data.caller;
+                
+                randomize();
+
+
+                renderAvailableCallers();
+
+                
+                callerName.style.display = 'block';
+                const exists_db_entries = await db.sounds.where('caller').equals(data.caller).toArray();
+                const exists = exists_db_entries.map(entry => entry['name']);
+                console.log(`${exists.length} cached files for ${data.caller}`);
+                callerName.innerHTML = `${name} [${exists.length} sounds]`;
+
+
+                if(callersFavoured.includes(name)){
+                    buttonFavorite.src =  "/static/images/star.png";
+                }else{
+                    buttonFavorite.src =  "/static/images/star-no.png";
+                }
+
+                setLoading(true);
+                data['event'] = 'sync';
+                data['exists'] = exists;
+                ws.emit('message', data);
+            }
+
+            else if(data.event === 'sync'){
+                if(data.exists.length == 0){
+                    setLoading(false);
+                    return;
+                }
+                const new_files = data.exists.map(new_file => {
+                        let arrayBuffer = base64ToArrayBuffer(new_file.file);
+                        done += 1;
+                        callerName.innerText = `${name} [${done} sounds extracted]`;
+                        // console.log(`decode successful for ${new_file.name} -> ${new_file.path}`);
+                        return { caller: data.caller, name: new_file.name, path: new_file.path, file: arrayBuffer };
+                    });
+
+                db.sounds.bulkPut(new_files).then(function(last_file) {
+                    callerName.innerText = `${name} [${done} sounds synced]`;
+                    console.log("last sounds's id was: " + last_file);
+                }).catch(Dexie.BulkError, function (e) {
+                    console.error("some sounds did not succeed: " + e.failures.length + " failed");
+                }).finally(function() {
+                    setLoading(false);
+                });
+            }
+
+            else if(data.event === 'match-started'){
+                if(match === undefined || match !== data.id){
+                    clearWebRtcChat();
+                    createPeer(data.id, data.me, data.meHost, data.players);
+                }
+            }
+            
+            else{
+                console.log("Unknown message");
+            }
+        }
+
+    </script>
+</body>
+</html>
