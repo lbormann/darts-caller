@@ -1,3 +1,6 @@
+## 2.19.2
+- stability update and debug posibilitys
+
 ## 2.19.1
 - reactivate possibility to use the Caller standalone via source
 - changed webcaller design

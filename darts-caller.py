@@ -59,7 +59,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.19.1'
+VERSION = '2.19.2'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -837,17 +837,39 @@ def play_sound(sound, wait_for_last, volume_mult, mod, break_last):
                 mixer.stop()
             except Exception as e:
                 ppe('Failed to stop last sound', e)
-            # Event zurücksetzen für zukünftige Verwendung
-            time.sleep(0.02)  # Kurze Pause, damit wartende Schleifen das Signal verarbeiten können
-            sound_break_event.clear()
+            # Warte kurz, damit wartende Threads das Signal empfangen
+            time.sleep(0.05)
             
+            # Event zurücksetzen - aber nur wenn kein anderer Thread es gerade nutzt
+            # Dies ist sicherer mit einem Lock
+            sound_break_event.clear()
+
         if wait_for_last == True:
-            while mixer.get_busy():
-                # Prüfe ob ein Break-Signal empfangen wurde
+            check_interval = 0.01
+            max_wait = 30  # Max 30 Sekunden warten
+            waited = 0
+            
+            while mixer.get_busy() and waited < max_wait:
                 if sound_break_event.is_set():
                     ppi('Sound waiting loop interrupted by break_last signal')
-                    return  # Verlasse die Funktion ohne Sound abzuspielen
-                time.sleep(0.01)
+                    return
+                time.sleep(check_interval)
+                waited += check_interval
+            
+            if waited >= max_wait:
+                ppi('Sound waiting loop timeout reached')
+                return
+        # BACKUP FALLS NEUE METHODE NICHT STABIL LÄUFT 
+        # if wait_for_last == True:
+        #     while mixer.get_busy():
+        #         # Prüfe ob ein Break-Signal empfangen wurde
+        #         if sound_break_event.is_set():
+        #             ppi('Sound waiting loop interrupted by break_last signal')
+        #             return  # Verlasse die Funktion ohne Sound abzuspielen
+        #         time.sleep(0.01)
+
+             
+        
 
         s = mixer.Sound(sound)
         s.set_volume(volume)
@@ -1088,6 +1110,8 @@ def listen_to_match(m, ws):
     global currentMatchPlayers
     global indexNameMacro
     global gotcha_last_player_points
+    global matchIsActive
+    global match_lock
 
     # EXAMPLE
     # {
@@ -1103,7 +1127,9 @@ def listen_to_match(m, ws):
         return
 
     if m['event'] == 'start':
-        currentMatch = m['id']
+        with match_lock:
+            currentMatch = m['id']
+            matchIsActive = True
         ppi('Listen to match: ' + currentMatch)
         paramsSubscribeTakeOut = {
             "channel": "autodarts.boards",
@@ -1124,7 +1150,7 @@ def listen_to_match(m, ws):
         try:
             res = requests.get(AUTODARTS_MATCHES_URL + currentMatch, headers = {'Authorization': f'Bearer {kc.access_token}'})
             m = res.json()
-            ppi(json.dumps(m, indent = 4, sort_keys = True))
+            # ppi(json.dumps(m, indent = 4, sort_keys = True))
 
             currentPlayerName = None
             players = []
@@ -1307,10 +1333,27 @@ def listen_to_match(m, ws):
 
         
     elif m['event'] == 'finish' or m['event'] == 'delete':
+        # Debug-Logging für Fehlerdiagnose
+        ppi(f"Received {m['event']} event for match: {m['id']}")
+        ppi(f"Current match ID: {currentMatch}")
+        ppi(f"Match is active: {matchIsActive}")
+        
+        # Validierung: Nur beenden wenn Match-ID übereinstimmt und Match aktiv ist
+        with match_lock:
+            if not matchIsActive:
+                ppi(f"WARNING: Ignoring {m['event']} event - match is not active")
+                return
+                
+            if currentMatch is None or currentMatch != m['id']:
+                ppi(f"WARNING: Ignoring {m['event']} event - match ID mismatch (current: {currentMatch}, event: {m['id']})")
+                return
+        
         ppi('Stop listening to match: ' + m['id'])
         ppi('listen to match message'+ 'event: ')
 
-        currentMatch = None
+        with match_lock:
+            currentMatch = None
+            matchIsActive = False
         currentMatchHost = None
         currentMatchPlayers = []
         ppi ("Player index reset")
@@ -4725,6 +4768,8 @@ def on_message_autodarts(ws, message):
             global lastMessage
             global gotcha_last_player_points
             global indexNameMacro
+            global matchIsActive
+            global match_lock
             m = json.loads(message)
             
             # ppi(json.dumps(m, indent = 4, sort_keys = True))
@@ -4746,41 +4791,56 @@ def on_message_autodarts(ws, message):
                 
                 time.sleep(0.01)
 
-                if lastMessage != data and currentMatch != None and 'id' in data and data['id'] == currentMatch:
-                    lastMessage = data
+                # Thread-safe Match-Validierung
+                with match_lock:
+                    if not matchIsActive:
+                        return
                     
-                    # ppi(json.dumps(data, indent = 4, sort_keys = True))
-
-                    # process_common(data)
-
-                    variant = data['variant']
+                    if currentMatch is None:
+                        return
                     
-                    if variant == 'Bull-off':
-                        process_bulling(data)
-
-                    elif variant == 'X01' or variant == 'Random Checkout':
-                        process_match_x01(data)
+                    if 'id' not in data or data['id'] != currentMatch:
+                        return
+                    
+                    # Doppelte Event-Prüfung
+                    if lastMessage == data:
+                        return
                         
-                    elif variant == 'Cricket':
-                        process_match_cricket(data)
+                    lastMessage = data
+                
+                # Rest der Verarbeitung außerhalb des Locks
+                # ppi(json.dumps(data, indent = 4, sort_keys = True))
+
+                # process_common(data)
+
+                variant = data['variant']
+                
+                if variant == 'Bull-off':
+                    process_bulling(data)
+
+                elif variant == 'X01' or variant == 'Random Checkout':
+                    process_match_x01(data)
                     
-                    elif variant == 'ATC':
-                        process_match_atc(data)
+                elif variant == 'Cricket':
+                    process_match_cricket(data)
+                
+                elif variant == 'ATC':
+                    process_match_atc(data)
 
-                    elif variant == 'RTW':
-                        process_match_rtw(data)
-                   
-                    elif variant == 'CountUp':
-                        process_match_CountUp(data)
+                elif variant == 'RTW':
+                    process_match_rtw(data)
+               
+                elif variant == 'CountUp':
+                    process_match_CountUp(data)
 
-                    elif variant == 'Bermuda':
-                        process_match_Bermuda(data)
-                    
-                    elif variant == 'Shanghai':
-                        process_match_shanghai(data)
+                elif variant == 'Bermuda':
+                    process_match_Bermuda(data)
+                
+                elif variant == 'Shanghai':
+                    process_match_shanghai(data)
 
-                    elif variant == 'Gotcha':
-                        process_match_gotcha(data)
+                elif variant == 'Gotcha':
+                    process_match_gotcha(data)
 
             elif m['channel'] == 'autodarts.boards':
                 data = m['data']
@@ -5526,6 +5586,12 @@ if __name__ == "__main__":
 
     global currentMatch
     currentMatch = None
+
+    global matchIsActive
+    matchIsActive = False
+
+    global match_lock
+    match_lock = threading.Lock()
 
     global currentMatchPlayers
     currentMatchPlayers = []

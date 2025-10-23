@@ -1,4 +1,3 @@
-
 *.txt
 *.json
 *-custom.sh
@@ -8,6 +7,7 @@
 *raw*.csv
 test.py
 __pycache__
+
 build
 dist
 *.spec
@@ -18,5 +18,4 @@ caller-downloads-temp
 .stats-page
 .caller-preview-page
 new_calls.csv
-autodarts_nodejs_keycloak_client.py
 NODEJS_SERVER_EXAMPLE.md
