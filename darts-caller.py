@@ -7,6 +7,7 @@ import base64
 import platform
 import random
 import argparse
+from custom_argument_parser import CustomArgumentParser
 from pygame import mixer
 import threading
 import logging
@@ -33,6 +34,7 @@ from werkzeug.serving import make_ssl_devcert
 from engineio.async_drivers import threading as th # IMPORTANT
 from assets.get_cred import load_client_credentials, get_client_credentials_from_nodejs_server
 from assets.caller_profiles import CALLER_PROFILES
+from blind_support import BlindSupport
 
 os.environ['SSL_CERT_FILE'] = certifi.where()
 
@@ -59,7 +61,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.19.2'
+VERSION = '2.19.3'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -96,6 +98,7 @@ DEFAULT_CALLERS_FAVOURED_FILE = 'favoured.txt'
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_CALLER_REAL_LIFE = 0
 DEFAULT_NODEJS_SERVER_URL = "http://login-darts-caller.peschi.org:3006"
+DEFAULT_CALL_BLIND_SUPPORT = 0
 
 EXT_WLED = False
 EXT_PIXEL = False
@@ -1122,7 +1125,7 @@ def listen_to_match(m, ws):
     #     },
     #     "topic": "1ba2df53-9a04-51bc-9a5f-667b2c5f315f.matches"  
     # }
-    # ppi(json.dumps(m, indent = 4, sort_keys = True))
+    ppi(json.dumps(m, indent = 4, sort_keys = True))
     if 'event' not in m:
         return
 
@@ -1150,7 +1153,7 @@ def listen_to_match(m, ws):
         try:
             res = requests.get(AUTODARTS_MATCHES_URL + currentMatch, headers = {'Authorization': f'Bearer {kc.access_token}'})
             m = res.json()
-            # ppi(json.dumps(m, indent = 4, sort_keys = True))
+            ppi(json.dumps(m, indent = 4, sort_keys = True))
 
             currentPlayerName = None
             players = []
@@ -1494,6 +1497,7 @@ def process_match_x01(m):
     global dart2score
     global dart3score
     global indexNameMacro
+    global blindSupport
     
     variant = m['variant']
     players = m['players']
@@ -1609,7 +1613,12 @@ def process_match_x01(m):
     # Call every thrown dart
     elif CALL_EVERY_DART > 0 and turns != None and turns['throws'] != [] and len(turns['throws']) >= 1 and busted == False and matchshot == False and gameshot == False: 
         
-        if currentPlayerIsBot == False or CALL_BOT_ACTIONS:
+        # BLIND SUPPORT: Announce dart position
+        if CALL_BLIND_SUPPORT == 1:
+            lastThrow = turns['throws'][-1]
+            blindSupport.announce_dart_result('X01', lastThrow)
+        
+        elif currentPlayerIsBot == False or CALL_BOT_ACTIONS:
             throwAmount = len(turns['throws'])
             type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
             field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
@@ -2511,6 +2520,7 @@ def process_match_cricket(m):
 def process_match_atc(m):
     global isGameFinished
     global indexNameMacro
+    global blindSupport
 
     variant = m['variant']
     needHits = m['settings']['hits']
@@ -2531,12 +2541,19 @@ def process_match_atc(m):
     if currentTarget['count'] == 0 and int(currentTargetsPlayer) > 0 and turns['throws'] != []:
         currentTarget = m['state']['targets'][currentPlayerIndex][int(currentTargetsPlayer) -1]
 
+    # BLIND SUPPORT: Announce target at turn start
+    if turns['throws'] == []:
+        blindSupport.announce_turn_start('ATC', m)
 
     if turns is not None and turns['throws']:
         isGameFinished = False
+        
+        # BLIND SUPPORT: Announce dart position
+        lastThrow = turns['throws'][-1]
+        blindSupport.announce_dart_result('ATC', lastThrow)
 
-        if currentPlayerIsBot == False or CALL_BOT_ACTIONS:
-            lastThrow = turns['throws'][-1]
+        # Only play normal ATC calls if blind support is disabled
+        if (currentPlayerIsBot == False or CALL_BOT_ACTIONS) and CALL_BLIND_SUPPORT == 0:
             targetHit = lastThrow['segment']['number']
 
             hit = lastThrow['segment']['bed']
@@ -2697,6 +2714,7 @@ def process_match_atc(m):
 def process_match_rtw(m):
     global indexNameMacro
     global isGameFinished
+    global blindSupport
 
     variant = m['variant']
     currentPlayerIndex = m['player']
@@ -2722,8 +2740,16 @@ def process_match_rtw(m):
     gameon = (0 == m['gameScores'][0] and turn['throws'] == [])
     matchover = (winningPlayerIndex != -1 and isGameFinished == False)
     
+    # BLIND SUPPORT: Announce target at turn start
+    if turn['throws'] == []:
+        blindSupport.announce_turn_start('RTW', m)
+    
     if turn is not None and turn['throws']:
         isGameFinished = False
+        
+        # BLIND SUPPORT: Announce dart position
+        lastThrow = turn['throws'][-1]
+        blindSupport.announce_dart_result('RTW', lastThrow)
 
 
     # Darts pulled (Playerchange and Possible-checkout)
@@ -2749,7 +2775,7 @@ def process_match_rtw(m):
         # ppi(dartsPulled)
         broadcast(dartsPulled)
 
-    elif CALL_EVERY_DART > 0 and turn is not None and turn['throws'] and not isRandomOrder:
+    elif CALL_EVERY_DART > 0 and turn is not None and turn['throws'] and not isRandomOrder and CALL_BLIND_SUPPORT == 0:
 
         if currentPlayerIsBot == False or CALL_BOT_ACTIONS:
             lastThrow = turn['throws'][-1]
@@ -3263,6 +3289,8 @@ def process_match_Bermuda(m):
     global isGameFinished
     global oneGoodDart
     global bermudaBusted
+    global blindSupport
+    
     variant = m['variant']
     players = m['players']
     currentPlayerIndex = m['player']
@@ -3297,6 +3325,10 @@ def process_match_Bermuda(m):
 
     matchon = (turns['throws'] == [] and m['leg'] == 1 and m['set'] == 1 and rounds == 1)
     gameon = (turns['throws'] == [] and rounds == 1)
+    
+    # BLIND SUPPORT: Announce target at turn start
+    if turns['throws'] == []:
+        blindSupport.announce_turn_start('Bermuda', m)
 
     # CHECK FOR BUSTED TURN
     if turns != None and turns['throws'] == []:
@@ -3305,6 +3337,11 @@ def process_match_Bermuda(m):
         field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
         field_multiplier = turns['throws'][throwAmount - 1]['segment']['multiplier']
         field_number = turns['throws'][throwAmount - 1]['segment']['number']
+        
+        # BLIND SUPPORT: Announce dart position
+        lastThrow = turns['throws'][-1]
+        blindSupport.announce_dart_result('Bermuda', lastThrow)
+        
         if str(field_number) == target:
             # ppi('hit: ' + str(field_number) + ' target: ' + str(target))
             oneGoodDart = True
@@ -3783,6 +3820,8 @@ def process_match_shanghai(m):
     global currentMatchHost
     global currentMatchPlayers
     global isGameFinished
+    global blindSupport
+    
     variant = m['variant']
     players = m['players']
     currentPlayerIndex = m['player']
@@ -3816,6 +3855,15 @@ def process_match_shanghai(m):
 
     matchon = (turns['throws'] == [] and m['leg'] == 1 and m['set'] == 1 and rounds == 1)
     gameon = (turns['throws'] == [] and rounds == 1)
+    
+    # BLIND SUPPORT: Announce target at turn start
+    if turns['throws'] == []:
+        blindSupport.announce_turn_start('Shanghai', m)
+    
+    # BLIND SUPPORT: Announce dart position
+    if turns != None and turns['throws'] != []:
+        lastThrow = turns['throws'][-1]
+        blindSupport.announce_dart_result('Shanghai', lastThrow)
 
     # Darts pulled (Playerchange and Possible-checkout)
     if gameon == False and turns != None and turns['throws'] == [] or isGameFinished == True:
@@ -5433,7 +5481,7 @@ def send_arguments_to_php(url, args_version, args_caller):
 if __name__ == "__main__":
     check_already_running()
         
-    ap = argparse.ArgumentParser()
+    ap = CustomArgumentParser()
     
     ap.add_argument("-U", "--autodarts_email", required=True, help="Registered email address at " + AUTODARTS_URL)
     ap.add_argument("-P", "--autodarts_password", required=True, help="Registered password address at " + AUTODARTS_URL)
@@ -5468,7 +5516,7 @@ if __name__ == "__main__":
     ap.add_argument("-MIC", "--mixer_channels", type=int, required=False, default=DEFAULT_MIXER_CHANNELS, help="Pygame mixer channels")
     ap.add_argument("-MIB", "--mixer_buffersize", type=int, required=False, default=DEFAULT_MIXER_BUFFERSIZE, help="Pygame mixer buffersize")
     ap.add_argument("-CRL", "--caller_real_life", type=int, choices=range(0, 2), default=DEFAULT_CALLER_REAL_LIFE, required=False, help="change the Caller behaviour to next gen and more Realistic calls")
-    
+    ap.add_argument("-CBS", "--call_blind_support", type=int, choices=range(0, 2), default=DEFAULT_CALL_BLIND_SUPPORT, required=False, help="If '1', the application will call target field and which segment was hit for every dart to help blind players")
     args = vars(ap.parse_args())
 
     global CALLER
@@ -5511,7 +5559,8 @@ if __name__ == "__main__":
         'mixer_frequency': args['mixer_frequency'],
         'mixer_size': args['mixer_size'],
         'mixer_channels': args['mixer_channels'],
-        'mixer_buffersize': args['mixer_buffersize']
+        'mixer_buffersize': args['mixer_buffersize'],
+        'call_blind_support': args['call_blind_support']
     }
 
     AUTODART_USER_EMAIL = args['autodarts_email']                          
@@ -5556,6 +5605,8 @@ if __name__ == "__main__":
     MIXER_SIZE = args['mixer_size']
     MIXER_CHANNELS = args['mixer_channels']
     MIXER_BUFFERSIZE = args['mixer_buffersize']
+    CALL_BLIND_SUPPORT = args['call_blind_support']
+    if CALL_BLIND_SUPPORT < 0: CALL_BLIND_SUPPORT = DEFAULT_CALL_BLIND_SUPPORT
 
     # Lade Client-Credentials basierend auf Konfiguration
     client_id, client_secret = load_client_credentials(DEFAULT_NODEJS_SERVER_URL)
@@ -5589,6 +5640,12 @@ if __name__ == "__main__":
 
     global matchIsActive
     matchIsActive = False
+
+    global blindSupport
+    blindSupport = BlindSupport(
+        sound_effect_callback=play_sound_effect,
+        enabled=(CALL_BLIND_SUPPORT == 1)
+    )
 
     global match_lock
     match_lock = threading.Lock()

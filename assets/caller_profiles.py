@@ -139,17 +139,17 @@ CALLER_PROFILES = {
     'de-DE-onyx-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/de-DE-onyx-MALE.zip', 1),
     'de-DE-sage-FEMALE': ('https://darts-downloads.peschi.org/soundfiles/openai/de-DE-sage-FEMALE.zip', 1),
     # -- en-GB --
-    'en-GB-ash-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/en-GB-ash-MALE.zip', 1),
-    'en-GB-ballad-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/en-GB-ballad-MALE.zip', 1),
+    'en-GB-ash-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/en-GB-ash-MALE-v2.zip', 2),
+    'en-GB-ballad-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/en-GB-ballad-MALE-v2.zip', 2),
     'en-GB-coral-FEMALE': ('https://darts-downloads.peschi.org/soundfiles/openai/en-GB-coral-FEMALE.zip', 1),
-    'en-GB-onyx-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/en-GB-onyx-MALE.zip', 1),
+    'en-GB-onyx-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/en-GB-onyx-MALE-v2.zip', 2),
     'en-GB-sage-FEMALE': ('https://darts-downloads.peschi.org/soundfiles/openai/en-GB-sage-FEMALE.zip', 1),
     'en-GB-verse-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/en-GB-verse-MALE.zip', 1),
     # -- en-US --
-    'en-US-ash-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/en-US-ash-MALE.zip', 1),
-    'en-US-ballad-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/en-US-ballad-MALE.zip', 1),
+    'en-US-ash-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/en-US-ash-MALE-v2.zip', 2),
+    'en-US-ballad-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/en-US-ballad-MALE-v2.zip', 2),
     'en-US-coral-FEMALE': ('https://darts-downloads.peschi.org/soundfiles/openai/en-US-coral-FEMALE.zip', 1),
-    'en-US-onyx-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/en-US-onyx-MALE.zip', 1),
+    'en-US-onyx-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/en-US-onyx-MALE-v2.zip', 2),
     'en-US-sage-FEMALE': ('https://darts-downloads.peschi.org/soundfiles/openai/en-US-sage-FEMALE.zip', 1),
     # -- es-ES --
     'es-ES-ash-MALE': ('https://darts-downloads.peschi.org/soundfiles/openai/es-ES-ash-MALE.zip', 1),

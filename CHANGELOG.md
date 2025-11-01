@@ -1,3 +1,15 @@
+## 2.19.3
+- Added CustomArgumentParser class for improved error output on invalid arguments
+  - Shows only relevant error messages instead of full help text
+  - Provides helpful hints based on error type
+- Added Blind Support feature (-CBS / --call_blind_support)
+  - New BlindSupport class in separate blind_support.py module
+  - Announces target field at the start of each player's turn
+  - Announces exact dart position after every throw (bed type + number)
+  - Supported game modes: X01, ATC, RTW, Bermuda, Shanghai
+  - Replaces normal game mode calls when enabled to prevent duplicates
+  - Required sound files: bs_target_is, bs_single, bs_single_inner, bs_single_outer, bs_double, bs_triple, bs_outside, bs_any_double, bs_any_triple
+
 ## 2.19.2
 - stability update and debug posibilitys
 
