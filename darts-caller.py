@@ -61,7 +61,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.19.3'
+VERSION = '2.19.4'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -2970,6 +2970,7 @@ def process_bulling(m):
 
 def process_match_CountUp(m):
     global indexNameMacro
+    global blindSupport
     currentPlayerIndex = m['player']
     currentPlayer = m['players'][currentPlayerIndex]
     currentPlayerName = str(currentPlayer['name']).lower()
@@ -2985,7 +2986,12 @@ def process_match_CountUp(m):
     # Call every thrown dart
     if CALL_EVERY_DART > 0 and turns != None and turns['throws'] != [] and len(turns['throws']) >= 1: 
 
-        if currentPlayerIsBot == False or CALL_BOT_ACTIONS:
+        # BLIND SUPPORT: Announce dart position
+        if CALL_BLIND_SUPPORT == 1:
+            lastThrow = turns['throws'][-1]
+            blindSupport.announce_dart_result('CountUp', lastThrow)
+
+        elif currentPlayerIsBot == False or CALL_BOT_ACTIONS:
 
             throwAmount = len(turns['throws'])
             type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
@@ -4307,6 +4313,7 @@ def process_match_gotcha(m):
     global gotcha_last_player_points
     global isGameFinished
     global lastPoints
+    global blindSupport
     currentPlayerIndex = m['player']
     currentPlayer = m['players'][currentPlayerIndex]
     currentPlayerName = str(currentPlayer['name']).lower()
@@ -4346,7 +4353,12 @@ def process_match_gotcha(m):
     # Call every thrown dart
     if CALL_EVERY_DART > 0 and turns != None and turns['throws'] != [] and len(turns['throws']) >= 1: 
 
-        if currentPlayerIsBot == False or CALL_BOT_ACTIONS:
+        # BLIND SUPPORT: Announce dart position
+        if CALL_BLIND_SUPPORT == 1:
+            lastThrow = turns['throws'][-1]
+            blindSupport.announce_dart_result('Gotcha', lastThrow)
+
+        elif currentPlayerIsBot == False or CALL_BOT_ACTIONS:
 
             throwAmount = len(turns['throws'])
             type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()

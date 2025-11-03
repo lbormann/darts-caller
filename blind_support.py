@@ -110,29 +110,19 @@ class BlindSupport:
         try:
             # Bermuda rounds mapping
             BERMUDA_ROUNDS = {
-                1: '20',
-                2: '1',
-                3: '18',
-                4: '4',
-                5: '13',
-                6: '6',
-                7: '10',
-                8: '15',
-                9: '2',
-                10: '17',
-                11: '3',
-                12: '19',
-                13: '7',
-                14: '16',
-                15: '8',
-                16: '11',
-                17: '14',
-                18: '9',
-                19: '12',
-                20: '5',
-                21: 'D',
-                22: 'T',
-                23: '50'
+                1: '12',
+                2: '13',
+                3: '14',
+                4: 'D',
+                5: '15',
+                6: '16',
+                7: '17',
+                8: 'T',
+                9: '18',
+                10: '19',
+                11: '20',
+                12: '25',
+                13: '50'
             }
             
             round_num = game_data['round']
@@ -150,6 +140,8 @@ class BlindSupport:
                     self.play_sound('bs_any_triple', wait_for_last=True)
                 elif target == '50':
                     self.play_sound('bullseye', wait_for_last=True)
+                elif target == '25':
+                    self.play_sound('bull', wait_for_last=True)
                 else:
                     self.play_sound(target, wait_for_last=True)
                     
@@ -174,9 +166,6 @@ class BlindSupport:
             segment = throw_data['segment']
             bed = segment['bed']
             number = segment['number']
-            
-            # Build announcement
-            bed_key = self._get_bed_sound_key(bed)
             number_str = str(number)
             
             # Special handling for bull
@@ -186,13 +175,51 @@ class BlindSupport:
                 else:
                     self.play_sound('bull', wait_for_last=True)
                 return
+            
+            # Handle different bed types
+            if bed == 'Triple':
+                # Try t20, t19, etc.
+                if not self.play_sound('t' + number_str, wait_for_last=True):
+                    # Fallback to "triple" + number
+                    if self.play_sound('bs_triple', wait_for_last=True):
+                        self.play_sound(number_str, wait_for_last=True)
+                    else:
+                        self.play_sound(number_str, wait_for_last=True)
+                        
+            elif bed == 'Double':
+                # Try d20, d19, etc.
+                if not self.play_sound('d' + number_str, wait_for_last=True):
+                    # Fallback to "double" + number
+                    if self.play_sound('bs_double', wait_for_last=True):
+                        self.play_sound(number_str, wait_for_last=True)
+                    else:
+                        self.play_sound(number_str, wait_for_last=True)
+                        
+            elif bed == 'Outside':
+                # Try m20, m19, etc.
+                if not self.play_sound('m' + number_str, wait_for_last=True):
+                    # Fallback to "outside" + number
+                    if self.play_sound('bs_outside', wait_for_last=True):
+                        self.play_sound(number_str, wait_for_last=True)
+                    else:
+                        self.play_sound(number_str, wait_for_last=True)
+                        
+            elif bed == 'SingleOuter' or bed == 'Outer Single':
+                # Only announce number for outer single
+                self.play_sound(number_str, wait_for_last=True)
                 
-            # Announce bed type
-            if bed_key and self.play_sound(bed_key, wait_for_last=True):
-                # Announce number
+            elif bed == 'SingleInner' or bed == 'Inner Single':
+                # Announce "single inner" + number
+                if self.play_sound('bs_single_inner', wait_for_last=True):
+                    self.play_sound(number_str, wait_for_last=True)
+                else:
+                    self.play_sound(number_str, wait_for_last=True)
+                    
+            elif bed == 'Single':
+                # Generic single - just announce number
                 self.play_sound(number_str, wait_for_last=True)
             else:
-                # Fallback: just announce number
+                # Fallback for any other bed type
                 self.play_sound(number_str, wait_for_last=True)
                 
         except Exception as e:

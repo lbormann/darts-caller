@@ -25,17 +25,21 @@ jobs:
             # THIS IS A BETA RELEASE USING AT YOUR OWN RISK
             
             # Changes in this Release
-              - Added CustomArgumentParser class for improved error output on invalid arguments
-                - Shows only relevant error messages instead of full help text
-                - Provides helpful hints based on error type
               - Added Blind Support feature (-CBS / --call_blind_support)
-                - New BlindSupport class in separate blind_support.py module
-                - Announces target field at the start of each player's turn
-                - Announces exact dart position after every throw (bed type + number)
-                - Supported game modes: X01, ATC, RTW, Bermuda, Shanghai
+                - Announces target field at the start of each player's turn (for applicable game modes)
+                - Announces exact dart position after every throw with intelligent sound file usage
+                - Supported game modes: X01, ATC, RTW, Bermuda, Shanghai, Count-Up, Gotcha
                 - Replaces normal game mode calls when enabled to prevent duplicates
-                - Required sound files: bs_target_is, bs_single, bs_single_inner, bs_single_outer, bs_double, bs_triple, bs_outside, bs_any_double, bs_any_triple
-
+                - Smart dart position announcements:
+                  - Outer Single: Only number (e.g., "20")
+                  - Inner Single: "inside" + number (e.g., "inside 20")
+                  - Triple: Uses t-prefix files (e.g., "t20") with fallback to "triple 20"
+                  - Double: Uses d-prefix files (e.g., "d20") with fallback to "double 20"
+                  - Outside: Uses m-prefix files (e.g., "m20") with fallback to "outside 20"
+                  - Bull/Bullseye: Direct announcement
+                - Corrected Bermuda rounds mapping (12-13-14-D-15-16-17-T-18-19-20-25-50)
+                - Required sound files: bs_target_is, bs_single_inner, bs_any_double, bs_any_triple, plus existing t*, d*, m* files
+                  - the soundfiles are included in new pack versions for all googleai and openai voices. 
         draft: false
         prerelease: true
         

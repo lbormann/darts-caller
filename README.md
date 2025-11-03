@@ -573,6 +573,32 @@ Default: '8079'</p>
 Default: '0'</p>
 
 
+### Blind Support Feature, extended Callouts
+
+#### *`-CBS / --call_blind_support`*
+
+<p>Enables blind support mode for visually impaired players. When activated, the caller announces the target field at the beginning of each turn (for applicable game modes) and provides detailed information about where each dart landed.
+
+Supported game modes: X01, Around the Clock (ATC), Round the World (RTW), Bermuda, Shanghai, Count-Up, and Gotcha.
+
+Features:
+- Target announcements at turn start (e.g., "Target is triple 20" for ATC)
+- Dart position announcements after each throw
+- Replaces standard calling when enabled to prevent duplicate announcements
+
+Required sound files:
+- bs_target_is: "Target is" announcement
+- bs_single_inner: For inner single announcements
+- bs_any_double: For "any double" targets (Bermuda)
+- bs_any_triple: For "any triple" targets (Bermuda)
+- Existing t*, d*, m* files for triple/double/miss announcements
+
+- '0' = blind support deactivated
+- '1' = blind support activated
+
+Default: '0'
+</p>
+
 
 
 ### Setup autostart [linux] (optional)
