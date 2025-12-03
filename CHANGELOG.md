@@ -1,3 +1,14 @@
+## 2.19.5
+- Fixed Blind Support duplicate score announcements
+  - Total score now announced only once after 3rd dart
+  - Removed duplicate announcement after "Turn ended"
+  - Bot total scores now announced correctly
+- Fixed Blind Support dart position announcement order
+  - Dart position now announced BEFORE "you require" in checkout range
+  - Proper sequence: Position → "you require X" (darts 1-2), Position only (dart 3)
+- Blind Support now works independently of CALL_EVERY_DART setting
+  - No longer requires -E parameter to function
+
 ## 2.19.4
 - Added Blind Support feature (-CBS / --call_blind_support)
   - Announces target field at the start of each player's turn (for applicable game modes)
