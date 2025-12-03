@@ -878,7 +878,21 @@ def play_sound(sound, wait_for_last, volume_mult, mod, break_last):
         s.set_volume(volume)
         s.play()
 
-    ppi('Play: "' + sound + '"')
+    if DEBUG:
+        debug_params = []
+        if wait_for_last:
+            debug_params.append('wait_for_last=True')
+        if break_last:
+            debug_params.append('break_last=True')
+        if volume_mult != 1.0:
+            debug_params.append(f'volume_mult={volume_mult}')
+        if mod == False:
+            debug_params.append('mod=False')
+        
+        params_str = ' [' + ', '.join(debug_params) + ']' if debug_params else ''
+        ppi('Play: "' + sound + '"' + params_str)
+    else:
+        ppi('Play: "' + sound + '"')
 
 def play_sound_effect(sound_file_key, wait_for_last = False, volume_mult = 1.0, mod = True, break_last = False):
     try:
@@ -1610,15 +1624,26 @@ def process_match_x01(m):
 
             ppi("Next player")
 
+    # BLIND SUPPORT: Announce dart position (independent of CALL_EVERY_DART)
+    if CALL_BLIND_SUPPORT == 1 and turns != None and turns['throws'] != [] and len(turns['throws']) >= 1 and busted == False and matchshot == False and gameshot == False:
+        # Skip bot throws - only announce for human players
+        if currentPlayerIsBot == False:
+            lastThrow = turns['throws'][-1]
+            blindSupport.announce_dart_result('X01', lastThrow)
+            
+            throwAmount = len(turns['throws'])
+            
+            # After 1st and 2nd dart: announce "you require"
+            if throwAmount < 3:
+                # remainingPlayerScore is already updated with current throws
+                # Just announce "you require" if in checkout range (2-170) and not busted
+                if remainingPlayerScore > 0 and remainingPlayerScore <= 170 and remainingPlayerScore not in BOGEY_NUMBERS:
+                    blindSupport.announce_remaining_score(remainingPlayerScore)
+
     # Call every thrown dart
     elif CALL_EVERY_DART > 0 and turns != None and turns['throws'] != [] and len(turns['throws']) >= 1 and busted == False and matchshot == False and gameshot == False: 
         
-        # BLIND SUPPORT: Announce dart position
-        if CALL_BLIND_SUPPORT == 1:
-            lastThrow = turns['throws'][-1]
-            blindSupport.announce_dart_result('X01', lastThrow)
-        
-        elif currentPlayerIsBot == False or CALL_BOT_ACTIONS:
+        if currentPlayerIsBot == False or CALL_BOT_ACTIONS:
             throwAmount = len(turns['throws'])
             type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
             field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
@@ -2073,7 +2098,16 @@ def process_match_x01(m):
         }
         broadcast(dartsThrown)
 
-        if currentPlayerIsBot == False or CALL_BOT_ACTIONS:
+        # BLIND SUPPORT: Announce total score after 3rd dart
+        if CALL_BLIND_SUPPORT == 1:
+            if currentPlayerIsBot == False:
+                # Human player: announce total score
+                blindSupport.announce_turn_total(turns['points'])
+            elif currentPlayerIsBot:
+                # Bot: only announce total score
+                play_sound_effect(points, wait_for_last=True)
+        elif currentPlayerIsBot == False or CALL_BOT_ACTIONS:
+            # Normal mode: announce total score if conditions are met
             if CALL_EVERY_DART == 0 or CALL_EVERY_DART_TOTAL_SCORE == True:
                 play_sound_effect(points, wait_for_last=CALL_EVERY_DART > 0)
 
