@@ -9,15 +9,17 @@ class BlindSupport:
     Announces targets and dart positions to assist visually impaired players.
     """
     
-    def __init__(self, sound_effect_callback, enabled=False):
+    def __init__(self, sound_effect_callback, enabled=False, sound_effect_variant_callback=None):
         """
         Initialize BlindSupport
         
         Args:
             sound_effect_callback: Function to play sound effects
             enabled: Whether blind support is enabled
+            sound_effect_variant_callback: Function to play specific sound variants (optional)
         """
         self.play_sound = sound_effect_callback
+        self.play_sound_variant = sound_effect_variant_callback
         self.enabled = enabled
         self.last_announced_target = None
         
@@ -72,12 +74,21 @@ class BlindSupport:
         try:
             remaining = str(remaining_score)
             # Announce "you require" - wait for dart position to finish first
-            if self.play_sound('you_require', wait_for_last=True):
+            # Use variant +1 specifically if available
+            success = False
+            if self.play_sound_variant:
+                success = self.play_sound_variant('you_require', '1', wait_for_last=True)
+            
+            if not success:
+                # Fallback to regular you_require
+                success = self.play_sound('you_require', wait_for_last=True)
+            
+            if success:
                 # Announce the score
                 if not self.play_sound('c_' + remaining, wait_for_last=True):
                     self.play_sound(remaining, wait_for_last=True)
             else:
-                # Fallback to combined sound
+                # Last fallback to combined sound
                 if not self.play_sound('yr_' + remaining, wait_for_last=True):
                     self.play_sound(remaining, wait_for_last=True)
         except Exception as e:

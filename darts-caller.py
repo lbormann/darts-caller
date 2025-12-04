@@ -61,7 +61,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.19.5'
+VERSION = '2.19.60'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -902,6 +902,37 @@ def play_sound_effect(sound_file_key, wait_for_last = False, volume_mult = 1.0, 
     except Exception as e:
         ppe('Can not play sound for sound-file-key "' + sound_file_key + '" -> Ignore this or check existance; otherwise convert your file appropriate', e)
         return False
+
+def play_sound_effect_variant(sound_file_key, variant, wait_for_last = False, volume_mult = 1.0, mod = True, break_last = False):
+    """
+    Play a specific variant of a sound file.
+    Example: play_sound_effect_variant('you_require', '1', ...) will play you_require+1.mp3
+    """
+    try:
+        global caller
+        # Get all files for this key
+        sound_files = caller[sound_file_key]
+        
+        # Filter for specific variant
+        variant_file = None
+        search_pattern = sound_file_key + '+' + variant
+        for sound_file in sound_files:
+            # Extract filename without extension
+            filename = os.path.splitext(os.path.basename(sound_file))[0]
+            if filename == search_pattern:
+                variant_file = sound_file
+                break
+        
+        if variant_file:
+            play_sound(variant_file, wait_for_last, volume_mult, mod, break_last)
+            return True
+        else:
+            # Fallback to random choice if variant not found
+            play_sound(random.choice(sound_files), wait_for_last, volume_mult, mod, break_last)
+            return True
+    except Exception as e:
+        ppe('Can not play sound variant for sound-file-key "' + sound_file_key + '+' + variant + '" -> Ignore this or check existance; otherwise convert your file appropriate', e)
+        return False
     
 def mirror_sounds():
     global mirror_files
@@ -1635,9 +1666,11 @@ def process_match_x01(m):
             
             # After 1st and 2nd dart: announce "you require"
             if throwAmount < 3:
-                # remainingPlayerScore is already updated with current throws
-                # Just announce "you require" if in checkout range (2-170) and not busted
-                if remainingPlayerScore > 0 and remainingPlayerScore <= 170 and remainingPlayerScore not in BOGEY_NUMBERS:
+                # Check if this dart scored (not miss/outside)
+                dartScored = lastThrow['segment']['number'] * lastThrow['segment']['multiplier'] > 0
+                
+                # Only announce "you require" if dart scored and in checkout range
+                if dartScored and remainingPlayerScore > 0 and remainingPlayerScore <= 170 and remainingPlayerScore not in BOGEY_NUMBERS:
                     blindSupport.announce_remaining_score(remainingPlayerScore)
 
     # Call every thrown dart
@@ -5690,7 +5723,8 @@ if __name__ == "__main__":
     global blindSupport
     blindSupport = BlindSupport(
         sound_effect_callback=play_sound_effect,
-        enabled=(CALL_BLIND_SUPPORT == 1)
+        enabled=(CALL_BLIND_SUPPORT == 1),
+        sound_effect_variant_callback=play_sound_effect_variant
     )
 
     global match_lock

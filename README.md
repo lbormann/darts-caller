@@ -584,6 +584,7 @@ Supported game modes: X01, Around the Clock (ATC), Round the World (RTW), Bermud
 Features:
 - Target announcements at turn start (e.g., "Target is triple 20" for ATC)
 - Dart position announcements after each throw
+- require announcements after each throw if in checkout area
 - Replaces standard calling when enabled to prevent duplicate announcements
 
 Required sound files:

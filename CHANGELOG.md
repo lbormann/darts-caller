@@ -1,3 +1,11 @@
+## 2.19.6
+- Improved Blind Support "you require" announcements
+  - Now uses specific sound variant you_require+1.mp3 for consistent tone
+  - Skips "you require" announcement when dart scores zero (miss/outside)
+- Added play_sound_effect_variant() function
+  - Allows playing specific sound file variants (e.g., filename+1.mp3)
+  - Falls back to random selection if variant not found
+
 ## 2.19.5
 - Fixed Blind Support duplicate score announcements
   - Total score now announced only once after 3rd dart
