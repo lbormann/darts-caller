@@ -61,7 +61,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.19.7'
+VERSION = '2.19.8'
 
 
 DEFAULT_EMPTY_PATH = ''

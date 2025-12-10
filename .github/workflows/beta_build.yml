@@ -71,10 +71,10 @@ jobs:
             OUT_FILE_NAME: darts-caller-mac
             ASSET_MIME: application/zip
 
-          - os: macos-13
+          - os: macos-15-intel
             TARGET: macos
-            CMD_BUILD: pyinstaller -F -n darts-caller-mac64 -i resources/darts-caller.icns --add-data "templates:templates" --add-data "assets:assets" --add-data "static:static" --add-data ".env:.env" --collect-all certifi darts-caller.py 
-            OUT_FILE_NAME: darts-caller-mac64
+            CMD_BUILD: pyinstaller -F -n darts-caller-macx64 -i resources/darts-caller.icns --add-data "templates:templates" --add-data "assets:assets" --add-data "static:static" --add-data ".env:.env" --collect-all certifi darts-caller.py 
+            OUT_FILE_NAME: darts-caller-macx64
             ASSET_MIME: application/zip
 
           - os: ubuntu-22.04
