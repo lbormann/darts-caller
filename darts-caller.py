@@ -61,7 +61,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.19.60'
+VERSION = '2.19.7'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -907,6 +907,7 @@ def play_sound_effect_variant(sound_file_key, variant, wait_for_last = False, vo
     """
     Play a specific variant of a sound file.
     Example: play_sound_effect_variant('you_require', '1', ...) will play you_require+1.mp3
+    If variant is empty string, plays base file without any +suffix (e.g., busted.mp3)
     """
     try:
         global caller
@@ -915,13 +916,22 @@ def play_sound_effect_variant(sound_file_key, variant, wait_for_last = False, vo
         
         # Filter for specific variant
         variant_file = None
-        search_pattern = sound_file_key + '+' + variant
-        for sound_file in sound_files:
-            # Extract filename without extension
-            filename = os.path.splitext(os.path.basename(sound_file))[0]
-            if filename == search_pattern:
-                variant_file = sound_file
-                break
+        
+        if variant == '':
+            # Search for base file without any +suffix
+            for sound_file in sound_files:
+                filename = os.path.splitext(os.path.basename(sound_file))[0]
+                if filename == sound_file_key:  # Exact match without +
+                    variant_file = sound_file
+                    break
+        else:
+            # Search for file with specific variant
+            search_pattern = sound_file_key + '+' + variant
+            for sound_file in sound_files:
+                filename = os.path.splitext(os.path.basename(sound_file))[0]
+                if filename == search_pattern:
+                    variant_file = sound_file
+                    break
         
         if variant_file:
             play_sound(variant_file, wait_for_last, volume_mult, mod, break_last)
@@ -931,7 +941,7 @@ def play_sound_effect_variant(sound_file_key, variant, wait_for_last = False, vo
             play_sound(random.choice(sound_files), wait_for_last, volume_mult, mod, break_last)
             return True
     except Exception as e:
-        ppe('Can not play sound variant for sound-file-key "' + sound_file_key + '+' + variant + '" -> Ignore this or check existance; otherwise convert your file appropriate', e)
+        ppe('Can not play sound variant for sound-file-key "' + sound_file_key + ('+' + variant if variant else '') + '" -> Ignore this or check existance; otherwise convert your file appropriate', e)
         return False
     
 def mirror_sounds():
@@ -1170,7 +1180,7 @@ def listen_to_match(m, ws):
     #     },
     #     "topic": "1ba2df53-9a04-51bc-9a5f-667b2c5f315f.matches"  
     # }
-    ppi(json.dumps(m, indent = 4, sort_keys = True))
+    # ppi(json.dumps(m, indent = 4, sort_keys = True))
     if 'event' not in m:
         return
 
@@ -1198,7 +1208,7 @@ def listen_to_match(m, ws):
         try:
             res = requests.get(AUTODARTS_MATCHES_URL + currentMatch, headers = {'Authorization': f'Bearer {kc.access_token}'})
             m = res.json()
-            ppi(json.dumps(m, indent = 4, sort_keys = True))
+            # ppi(json.dumps(m, indent = 4, sort_keys = True))
 
             currentPlayerName = None
             players = []
@@ -2012,7 +2022,11 @@ def process_match_x01(m):
         broadcast(busted)
 
         if currentPlayerIsBot == False or CALL_BOT_ACTIONS:
-            play_sound_effect('busted', mod = False)
+            # In blind support mode, use base busted.mp3 without variant
+            if CALL_BLIND_SUPPORT == 1:
+                play_sound_effect_variant('busted', '', mod=False)
+            else:
+                play_sound_effect('busted', mod = False)
 
             if AMBIENT_SOUNDS != 0.0:
                 play_sound_effect('ambient_noscore', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)

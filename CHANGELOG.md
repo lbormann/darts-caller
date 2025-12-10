@@ -1,3 +1,7 @@
+## 2.19.7
+- Improved Blind Support busted announcments
+  - just play a fixed busted sound to not confuse the blind player with different calls like "thrown to high"
+  
 ## 2.19.6
 - Improved Blind Support "you require" announcements
   - Now uses specific sound variant you_require+1.mp3 for consistent tone
