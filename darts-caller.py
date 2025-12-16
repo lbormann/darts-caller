@@ -61,7 +61,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.19.8'
+VERSION = '2.19.9'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -103,7 +103,7 @@ DEFAULT_CALL_BLIND_SUPPORT = 0
 EXT_WLED = False
 EXT_PIXEL = False
 USER_LOCATION = ""
-DB_INSERT = 'https://www.user-stats.peschi.org/db_newuserstats.php'
+DB_INSERT = 'https://www.user-stats.peschi.org/db_newuserstats_2026.php'
 BOARD_OWNER = None
 USER_ID = None
 DB_ARGS = []
@@ -5623,6 +5623,7 @@ if __name__ == "__main__":
     global POSSIBLE_CHECKOUT_CALL_YOURSELF_ONLY
     
     CALLER_SETTINGS_ARGS = {
+        'board_id': str(args['autodarts_board_id']),
         'media_path': str(args['media_path']),
         'media_path_shared': str(args['media_path_shared']),
         'caller': args['caller'],

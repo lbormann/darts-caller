@@ -1,3 +1,6 @@
+## 2.19.9
+- stats backend update
+
 ## 2.19.8
 - Improved Blind Support busted announcments
   - just play a fixed busted sound to not confuse the blind player with different calls like "thrown to high"

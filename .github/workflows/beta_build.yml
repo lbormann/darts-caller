@@ -25,28 +25,8 @@ jobs:
             # THIS IS A BETA RELEASE USING AT YOUR OWN RISK
             
             # Changes in this Release
-              ## 2.19.7  
-              - Improved Blind Support busted announcments
-                - just play a fixed busted sound to not confuse the blind player with different calls like "thrown to high"
-  
-              ## 2.19.6
-              - Improved Blind Support "you require" announcements
-                - Now uses specific sound variant you_require+1.mp3 for consistent tone
-                - Skips "you require" announcement when dart scores zero (miss/outside)
-              - Added play_sound_effect_variant() function
-                - Allows playing specific sound file variants (e.g., filename+1.mp3)
-                - Falls back to random selection if variant not found
-
-              ## 2.19.5
-              - Fixed Blind Support duplicate score announcements
-                - Total score now announced only once after 3rd dart
-                - Removed duplicate announcement after "Turn ended"
-                - Bot total scores now announced correctly
-              - Fixed Blind Support dart position announcement order
-                - Dart position now announced BEFORE "you require" in checkout range
-                - Proper sequence: Position → "you require X" (darts 1-2), Position only (dart 3)
-              - Blind Support now works independently of CALL_EVERY_DART setting
-                - No longer requires -E parameter to function
+              ## 2.19.9  
+              - backend updates
         draft: false
         prerelease: true
         
