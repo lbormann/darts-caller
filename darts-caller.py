@@ -61,7 +61,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.19.10'
+VERSION = '2.19.11'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -5011,6 +5011,9 @@ def on_message_autodarts(ws, message):
 
                     elif data['event'] == 'lobby-leave':
                         # ppi("lobby-leave", data)
+                        if DEBUG:
+                            ppi ('Left lobby event received')
+                            ppi(json.dumps(m, indent = 4, sort_keys = True))
 
                         lobby_id = data['body']['id']
                         currentMatch = None
@@ -5070,6 +5073,9 @@ def on_message_autodarts(ws, message):
 
                 elif 'players' in data:
                     # did I left the lobby?
+                    if DEBUG:
+                        ppi ('did I left the lobby? check')
+                        ppi(json.dumps(m, indent = 4, sort_keys = True))
                     me = False
                     for p in data['players']:
                         if 'boardId' in p and p['boardId'] == AUTODART_USER_BOARD_ID:

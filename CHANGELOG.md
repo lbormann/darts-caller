@@ -1,5 +1,8 @@
 ## 2.19.10
-- deactivate matches endpoint
+- implement debug messages because of match close issues
+
+## 2.19.10
+- Deactivated the matches API endpoint; this endpoint is no longer available for client use
 
 ## 2.19.9
 - stats backend update
