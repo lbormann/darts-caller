@@ -61,7 +61,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.19.9'
+VERSION = '2.19.10'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -97,7 +97,6 @@ DEFAULT_CALLERS_BANNED_FILE = 'banned.txt'
 DEFAULT_CALLERS_FAVOURED_FILE = 'favoured.txt'
 DEFAULT_HOST_IP = '0.0.0.0'
 DEFAULT_CALLER_REAL_LIFE = 0
-DEFAULT_NODEJS_SERVER_URL = "http://login-darts-caller.peschi.org:3006"
 DEFAULT_CALL_BLIND_SUPPORT = 0
 
 EXT_WLED = False
@@ -124,7 +123,6 @@ AUTODARTS_MATCHES_URL = 'https://api.autodarts.io/gs/v0/matches/'
 AUTODARTS_BOARDS_URL = 'https://api.autodarts.io/bs/v0/boards/'
 AUTODARTS_USERS_URL = 'https://api.autodarts.io/as/v0/users/'
 AUTODARTS_WEBSOCKET_URL = 'wss://api.autodarts.io/ms/v0/subscribe'
-NODEJS_SERVER_URL = "http://login-darts-caller.peschi.org:3006"
 
 SUPPORTED_SOUND_FORMATS = ['.mp3', '.wav']
 SUPPORTED_GAME_VARIANTS = ['X01', 'Cricket', 'Random Checkout', 'ATC', 'RTW', 'Count Up', "Bermuda", "Shanghai", "Gotcha"]
@@ -4847,27 +4845,20 @@ def on_open_autodarts(ws):
     global BOARD_OWNER
     # fetch-matches
     # get
-    # https://api.autodarts.io/gs/v0/matches/
+    # https://api.autodarts.io/gs/v0/board/
     try:
-        res = requests.get(AUTODARTS_MATCHES_URL, headers = {'Authorization': f'Bearer {kc.access_token}'})
+        res = requests.get(AUTODARTS_BOARDS_URL+AUTODART_USER_BOARD_ID, headers = {'Authorization': f'Bearer {kc.access_token}'})
         res = res.json()
         # ppi(json.dumps(res, indent = 4, sort_keys = True))
-
-        # watchout for a match with my board-id
-        should_break = False
-        for m in res:
-            for p in m['players']:
-                if 'boardId' in p and p['boardId'] == AUTODART_USER_BOARD_ID:
-                    mes = {
-                        "event": "start",
-                        "id": m['id']
-                    }
-                    listen_to_match(mes, ws)
-                    should_break = True
-                    break
-            if should_break:
-                break
-            
+        if 'matchId' in res and res['matchId'] != None:
+            mes = {
+                "event": "start",
+                "id": res['matchId']
+            }
+            listen_to_match(mes, ws)
+        else :
+            ppi('No active match found for board-id: ' + AUTODART_USER_BOARD_ID)
+                    
     except Exception as e:
         ppe('Fetching matches failed', e)
 
@@ -4898,8 +4889,6 @@ def on_open_autodarts(ws):
 
     except Exception as e:
         ppe('WS-Open-users failed: ', e)
-    
-   
 
 def on_message_autodarts(ws, message):
     def process(*args):
@@ -5703,7 +5692,7 @@ if __name__ == "__main__":
     if CALL_BLIND_SUPPORT < 0: CALL_BLIND_SUPPORT = DEFAULT_CALL_BLIND_SUPPORT
 
     # Lade Client-Credentials basierend auf Konfiguration
-    client_id, client_secret = load_client_credentials(DEFAULT_NODEJS_SERVER_URL)
+    client_id, client_secret = load_client_credentials()
     AUTODARTS_CLIENT_ID = client_id
     AUTODARTS_REALM_NAME = 'autodarts'
     AUTODARTS_CLIENT_SECRET = client_secret

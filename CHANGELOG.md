@@ -1,3 +1,6 @@
+## 2.19.10
+- deactivate matches endpoint
+
 ## 2.19.9
 - stats backend update
 

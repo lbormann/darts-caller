@@ -25,7 +25,7 @@ jobs:
             # THIS IS A BETA RELEASE USING AT YOUR OWN RISK
             
             # Changes in this Release
-              ## 2.19.9  
+              ## 2.19.10 
               - backend updates
         draft: false
         prerelease: true
