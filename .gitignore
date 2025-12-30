@@ -20,4 +20,5 @@ caller-downloads-temp
 new_calls.csv
 NODEJS_SERVER_EXAMPLE.md
 assets/autodarts_login.py
-
+MESSAGE_LOGGER_README.md
+/logs/*

@@ -17,6 +17,7 @@ import csv
 import math
 import psutil
 import queue
+import traceback
 from mask import mask
 from urllib.parse import quote, unquote
 import ssl
@@ -35,6 +36,7 @@ from engineio.async_drivers import threading as th # IMPORTANT
 from assets.get_cred import load_client_credentials, get_client_credentials_from_nodejs_server
 from assets.caller_profiles import CALLER_PROFILES
 from blind_support import BlindSupport
+from message_logger import init_logger, get_logger
 
 os.environ['SSL_CERT_FILE'] = certifi.where()
 
@@ -61,7 +63,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.19.11'
+VERSION = '2.19.12'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -1192,7 +1194,7 @@ def listen_to_match(m, ws):
             "type": "subscribe",
             "topic": AUTODART_USER_BOARD_ID + ".events"
         }
-        ws.send(json.dumps(paramsSubscribeTakeOut))
+        ws_send_with_logging(ws, paramsSubscribeTakeOut)
         reset_checkouts_counter()
 
         try:
@@ -1378,7 +1380,7 @@ def listen_to_match(m, ws):
             "topic": currentMatch + ".state"
         }
 
-        ws.send(json.dumps(paramsSubscribeMatchesEvents))
+        ws_send_with_logging(ws, paramsSubscribeMatchesEvents)
 
         # paramsSubscribeMatchesEvents = {
         #     "channel": "autodarts.matches",
@@ -1421,7 +1423,7 @@ def listen_to_match(m, ws):
             "type": "unsubscribe",
             "topic": m['id'] + ".state"
         }
-        ws.send(json.dumps(paramsUnsubscribeMatchEvents))
+        ws_send_with_logging(ws, paramsUnsubscribeMatchEvents)
 
         # paramsUnsubscribeMatchEvents = {
         #     "channel": "autodarts.matches",
@@ -1434,7 +1436,7 @@ def listen_to_match(m, ws):
             "type": "unsubscribe",
             "topic": AUTODART_USER_BOARD_ID + ".events"
         }
-        ws.send(json.dumps(paramsSubscribeTakeOut))
+        ws_send_with_logging(ws, paramsSubscribeTakeOut)
         if m['event'] == 'delete':
             play_sound_effect('matchcancel')
             play_sound_effect('ambient_matchcancel', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
@@ -4794,6 +4796,65 @@ def mute_background(mute_vol):
 
 
 
+def ws_send_with_logging(ws, data_dict):
+    """
+    Send WebSocket message and log it
+    Args:
+        ws: WebSocket object
+        data_dict: Dictionary to send as JSON
+    """
+    msg_logger = get_logger()
+    msg_logger.log_websocket_message(
+        message=data_dict,
+        direction="OUTGOING",
+        channel=data_dict.get('channel', 'unknown'),
+        event=data_dict.get('type', 'unknown')
+    )
+    ws.send(json.dumps(data_dict))
+
+
+def api_request_with_logging(method, url, **kwargs):
+    """
+    Make API request and log it
+    Args:
+        method: HTTP method (get, post, put, delete, etc.)
+        url: Request URL
+        **kwargs: Additional arguments passed to requests method
+    Returns:
+        Response object
+    """
+    msg_logger = get_logger()
+    
+    # Log request
+    msg_logger.log_api_request(
+        method=method.upper(),
+        url=url,
+        headers=kwargs.get('headers'),
+        params=kwargs.get('params'),
+        data=kwargs.get('data') or kwargs.get('json')
+    )
+    
+    # Make request
+    try:
+        response = getattr(requests, method.lower())(url, **kwargs)
+        
+        # Log response
+        msg_logger.log_api_request(
+            method=method.upper(),
+            url=url,
+            response=response
+        )
+        
+        return response
+    except Exception as e:
+        msg_logger.log_error(
+            error_type="API_REQUEST_ERROR",
+            error_message=str(e),
+            traceback_str=traceback.format_exc() if 'traceback' in dir() else None
+        )
+        raise
+
+
 def connect_autodarts():
     global BOARD_OWNER
     global USER_LOCATION
@@ -4869,7 +4930,7 @@ def on_open_autodarts(ws):
             "type": "subscribe",
             "topic": AUTODART_USER_BOARD_ID + ".matches"
         }
-        ws.send(json.dumps(paramsSubscribeMatchesEvents))
+        ws_send_with_logging(ws, paramsSubscribeMatchesEvents)
 
         ppi('Receiving live information for board-id: ' + AUTODART_USER_BOARD_ID)
 
@@ -4883,7 +4944,7 @@ def on_open_autodarts(ws):
             "type": "subscribe",
             "topic": kc.user_id + ".events"
         }
-        ws.send(json.dumps(paramsSubscribeUserEvents))
+        ws_send_with_logging(ws, paramsSubscribeUserEvents)
 
         # ppi('Receiving live information for user-id: ' + kc.user_id)
 
@@ -4901,6 +4962,19 @@ def on_message_autodarts(ws, message):
             global matchIsActive
             global match_lock
             m = json.loads(message)
+            
+            # Log incoming WebSocket message
+            msg_logger = get_logger()
+            msg_logger.log_websocket_message(
+                message=m,
+                direction="INCOMING",
+                channel=m.get('channel', 'unknown'),
+                event=m.get('data', {}).get('event') if isinstance(m.get('data'), dict) else None,
+                additional_info={
+                    'match_active': matchIsActive,
+                    'current_match': currentMatch
+                }
+            )
             
             # ppi(json.dumps(m, indent = 4, sort_keys = True))
             if m['channel'] == 'autodarts.matches':
@@ -4997,13 +5071,13 @@ def on_message_autodarts(ws, message):
                                 "type": "subscribe",
                                 "topic": lobby_id + ".state"
                             }
-                        ws.send(json.dumps(paramsSubscribeLobbyEvents))
+                        ws_send_with_logging(ws, paramsSubscribeLobbyEvents)
                         paramsSubscribeLobbyEvents = {
                                 "channel": "autodarts.lobbies",
                                 "type": "subscribe",
                                 "topic": lobby_id + ".events"
                             }
-                        ws.send(json.dumps(paramsSubscribeLobbyEvents))
+                        ws_send_with_logging(ws, paramsSubscribeLobbyEvents)
                         lobbyPlayers = []
 
                         if play_sound_effect("ambient_lobby_in", False, mod = False):
@@ -5025,13 +5099,13 @@ def on_message_autodarts(ws, message):
                                 "type": "unsubscribe",
                                 "topic": lobby_id + ".state"
                             }
-                        ws.send(json.dumps(paramsUnsubscribeLobbyEvents))
+                        ws_send_with_logging(ws, paramsUnsubscribeLobbyEvents)
                         paramsUnsubscribeLobbyEvents = {
                                 "channel": "autodarts.lobbies",
                                 "type": "unsubscribe",
                                 "topic": lobby_id + ".events"
                             }
-                        ws.send(json.dumps(paramsUnsubscribeLobbyEvents))
+                        ws_send_with_logging(ws, paramsUnsubscribeLobbyEvents)
                         lobbyPlayers = []
 
                         if play_sound_effect("ambient_lobby_out", False, mod = False):
@@ -5055,13 +5129,15 @@ def on_message_autodarts(ws, message):
                             "channel": "autodarts.lobbies",
                             "topic": m['id'] + ".events"
                         }
-                        ws.send(json.dumps(paramsUnsubscribeLobbyEvents))
+                        # ws_send(ws, paramsUnsubscribeLobbyEvents)
+                        ws_send_with_logging(ws, paramsUnsubscribeLobbyEvents)
                         paramsUnsubscribeLobbyEvents = {
                             "type": "unsubscribe",
                             "channel": "autodarts.lobbies",
                             "topic": m['id'] + ".state"
                         }
-                        ws.send(json.dumps(paramsUnsubscribeLobbyEvents))
+                        # ws_send(ws, paramsUnsubscribeLobbyEvents)
+                        ws_send_with_logging(ws, paramsUnsubscribeLobbyEvents)
                         lobbyPlayers = []
                         ppi ("Player index reset")
                         gotcha_last_player_points=[]
@@ -5091,13 +5167,15 @@ def on_message_autodarts(ws, message):
                                 "type": "unsubscribe",
                                 "topic": lobby_id + ".state"
                             }
-                        ws.send(json.dumps(paramsUnsubscribeLobbyEvents))
+                        # ws_send(ws, paramsUnsubscribeLobbyEvents)
+                        ws_send_with_logging(ws, paramsUnsubscribeLobbyEvents)
                         paramsUnsubscribeLobbyEvents = {
                                 "channel": "autodarts.lobbies",
                                 "type": "unsubscribe",
                                 "topic": lobby_id + ".events"
                             }
-                        ws.send(json.dumps(paramsUnsubscribeLobbyEvents))
+                        # ws_send(ws, paramsUnsubscribeLobbyEvents)
+                        ws_send_with_logging(ws, paramsUnsubscribeLobbyEvents)
                         if play_sound_effect("ambient_lobby_out", False, mod = False):
                             mirror_sounds()
                         lobbyPlayers = []
@@ -5598,6 +5676,7 @@ if __name__ == "__main__":
     ap.add_argument("-WEBDH", "--web_caller_disable_https", required=False, type=int, choices=range(0, 2), default=DEFAULT_WEB_CALLER_DISABLE_HTTPS, help="If '0', the web caller will use http instead of https. This is unsecure, be careful!")
     ap.add_argument("-HP", "--host_port", required=False, type=int, default=DEFAULT_HOST_PORT, help="Host-Port")
     ap.add_argument("-DEB", "--debug", type=int, choices=range(0, 2), default=DEFAULT_DEBUG, required=False, help="If '1', the application will output additional information")
+    ap.add_argument("-MLA", "--message_log_all", type=int, choices=range(0, 2), default=0, required=False, help="If '1', log all WebSocket and API messages to file")
     ap.add_argument("-CC", "--cert_check", type=int, choices=range(0, 2), default=DEFAULT_CERT_CHECK, required=False, help="If '0', the application won't check any ssl certification")
     ap.add_argument("-MIF", "--mixer_frequency", type=int, required=False, default=DEFAULT_MIXER_FREQUENCY, help="Pygame mixer frequency")
     ap.add_argument("-MIS", "--mixer_size", type=int, required=False, default=DEFAULT_MIXER_SIZE, help="Pygame mixer size")
@@ -5689,6 +5768,7 @@ if __name__ == "__main__":
     WEB_DISABLE_HTTPS = args['web_caller_disable_https']
     HOST_PORT = args['host_port']
     DEBUG = args['debug']
+    MESSAGE_LOG_ALL = args['message_log_all']
     CERT_CHECK = args['cert_check']
     MIXER_FREQUENCY = args['mixer_frequency']
     MIXER_SIZE = args['mixer_size']
@@ -5714,6 +5794,11 @@ if __name__ == "__main__":
         masked_args = mask(args, data_to_mask)
         ppi(json.dumps(masked_args, indent=4))
     
+    # Initialize message logger
+    init_logger(enabled=(MESSAGE_LOG_ALL == 1), log_dir="logs")
+    msg_logger = get_logger()
+    if MESSAGE_LOG_ALL == 1:
+        ppi('Message logging enabled - all WebSocket and API messages will be logged to logs/')
 
     global boardManagerAddress
     boardManagerAddress = None

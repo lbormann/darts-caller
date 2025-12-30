@@ -25,8 +25,8 @@ jobs:
             # THIS IS A BETA RELEASE USING AT YOUR OWN RISK
             
             # Changes in this Release
-              ## 2.19.11 
-              - - implement debug messages because of match close issues
+              ## 2.19.12 
+              - Adding logger for websocket messages to debug disconnects (-MLA)
         draft: false
         prerelease: true
         

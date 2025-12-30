@@ -1,3 +1,6 @@
+## 2.19.12
+- Adding logger for websocket messages to debug disconnects (-MLA)
+
 ## 2.19.10
 - implement debug messages because of match close issues
 
