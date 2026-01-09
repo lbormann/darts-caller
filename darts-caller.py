@@ -5728,7 +5728,8 @@ if __name__ == "__main__":
         'mixer_size': args['mixer_size'],
         'mixer_channels': args['mixer_channels'],
         'mixer_buffersize': args['mixer_buffersize'],
-        'call_blind_support': args['call_blind_support']
+        'call_blind_support': args['call_blind_support'],
+        'message_log_all': args['message_log_all']
     }
 
     AUTODART_USER_EMAIL = args['autodarts_email']                          
