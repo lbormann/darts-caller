@@ -21,9 +21,48 @@ jobs:
       with:
         tag_name: ${{ github.ref }}
         release_name: Release ${{ github.ref }}
-        body: |            
-            # Changes in this Release
-              - backend updates
+        body: |
+           # Changes in this Release
+            ## 2.20.0
+            - Adding logger for websocket messages to debug disconnects (-MLA)
+            - implement debug messages because of match close issues
+            - Deactivated the matches API endpoint; this endpoint is no longer available for client use
+            - stats backend update
+            - Improved Blind Support busted announcments
+              - just play a fixed busted sound to not confuse the blind player with different calls like "thrown to high"
+            - Improved Blind Support "you require" announcements
+              - Now uses specific sound variant you_require+1.mp3 for consistent tone
+              - Skips "you require" announcement when dart scores zero (miss/outside)
+            - Added play_sound_effect_variant() function
+              - Allows playing specific sound file variants (e.g., filename+1.mp3)
+              - Falls back to random selection if variant not found
+            - Fixed Blind Support duplicate score announcements
+              - Total score now announced only once after 3rd dart
+              - Removed duplicate announcement after "Turn ended"
+              - Bot total scores now announced correctly
+            - Fixed Blind Support dart position announcement order
+              - Dart position now announced BEFORE "you require" in checkout range
+              - Proper sequence: Position → "you require X" (darts 1-2), Position only (dart 3)
+            - Blind Support now works independently of CALL_EVERY_DART setting
+              - No longer requires -E parameter to function
+            - Added Blind Support feature (-CBS / --call_blind_support)
+              - Announces target field at the start of each player's turn (for applicable game modes)
+              - Announces exact dart position after every throw with intelligent sound file usage
+              - Supported game modes: X01, ATC, RTW, Bermuda, Shanghai, Count-Up, Gotcha
+              - Replaces normal game mode calls when enabled to prevent duplicates
+              - Smart dart position announcements:
+                - Outer Single: Only number (e.g., "20")
+                - Inner Single: "inside" + number (e.g., "inside 20")
+                - Triple: Uses t-prefix files (e.g., "t20") with fallback to "triple 20"
+                - Double: Uses d-prefix files (e.g., "d20") with fallback to "double 20"
+                - Outside: Uses m-prefix files (e.g., "m20") with fallback to "outside 20"
+                - Bull/Bullseye: Direct announcement
+              - Corrected Bermuda rounds mapping (12-13-14-D-15-16-17-T-18-19-20-25-50)
+              - Required sound files: bs_target_is, bs_single_inner, bs_any_double, bs_any_triple, plus existing t*, d*, m* files
+                - the soundfiles are included in new pack versions for all googleai and openai voices. 
+            - Added CustomArgumentParser class for improved error output on invalid arguments
+              - Shows only relevant error messages instead of full help text
+              - Provides helpful hints based on error type
         draft: false
         prerelease: false
         
@@ -48,12 +87,12 @@ jobs:
             OUT_FILE_NAME: darts-caller-mac
             ASSET_MIME: application/zip
 
-          - os: macos-13
+          - os: macos-15-intel
             TARGET: macos
-            CMD_BUILD: pyinstaller -F -n darts-caller-mac64 -i resources/darts-caller.icns --add-data "templates:templates" --add-data "assets:assets" --add-data "static:static" --add-data ".env:.env" --collect-all certifi darts-caller.py 
-            OUT_FILE_NAME: darts-caller-mac64
+            CMD_BUILD: pyinstaller -F -n darts-caller-macx64 -i resources/darts-caller.icns --add-data "templates:templates" --add-data "assets:assets" --add-data "static:static" --add-data ".env:.env" --collect-all certifi darts-caller.py 
+            OUT_FILE_NAME: darts-caller-macx64
             ASSET_MIME: application/zip
-          
+
           - os: ubuntu-22.04
             TARGET: ubuntu
             CMD_BUILD: pyinstaller -F -n darts-caller -i resources/darts-caller.svg --add-data "templates:templates" --add-data "assets:assets" --add-data "static:static" --add-data ".env:.env" --collect-all certifi darts-caller.py
@@ -72,7 +111,7 @@ jobs:
               sudo apt-get update
               sudo apt-get install -y qemu-user-static binfmt-support
               docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-              docker run --rm -v /usr/bin/qemu-arm-static:/usr/bin/qemu-arm-static --platform linux/arm64/v8 -v $(pwd):/workdir -w /workdir arm64v8/ubuntu:22.04 bash -c "apt-get update -y && apt-get install -y python3-pip && pip install -r requirements.txt && pyinstaller -F -n darts-caller-arm64 -i resources/darts-caller.svg --add-data 'templates:templates' --add-data "assets:assets" --add-data 'static:static' --add-data '.env:.env' --collect-all certifi darts-caller.py"
+              docker run --rm -v /usr/bin/qemu-arm-static:/usr/bin/qemu-arm-static --platform linux/arm64/v8 -v $(pwd):/workdir -w /workdir arm64v8/ubuntu:22.04 bash -c "apt-get update -y && apt-get install -y python3-pip && pip install -r requirements.txt && pyinstaller -F -n darts-caller-arm64 -i resources/darts-caller.svg --add-data 'templates:templates' --add-data "assets:assets" --add-data 'static:static' --add-data ".env:.env" --collect-all certifi darts-caller.py"
             OUT_FILE_NAME: darts-caller-arm64
             ASSET_MIME: application/octet-stream
 
