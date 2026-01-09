@@ -279,6 +279,14 @@ Disclaimer: For uninterrupted calling experience on mobile devices, ensure that 
 - control_dart_correction_2 [overrides: control, control_dart_correction]
 - control_dart_correction_3 [overrides: control, control_dart_correction]
 
+**BLIND SUPPORT**
+
+- bs_target_is
+- bs_any_double
+- bs_any_triple
+- bs_outside
+- bs_single_inner
+
 
 
 
@@ -432,6 +440,22 @@ Side note: You can change that option anytime in the web-caller.</p>
 Default: '1'
 
 Side note: You can change that option anytime in the web-caller. </p>
+
+#### *`-CBS /--call_blind_support`*
+
+<p>Caller Blind support is a feature which allows blind user to get some more informations of the Throws.
+
+- inner field hits will be called as  "inside 20" for example
+- outer field normal "20" call
+- Tripple and double normall "tripple 20" "double 20"
+- outside with position name "outside 20"
+- from 170 on after every throw an require call 
+- butsted with fild number
+
+- '0' deactivated
+- '1' activated
+
+Default 0 </p>
 
 #### *`-CBA / --call_bot_actions`*
 
