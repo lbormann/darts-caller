@@ -1,3 +1,7 @@
+## 2.20.1
+- version Update darts-caller to v2.20.1
+        - fix bug where lobby is closed by autodarts and caller stops working.
+
 ## 2.20.0
 - Adding logger for websocket messages to debug disconnects (-MLA)
 - implement debug messages because of match close issues

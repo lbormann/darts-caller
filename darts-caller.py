@@ -63,7 +63,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.20.0'
+VERSION = '2.20.1'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -5090,26 +5090,41 @@ def on_message_autodarts(ws, message):
                             ppi(json.dumps(m, indent = 4, sort_keys = True))
 
                         lobby_id = data['body']['id']
-                        currentMatch = None
+                        
 
                         ppi('Stop Listen to lobby: ' + lobby_id)
                         ppi('I left the lobby, message from autodarts.users')
-                        paramsUnsubscribeLobbyEvents = {
-                                "channel": "autodarts.lobbies",
-                                "type": "unsubscribe",
-                                "topic": lobby_id + ".state"
+                        # neue reconnect überprüfung wenn lobby verlassen wird
+                        res = requests.get(AUTODARTS_BOARDS_URL+AUTODART_USER_BOARD_ID, headers = {'Authorization': f'Bearer {kc.access_token}'})
+                        res = res.json()
+                        # ppi(json.dumps(res, indent = 4, sort_keys = True))
+                        if 'matchId' in res and res['matchId'] != None:
+                            ppi('Active match found for board-id: ' + AUTODART_USER_BOARD_ID)
+                            ppi('Reconnecting to active match: ' + res['matchId'])
+                            mes = {
+                                "event": "start",
+                                "id": res['matchId']
                             }
-                        ws_send_with_logging(ws, paramsUnsubscribeLobbyEvents)
-                        paramsUnsubscribeLobbyEvents = {
-                                "channel": "autodarts.lobbies",
-                                "type": "unsubscribe",
-                                "topic": lobby_id + ".events"
-                            }
-                        ws_send_with_logging(ws, paramsUnsubscribeLobbyEvents)
-                        lobbyPlayers = []
+                            listen_to_match(mes, ws)
+                        else :
+                            ppi('No active match found for board-id: ' + AUTODART_USER_BOARD_ID)
+                            currentMatch = None
+                            paramsUnsubscribeLobbyEvents = {
+                                    "channel": "autodarts.lobbies",
+                                    "type": "unsubscribe",
+                                    "topic": lobby_id + ".state"
+                                }
+                            ws_send_with_logging(ws, paramsUnsubscribeLobbyEvents)
+                            paramsUnsubscribeLobbyEvents = {
+                                    "channel": "autodarts.lobbies",
+                                    "type": "unsubscribe",
+                                    "topic": lobby_id + ".events"
+                                }
+                            ws_send_with_logging(ws, paramsUnsubscribeLobbyEvents)
+                            lobbyPlayers = []
 
-                        if play_sound_effect("ambient_lobby_out", False, mod = False):
-                            mirror_sounds()
+                            if play_sound_effect("ambient_lobby_out", False, mod = False):
+                                mirror_sounds()
 
             elif m['channel'] == 'autodarts.lobbies':
                 data = m['data']
