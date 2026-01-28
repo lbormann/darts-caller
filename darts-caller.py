@@ -63,7 +63,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 parent_directory = os.path.dirname(main_directory)
 
 
-VERSION = '2.20.1'
+VERSION = '2.20.2'
 
 
 DEFAULT_EMPTY_PATH = ''
@@ -147,6 +147,9 @@ BERMUDA_ROUNDS = {
 }
 BOGEY_NUMBERS = [169, 168, 166, 165, 163, 162, 159]
 TEMPLATE_FILE_ENCODING = 'utf-8-sig'
+
+# Track last announced throw count per player to avoid duplicate blind calls in RTW
+rtw_last_throw_count = {}
 
 
 
@@ -240,8 +243,9 @@ def ppi(message, info_object = None, prefix = '\r\n'):
     
 def ppe(message, error_object):
     ppi(message)
-    if DEBUG:
-        logger.exception("\r\n" + str(error_object))
+    # if DEBUG:
+    #     logger.exception("\r\n" + str(error_object))
+    logger.error(f"{type(error_object).__name__}: {error_object}", exc_info=DEBUG)
 
 def get_executable_directory():
     if getattr(sys, 'frozen', False):
@@ -2000,6 +2004,7 @@ def process_match_x01(m):
         lastPoints = "B"
         isGameFinished = False
         throwAmount = len(turns['throws'])
+        lastThrow = turns['throws'][throwAmount - 1]
         type = turns['throws'][throwAmount - 1]['segment']['bed'].lower()
         field_name = turns['throws'][throwAmount - 1]['segment']['name'].lower()
         field_multiplier = turns['throws'][throwAmount - 1]['segment']['multiplier']
@@ -2022,9 +2027,9 @@ def process_match_x01(m):
         broadcast(busted)
 
         if currentPlayerIsBot == False or CALL_BOT_ACTIONS:
-            # In blind support mode, use base busted.mp3 without variant
-            if CALL_BLIND_SUPPORT == 1:
-                play_sound_effect_variant('busted', '', mod=False)
+            # For blind support announce the hit and the bust in sequence
+            if CALL_BLIND_SUPPORT == 1 and currentPlayerIsBot == False:
+                blindSupport.announce_bust(lastThrow)
             else:
                 play_sound_effect('busted', mod = False)
 
@@ -2796,6 +2801,7 @@ def process_match_rtw(m):
     global indexNameMacro
     global isGameFinished
     global blindSupport
+    global rtw_last_throw_count
 
     variant = m['variant']
     currentPlayerIndex = m['player']
@@ -2810,6 +2816,8 @@ def process_match_rtw(m):
     order = m['settings']['order']
     turn = m['turns'][0]
     points = turn['points']
+    throw_len = len(turn['throws']) if turn and 'throws' in turn else 0
+    last_announced_len = rtw_last_throw_count.get(currentPlayerIndex, -1)
     currentTarget = 0
     if order == '1-20-Bull':
         currentTarget = m['round']
@@ -2823,14 +2831,23 @@ def process_match_rtw(m):
     
     # BLIND SUPPORT: Announce target at turn start
     if turn['throws'] == []:
-        blindSupport.announce_turn_start('RTW', m)
+        rtw_last_throw_count[currentPlayerIndex] = 0
+        if CALL_BLIND_SUPPORT == 1:
+            # Say player name first only in multiplayer, so target follows cleanly
+            if currentPlayerIsBot == False and CALL_CURRENT_PLAYER >= 1 and numberOfPlayers > 1:
+                if play_sound_effect(currentPlayerName, wait_for_last=True) == False:
+                    play_sound_effect('player'+str(currentPlayerIndex + 1), wait_for_last=True)
+
+            blindSupport.announce_turn_start('RTW', m)
     
-    if turn is not None and turn['throws']:
+    if turn is not None and turn['throws'] and throw_len > last_announced_len:
         isGameFinished = False
         
         # BLIND SUPPORT: Announce dart position
         lastThrow = turn['throws'][-1]
         blindSupport.announce_dart_result('RTW', lastThrow)
+
+        rtw_last_throw_count[currentPlayerIndex] = throw_len
 
 
     # Darts pulled (Playerchange and Possible-checkout)
@@ -2987,7 +3004,7 @@ def process_match_rtw(m):
                 play_sound_effect('ambient_playerchange', AMBIENT_SOUNDS_AFTER_CALLS, volume_mult = AMBIENT_SOUNDS, mod = False)
 
         if currentPlayerIsBot == False or CALL_BOT_ACTIONS:
-            if CALL_CURRENT_PLAYER == 2 and numberOfPlayers > 1:
+            if CALL_CURRENT_PLAYER == 2 and CALL_BLIND_SUPPORT == 0 and numberOfPlayers > 1:
                 play_sound_effect(currentPlayerName, True)
     # Playerchange
     if turn != None and turn['throws'] == [] or isGameFinished == True:
@@ -3002,7 +3019,7 @@ def process_match_rtw(m):
         broadcast(dartsPulled)
 
         if currentPlayerIsBot == False or CALL_BOT_ACTIONS:
-            if CALL_CURRENT_PLAYER == 2:
+            if CALL_CURRENT_PLAYER == 2 and CALL_BLIND_SUPPORT == 0:
                 play_sound_effect(currentPlayerName)
 
         if AMBIENT_SOUNDS != 0.0:

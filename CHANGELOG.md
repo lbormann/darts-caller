@@ -1,3 +1,7 @@
+## 2.20.2
+- Blind support bugfix in RTW
+- Blind support calls also hit number befor busted
+
 ## 2.20.1
 - version Update darts-caller to v2.20.1
         - fix bug where lobby is closed by autodarts and caller stops working.

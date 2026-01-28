@@ -108,6 +108,23 @@ class BlindSupport:
             self.play_sound(str(total_score), wait_for_last=True)
         except Exception as e:
             pass
+
+    def announce_bust(self, throw_data):
+        """Announce the busted dart position and the bust call"""
+        if not self.enabled:
+            return
+
+        try:
+            # Say where the last dart landed first
+            self._announce_dart_position(throw_data)
+
+            # Follow with the busted call (use base variant if available)
+            if self.play_sound_variant and self.play_sound_variant('busted', '', wait_for_last=True):
+                return
+
+            self.play_sound('busted', wait_for_last=True)
+        except Exception:
+            pass
         
     def _announce_atc_target(self, game_data):
         """Announce current target for ATC mode"""
